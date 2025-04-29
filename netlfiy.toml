@@ -3,6 +3,14 @@
   publish = "/"
   # Directory with serverless functions
   functions = "functions"
+  # Uncomment this if you need dependencies installed during build
+  # command = "cd functions && npm install"
+
+# Configure Node bundler for functions
+[functions]
+  node_bundler = "esbuild"
+  # Include node modules in function deployment
+  included_files = ["functions/node_modules/**"]
 
 # Set security headers
 [[headers]]
