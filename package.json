@@ -1,0 +1,20 @@
+{
+  "name": "sleeptech-course",
+  "version": "1.0.0",
+  "description": "SleepTech Course Website",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sleeptech",
+    "course",
+    "sleep",
+    "technology"
+  ],
+  "author": "SleepTech",
+  "license": "ISC",
+  "dependencies": {
+    "stripe": "^12.18.0"
+  }
+}
