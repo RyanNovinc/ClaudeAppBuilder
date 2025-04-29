@@ -46,10 +46,11 @@ exports.handler = async function(event, context) {
       };
     }
     
-    // Get SendGrid API key from environment variables
-    const apiKey = process.env.SENDGRID_API_KEY;
+    // Get SendGrid API key from environment variables - try both possible keys
+    const apiKey = process.env.SENDGRID_API_KEY || process.env.NETLIFY_EMAILS_PROVIDER_API_KEY;
     if (!apiKey) {
-      console.log('SENDGRID_API_KEY is not set in environment variables');
+      console.log('SendGrid API key is not set in environment variables');
+      console.log('Available env vars:', Object.keys(process.env).filter(key => !key.includes('SECRET') && !key.includes('KEY')));
       return {
         statusCode: 500,
         headers,
@@ -69,13 +70,19 @@ exports.handler = async function(event, context) {
       day: 'numeric'
     });
     
+    // Define sender email
+    const fromEmail = process.env.EMAIL_FROM || 'hello@risegg.net';
+    const fromName = process.env.EMAIL_FROM_NAME || 'SleepTech';
+    
+    console.log('Sending from:', fromEmail);
+    
     // Prepare welcome email with receipt and login details
     const msg = {
-      from: {
-        email: process.env.EMAIL_FROM || 'hello@risegg.net',
-        name: process.env.EMAIL_FROM_NAME || 'SleepTech'
-      },
       to: customerEmail,
+      from: {
+        email: fromEmail,
+        name: fromName
+      },
       subject: 'Welcome to SleepTech: Your Course Access Details',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -130,10 +137,48 @@ exports.handler = async function(event, context) {
     
     console.log('Sending email via SendGrid');
     
-    // Send the welcome email
-    await sgMail.send(msg);
-    
-    console.log('Email sent successfully to:', customerEmail);
+    try {
+      // Try using the regular SendGrid send method
+      await sgMail.send(msg);
+      console.log('Email sent successfully to:', customerEmail);
+    } catch (sendError) {
+      console.error('Error with sgMail.send:', sendError);
+      
+      // If that fails, try an alternative approach - making a direct API call
+      console.log('Attempting alternative sending method...');
+      
+      try {
+        const fetch = require('node-fetch');
+        const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            personalizations: [{ to: [{ email: customerEmail }] }],
+            from: { email: fromEmail, name: fromName },
+            subject: 'Welcome to SleepTech: Your Course Access Details',
+            content: [
+              {
+                type: 'text/html',
+                value: msg.html
+              }
+            ]
+          })
+        });
+        
+        if (response.ok) {
+          console.log('Email sent successfully via API call to:', customerEmail);
+        } else {
+          const errorData = await response.text();
+          throw new Error(`API call failed: ${response.status} - ${errorData}`);
+        }
+      } catch (apiError) {
+        console.error('Error with direct API call:', apiError);
+        throw apiError; // Re-throw to be caught by the outer try/catch
+      }
+    }
     
     // Send success response
     return {
@@ -147,11 +192,15 @@ exports.handler = async function(event, context) {
   } catch (error) {
     console.error('Error sending email:', error);
     
+    // Instead of failing, return a success response but log the error
+    // This allows the checkout process to continue even if email fails
     return {
-      statusCode: 500,
+      statusCode: 200, // Changed from 500 to 200 to let the process continue
       headers,
       body: JSON.stringify({
-        error: 'Failed to send email: ' + error.message
+        success: true, // Changed from false to true
+        message: 'Email could not be sent, but purchase was successful',
+        error: error.message
       })
     };
   }
