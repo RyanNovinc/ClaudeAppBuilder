@@ -174,6 +174,16 @@
             background-color: #0055b3;
         }
         
+        .error-notice {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #b91c1c;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
         @media (max-width: 768px) {
             .thank-you-container {
                 margin: 60px auto;
@@ -213,6 +223,12 @@
             <p id="user-email"><strong>Email:</strong> <span id="account-email">your@email.com</span></p>
             <p>If you don't receive an email within a few minutes, check your spam folder or use the password reset option.</p>
             <button id="open-login" class="login-button">Login to Your Account</button>
+        </div>
+        
+        <div id="server-error-notice" style="display: none;" class="error-notice">
+            <h3 style="margin-top: 0;">Note: Email Delivery Issue</h3>
+            <p>We encountered an issue sending your welcome email. Please contact support at <a href="mailto:hello@risegg.net">hello@risegg.net</a> if you don't receive login details.</p>
+            <p>However, you can still access all course content in test mode by using the "Start Learning Now" button below.</p>
         </div>
         
         <div class="order-details">
@@ -303,6 +319,7 @@
             const sessionId = urlParams.get('session_id');
             const isTestMode = urlParams.get('test_mode') === 'true';
             const emailParam = urlParams.get('email');
+            const serverError = urlParams.get('server_error') === 'true';
             
             // Update account email if provided
             if (emailParam) {
@@ -314,25 +331,50 @@
                 if (window.netlifyIdentity) {
                     netlifyIdentity.open('login');
                 } else {
-                    alert('Login system is not available. Please try again later or contact support.');
+                    alert('Login system is not available. Please use test mode to access course materials.');
                 }
             });
+            
+            // If server error was flagged, show the notice
+            if (serverError) {
+                document.getElementById('server-error-notice').style.display = 'block';
+            }
             
             // If in test mode, show indicator
             if (isTestMode) {
                 const testModeIndicator = document.getElementById('test-mode-indicator');
                 testModeIndicator.classList.add('test-mode-banner');
-                testModeIndicator.textContent = 'TEST MODE - No actual purchase was made';
+                testModeIndicator.textContent = 'TEST MODE - This is a simulated purchase';
                 
                 // Update order details for test mode
-                document.getElementById('order-id').textContent = sessionId || 'TEST-ORDER';
+                document.getElementById('order-id').textContent = sessionId ? 'TEST-' + sessionId.substring(0, 8) : 'TEST-ORDER';
                 document.getElementById('payment-method').textContent = 'TEST MODE (No charge)';
                 document.getElementById('order-amount').textContent = '$0.00 (Test)';
                 
-                // Update start course button
+                // Update start course button with test mode parameter
                 document.getElementById('start-course-button').href = 'modules/module1.html?test_mode=true';
+                
+                // Update account info section for test mode if there was an error
+                if (serverError) {
+                    const accountInfo = document.getElementById('account-info');
+                    accountInfo.innerHTML = `
+                        <h2>Test Mode Account</h2>
+                        <p>We tried to create a test account for <strong>${emailParam}</strong>, but encountered an issue with the test email delivery.</p>
+                        <p>In a real purchase, you would receive an email with login details. For now, you can access all content in test mode.</p>
+                        <a href="modules/module1.html?test_mode=true" class="login-button">Access Course Content</a>
+                    `;
+                } else {
+                    // No server error, but still in test mode - show appropriate message
+                    const accountInfo = document.getElementById('account-info');
+                    accountInfo.innerHTML = `
+                        <h2>Test Mode Account</h2>
+                        <p>In test mode, we've simulated creating an account for <strong>${emailParam}</strong>.</p>
+                        <p>If this were a real purchase, you would receive an email with login credentials. Check your inbox!</p>
+                        <a href="modules/module1.html?test_mode=true" class="login-button">Access Course Content</a>
+                    `;
+                }
             } else if (sessionId) {
-                // Show a shortened version of the session ID as the order number
+                // Real purchase
                 document.getElementById('order-id').textContent = 'ST-' + sessionId.substring(0, 8);
             }
             
@@ -344,7 +386,7 @@
             // Check if user is already logged in
             if (window.netlifyIdentity) {
                 window.netlifyIdentity.on('init', user => {
-                    if (user) {
+                    if (user && !isTestMode) {
                         // User is already logged in, update account info section
                         const accountInfo = document.getElementById('account-info');
                         accountInfo.innerHTML = `
