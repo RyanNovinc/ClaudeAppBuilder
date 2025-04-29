@@ -36,10 +36,19 @@ exports.handler = async function(event, context) {
       };
     }
     
+    console.log('Creating email transport with settings:', {
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+      }
+    });
+    
     // Configure nodemailer transport for Gmail
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: process.env.EMAIL_PORT || 587,
+      port: parseInt(process.env.EMAIL_PORT || '587'),
       secure: false, // true for 465, false for other ports
       auth: {
         user: process.env.EMAIL_USER || 'hello@risegg.net',
@@ -54,28 +63,30 @@ exports.handler = async function(event, context) {
     // Create receipt PDF (optional, for a more sophisticated approach)
     // const receiptPdfBuffer = await createReceiptPDF(orderDetails);
     
+    console.log('Preparing welcome email for:', customerEmail);
+    
     // Prepare welcome email with receipt and login details
     const welcomeEmail = {
-      from: `"${process.env.EMAIL_FROM_NAME || 'SleepTech Course'}" <${process.env.EMAIL_FROM || 'hello@risegg.net'}>`,
+      from: `"${process.env.EMAIL_FROM_NAME || 'ClaudeAppCourse'}" <${process.env.EMAIL_FROM || 'hello@risegg.net'}>`,
       to: customerEmail,
-      subject: 'Welcome to SleepTech: Your Course Access Details',
+      subject: 'Welcome to ClaudeAppCourse: Your Course Access Details',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #007AFF; padding: 20px; text-align: center; color: white;">
-            <h1 style="margin: 0;">Welcome to SleepTech!</h1>
+            <h1 style="margin: 0;">Welcome to ClaudeAppCourse!</h1>
           </div>
           
           <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
             <p>Hello ${customerName},</p>
             
-            <p>Thank you for purchasing the SleepTech App Building Course! We're excited to have you on board.</p>
+            <p>Thank you for purchasing the ClaudeAppCourse! We're excited to have you on board.</p>
             
             <h2 style="color: #007AFF; margin-top: 30px;">Your Course Access Details</h2>
             
             <div style="background-color: #f9fafb; border-radius: 8px; padding: 15px; margin: 15px 0;">
               <p style="margin: 0;"><strong>Email:</strong> ${customerEmail}</p>
               <p style="margin: 10px 0 0;"><strong>Password:</strong> ${loginDetails?.password || 'Use the "Login with Email" option to set your password'}</p>
-              <p style="margin: 10px 0 0;"><strong>Course URL:</strong> <a href="https://yourdomain.com/modules/module1.html">https://yourdomain.com/modules/module1.html</a></p>
+              <p style="margin: 10px 0 0;"><strong>Course URL:</strong> <a href="https://radiant-travesseiro-481254.netlify.app/modules/module1.html">https://radiant-travesseiro-481254.netlify.app/modules/module1.html</a></p>
             </div>
             
             <h2 style="color: #007AFF; margin-top: 30px;">Your Receipt</h2>
@@ -99,11 +110,11 @@ exports.handler = async function(event, context) {
             
             <p>We're excited to see what you'll build!</p>
             
-            <p>Best regards,<br>Claude<br>SleepTech Team</p>
+            <p>Best regards,<br>Claude<br>ClaudeAppCourse Team</p>
           </div>
           
           <div style="background-color: #f2f2f7; padding: 20px; text-align: center; font-size: 14px; color: #6b7280;">
-            <p style="margin: 0;">© 2025 SleepTech. All rights reserved.</p>
+            <p style="margin: 0;">© 2025 RiseGG. All rights reserved.</p>
             <p style="margin: 10px 0 0;">RiseGG, Inc.</p>
           </div>
         </div>
@@ -117,8 +128,12 @@ exports.handler = async function(event, context) {
       ]
     };
     
+    console.log('Attempting to send email...');
+    
     // Send the welcome email
-    await transporter.sendMail(welcomeEmail);
+    const info = await transporter.sendMail(welcomeEmail);
+    
+    console.log('Email sent successfully:', info.messageId);
     
     // Send success response
     return {
@@ -128,7 +143,8 @@ exports.handler = async function(event, context) {
       },
       body: JSON.stringify({
         success: true,
-        message: 'Welcome email sent successfully'
+        message: 'Welcome email sent successfully',
+        messageId: info.messageId
       })
     };
   } catch (error) {
