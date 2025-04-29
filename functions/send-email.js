@@ -36,14 +36,18 @@ exports.handler = async function(event, context) {
       };
     }
     
-    // Configure nodemailer transport
+    // Configure nodemailer transport for Gmail
     const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true, // use TLS
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: process.env.EMAIL_PORT || 587,
+      secure: false, // true for 465, false for other ports
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: process.env.EMAIL_USER || 'hello@risegg.net',
+        pass: process.env.EMAIL_PASS // This should be an App Password for Gmail
+      },
+      tls: {
+        // Do not fail on invalid certificates
+        rejectUnauthorized: false
       }
     });
     
@@ -52,7 +56,7 @@ exports.handler = async function(event, context) {
     
     // Prepare welcome email with receipt and login details
     const welcomeEmail = {
-      from: `"SleepTech Course" <${process.env.EMAIL_FROM || 'hello@risegg.net'}>`,
+      from: `"${process.env.EMAIL_FROM_NAME || 'SleepTech Course'}" <${process.env.EMAIL_FROM || 'hello@risegg.net'}>`,
       to: customerEmail,
       subject: 'Welcome to SleepTech: Your Course Access Details',
       html: `
@@ -100,7 +104,7 @@ exports.handler = async function(event, context) {
           
           <div style="background-color: #f2f2f7; padding: 20px; text-align: center; font-size: 14px; color: #6b7280;">
             <p style="margin: 0;">© 2025 SleepTech. All rights reserved.</p>
-            <p style="margin: 10px 0 0;">Our address: Your Business Address Here</p>
+            <p style="margin: 10px 0 0;">RiseGG, Inc.</p>
           </div>
         </div>
       `,
