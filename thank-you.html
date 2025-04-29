@@ -8,10 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Netlify Identity Widget -->
-    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-    
     <style>
         /* Thank-you page specific styles */
         .thank-you-container {
@@ -125,32 +121,6 @@
             margin-bottom: 0;
         }
         
-        .access-instructions {
-            margin-top: 40px;
-            padding: 30px;
-            background-color: #eef2ff;
-            border-radius: 12px;
-            border-left: 4px solid #0070f3;
-        }
-        
-        .access-instructions h2 {
-            color: #0070f3;
-            margin-bottom: 15px;
-            text-align: left;
-        }
-        
-        .access-instructions p {
-            color: #4b5563;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        
-        .access-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
         @media (max-width: 768px) {
             .thank-you-container {
                 margin: 60px auto;
@@ -158,10 +128,6 @@
             
             .steps-grid {
                 grid-template-columns: 1fr;
-            }
-            
-            .access-buttons {
-                flex-direction: column;
             }
         }
     </style>
@@ -175,9 +141,10 @@
                     <li><a href="index.html#overview">Overview</a></li>
                     <li><a href="index.html#curriculum">Curriculum</a></li>
                     <li><a href="index.html#pricing">Pricing</a></li>
+                    <li><a href="about-creator.html">About</a></li>
                 </ul>
             </nav>
-            <button class="cta-button small" id="loginButton" onclick="netlifyIdentity.open()">Log in</button>
+            <button class="cta-button small" id="loginButton">My Account</button>
         </div>
     </header>
 
@@ -206,34 +173,25 @@
             </div>
         </div>
         
-        <div class="access-instructions">
-            <h2>Access Your Course</h2>
-            <p>An email has been sent to your address with instructions to set up your password. Once you've set your password, you'll have full access to the course content.</p>
-            <p>If you don't receive the email within 5 minutes, please check your spam folder or click the button below to log in or request a new password link.</p>
-            
-            <div class="access-buttons">
-                <button class="cta-button large" onclick="netlifyIdentity.open('login')">Log In Now</button>
-                <button class="cta-button large" onclick="window.location.href='modules/module1.html'" style="background-color: #10B981;">Start Course</button>
-            </div>
-        </div>
+        <a href="modules/module1.html" class="cta-button large">Start Learning Now</a>
         
         <div class="next-steps">
             <h2>What's Next?</h2>
             <div class="steps-grid">
                 <div class="step-card">
                     <div class="step-number">1</div>
-                    <h3>Set Up Your Account</h3>
-                    <p>Check your email and follow the instructions to set your password.</p>
+                    <h3>Check Your Email</h3>
+                    <p>We've sent a confirmation email with your receipt and login details.</p>
                 </div>
                 <div class="step-card">
                     <div class="step-number">2</div>
-                    <h3>Explore Course Content</h3>
-                    <p>Navigate through the modules and start your learning journey.</p>
+                    <h3>Log In to Your Account</h3>
+                    <p>Use the "My Account" button to access your dashboard and course materials.</p>
                 </div>
                 <div class="step-card">
                     <div class="step-number">3</div>
-                    <h3>Build Your First App</h3>
-                    <p>Follow along with the tutorials to create your own sleep technology app.</p>
+                    <h3>Start Learning</h3>
+                    <p>Begin with Module 1 and work your way through the course at your own pace.</p>
                 </div>
             </div>
             
@@ -251,14 +209,15 @@
                         <li><a href="index.html#overview">Overview</a></li>
                         <li><a href="index.html#curriculum">Curriculum</a></li>
                         <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="about-creator.html">About Creator</a></li>
                     </ul>
                 </div>
                 <div class="link-group">
                     <h4>Legal</h4>
                     <ul>
-                        <li><a href="#">Terms of Service</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Refund Policy</a></li>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="refund-policy.html">Refund Policy</a></li>
                     </ul>
                 </div>
                 <div class="link-group">
@@ -290,18 +249,13 @@
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('order-date').textContent = today.toLocaleDateString('en-US', options);
             
-            // Handle Netlify Identity events
-            if (window.netlifyIdentity) {
-                netlifyIdentity.on('init', user => {
-                    if (user) {
-                        // Already logged in
-                        console.log('User already logged in');
-                    }
-                });
-                
-                netlifyIdentity.on('login', user => {
-                    // Redirect to first module after login
-                    window.location.href = 'modules/module1.html';
+            // Update login button to say "My Account"
+            const loginButton = document.getElementById('loginButton');
+            if (loginButton) {
+                loginButton.textContent = "My Account";
+                loginButton.addEventListener('click', function() {
+                    // This would link to the user's dashboard in the final version
+                    window.location.href = "modules/module1.html";
                 });
             }
         });
