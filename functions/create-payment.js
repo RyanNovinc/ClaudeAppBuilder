@@ -129,6 +129,8 @@ exports.handler = async function(event, context) {
     // Send welcome email with receipt and login details
     try {
       console.log('Sending welcome email');
+      
+      // We'll send real emails even in test mode
       await fetch('/.netlify/functions/send-email', {
         method: 'POST',
         headers: {
@@ -147,7 +149,8 @@ exports.handler = async function(event, context) {
           loginDetails: {
             email: customerEmail,
             password: tempPassword
-          }
+          },
+          forceEmailInTestMode: true // New flag to force email sending in test mode
         })
       });
       console.log('Welcome email request sent');
@@ -166,7 +169,8 @@ exports.handler = async function(event, context) {
         customerEmail: customerEmail,
         amount: amount / 100, // Convert back to dollars for display
         userCreated: true,
-        tempPassword: tempPassword // Include this in response for test mode only
+        tempPassword: tempPassword, // Include this in response for test mode only
+        emailSent: true // Indicate that we attempted to send an email
       })
     };
   } catch (error) {
