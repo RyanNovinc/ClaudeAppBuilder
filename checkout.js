@@ -1,4 +1,4 @@
-// checkout.js - Client-side JavaScript for Stripe integration with test mode
+// checkout.js - Client-side JavaScript for Stripe integration with accounts
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize Stripe with your publishable key
   const stripe = Stripe('pk_live_51OXbiNFi6Y0LXnPSzJ31J6zFABTFibfouamxrc9Eb2t07ni2WyM2KvbhuIvyGYwKABk6Z3UOg0uY2h19vKIvuqXO00hoPLQiCF');
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add a note about test mode
     const testModeNote = document.createElement('div');
     testModeNote.className = 'test-mode-note';
-    testModeNote.innerHTML = 'In test mode, you can use any email and any valid card format to test the checkout flow. No actual charge will be made.';
+    testModeNote.innerHTML = 'In test mode, you can use any email and any valid card format to test the checkout flow. A test account will be created with access to all course content.';
     document.querySelector('.payment-form').appendChild(testModeNote);
   }
   
@@ -96,16 +96,45 @@ document.addEventListener('DOMContentLoaded', function() {
       email: document.getElementById('email').value,
     };
     
-    // TEST MODE: Skip payment processing and go straight to success page
-    if (isTestMode) {
-      setTimeout(() => {
-        window.location.href = '/thank-you.html?session_id=TEST_MODE_' + Math.random().toString(36).substring(2, 10);
-      }, 1500); // Simulate processing delay
-      return;
-    }
-    
     try {
-      // Create a payment method and confirm payment
+      // For test mode, we can skip the actual payment processing
+      if (isTestMode) {
+        // Send request to create user account and send welcome email
+        const response = await fetch('/.netlify/functions/create-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            paymentMethodId: 'test_pm_' + Date.now(),
+            amount: 9900, // $99.00 in cents
+            currency: 'usd',
+            customerEmail: customerData.email,
+            customerName: customerData.name,
+            productName: 'SleepTech Course',
+            supportEmail: 'hello@risegg.net',
+            testMode: true
+          }),
+        });
+        
+        const result = await response.json();
+        
+        if (result.error) {
+          // Error handling
+          const errorElement = document.getElementById('card-errors');
+          errorElement.textContent = result.error;
+          document.getElementById('submit-button').disabled = false;
+          document.getElementById('submit-button').textContent = 'Complete Purchase';
+          if (loadingElement) loadingElement.style.display = 'none';
+          return;
+        }
+        
+        // Success - redirect to thank you page
+        window.location.href = '/thank-you.html?session_id=' + result.paymentIntentId + '&test_mode=true&email=' + encodeURIComponent(customerData.email);
+        return;
+      }
+      
+      // For real payments, proceed with Stripe
       const { paymentMethod, error } = await stripe.createPaymentMethod({
         type: 'card',
         card: cardElement,
@@ -153,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loadingElement) loadingElement.style.display = 'none';
       } else {
         // Payment succeeded - redirect to success page
-        window.location.href = '/thank-you.html?session_id=' + result.paymentIntentId;
+        window.location.href = '/thank-you.html?session_id=' + result.paymentIntentId + '&email=' + encodeURIComponent(customerData.email);
       }
     } catch (err) {
       console.error('Error:', err);
