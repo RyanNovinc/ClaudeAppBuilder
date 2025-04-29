@@ -92,8 +92,14 @@ exports.handler = async function(event, context) {
     
     try {
       console.log('Creating user account in Netlify Identity');
+      
+      // Get the site URL - ensure it's the full absolute URL
+      const siteUrl = process.env.URL || `https://${process.env.NETLIFY_SITE_NAME}.netlify.app`;
+      
       // Netlify Identity API endpoint for creating users
-      const netlifyIdentityEndpoint = `https://${process.env.NETLIFY_SITE_NAME}.netlify.app/.netlify/identity/admin/users`;
+      const netlifyIdentityEndpoint = `${siteUrl}/.netlify/identity/admin/users`;
+      
+      console.log('Using Netlify Identity endpoint:', netlifyIdentityEndpoint);
       
       // Create the user
       const userResponse = await fetch(netlifyIdentityEndpoint, {
@@ -130,8 +136,14 @@ exports.handler = async function(event, context) {
     try {
       console.log('Sending welcome email');
       
+      // Get the site URL - ensure it's the full absolute URL
+      const siteUrl = process.env.URL || `https://${process.env.NETLIFY_SITE_NAME}.netlify.app`;
+      const emailFunctionUrl = `${siteUrl}/.netlify/functions/send-email`;
+      
+      console.log('Using email function URL:', emailFunctionUrl);
+      
       // We'll send real emails even in test mode
-      await fetch('/.netlify/functions/send-email', {
+      await fetch(emailFunctionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
