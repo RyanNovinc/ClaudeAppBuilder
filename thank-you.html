@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     <style>
         /* Thank-you page specific styles */
         .thank-you-container {
@@ -131,6 +132,48 @@
             border-radius: 6px;
         }
         
+        .account-info {
+            background-color: #e0f2ff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .account-info h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+            color: #0070f3;
+        }
+        
+        .account-info p {
+            color: #111827;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .account-info strong {
+            font-weight: 600;
+        }
+        
+        .login-button {
+            margin-top: 15px;
+            background-color: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .login-button:hover {
+            background-color: #0055b3;
+        }
+        
         @media (max-width: 768px) {
             .thank-you-container {
                 margin: 60px auto;
@@ -164,6 +207,14 @@
         <h1>Thank You for Your Purchase!</h1>
         <p>Your order has been successfully processed. You now have access to the complete SleepTech course.</p>
         
+        <div id="account-info" class="account-info">
+            <h2>Your Account Information</h2>
+            <p>We've created an account for you with the email you provided. <strong>Check your inbox</strong> for login details!</p>
+            <p id="user-email"><strong>Email:</strong> <span id="account-email">your@email.com</span></p>
+            <p>If you don't receive an email within a few minutes, check your spam folder or use the password reset option.</p>
+            <button id="open-login" class="login-button">Login to Your Account</button>
+        </div>
+        
         <div class="order-details">
             <h2>Order Details</h2>
             <div class="detail-row">
@@ -184,7 +235,7 @@
             </div>
         </div>
         
-        <a href="modules/module1.html?test_mode=true" class="cta-button large">Start Learning Now</a>
+        <a href="modules/module1.html" id="start-course-button" class="cta-button large">Start Learning Now</a>
         
         <div class="next-steps">
             <h2>What's Next?</h2>
@@ -244,12 +295,28 @@
         </div>
     </footer>
 
+    <script src="identity-widget.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if we're in test mode
+            // Parse URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const sessionId = urlParams.get('session_id');
-            const isTestMode = sessionId && sessionId.startsWith('TEST_MODE_');
+            const isTestMode = urlParams.get('test_mode') === 'true';
+            const emailParam = urlParams.get('email');
+            
+            // Update account email if provided
+            if (emailParam) {
+                document.getElementById('account-email').textContent = emailParam;
+            }
+            
+            // Set up login button
+            document.getElementById('open-login').addEventListener('click', function() {
+                if (window.netlifyIdentity) {
+                    netlifyIdentity.open('login');
+                } else {
+                    alert('Login system is not available. Please try again later or contact support.');
+                }
+            });
             
             // If in test mode, show indicator
             if (isTestMode) {
@@ -258,9 +325,12 @@
                 testModeIndicator.textContent = 'TEST MODE - No actual purchase was made';
                 
                 // Update order details for test mode
-                document.getElementById('order-id').textContent = sessionId;
+                document.getElementById('order-id').textContent = sessionId || 'TEST-ORDER';
                 document.getElementById('payment-method').textContent = 'TEST MODE (No charge)';
                 document.getElementById('order-amount').textContent = '$0.00 (Test)';
+                
+                // Update start course button
+                document.getElementById('start-course-button').href = 'modules/module1.html?test_mode=true';
             } else if (sessionId) {
                 // Show a shortened version of the session ID as the order number
                 document.getElementById('order-id').textContent = 'ST-' + sessionId.substring(0, 8);
@@ -271,16 +341,22 @@
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('order-date').textContent = today.toLocaleDateString('en-US', options);
             
-            // Update login button to say "My Account"
-            const loginButton = document.getElementById('loginButton');
-            if (loginButton) {
-                loginButton.textContent = "My Account";
-                loginButton.addEventListener('click', function() {
-                    // This would link to the user's dashboard in the final version
-                    if (isTestMode) {
-                        window.location.href = "modules/module1.html?test_mode=true";
-                    } else {
-                        window.location.href = "modules/module1.html";
+            // Check if user is already logged in
+            if (window.netlifyIdentity) {
+                window.netlifyIdentity.on('init', user => {
+                    if (user) {
+                        // User is already logged in, update account info section
+                        const accountInfo = document.getElementById('account-info');
+                        accountInfo.innerHTML = `
+                            <h2>You're Already Logged In!</h2>
+                            <p>You're currently logged in as <strong>${user.email}</strong>.</p>
+                            <p>You can now access all course materials immediately.</p>
+                            <button id="go-to-account" class="login-button">Go to My Account</button>
+                        `;
+                        
+                        document.getElementById('go-to-account').addEventListener('click', function() {
+                            netlifyIdentity.open('user');
+                        });
                     }
                 });
             }
