@@ -104,6 +104,10 @@ exports.handler = async function(event, context) {
     
     console.log('Sending from:', fromEmail);
     
+    // Get site URL for links
+    const siteUrl = process.env.URL || 'https://radiant-travesseiro-481254.netlify.app';
+    const courseUrl = `${siteUrl}/modules/module1.html`;
+    
     // Add test mode indicator to subject if in test mode
     const emailSubject = isTestMode 
       ? '[TEST MODE] Welcome to SleepTech: Your Course Access Details' 
@@ -139,7 +143,7 @@ exports.handler = async function(event, context) {
             <div style="background-color: #f9fafb; border-radius: 8px; padding: 15px; margin: 15px 0;">
               <p style="margin: 0;"><strong>Email:</strong> ${customerEmail}</p>
               <p style="margin: 10px 0 0;"><strong>Password:</strong> ${loginDetails?.password || 'Use the "Login with Email" option to set your password'}</p>
-              <p style="margin: 10px 0 0;"><strong>Course URL:</strong> <a href="https://radiant-travesseiro-481254.netlify.app/modules/module1.html">https://radiant-travesseiro-481254.netlify.app/modules/module1.html</a></p>
+              <p style="margin: 10px 0 0;"><strong>Course URL:</strong> <a href="${courseUrl}">${courseUrl}</a></p>
             </div>
             
             <h2 style="color: #007AFF; margin-top: 30px;">Your Receipt</h2>
