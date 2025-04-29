@@ -1,90 +1,97 @@
+// Add to your create-payment.js function
+// This would be placed after successful payment processing
 
-// Netlify function: create-payment.js
-// This file should be placed in the "functions" folder in your repository root
-
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
-exports.handler = async function(event, context) {
-  // Set CORS headers to allow requests from your domain
-  const headers = {
-    'Access-Control-Allow-Origin': '*', // In production, set this to your specific domain
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
-  };
-
-  // Handle preflight OPTIONS request
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
-  }
-
-  // Only allow POST requests
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
-  }
-
+// Create new user or update existing user
+async function manageUserAccess(customerEmail, customerName) {
   try {
-    // Parse the incoming request body
-    const data = JSON.parse(event.body);
-    const { paymentMethodId, amount, currency, customerEmail, customerName, productName } = data;
+    // Check if user exists
+    const adminAuthToken = process.env.NETLIFY_IDENTITY_ADMIN_TOKEN;
     
-    // Validate the required fields
-    if (!paymentMethodId || !amount || !currency || !customerEmail) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Missing required parameters' })
-      };
-    }
-    
-    // Create a new customer
-    const customer = await stripe.customers.create({
-      email: customerEmail,
-      name: customerName,
-      payment_method: paymentMethodId,
-    });
-    
-    // Create a payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount,
-      currency: currency,
-      customer: customer.id,
-      payment_method: paymentMethodId,
-      description: `Purchase of ${productName}`,
-      confirm: true,
-      receipt_email: customerEmail,
-      metadata: {
-        product: productName
+    // First check if the user exists
+    const userCheckResponse = await fetch(`${process.env.URL}/.netlify/identity/admin/users`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${adminAuthToken}`,
+        'Content-Type': 'application/json'
       }
     });
     
-    // Send success response
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        paymentIntentId: paymentIntent.id,
-        customerEmail: customerEmail,
-        amount: amount / 100 // Convert back to dollars for display
-      })
-    };
-  } catch (error) {
-    console.error('Error processing payment:', error);
+    const users = await userCheckResponse.json();
+    const existingUser = users.find(user => user.email === customerEmail);
     
-    return {
-      statusCode: 400,
-      headers,
-      body: JSON.stringify({
-        error: error.message
-      })
-    };
+    if (existingUser) {
+      // Update existing user with course access
+      await fetch(`${process.env.URL}/.netlify/identity/admin/users/${existingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${adminAuthToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          app_metadata: {
+            roles: ['course-member']
+          },
+          user_metadata: {
+            full_name: customerName,
+            payment_status: 'paid',
+            course_access: true,
+            purchase_date: new Date().toISOString()
+          }
+        })
+      });
+      
+      console.log(`Updated existing user ${customerEmail} with course access`);
+    } else {
+      // Generate a secure random password
+      const tempPassword = Math.random().toString(36).slice(-10);
+      
+      // Create a new user
+      await fetch(`${process.env.URL}/.netlify/identity/admin/users`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${adminAuthToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: customerEmail,
+          password: tempPassword,
+          app_metadata: {
+            roles: ['course-member']
+          },
+          user_metadata: {
+            full_name: customerName,
+            payment_status: 'paid',
+            course_access: true,
+            purchase_date: new Date().toISOString()
+          }
+        })
+      });
+      
+      console.log(`Created new user ${customerEmail} with course access`);
+      
+      // Send welcome email with login instructions
+      // You would implement this using a service like SendGrid or AWS SES
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error managing user access:', error);
+    return false;
   }
+}
+
+// Then add this to your payment success handler
+const userAccessGranted = await manageUserAccess(customerEmail, customerName);
+
+// If access was granted successfully, add this information to your response
+return {
+  statusCode: 200,
+  headers,
+  body: JSON.stringify({
+    success: true,
+    paymentIntentId: paymentIntent.id,
+    customerEmail: customerEmail,
+    amount: amount / 100,
+    accessGranted: userAccessGranted
+  })
 };
