@@ -18,24 +18,33 @@ exports.handler = async function(event, context) {
     };
   }
   
-  // Only allow POST requests
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
-  }
-  
+  console.log('==================== EMAIL FUNCTION START ====================');
   console.log('Starting send-email function');
+  
+  // Dump the environment to log (excluding sensitive values)
+  console.log('Environment check:');
+  const safeEnvVars = {};
+  for (const key in process.env) {
+    if (key.includes('KEY') || key.includes('SECRET') || key.includes('PASS') || key.includes('TOKEN')) {
+      safeEnvVars[key] = '[REDACTED]';
+    } else {
+      safeEnvVars[key] = process.env[key];
+    }
+  }
+  console.log('Available env vars:', JSON.stringify(safeEnvVars, null, 2));
   
   try {
     // Parse the incoming request body
     const data = JSON.parse(event.body);
     const { customerEmail, customerName, orderDetails, sessionId, loginDetails } = data;
     
-    console.log('Email request received for:', customerEmail);
-    console.log('Session ID:', sessionId);
+    console.log('Email request data structure:', JSON.stringify({
+      customerEmail,
+      customerName,
+      orderDetails: orderDetails ? 'present' : 'missing',
+      sessionId,
+      loginDetails: loginDetails ? 'present' : 'missing'
+    }, null, 2));
     
     if (!customerEmail || !customerName || !orderDetails || !sessionId) {
       console.log('Missing required parameters');
@@ -48,20 +57,19 @@ exports.handler = async function(event, context) {
     
     // Get SendGrid API key from environment variables - try both possible keys
     const apiKey = process.env.SENDGRID_API_KEY || process.env.NETLIFY_EMAILS_PROVIDER_API_KEY;
+    console.log('API key exists:', !!apiKey);
     if (!apiKey) {
       console.log('SendGrid API key is not set in environment variables');
-      console.log('Available env vars:', Object.keys(process.env).filter(key => !key.includes('SECRET') && !key.includes('KEY')));
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'Email service is not properly configured' })
+        body: JSON.stringify({ error: 'Email service is not properly configured - missing API key' })
       };
     }
     
     // Set SendGrid API key
     sgMail.setApiKey(apiKey);
-    
-    console.log('Preparing email content');
+    console.log('Set SendGrid API key');
     
     // Format date
     const orderDate = new Date().toLocaleDateString('en-US', {
@@ -135,50 +143,100 @@ exports.handler = async function(event, context) {
       `
     };
     
-    console.log('Sending email via SendGrid');
+    console.log('Email message prepared:', JSON.stringify({
+      to: msg.to,
+      from: msg.from,
+      subject: msg.subject,
+      htmlLength: msg.html?.length || 0
+    }, null, 2));
     
+    console.log('Attempting to send email via SendGrid');
+    
+    // Try the primary sending method
     try {
-      // Try using the regular SendGrid send method
-      await sgMail.send(msg);
+      console.log('Using sgMail.send() method');
+      const [response] = await sgMail.send(msg);
+      console.log('SendGrid response:', JSON.stringify({
+        statusCode: response?.statusCode,
+        headers: response?.headers ? 'present' : 'absent',
+        body: response?.body ? 'present' : 'absent'
+      }, null, 2));
+      
       console.log('Email sent successfully to:', customerEmail);
     } catch (sendError) {
-      console.error('Error with sgMail.send:', sendError);
+      console.error('Error with sgMail.send():', sendError.toString());
+      console.error('SendGrid error details:', JSON.stringify({
+        message: sendError.message,
+        code: sendError.code,
+        response: sendError.response ? {
+          body: sendError.response.body,
+          statusCode: sendError.response.statusCode,
+        } : 'No response details'
+      }, null, 2));
       
-      // If that fails, try an alternative approach - making a direct API call
-      console.log('Attempting alternative sending method...');
+      // Try alternative sending method
+      console.log('Attempting alternative sending method via direct API call');
       
       try {
         const fetch = require('node-fetch');
+        console.log('Making direct API call to SendGrid');
+        
+        const apiBody = {
+          personalizations: [{ to: [{ email: customerEmail }] }],
+          from: { email: fromEmail, name: fromName },
+          subject: 'Welcome to SleepTech: Your Course Access Details',
+          content: [
+            {
+              type: 'text/html',
+              value: msg.html
+            }
+          ]
+        };
+        
+        console.log('API request data structure:', JSON.stringify({
+          url: 'https://api.sendgrid.com/v3/mail/send',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer [REDACTED]'
+          },
+          bodyStructure: {
+            personalizations: 'present',
+            from: 'present',
+            subject: 'present',
+            content: 'present'
+          }
+        }, null, 2));
+        
         const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiKey}`
           },
-          body: JSON.stringify({
-            personalizations: [{ to: [{ email: customerEmail }] }],
-            from: { email: fromEmail, name: fromName },
-            subject: 'Welcome to SleepTech: Your Course Access Details',
-            content: [
-              {
-                type: 'text/html',
-                value: msg.html
-              }
-            ]
-          })
+          body: JSON.stringify(apiBody)
         });
         
-        if (response.ok) {
-          console.log('Email sent successfully via API call to:', customerEmail);
+        console.log('Direct API response:', JSON.stringify({
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
+        }, null, 2));
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API error response:', errorText);
+          throw new Error(`API call failed: ${response.status} - ${errorText}`);
         } else {
-          const errorData = await response.text();
-          throw new Error(`API call failed: ${response.status} - ${errorData}`);
+          console.log('Email sent successfully via direct API call');
         }
       } catch (apiError) {
-        console.error('Error with direct API call:', apiError);
+        console.error('Error with direct API call:', apiError.toString());
         throw apiError; // Re-throw to be caught by the outer try/catch
       }
     }
+    
+    console.log('==================== EMAIL FUNCTION END (SUCCESS) ====================');
     
     // Send success response
     return {
@@ -190,15 +248,15 @@ exports.handler = async function(event, context) {
       })
     };
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('==================== EMAIL FUNCTION END (ERROR) ====================');
+    console.error('Final error sending email:', error.toString());
     
-    // Instead of failing, return a success response but log the error
-    // This allows the checkout process to continue even if email fails
+    // Return success anyway to not block checkout
     return {
-      statusCode: 200, // Changed from 500 to 200 to let the process continue
+      statusCode: 200,
       headers,
       body: JSON.stringify({
-        success: true, // Changed from false to true
+        success: true,
         message: 'Email could not be sent, but purchase was successful',
         error: error.message
       })
