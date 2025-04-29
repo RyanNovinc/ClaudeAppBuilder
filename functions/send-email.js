@@ -18,33 +18,26 @@ exports.handler = async function(event, context) {
     };
   }
   
+  // Only allow POST requests
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
+  }
+  
   console.log('==================== EMAIL FUNCTION START ====================');
   console.log('Starting send-email function');
-  
-  // Dump the environment to log (excluding sensitive values)
-  console.log('Environment check:');
-  const safeEnvVars = {};
-  for (const key in process.env) {
-    if (key.includes('KEY') || key.includes('SECRET') || key.includes('PASS') || key.includes('TOKEN')) {
-      safeEnvVars[key] = '[REDACTED]';
-    } else {
-      safeEnvVars[key] = process.env[key];
-    }
-  }
-  console.log('Available env vars:', JSON.stringify(safeEnvVars, null, 2));
   
   try {
     // Parse the incoming request body
     const data = JSON.parse(event.body);
-    const { customerEmail, customerName, orderDetails, sessionId, loginDetails } = data;
+    const { customerEmail, customerName, orderDetails, sessionId, loginDetails, forceEmailInTestMode } = data;
     
-    console.log('Email request data structure:', JSON.stringify({
-      customerEmail,
-      customerName,
-      orderDetails: orderDetails ? 'present' : 'missing',
-      sessionId,
-      loginDetails: loginDetails ? 'present' : 'missing'
-    }, null, 2));
+    console.log('Email request received for:', customerEmail);
+    console.log('Session ID:', sessionId);
+    console.log('Force email in test mode:', forceEmailInTestMode === true);
     
     if (!customerEmail || !customerName || !orderDetails || !sessionId) {
       console.log('Missing required parameters');
@@ -55,11 +48,38 @@ exports.handler = async function(event, context) {
       };
     }
     
+    // Check if this is a test mode request
+    const isTestMode = sessionId.startsWith('test_');
+    
+    // Only proceed if we're either in real mode OR we've been explicitly told to force email in test mode
+    if (isTestMode && !forceEmailInTestMode) {
+      console.log('Test mode detected but forceEmailInTestMode not set - skipping email send');
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Email sending skipped in test mode'
+        })
+      };
+    }
+    
     // Get SendGrid API key from environment variables - try both possible keys
     const apiKey = process.env.SENDGRID_API_KEY || process.env.NETLIFY_EMAILS_PROVIDER_API_KEY;
-    console.log('API key exists:', !!apiKey);
     if (!apiKey) {
       console.log('SendGrid API key is not set in environment variables');
+      
+      // Log available environment variables (excluding sensitive ones)
+      const safeEnvVars = {};
+      for (const key in process.env) {
+        if (key.includes('KEY') || key.includes('SECRET') || key.includes('PASS') || key.includes('TOKEN')) {
+          safeEnvVars[key] = '[REDACTED]';
+        } else {
+          safeEnvVars[key] = process.env[key];
+        }
+      }
+      console.log('Available env vars:', JSON.stringify(safeEnvVars, null, 2));
+      
       return {
         statusCode: 500,
         headers,
@@ -84,6 +104,11 @@ exports.handler = async function(event, context) {
     
     console.log('Sending from:', fromEmail);
     
+    // Add test mode indicator to subject if in test mode
+    const emailSubject = isTestMode 
+      ? '[TEST MODE] Welcome to SleepTech: Your Course Access Details' 
+      : 'Welcome to SleepTech: Your Course Access Details';
+    
     // Prepare welcome email with receipt and login details
     const msg = {
       to: customerEmail,
@@ -91,9 +116,15 @@ exports.handler = async function(event, context) {
         email: fromEmail,
         name: fromName
       },
-      subject: 'Welcome to SleepTech: Your Course Access Details',
+      subject: emailSubject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          ${isTestMode ? `
+            <div style="background-color: #fbbf24; color: #7c2d12; padding: 10px; text-align: center; font-weight: bold;">
+              THIS IS A TEST EMAIL - No actual purchase was made
+            </div>
+          ` : ''}
+          
           <div style="background-color: #007AFF; padding: 20px; text-align: center; color: white;">
             <h1 style="margin: 0;">Welcome to SleepTech!</h1>
           </div>
@@ -101,7 +132,7 @@ exports.handler = async function(event, context) {
           <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none;">
             <p>Hello ${customerName},</p>
             
-            <p>Thank you for purchasing the SleepTech Course! We're excited to have you on board.</p>
+            <p>Thank you for ${isTestMode ? 'testing' : 'purchasing'} the SleepTech Course! We're excited to have you on board.</p>
             
             <h2 style="color: #007AFF; margin-top: 30px;">Your Course Access Details</h2>
             
@@ -114,10 +145,10 @@ exports.handler = async function(event, context) {
             <h2 style="color: #007AFF; margin-top: 30px;">Your Receipt</h2>
             
             <div style="background-color: #f9fafb; border-radius: 8px; padding: 15px; margin: 15px 0;">
-              <p style="margin: 0;"><strong>Order Number:</strong> ST-${sessionId.substring(0, 8)}</p>
+              <p style="margin: 0;"><strong>Order Number:</strong> ${isTestMode ? 'TEST-' : 'ST-'}${sessionId.substring(0, 8)}</p>
               <p style="margin: 10px 0 0;"><strong>Date:</strong> ${orderDate}</p>
-              <p style="margin: 10px 0 0;"><strong>Amount:</strong> $${orderDetails.amount}</p>
-              <p style="margin: 10px 0 0;"><strong>Payment Method:</strong> ${orderDetails.paymentMethod}</p>
+              <p style="margin: 10px 0 0;"><strong>Amount:</strong> ${isTestMode ? '$0.00 (Test)' : `$${orderDetails.amount}`}</p>
+              <p style="margin: 10px 0 0;"><strong>Payment Method:</strong> ${isTestMode ? 'TEST MODE (No charge)' : orderDetails.paymentMethod}</p>
             </div>
             
             <h2 style="color: #007AFF; margin-top: 30px;">Getting Started</h2>
@@ -184,7 +215,7 @@ exports.handler = async function(event, context) {
         const apiBody = {
           personalizations: [{ to: [{ email: customerEmail }] }],
           from: { email: fromEmail, name: fromName },
-          subject: 'Welcome to SleepTech: Your Course Access Details',
+          subject: emailSubject,
           content: [
             {
               type: 'text/html',
