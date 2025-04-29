@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <h2>Access Denied</h2>
                 <p>Your account doesn't have access to this course content.</p>
                 <button class="cta-button large" onclick="window.location.href='../checkout.html'">Purchase Course</button>
-                <p class="small-text">Already purchased? <a href="mailto:support@sleeptech.com">Contact support</a>.</p>
+                <p class="small-text">Already purchased? <a href="mailto:hello@risegg.net">Contact support</a>.</p>
             </div>
         `;
     }
