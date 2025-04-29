@@ -8,6 +8,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .test-mode-link {
+            display: block;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #6b7280;
+            text-decoration: underline;
+        }
+        
+        .test-mode-link:hover {
+            color: #0070f3;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -69,6 +82,7 @@
                 <h3>App Building with Claude</h3>
                 <div class="course-price">$99.00</div>
                 <button class="cta-button large" onclick="window.location.href='checkout.html'">Enroll Now</button>
+                <a href="checkout.html?test_mode=true" class="test-mode-link">Test drive the course</a>
                 <div class="course-meta">
                     <div class="meta-item">
                         <span class="meta-icon">📘</span>
@@ -186,6 +200,7 @@
                     <span>30-Day "Build Your First App" Guarantee</span>
                 </div>
                 <button class="cta-button large" onclick="window.location.href='checkout.html'">Enroll Now</button>
+                <a href="checkout.html?test_mode=true" class="test-mode-link">Try course before buying</a>
             </div>
         </div>
     </section>
@@ -214,6 +229,7 @@
             <h2>Ready to Build Your Dream App Without Coding?</h2>
             <p>Join hundreds of non-technical creators who've built professional apps using our AI-powered system</p>
             <button class="cta-button large" onclick="window.location.href='checkout.html'">Start Building Today</button>
+            <a href="checkout.html?test_mode=true" class="test-mode-link">Want to test the course first? Click here</a>
         </div>
     </section>
 
