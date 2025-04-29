@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     } else {
         console.error('Netlify Identity widget not loaded');
-        showError('Authentication system not available. Please try again later.');
+        showError('Authentication system not available. Please try again later or use test mode.');
     }
     
     // Update UI based on login and course access state
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="access-box">
                 <h2>Course Access Required</h2>
                 <p>Please log in to access this course content.</p>
-                <button class="cta-button large" onclick="netlifyIdentity.open('login')">Log In</button>
+                <button class="cta-button large" onclick="netlifyIdentity && netlifyIdentity.open('login')">Log In</button>
                 <p class="small-text">Don't have an account? <a href="../checkout.html">Purchase the course</a> to gain access.</p>
                 <p class="small-text">Or <a href="?test_mode=true">activate test mode</a> to preview the course.</p>
             </div>
