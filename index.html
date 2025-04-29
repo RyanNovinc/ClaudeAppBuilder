@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Netlify Identity Widget -->
+    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
     <header>
@@ -20,7 +23,7 @@
                     <li><a href="#pricing">Pricing</a></li>
                 </ul>
             </nav>
-            <button class="cta-button small" onclick="window.location.href='checkout.html'">Enroll Now</button>
+            <button class="cta-button small" id="loginButton" onclick="handleLogin()">Log in</button>
         </div>
     </header>
 
@@ -139,7 +142,7 @@
         <div class="container">
             <h2>Ready to Build Your First Sleep Technology App?</h2>
             <p>Join hundreds of students who have transformed their app ideas into reality</p>
-            <button class="cta-button large" onclick="window.location.href='checkout.html'">Start Learning Today</button>
+            <button class="cta-button large" onclick="handleCourseAccess()">Start Learning Today</button>
         </div>
     </section>
 
@@ -177,5 +180,70 @@
     </footer>
 
     <script src="scripts.js"></script>
+    <script>
+        // Handle login button click
+        function handleLogin() {
+            if (window.netlifyIdentity) {
+                netlifyIdentity.open('login');
+            } else {
+                alert('Login system is not available. Please try again later.');
+            }
+        }
+        
+        // Handle "Start Learning Today" button
+        function handleCourseAccess() {
+            if (window.netlifyIdentity) {
+                const user = netlifyIdentity.currentUser();
+                
+                if (user) {
+                    // User is logged in, check if they have course access
+                    const userMeta = user.user_metadata || {};
+                    
+                    if (userMeta.course_access === true) {
+                        // User has access, send to first module
+                        window.location.href = 'modules/module1.html';
+                    } else {
+                        // User is logged in but doesn't have course access
+                        window.location.href = 'checkout.html';
+                    }
+                } else {
+                    // User is not logged in
+                    window.location.href = 'checkout.html';
+                }
+            } else {
+                // Netlify Identity not available, just go to checkout
+                window.location.href = 'checkout.html';
+            }
+        }
+        
+        // Handle Netlify Identity events
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.netlifyIdentity) {
+                // Update login button text if user is logged in
+                netlifyIdentity.on('init', user => {
+                    if (user) {
+                        document.getElementById('loginButton').textContent = 'My Account';
+                    }
+                });
+                
+                // Update on login
+                netlifyIdentity.on('login', user => {
+                    document.getElementById('loginButton').textContent = 'My Account';
+                    
+                    // See if user was in the middle of going to a course page
+                    const intendedPage = sessionStorage.getItem('intendedPage');
+                    if (intendedPage) {
+                        sessionStorage.removeItem('intendedPage');
+                        window.location.href = intendedPage;
+                    }
+                });
+                
+                // Update on logout
+                netlifyIdentity.on('logout', () => {
+                    document.getElementById('loginButton').textContent = 'Log in';
+                });
+            }
+        });
+    </script>
 </body>
 </html>
