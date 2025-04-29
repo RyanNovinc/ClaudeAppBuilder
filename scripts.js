@@ -44,10 +44,25 @@ document.addEventListener('DOMContentLoaded', function() {
         loginButton.addEventListener('click', function() {
             // This would be replaced with actual login functionality
             if (this.textContent === 'Log in') {
-                alert('Login functionality will be implemented in the final version');
+                if (window.netlifyIdentity) {
+                    netlifyIdentity.open('login');
+                } else {
+                    alert('Login functionality will be implemented in the final version');
+                }
             } else {
                 window.location.href = 'modules/module1.html';
             }
+        });
+    }
+    
+    // Toggle FAQ items if they exist
+    const faqItems = document.querySelectorAll('.faq-item');
+    if (faqItems.length > 0) {
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            question.addEventListener('click', () => {
+                item.classList.toggle('active');
+            });
         });
     }
 });
