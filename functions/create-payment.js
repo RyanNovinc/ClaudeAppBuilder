@@ -101,7 +101,7 @@ exports.handler = async function(event, context) {
       
       console.log('Using Netlify Identity endpoint:', netlifyIdentityEndpoint);
       
-      // Create the user
+      // Create the user with confirmed_at to auto-verify the email
       const userResponse = await fetch(netlifyIdentityEndpoint, {
         method: 'POST',
         headers: {
@@ -111,6 +111,10 @@ exports.handler = async function(event, context) {
         body: JSON.stringify({
           email: customerEmail,
           password: tempPassword,
+          confirmed_at: new Date().toISOString(), // Auto-confirm the user's email
+          app_metadata: {
+            roles: ["paying_customer"] // Optional: assign a role for access control
+          },
           user_metadata: {
             full_name: customerName,
             course_access: true,
@@ -121,7 +125,7 @@ exports.handler = async function(event, context) {
       });
       
       if (!userResponse.ok) {
-        const errorData = await userResponse.json();
+        const errorData = await userResponse.text();
         console.error('Error creating user in Netlify Identity:', errorData);
         // Continue even if user creation failed - we'll handle it via email
       } else {
