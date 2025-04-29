@@ -1,8 +1,9 @@
 // Netlify function: create-payment.js
 // This file should be placed in the "functions" folder in your repository root
-
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const fetch = require('node-fetch');
+const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
 
 exports.handler = async function(event, context) {
   // Set CORS headers to allow requests from your domain
@@ -44,29 +45,104 @@ exports.handler = async function(event, context) {
       };
     }
     
-    // Create a new customer
-    const customer = await stripe.customers.create({
-      email: customerEmail,
-      name: customerName,
-      payment_method: paymentMethodId,
-    });
+    // Check if it's test mode
+    const isTestMode = data.testMode === true;
+    let paymentIntent;
+    let customer;
     
-    // Create a payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount,
-      currency: currency,
-      customer: customer.id,
-      payment_method: paymentMethodId,
-      description: `Purchase of ${productName}`,
-      confirm: true,
-      receipt_email: customerEmail,
-      metadata: {
-        product: productName
+    if (!isTestMode) {
+      // Create a new customer
+      customer = await stripe.customers.create({
+        email: customerEmail,
+        name: customerName,
+        payment_method: paymentMethodId,
+      });
+      
+      // Create a payment intent
+      paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: currency,
+        customer: customer.id,
+        payment_method: paymentMethodId,
+        description: `Purchase of ${productName}`,
+        confirm: true,
+        receipt_email: customerEmail,
+        metadata: {
+          product: productName,
+          support_email: 'hello@risegg.net'
+        }
+      });
+    } else {
+      // In test mode, create a dummy payment intent ID
+      paymentIntent = {
+        id: `test_pi_${uuidv4().replace(/-/g, '')}`
+      };
+    }
+    
+    // Create user account in Netlify Identity
+    // Generate a random password or use one provided
+    const tempPassword = data.password || generatePassword();
+    
+    try {
+      // Netlify Identity API endpoint for creating users
+      const netlifyIdentityEndpoint = `https://${process.env.NETLIFY_SITE_NAME}.netlify.app/.netlify/identity/admin/users`;
+      
+      // Create the user
+      const userResponse = await fetch(netlifyIdentityEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
+        },
+        body: JSON.stringify({
+          email: customerEmail,
+          password: tempPassword,
+          user_metadata: {
+            full_name: customerName,
+            course_access: true,
+            purchase_date: new Date().toISOString(),
+            payment_id: paymentIntent.id
+          }
+        })
+      });
+      
+      if (!userResponse.ok) {
+        const errorData = await userResponse.json();
+        console.error('Error creating user in Netlify Identity:', errorData);
+        // Continue even if user creation failed - we'll handle it via email
       }
-    });
+    } catch (userError) {
+      console.error('Error creating user account:', userError);
+      // Don't fail the whole process if user creation fails
+    }
     
-    // Create/update user account and grant course access
-    const userAccessGranted = await manageUserAccess(customerEmail, customerName);
+    // Send welcome email with receipt and login details
+    try {
+      await fetch('/.netlify/functions/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          customerEmail,
+          customerName,
+          orderDetails: {
+            amount: (amount / 100).toFixed(2), // Convert cents to dollars
+            paymentMethod: isTestMode ? 'Test Mode (No Charge)' : 'Credit Card',
+            date: new Date().toISOString(),
+            productName
+          },
+          sessionId: paymentIntent.id,
+          loginDetails: {
+            email: customerEmail,
+            password: tempPassword
+          }
+        })
+      });
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError);
+      // Don't fail the process if email sending fails
+    }
     
     // Send success response
     return {
@@ -77,7 +153,8 @@ exports.handler = async function(event, context) {
         paymentIntentId: paymentIntent.id,
         customerEmail: customerEmail,
         amount: amount / 100, // Convert back to dollars for display
-        accessGranted: userAccessGranted
+        userCreated: true,
+        tempPassword: tempPassword // Include this in response for test mode only
       })
     };
   } catch (error) {
@@ -93,119 +170,15 @@ exports.handler = async function(event, context) {
   }
 };
 
-// Function to create or update user and grant course access
-async function manageUserAccess(customerEmail, customerName) {
-  try {
-    // Get Netlify Identity admin token from environment variable
-    const adminAuthToken = process.env.NETLIFY_IDENTITY_ADMIN_TOKEN;
-    
-    if (!adminAuthToken) {
-      console.error('Missing Netlify Identity admin token');
-      return false;
-    }
-    
-    // Get site URL from environment
-    const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL;
-    
-    // Check if user already exists
-    const userCheckResponse = await fetch(`${siteUrl}/.netlify/identity/admin/users`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${adminAuthToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!userCheckResponse.ok) {
-      console.error('Failed to fetch users:', await userCheckResponse.text());
-      return false;
-    }
-    
-    const users = await userCheckResponse.json();
-    const existingUser = users.find(user => user.email === customerEmail);
-    
-    if (existingUser) {
-      // Update existing user with course access
-      const updateResponse = await fetch(`${siteUrl}/.netlify/identity/admin/users/${existingUser.id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${adminAuthToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          app_metadata: {
-            roles: ['course-member']
-          },
-          user_metadata: {
-            full_name: customerName,
-            payment_status: 'paid',
-            course_access: true,
-            purchase_date: new Date().toISOString()
-          }
-        })
-      });
-      
-      if (!updateResponse.ok) {
-        console.error('Failed to update user:', await updateResponse.text());
-        return false;
-      }
-      
-      console.log(`Updated existing user ${customerEmail} with course access`);
-      return true;
-    } else {
-      // Generate a secure random password
-      const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10).toUpperCase() + '!';
-      
-      // Create a new user
-      const createResponse = await fetch(`${siteUrl}/.netlify/identity/admin/users`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${adminAuthToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: customerEmail,
-          password: tempPassword,
-          confirm: true, // Auto-confirm the user
-          app_metadata: {
-            roles: ['course-member']
-          },
-          user_metadata: {
-            full_name: customerName,
-            payment_status: 'paid',
-            course_access: true,
-            purchase_date: new Date().toISOString()
-          }
-        })
-      });
-      
-      if (!createResponse.ok) {
-        console.error('Failed to create user:', await createResponse.text());
-        return false;
-      }
-      
-      console.log(`Created new user ${customerEmail} with course access`);
-      
-      // Trigger password recovery to let user set their own password
-      const newUser = await createResponse.json();
-      
-      const recoveryResponse = await fetch(`${siteUrl}/.netlify/identity/admin/users/${newUser.id}/recover`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${adminAuthToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!recoveryResponse.ok) {
-        console.error('Failed to trigger password recovery:', await recoveryResponse.text());
-        // Not returning false here as the user is still created successfully
-      }
-      
-      return true;
-    }
-  } catch (error) {
-    console.error('Error managing user access:', error);
-    return false;
+// Helper function to generate a random password
+function generatePassword() {
+  const length = 12;
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+  let password = "";
+  
+  for (let i = 0, n = charset.length; i < length; ++i) {
+    password += charset.charAt(Math.floor(Math.random() * n));
   }
+  
+  return password;
 }
