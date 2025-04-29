@@ -4,6 +4,7 @@
     --primary-dark: #0055b3;
     --secondary: #5AC8FA;
     --dark: #1A1A1A;
+    --darker: #0F1824;
     --light: #FFFFFF;
     --gray: #8E8E93;
     --light-gray: #F2F2F7;
@@ -135,13 +136,25 @@ nav ul li a:hover {
 .hero {
     padding: 100px 0;
     background: linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%);
-    text-align: center;
+}
+
+.hero-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+}
+
+.hero-content {
+    flex: 1;
+    max-width: 600px;
 }
 
 .hero h1 {
     max-width: 800px;
     margin-left: auto;
     margin-right: auto;
+    text-align: left;
 }
 
 .hero .subtitle {
@@ -151,6 +164,56 @@ nav ul li a:hover {
     margin-right: auto;
     margin-bottom: 2rem;
     color: var(--gray);
+    text-align: left;
+}
+
+/* Course Preview Card */
+.course-preview-card {
+    background-color: var(--darker);
+    color: white;
+    border-radius: 12px;
+    padding: 30px;
+    width: 350px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.course-label {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    color: #aaa;
+}
+
+.course-preview-card h3 {
+    margin-bottom: 15px;
+    font-size: 1.75rem;
+}
+
+.course-price {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.course-preview-card .cta-button {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.course-meta {
+    display: flex;
+    justify-content: space-between;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.meta-icon {
+    margin-right: 8px;
 }
 
 /* Overview Section */
@@ -286,6 +349,109 @@ nav ul li a:hover {
     color: var(--gray);
 }
 
+/* About the Creator */
+.about-container {
+    max-width: 1000px;
+    margin: 100px auto;
+    padding: 0 20px;
+}
+
+.about-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.creator-profile {
+    display: flex;
+    gap: 60px;
+    align-items: center;
+    margin-bottom: 80px;
+}
+
+.creator-image {
+    width: 40%;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.creator-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.creator-bio {
+    flex: 1;
+}
+
+.creator-bio h2 {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.creator-bio p {
+    margin-bottom: 20px;
+    line-height: 1.8;
+}
+
+.creator-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-bottom: 80px;
+}
+
+.stat-card {
+    background-color: var(--light);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.stat-label {
+    color: var(--gray);
+}
+
+.creator-philosophy {
+    background-color: var(--light-gray);
+    border-radius: 12px;
+    padding: 60px;
+    margin-bottom: 80px;
+}
+
+.creator-philosophy h2 {
+    margin-bottom: 30px;
+}
+
+.philosophy-points {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+}
+
+.philosophy-point {
+    display: flex;
+    flex-direction: column;
+}
+
+.philosophy-icon {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: var(--primary);
+}
+
+.philosophy-point h3 {
+    margin-bottom: 15px;
+}
+
 /* Footer */
 footer {
     background-color: var(--dark);
@@ -336,6 +502,31 @@ footer .logo {
 }
 
 /* Responsive Styles */
+@media (max-width: 992px) {
+    .hero-container {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .hero h1, .hero .subtitle {
+        text-align: center;
+    }
+    
+    .creator-profile {
+        flex-direction: column;
+    }
+    
+    .creator-image {
+        width: 100%;
+        max-width: 400px;
+        margin-bottom: 30px;
+    }
+    
+    .creator-stats {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
     h1 {
         font-size: 2.5rem;
@@ -357,6 +548,12 @@ footer .logo {
         padding: 60px 0;
     }
     
+    .course-preview-card {
+        width: 100%;
+        max-width: 350px;
+        margin: 0 auto;
+    }
+    
     .overview, .curriculum, .pricing, .cta-section {
         padding: 60px 0;
     }
@@ -373,5 +570,13 @@ footer .logo {
     
     .price-card {
         padding: 30px;
+    }
+    
+    .creator-philosophy {
+        padding: 30px;
+    }
+    
+    .philosophy-points {
+        grid-template-columns: 1fr;
     }
 }
