@@ -1,9 +1,11 @@
 {
   "name": "site-functions",
   "version": "1.0.0",
-  "description": "Netlify Functions",
+  "description": "Netlify Functions for SleepTech",
   "dependencies": {
     "@sendgrid/mail": "^7.7.0",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^2.6.7",
+    "stripe": "^12.18.0",
+    "uuid": "^9.0.0"
   }
 }
