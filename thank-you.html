@@ -121,6 +121,16 @@
             margin-bottom: 0;
         }
         
+        .test-mode-banner {
+            background-color: #fbbf24;
+            color: #7c2d12;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+        
         @media (max-width: 768px) {
             .thank-you-container {
                 margin: 60px auto;
@@ -149,6 +159,7 @@
     </header>
 
     <div class="thank-you-container">
+        <div id="test-mode-indicator"></div>
         <div class="success-icon">✓</div>
         <h1>Thank You for Your Purchase!</h1>
         <p>Your order has been successfully processed. You now have access to the complete SleepTech course.</p>
@@ -165,15 +176,15 @@
             </div>
             <div class="detail-row">
                 <span class="detail-label">Amount</span>
-                <span>$99.00</span>
+                <span id="order-amount">$99.00</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Payment Method</span>
-                <span>Credit Card</span>
+                <span id="payment-method">Credit Card</span>
             </div>
         </div>
         
-        <a href="modules/module1.html" class="cta-button large">Start Learning Now</a>
+        <a href="modules/module1.html?test_mode=true" class="cta-button large">Start Learning Now</a>
         
         <div class="next-steps">
             <h2>What's Next?</h2>
@@ -217,7 +228,7 @@
                     <ul>
                         <li><a href="terms-of-service.html">Terms of Service</a></li>
                         <li><a href="privacy-policy.html">Privacy Policy</a></li>
-                        <li><a href="refund-policy.html">Refund Policy</a></li>
+                        <li><a href="refund-policy.html">Our Guarantee</a></li>
                     </ul>
                 </div>
                 <div class="link-group">
@@ -235,11 +246,22 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get order ID from URL parameters
+            // Check if we're in test mode
             const urlParams = new URLSearchParams(window.location.search);
             const sessionId = urlParams.get('session_id');
+            const isTestMode = sessionId && sessionId.startsWith('TEST_MODE_');
             
-            if (sessionId) {
+            // If in test mode, show indicator
+            if (isTestMode) {
+                const testModeIndicator = document.getElementById('test-mode-indicator');
+                testModeIndicator.classList.add('test-mode-banner');
+                testModeIndicator.textContent = 'TEST MODE - No actual purchase was made';
+                
+                // Update order details for test mode
+                document.getElementById('order-id').textContent = sessionId;
+                document.getElementById('payment-method').textContent = 'TEST MODE (No charge)';
+                document.getElementById('order-amount').textContent = '$0.00 (Test)';
+            } else if (sessionId) {
                 // Show a shortened version of the session ID as the order number
                 document.getElementById('order-id').textContent = 'ST-' + sessionId.substring(0, 8);
             }
@@ -255,7 +277,11 @@
                 loginButton.textContent = "My Account";
                 loginButton.addEventListener('click', function() {
                     // This would link to the user's dashboard in the final version
-                    window.location.href = "modules/module1.html";
+                    if (isTestMode) {
+                        window.location.href = "modules/module1.html?test_mode=true";
+                    } else {
+                        window.location.href = "modules/module1.html";
+                    }
                 });
             }
         });
