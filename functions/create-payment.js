@@ -50,27 +50,36 @@ exports.handler = async function(event, context) {
     let customer;
     
     if (!isTestMode) {
-      // Create a new customer
-      customer = await stripe.customers.create({
-        email: customerEmail,
-        name: customerName,
-        payment_method: paymentMethodId,
-      });
-      
-      // Create a payment intent
-      paymentIntent = await stripe.paymentIntents.create({
-        amount: amount,
-        currency: currency,
-        customer: customer.id,
-        payment_method: paymentMethodId,
-        description: `Purchase of ${productName}`,
-        confirm: true,
-        receipt_email: customerEmail,
-        metadata: {
-          product: productName,
-          support_email: 'hello@risegg.net'
-        }
-      });
+      try {
+        // Create a new customer
+        customer = await stripe.customers.create({
+          email: customerEmail,
+          name: customerName,
+          payment_method: paymentMethodId,
+        });
+        
+        // Create a payment intent
+        paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: currency,
+          customer: customer.id,
+          payment_method: paymentMethodId,
+          description: `Purchase of ${productName}`,
+          confirm: true,
+          receipt_email: customerEmail,
+          metadata: {
+            product: productName,
+            support_email: 'hello@risegg.net'
+          }
+        });
+      } catch (stripeError) {
+        console.error('Stripe error:', stripeError);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: stripeError.message })
+        };
+      }
     } else {
       // In test mode, create a dummy payment intent ID
       paymentIntent = {
@@ -78,69 +87,113 @@ exports.handler = async function(event, context) {
       };
     }
     
-    // Create user account in Netlify Identity
-    // Generate a random password or use one provided
+    // Generate a temporary password
     const tempPassword = data.password || generatePassword();
+    let userCreated = false;
     
+    // Create user account in Netlify Identity
     try {
-      // Netlify Identity API endpoint for creating users
-      const netlifyIdentityEndpoint = `https://${process.env.NETLIFY_SITE_NAME}.netlify.app/.netlify/identity/admin/users`;
-      
-      // Create the user
-      const userResponse = await fetch(netlifyIdentityEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
-        },
-        body: JSON.stringify({
-          email: customerEmail,
-          password: tempPassword,
-          user_metadata: {
-            full_name: customerName,
-            course_access: true,
-            purchase_date: new Date().toISOString(),
-            payment_id: paymentIntent.id
+      // Skip actual Netlify Identity API call if environment variables aren't set
+      if (!process.env.NETLIFY_SITE_NAME || !process.env.NETLIFY_IDENTITY_TOKEN) {
+        console.log('Skipping Netlify Identity user creation - environment variables not set');
+        if (isTestMode) {
+          userCreated = true; // Pretend it worked in test mode
+        }
+      } else {
+        // Netlify Identity API endpoint for creating users
+        const netlifyIdentityEndpoint = `https://${process.env.NETLIFY_SITE_NAME}.netlify.app/.netlify/identity/admin/users`;
+        
+        // Create the user
+        const userResponse = await fetch(netlifyIdentityEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
+          },
+          body: JSON.stringify({
+            email: customerEmail,
+            password: tempPassword,
+            user_metadata: {
+              full_name: customerName,
+              course_access: true,
+              purchase_date: new Date().toISOString(),
+              payment_id: paymentIntent.id
+            }
+          })
+        });
+        
+        if (userResponse.ok) {
+          userCreated = true;
+          console.log('User created successfully in Netlify Identity');
+        } else {
+          const errorData = await userResponse.json();
+          console.error('Error creating user in Netlify Identity:', errorData);
+          // Don't fail the whole process for test mode
+          if (!isTestMode) {
+            return {
+              statusCode: 500,
+              headers,
+              body: JSON.stringify({ error: 'Failed to create user account' })
+            };
           }
-        })
-      });
-      
-      if (!userResponse.ok) {
-        const errorData = await userResponse.json();
-        console.error('Error creating user in Netlify Identity:', errorData);
-        // Continue even if user creation failed - we'll handle it via email
+        }
       }
     } catch (userError) {
       console.error('Error creating user account:', userError);
-      // Don't fail the whole process if user creation fails
+      // Don't fail the whole process for test mode
+      if (!isTestMode) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({ error: 'Failed to create user account: ' + userError.message })
+        };
+      }
     }
     
     // Send welcome email with receipt and login details
+    let emailSent = false;
     try {
-      await fetch('/.netlify/functions/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          customerEmail,
-          customerName,
-          orderDetails: {
-            amount: (amount / 100).toFixed(2), // Convert cents to dollars
-            paymentMethod: isTestMode ? 'Test Mode (No Charge)' : 'Credit Card',
-            date: new Date().toISOString(),
-            productName
+      // Skip actual email sending if environment variables aren't set or in test mode
+      if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.log('Skipping email sending - environment variables not set');
+        if (isTestMode) {
+          emailSent = true; // Pretend it worked in test mode
+        }
+      } else {
+        const emailResponse = await fetch('/.netlify/functions/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
           },
-          sessionId: paymentIntent.id,
-          loginDetails: {
-            email: customerEmail,
-            password: tempPassword
-          }
-        })
-      });
+          body: JSON.stringify({
+            customerEmail,
+            customerName,
+            orderDetails: {
+              amount: (amount / 100).toFixed(2), // Convert cents to dollars
+              paymentMethod: isTestMode ? 'Test Mode (No Charge)' : 'Credit Card',
+              date: new Date().toISOString(),
+              productName,
+              sessionId: paymentIntent.id
+            },
+            sessionId: paymentIntent.id,
+            loginDetails: {
+              email: customerEmail,
+              password: tempPassword
+            }
+          })
+        });
+        
+        if (emailResponse.ok) {
+          emailSent = true;
+          console.log('Welcome email sent successfully');
+        } else {
+          const errorData = await emailResponse.text();
+          console.error('Error sending welcome email:', errorData);
+        }
+      }
     } catch (emailError) {
       console.error('Error sending welcome email:', emailError);
-      // Don't fail the process if email sending fails
+      // Don't fail the whole process if email sending fails
     }
     
     // Send success response
@@ -152,8 +205,9 @@ exports.handler = async function(event, context) {
         paymentIntentId: paymentIntent.id,
         customerEmail: customerEmail,
         amount: amount / 100, // Convert back to dollars for display
-        userCreated: true,
-        tempPassword: tempPassword // Include this in response for test mode only
+        userCreated: userCreated,
+        emailSent: emailSent,
+        testMode: isTestMode
       })
     };
   } catch (error) {
