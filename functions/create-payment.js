@@ -2,7 +2,6 @@
 // This file should be placed in the "functions" folder in your repository root
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const fetch = require('node-fetch');
-const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
 exports.handler = async function(event, context) {
@@ -34,7 +33,7 @@ exports.handler = async function(event, context) {
   try {
     // Parse the incoming request body
     const data = JSON.parse(event.body);
-    const { paymentMethodId, amount, currency, customerEmail, customerName, productName } = data;
+    const { paymentMethodId, amount, currency, customerEmail, customerName, productName, testMode } = data;
     
     // Validate the required fields
     if (!paymentMethodId || !amount || !currency || !customerEmail) {
@@ -46,7 +45,7 @@ exports.handler = async function(event, context) {
     }
     
     // Check if it's test mode
-    const isTestMode = data.testMode === true;
+    const isTestMode = testMode === true;
     let paymentIntent;
     let customer;
     
