@@ -1,1 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 1: Setting Up Your Environment - SleepTech</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <style>
+        /* Course page specific styles */
+        .course-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            gap: 40px;
+        }
+        
+        .sidebar {
+            width: 300px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 100px;
+            align-self: flex-start;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-top: 60px;
+        }
+        
+        .module-nav {
+            margin-bottom: 30px;
+        }
+        
+        .module-nav h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .module-nav ul {
+            padding: 0;
+            margin: 0;
+        }
+        
+        .module-nav li {
+            margin-bottom: 10px;
+        }
+        
+        .module-nav a {
+            display: block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #4b5563;
+            transition: background-color 0.2s;
+        }
+        
+        .module-nav a:hover {
+            background-color: #f9fafb;
+        }
+        
+        .module-nav a.active {
+            background-color: #e0f2ff;
+            color: #0070f3;
+            font-weight: 500;
+        }
+        
+        .main-content {
+            flex: 1;
+            max-width: 800px;
+            margin-top: 60px;
+        }
+        
+        .module-header {
+            margin-bottom: 40px;
+        }
+        
+        .module-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .module-header .description {
+            color: #6b7280;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+        
+        .lesson-content {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .lesson-content h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #111827;
+            text-align: left;
+        }
+        
+        .lesson-content h3 {
+            font-size: 20px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #1f2937;
+        }
+        
+        .lesson-content p {
+            margin-bottom: 20px;
+            line-height: 1.7;
+            color: #4b5563;
+        }
+        
+        .lesson-content ul, .lesson-content ol {
+            margin-bottom: 20px;
+            padding-left: 20px;
+        }
+        
+        .lesson-content li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .lesson-content pre {
+            background-color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            font-family: monospace;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .lesson-content code {
+            font-family: monospace;
+            background-color: #f3f4f6;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .lesson-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .lesson-content blockquote {
+            border-left: 4px solid #0070f3;
+            padding-left: 15px;
+            margin-left: 0;
+            margin-bottom: 20px;
+            color: #4b5563;
+            font-style: italic;
+        }
+        
+        .course-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 60px;
+        }
+        
+        .nav-button {
+            display: inline-flex;
+            align-items: center;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            color: #4b5563;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .nav-button:hover {
+            background-color: #f9fafb;
+            border-color: #d1d5db;
+            color: #111827;
+        }
+        
+        .nav-button.next {
+            margin-left: auto;
+        }
+        
+        .nav-button.prev {
+            margin-right: auto;
+        }
+        
+        .access-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .access-box {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .access-box h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .access-box p {
+            margin-bottom: 20px;
+            color: #4b5563;
+        }
+        
+        .access-box .cta-button {
+            margin-bottom: 20px;
+        }
+        
+        .small-text {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        @media (max-width: 992px) {
+            .course-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: static;
+                margin-bottom: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo"><a href="../index.html">SleepTech</a></div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html#overview">Overview</a></li>
+                    <li><a href="../index.html#curriculum">Curriculum</a></li>
+                    <li><a href="../index.html#pricing">Pricing</a></li>
+                    <li><a href="../about-creator.html">About</a></li>
+                </ul>
+            </nav>
+            <button class="cta-button small" id="loginButton">My Account</button>
+        </div>
+    </header>
 
+    <!-- Access overlay will be shown for unauthorized users -->
+    <div id="access-overlay" class="access-overlay">
+        <!-- Content will be dynamically inserted by access-control.js -->
+    </div>
+
+    <div id="course-content" style="display: none;">
+        <div class="course-container">
+            <aside class="sidebar">
+                <div class="module-nav">
+                    <h3>Course Modules</h3>
+                    <ul>
+                        <li><a href="module1.html" class="active">1. Setting Up Your Environment</a></li>
+                        <li><a href="module2.html">2. Creating Your First AI Project</a></li>
+                        <li><a href="module3.html">3. Testing Your App</a></li>
+                        <li><a href="module4.html">4. Directing Claude: Creating UI</a></li>
+                        <li><a href="module5.html">5. Building Your App Structure</a></li>
+                        <li><a href="module6.html">6. Building Out Your App</a></li>
+                        <li><a href="module7.html">7. Submitting to the App Store</a></li>
+                    </ul>
+                </div>
+                
+                <div class="module-nav">
+                    <h3>This Module</h3>
+                    <ul>
+                        <li><a href="#introduction" class="active">Introduction</a></li>
+                        <li><a href="#prerequisites">Prerequisites</a></li>
+                        <li><a href="#setting-up-claude">Setting Up Claude</a></li>
+                        <li><a href="#setting-up-expo">Setting Up Expo Go</a></li>
+                        <li><a href="#project-setup">Creating Your Project</a></li>
+                    </ul>
+                </div>
+            </aside>
+            
+            <main class="main-content">
+                <div class="module-header">
+                    <h1>Module 1: Setting Up Your Environment</h1>
+                    <p class="description">Learn how to configure everything you need to start building apps with Claude, without writing a single line of code yourself.</p>
+                </div>
+                
+                <div class="lesson-content" id="introduction">
+                    <h2>Introduction</h2>
+                    
+                    <p>Welcome to the first module of our course! This is where your journey to becoming an app developer without coding begins. In this module, we'll set up everything you need to start collaborating with Claude AI to build amazing apps.</p>
+                    
+                    <p>Building apps traditionally required extensive programming knowledge, but with the approach you'll learn in this course, you'll be able to create professional-grade applications by leveraging Claude's ability to generate and understand code. You'll be the creative director, and Claude will handle all the technical implementation.</p>
+                    
+                    <blockquote>
+                        "The most powerful person in the room is not the one who can code the fastest, but the one with the clearest vision for what to build."
+                    </blockquote>
+                    
+                    <p>By the end of this module, you'll have a complete development environment set up and ready to start building your first app in the next module. Let's get started!</p>
+                </div>
+                
+                <div class="lesson-content" id="prerequisites">
+                    <h2>Prerequisites</h2>
+                    
+                    <p>Before we dive into setting up your development environment, let's make sure you have everything you need to follow along with this course:</p>
+                    
+                    <h3>Required Equipment</h3>
+                    <ul>
+                        <li><strong>Computer:</strong> Any laptop or desktop computer (Windows, Mac, or Linux) with a web browser</li>
+                        <li><strong>Smartphone:</strong> An iOS or Android device to test your app</li>
+                        <li><strong>Internet Connection:</strong> A reliable internet connection</li>
+                    </ul>
+                    
+                    <h3>Required Accounts</h3>
+                    <ul>
+                        <li><strong>Claude AI Account:</strong> You'll need access to Claude to generate code (free or paid plan)</li>
+                        <li><strong>GitHub Account:</strong> For storing your project code (free)</li>
+                    </ul>
+                    
+                    <p>That's it! You don't need any programming experience, specialized software, or expensive equipment. The beauty of this approach is that Claude does all the technical heavy lifting for you.</p>
+                </div>
+                
+                <div class="lesson-content" id="setting-up-claude">
+                    <h2>Setting Up Claude</h2>
+                    
+                    <p>The first step in our journey is setting up access to Claude AI, which will be your AI developer throughout this course.</p>
+                    
+                    <h3>Accessing Claude</h3>
+                    <p>There are several ways to access Claude:</p>
+                    <ol>
+                        <li><strong>Anthropic Website:</strong> Visit <a href="https://claude.ai" target="_blank">claude.ai</a> and create an account</li>
+                        <li><strong>Claude API:</strong> For more advanced usage, you can also access Claude through its API</li>
+                    </ol>
+                    
+                    <p>For this course, we'll primarily use the web interface as it's the most accessible option.</p>
+                    
+                    <h3>Creating an Optimal Workspace</h3>
+                    <p>To get the most out of Claude when building apps, it's helpful to:</p>
+                    <ul>
+                        <li>Use a Claude model with high token limits (Claude 3 Opus or Claude 3.5 Sonnet)</li>
+                        <li>Keep your prompts clear and specific</li>
+                        <li>Save important conversations for future reference</li>
+                    </ul>
+                    
+                    <p>In the next section, we'll set up your phone with Expo Go so you can test the apps Claude creates for you.</p>
+                </div>
+                
+                <div class="lesson-content" id="setting-up-expo">
+                    <h2>Setting Up Expo Go</h2>
+                    
+                    <p>Expo Go is a free app that allows you to run and test your app directly on your device without going through the app store. It's an essential tool for our no-code approach.</p>
+                    
+                    <h3>Installing Expo Go</h3>
+                    <ol>
+                        <li>On your smartphone, open the app store (App Store for iOS or Google Play Store for Android)</li>
+                        <li>Search for "Expo Go"</li>
+                        <li>Install the app (it's free)</li>
+                        <li>Open the app once installed</li>
+                    </ol>
+                    
+                    <p>That's it! You don't need to create an account or configure anything else. Expo Go will allow you to scan QR codes that Claude will generate for you, instantly loading your app onto your phone.</p>
+                    
+                    <p>This approach is what makes our method so powerful - you can iterate on your app in real-time, seeing changes on your actual device without any complex deployment processes.</p>
+                </div>
+                
+                <div class="lesson-content" id="project-setup">
+                    <h2>Creating Your Project</h2>
+                    
+                    <p>Now that we have Claude and Expo Go set up, let's create our project foundation. In traditional app development, this would involve complex command-line tools, but with our approach, Claude will handle all of that for you.</p>
+                    
+                    <h3>The Project Creation Process</h3>
+                    <p>Here's how we'll create a new project:</p>
+                    <ol>
+                        <li>Open Claude and start a new conversation</li>
+                        <li>Ask Claude to set up a new React Native project with Expo</li>
+                        <li>Claude will provide you with code and instructions</li>
+                        <li>Follow Claude's guidance to save the code in GitHub</li>
+                    </ol>
+                    
+                    <p>We'll walk through this process step-by-step in the next module. For now, just ensure you have all the prerequisites ready.</p>
+                    
+                    <h3>What You'll Learn Next</h3>
+                    <p>In Module 2, we'll:</p>
+                    <ul>
+                        <li>Create your first project with Claude</li>
+                        <li>Learn the exact prompts to get Claude to write perfect code</li>
+                        <li>Set up a GitHub repository to store your project</li>
+                        <li>Understand the basic structure of a mobile app</li>
+                    </ul>
+                </div>
+                
+                <div class="course-navigation">
+                    <a href="../index.html" class="nav-button prev">← Back to Course Overview</a>
+                    <a href="module2.html" class="nav-button next">Next Module: Creating Your First AI Project →</a>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="logo">SleepTech</div>
+            <div class="footer-links">
+                <div class="link-group">
+                    <h4>Course</h4>
+                    <ul>
+                        <li><a href="../index.html#overview">Overview</a></li>
+                        <li><a href="../index.html#curriculum">Curriculum</a></li>
+                        <li><a href="../index.html#pricing">Pricing</a></li>
+                        <li><a href="../about-creator.html">About Creator</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="../terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="../privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="../refund-policy.html">Our Guarantee</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 SleepTech. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="../identity-widget.js"></script>
+    <script src="../access-control.js"></script>
+</body>
+</html>
