@@ -1,332 +1,117 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout - SleepTech</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Checkout specific styles */
-        .checkout-container {
-            max-width: 800px;
-            margin: 60px auto;
-            padding: 0 20px;
-        }
-        
-        .checkout-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .checkout-header h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-        
-        .checkout-header p {
-            color: #6b7280;
-            font-size: 18px;
-        }
-        
-        .checkout-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-        }
-        
-        .order-summary {
-            background-color: #f9fafb;
-            padding: 30px;
-            border-radius: 12px;
-        }
-        
-        .order-summary h2 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        
-        .course-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .course-icon {
-            width: 60px;
-            height: 60px;
-            background-color: #e0f2ff;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-size: 24px;
-        }
-        
-        .course-details {
-            flex: 1;
-        }
-        
-        .course-name {
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .course-access {
-            font-size: 14px;
-            color: #6b7280;
-        }
-        
-        .course-price {
-            font-weight: 600;
-            font-size: 18px;
-            color: #0070f3;
-        }
-        
-        .order-total {
-            display: flex;
-            justify-content: space-between;
-            padding-top: 20px;
-            font-weight: 600;
-        }
-        
-        .payment-form {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            padding: 30px;
-        }
-        
-        .payment-form h2 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 16px;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: #0070f3;
-            box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
-        }
-        
-        #card-element {
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            background-color: white;
-        }
-        
-        #card-errors {
-            color: #dc2626;
-            font-size: 14px;
-            margin-top: 8px;
-            min-height: 20px;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        
-        .checkout-button {
-            background-color: #0070f3;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 14px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: background-color 0.2s ease;
-        }
-        
-        .checkout-button:hover {
-            background-color: #0055b3;
-        }
-        
-        .checkout-button:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-        
-        .secure-note {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #6b7280;
-        }
-        
-        #loading {
-            display: none;
-            text-align: center;
-            margin-top: 10px;
-        }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(0, 112, 243, 0.3);
-            border-radius: 50%;
-            border-top-color: #0070f3;
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 10px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        @media (max-width: 768px) {
-            .checkout-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .checkout-container {
-                margin: 30px auto;
-            }
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <div class="container">
-            <div class="logo"><a href="index.html">SleepTech</a></div>
-            <nav>
-                <ul>
-                    <li><a href="index.html#overview">Overview</a></li>
-                    <li><a href="index.html#curriculum">Curriculum</a></li>
-                    <li><a href="index.html#pricing">Pricing</a></li>
-                    <li><a href="about-creator.html">About</a></li>
-                </ul>
-            </nav>
-            <button class="cta-button small" id="loginButton">Log in</button>
-        </div>
-    </header>
-
-    <div class="checkout-container">
-        <div class="checkout-header">
-            <h1>Complete Your Purchase</h1>
-            <p>You're just one step away from building amazing sleep technology apps</p>
-        </div>
-        
-        <div class="checkout-grid">
-            <div class="order-summary">
-                <h2>Order Summary</h2>
-                <div class="course-item">
-                    <div class="course-icon">📱</div>
-                    <div class="course-details">
-                        <div class="course-name">SleepTech Course</div>
-                        <div class="course-access">Lifetime Access</div>
-                    </div>
-                    <div class="course-price">$99</div>
-                </div>
-                <div class="order-total">
-                    <span>Total</span>
-                    <span>$99</span>
-                </div>
-            </div>
-            
-            <div class="payment-form">
-                <h2>Payment Details</h2>
-                <form id="payment-form">
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" required placeholder="your@email.com">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="name">Full Name</label>
-                        <input type="text" id="name" required placeholder="John Doe">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="card-element">Card Information</label>
-                        <div id="card-element">
-                            <!-- Stripe Card Element will be inserted here -->
-                        </div>
-                        <div id="card-errors" role="alert"></div>
-                    </div>
-                    
-                    <button type="submit" id="submit-button" class="checkout-button">Complete Purchase</button>
-                    
-                    <div id="loading">
-                        <div class="loading-spinner"></div>
-                        <span>Processing your payment...</span>
-                    </div>
-                    
-                    <div class="secure-note">
-                        🔒 Your payment is secure. We use encryption to protect your information.
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <footer>
-        <div class="container">
-            <div class="logo">SleepTech</div>
-            <div class="footer-links">
-                <div class="link-group">
-                    <h4>Course</h4>
-                    <ul>
-                        <li><a href="index.html#overview">Overview</a></li>
-                        <li><a href="index.html#curriculum">Curriculum</a></li>
-                        <li><a href="index.html#pricing">Pricing</a></li>
-                        <li><a href="about-creator.html">About Creator</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="terms-of-service.html">Terms of Service</a></li>
-                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
-                        <li><a href="refund-policy.html">Refund Policy</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li><a href="mailto:support@sleeptech.com">Email Support</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                © 2025 SleepTech. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-    <!-- Load Stripe.js -->
-    <script src="https://js.stripe.com/v3/"></script>
+// checkout.js - Client-side JavaScript for Stripe integration
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize Stripe with your publishable key
+  const stripe = Stripe('pk_live_51OXbiNFi6Y0LXnPSzJ31J6zFABTFibfouamxrc9Eb2t07ni2WyM2KvbhuIvyGYwKABk6Z3UOg0uY2h19vKIvuqXO00hoPLQiCF');
+  const elements = stripe.elements();
+  
+  // Create card element
+  const cardElement = elements.create('card', {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#32325d',
+        fontFamily: 'Inter, sans-serif',
+        '::placeholder': {
+          color: '#aab7c4',
+        },
+      },
+      invalid: {
+        color: '#fa755a',
+        iconColor: '#fa755a',
+      },
+    },
+  });
+  
+  // Mount the card element to the DOM
+  cardElement.mount('#card-element');
+  
+  // Handle real-time validation errors
+  cardElement.on('change', function(event) {
+    const displayError = document.getElementById('card-errors');
+    if (event.error) {
+      displayError.textContent = event.error.message;
+    } else {
+      displayError.textContent = '';
+    }
+  });
+  
+  // Handle form submission
+  const form = document.getElementById('payment-form');
+  form.addEventListener('submit', async function(event) {
+    event.preventDefault();
     
-    <!-- Load checkout script -->
-    <script src="checkout.js"></script>
-</body>
-</html>
+    // Disable the submit button to prevent repeated clicks
+    document.getElementById('submit-button').disabled = true;
+    document.getElementById('submit-button').textContent = 'Processing...';
+    
+    // Show loading state
+    const loadingElement = document.getElementById('loading');
+    if (loadingElement) loadingElement.style.display = 'block';
+    
+    // Collect customer data
+    const customerData = {
+      name: document.getElementById('name').value,
+      email: document.getElementById('email').value,
+    };
+    
+    try {
+      // Create a payment method and confirm payment
+      const { paymentMethod, error } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+        billing_details: {
+          name: customerData.name,
+          email: customerData.email,
+        },
+      });
+      
+      if (error) {
+        // Show error to customer
+        const errorElement = document.getElementById('card-errors');
+        errorElement.textContent = error.message;
+        document.getElementById('submit-button').disabled = false;
+        document.getElementById('submit-button').textContent = 'Complete Purchase';
+        if (loadingElement) loadingElement.style.display = 'none';
+        return;
+      }
+      
+      // Send the payment method ID to your serverless function
+      const response = await fetch('/.netlify/functions/create-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentMethodId: paymentMethod.id,
+          amount: 9900, // $99.00 in cents
+          currency: 'usd',
+          customerEmail: customerData.email,
+          customerName: customerData.name,
+          productName: 'SleepTech Course',
+          supportEmail: 'hello@risegg.net'
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.error) {
+        // Payment processing failed
+        const errorElement = document.getElementById('card-errors');
+        errorElement.textContent = result.error;
+        document.getElementById('submit-button').disabled = false;
+        document.getElementById('submit-button').textContent = 'Complete Purchase';
+        if (loadingElement) loadingElement.style.display = 'none';
+      } else {
+        // Payment succeeded - redirect to success page
+        window.location.href = '/thank-you.html?session_id=' + result.paymentIntentId;
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      const errorElement = document.getElementById('card-errors');
+      errorElement.textContent = 'An unexpected error occurred. Please try again.';
+      document.getElementById('submit-button').disabled = false;
+      document.getElementById('submit-button').textContent = 'Complete Purchase';
+      if (loadingElement) loadingElement.style.display = 'none';
+    }
+  });
+});
