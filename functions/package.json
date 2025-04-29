@@ -1,0 +1,9 @@
+{
+  "name": "site-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions",
+  "dependencies": {
+    "@sendgrid/mail": "^7.7.0",
+    "node-fetch": "^2.6.7"
+  }
+}
