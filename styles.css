@@ -9,6 +9,7 @@
     --gray: #8E8E93;
     --light-gray: #F2F2F7;
     --success: #34C759;
+    --guarantee: #FFD700;
 }
 
 * {
@@ -132,6 +133,40 @@ nav ul li a:hover {
     color: var(--primary);
 }
 
+/* Guarantee Banner */
+.guarantee-banner {
+    background-color: var(--darker);
+    color: white;
+    padding: 12px 0;
+    font-size: 0.95rem;
+}
+
+.guarantee-banner .container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.guarantee-icon {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.guarantee-text {
+    margin-right: 15px;
+}
+
+.guarantee-link {
+    color: var(--guarantee);
+    font-weight: 600;
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
+.guarantee-link:hover {
+    color: var(--light);
+}
+
 /* Hero Section */
 .hero {
     padding: 100px 0;
@@ -148,6 +183,7 @@ nav ul li a:hover {
 .hero-content {
     flex: 1;
     max-width: 600px;
+    position: relative;
 }
 
 .hero h1 {
@@ -165,6 +201,35 @@ nav ul li a:hover {
     margin-bottom: 2rem;
     color: var(--gray);
     text-align: left;
+}
+
+.guarantee-badge {
+    display: inline-flex;
+    align-items: center;
+    background-color: rgba(255, 215, 0, 0.15);
+    border: 1px solid var(--guarantee);
+    padding: 8px 16px;
+    border-radius: 100px;
+    margin-top: 20px;
+}
+
+.badge-icon {
+    background-color: var(--guarantee);
+    color: var(--dark);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.badge-text {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--dark);
 }
 
 /* Course Preview Card */
@@ -327,6 +392,84 @@ nav ul li a:hover {
     position: absolute;
     left: 0;
     font-weight: bold;
+}
+
+.guarantee-highlight {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 215, 0, 0.15);
+    border: 1px solid var(--guarantee);
+    padding: 12px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.guarantee-highlight-icon {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+/* Guarantee Section */
+.guarantee-section {
+    padding: 100px 0;
+    background-color: var(--light-gray);
+}
+
+.guarantee-content {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    background-color: white;
+    border-radius: 12px;
+    padding: 50px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+}
+
+.guarantee-image {
+    flex: 0 0 200px;
+    display: flex;
+    justify-content: center;
+}
+
+.guarantee-seal {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    border: 8px solid var(--guarantee);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.seal-content {
+    color: white;
+    font-size: 3rem;
+    font-weight: 800;
+}
+
+.guarantee-text-content {
+    flex: 1;
+}
+
+.guarantee-text-content h3 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: var(--primary);
+}
+
+.guarantee-text-content p {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+.guarantee-text-content .cta-button {
+    display: inline-block;
+    padding: 12px 24px;
+    margin-top: 10px;
 }
 
 /* CTA Section */
@@ -525,6 +668,15 @@ footer .logo {
     .creator-stats {
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     }
+    
+    .guarantee-content {
+        flex-direction: column;
+        padding: 30px;
+    }
+    
+    .guarantee-image {
+        margin-bottom: 30px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -554,7 +706,7 @@ footer .logo {
         margin: 0 auto;
     }
     
-    .overview, .curriculum, .pricing, .cta-section {
+    .overview, .curriculum, .pricing, .cta-section, .guarantee-section {
         padding: 60px 0;
     }
     
@@ -578,5 +730,15 @@ footer .logo {
     
     .philosophy-points {
         grid-template-columns: 1fr;
+    }
+    
+    .guarantee-banner .container {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .guarantee-icon, .guarantee-text {
+        margin-right: 0;
+        margin-bottom: 5px;
     }
 }
