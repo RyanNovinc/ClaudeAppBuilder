@@ -11,11 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configure the login button
     if (loginButton) {
       loginButton.addEventListener('click', function() {
-        if (this.textContent === 'Log in') {
-          netlifyIdentity.open('login');
-        } else {
-          netlifyIdentity.open('user');
-        }
+        // Always open identity widget, whether logged in or not
+        netlifyIdentity.open();
       });
     }
   } else {
@@ -63,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Add click handler for the login button
             document.getElementById('open-login').addEventListener('click', function() {
-              netlifyIdentity.open('login');
+              netlifyIdentity.open();
             });
           }
         }
