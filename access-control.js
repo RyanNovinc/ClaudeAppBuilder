@@ -1,6 +1,17 @@
-// access-control.js - Add this to your site for course content protection
+// access-control.js - Add this to your site for course content protection with test mode
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if we're in test mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const isTestMode = urlParams.get('test_mode') === 'true';
+    
+    // If in test mode, automatically grant access
+    if (isTestMode) {
+        showTestModeIndicator();
+        showContent();
+        return;
+    }
+    
     // Check if Netlify Identity is available
     if (window.netlifyIdentity) {
         // Initialize user state
@@ -45,6 +56,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Show a test mode indicator
+    function showTestModeIndicator() {
+        // Create test mode indicator
+        const testModeIndicator = document.createElement('div');
+        testModeIndicator.style.backgroundColor = '#fbbf24';
+        testModeIndicator.style.color = '#7c2d12';
+        testModeIndicator.style.padding = '10px';
+        testModeIndicator.style.textAlign = 'center';
+        testModeIndicator.style.fontWeight = 'bold';
+        testModeIndicator.style.position = 'fixed';
+        testModeIndicator.style.top = '0';
+        testModeIndicator.style.left = '0';
+        testModeIndicator.style.right = '0';
+        testModeIndicator.style.zIndex = '9999';
+        testModeIndicator.innerHTML = 'TEST MODE - All content is accessible without payment';
+        
+        document.body.prepend(testModeIndicator);
+        
+        // Adjust body padding to account for the indicator
+        document.body.style.paddingTop = (testModeIndicator.offsetHeight + 'px');
+    }
+    
     // Show login prompt for non-logged-in users
     function showLoginPrompt() {
         const overlay = document.getElementById('access-overlay');
@@ -57,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p>Please log in to access this course content.</p>
                 <button class="cta-button large" onclick="netlifyIdentity.open('login')">Log In</button>
                 <p class="small-text">Don't have an account? <a href="../checkout.html">Purchase the course</a> to gain access.</p>
+                <p class="small-text">Or <a href="?test_mode=true">activate test mode</a> to preview the course.</p>
             </div>
         `;
     }
@@ -73,6 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p>Your account doesn't have access to this course content.</p>
                 <button class="cta-button large" onclick="window.location.href='../checkout.html'">Purchase Course</button>
                 <p class="small-text">Already purchased? <a href="mailto:hello@risegg.net">Contact support</a>.</p>
+                <p class="small-text">Or <a href="?test_mode=true">activate test mode</a> to preview the course.</p>
             </div>
         `;
     }
@@ -90,7 +125,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loginButton) {
             loginButton.textContent = 'My Account';
             loginButton.onclick = function() {
-                netlifyIdentity.open('user');
+                if (window.netlifyIdentity) {
+                    netlifyIdentity.open('user');
+                } else if (isTestMode) {
+                    alert('This is test mode. In a real account, this would open your user profile.');
+                }
             };
         }
     }
@@ -107,6 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p>${message}</p>
                 <p>Please try again later or contact support for assistance.</p>
                 <button class="cta-button large" onclick="window.location.reload()">Retry</button>
+                <p class="small-text">Or <a href="?test_mode=true">activate test mode</a> to preview the course.</p>
             </div>
         `;
     }
