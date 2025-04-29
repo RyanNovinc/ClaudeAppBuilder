@@ -1,4 +1,4 @@
-// checkout.js - Client-side JavaScript for Stripe integration
+// checkout.js - Client-side JavaScript for Stripe integration with test mode
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize Stripe with your publishable key
   const stripe = Stripe('pk_live_51OXbiNFi6Y0LXnPSzJ31J6zFABTFibfouamxrc9Eb2t07ni2WyM2KvbhuIvyGYwKABk6Z3UOg0uY2h19vKIvuqXO00hoPLQiCF');
@@ -35,6 +35,48 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
+  // TEST MODE: Add a special parameter to the URL to enable test mode
+  const urlParams = new URLSearchParams(window.location.search);
+  const isTestMode = urlParams.get('test_mode') === 'true';
+  
+  // Add a test mode indicator if in test mode
+  if (isTestMode) {
+    const testModeIndicator = document.createElement('div');
+    testModeIndicator.className = 'test-mode-indicator';
+    testModeIndicator.innerHTML = 'TEST MODE ACTIVE';
+    document.querySelector('.checkout-header').appendChild(testModeIndicator);
+    
+    // Add test mode styling
+    const testModeStyle = document.createElement('style');
+    testModeStyle.textContent = `
+      .test-mode-indicator {
+        background-color: #fbbf24;
+        color: #7c2d12;
+        padding: 5px 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+        font-weight: bold;
+        display: inline-block;
+      }
+      
+      .test-mode-note {
+        background-color: #f9fafb;
+        border: 1px dashed #9ca3af;
+        padding: 10px;
+        border-radius: 6px;
+        margin-top: 15px;
+        font-size: 14px;
+      }
+    `;
+    document.head.appendChild(testModeStyle);
+    
+    // Add a note about test mode
+    const testModeNote = document.createElement('div');
+    testModeNote.className = 'test-mode-note';
+    testModeNote.innerHTML = 'In test mode, you can use any email and any valid card format to test the checkout flow. No actual charge will be made.';
+    document.querySelector('.payment-form').appendChild(testModeNote);
+  }
+  
   // Handle form submission
   const form = document.getElementById('payment-form');
   form.addEventListener('submit', async function(event) {
@@ -53,6 +95,14 @@ document.addEventListener('DOMContentLoaded', function() {
       name: document.getElementById('name').value,
       email: document.getElementById('email').value,
     };
+    
+    // TEST MODE: Skip payment processing and go straight to success page
+    if (isTestMode) {
+      setTimeout(() => {
+        window.location.href = '/thank-you.html?session_id=TEST_MODE_' + Math.random().toString(36).substring(2, 10);
+      }, 1500); // Simulate processing delay
+      return;
+    }
     
     try {
       // Create a payment method and confirm payment
