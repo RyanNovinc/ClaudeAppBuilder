@@ -1,10 +1,6 @@
 // functions/submit-success-story.js
 const { v4: uuidv4 } = require('uuid');
 
-// Simple in-memory storage for development
-// In production, you would use a database
-const submissions = [];
-
 exports.handler = async function(event, context) {
   // Set CORS headers
   const headers = {
@@ -62,19 +58,19 @@ exports.handler = async function(event, context) {
       images: data.images || [] // Array of image URLs
     };
     
-    // For local testing, just store in memory
-    // In production, you would store in a database
-    submissions.push(submission);
-    
     console.log('New success story submission:', submission.id);
     
+    // Important: Set special flag to instruct client to store in localStorage
+    // This is a workaround until we have proper database integration
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
         message: 'Success story submitted successfully',
-        submissionId: submission.id
+        submissionId: submission.id,
+        submission: submission, // Include full submission data
+        useLocalStorage: true // Signal to client to store in localStorage
       })
     };
   } catch (error) {
