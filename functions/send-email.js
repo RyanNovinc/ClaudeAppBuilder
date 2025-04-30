@@ -33,11 +33,12 @@ exports.handler = async function(event, context) {
   try {
     // Parse the incoming request body
     const data = JSON.parse(event.body);
-    const { customerEmail, customerName, orderDetails, sessionId, loginDetails, forceEmailInTestMode } = data;
+    const { customerEmail, customerName, orderDetails, sessionId, loginDetails, forceEmailInTestMode, testMode } = data;
     
     console.log('Email request received for:', customerEmail);
     console.log('Session ID:', sessionId);
     console.log('Force email in test mode:', forceEmailInTestMode === true);
+    console.log('Test mode:', testMode === true);
     
     if (!customerEmail || !customerName || !orderDetails || !sessionId) {
       console.log('Missing required parameters');
@@ -49,26 +50,13 @@ exports.handler = async function(event, context) {
     }
     
     // Check if this is a test mode request
-    const isTestMode = sessionId.startsWith('test_');
+    const isTestMode = testMode === true || sessionId.startsWith('test_');
     
-    // For test mode, always return success without trying to send email
-    if (isTestMode && !forceEmailInTestMode) {
-      console.log('Test mode detected - skipping email send process');
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          success: true,
-          message: 'Test mode - email sending skipped'
-        })
-      };
-    }
-    
-    // Get SendGrid API key from environment variables - try multiple possible names
+    // Get SendGrid API key from environment variables - try multiple names
     const apiKey = process.env.SENDGRID_API_KEY || 
                    process.env.NETLIFY_EMAILS_PROVIDER_API_KEY ||
                    process.env.SENDGRID_KEY;
-                   
+    
     if (!apiKey) {
       console.log('SendGrid API key is not set in environment variables');
       
@@ -82,19 +70,6 @@ exports.handler = async function(event, context) {
         }
       }
       console.log('Available env vars:', JSON.stringify(safeEnvVars, null, 2));
-      
-      // For test mode, return success anyway
-      if (isTestMode) {
-        console.log('Test mode - returning success despite missing API key');
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify({
-            success: true,
-            message: 'Test mode - email would be sent if API key was configured'
-          })
-        };
-      }
       
       return {
         statusCode: 500,
@@ -123,6 +98,7 @@ exports.handler = async function(event, context) {
     // Get site URL for links
     const siteUrl = process.env.URL || 'https://claudeappbuilder.netlify.app';
     const courseUrl = `${siteUrl}/modules/module1.html${isTestMode ? '?test_mode=true' : ''}`;
+    const loginUrl = `${siteUrl}/direct-login.html`;
     
     // Add test mode indicator to subject if in test mode
     const emailSubject = isTestMode 
@@ -160,8 +136,9 @@ exports.handler = async function(event, context) {
               <p style="margin: 0;"><strong>Email:</strong> ${customerEmail}</p>
               <p style="margin: 10px 0 0;"><strong>Password:</strong> ${loginDetails?.password || 'Use the "Login with Email" option to set your password'}</p>
               <p style="margin: 10px 0 0;"><strong>Course URL:</strong> <a href="${courseUrl}">${courseUrl}</a></p>
+              <p style="margin: 10px 0 0;"><strong>Login URL:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
               ${isTestMode ? `
-              <p style="margin: 10px 0 0;"><strong>Test Mode Access:</strong> Click the link above to access the course directly in test mode without needing to log in.</p>
+              <p style="margin: 10px 0 0;"><strong>Test Mode Access:</strong> You can either log in with the credentials above, or access the course directly using the Test Mode link.</p>
               ` : ''}
             </div>
             
@@ -177,7 +154,7 @@ exports.handler = async function(event, context) {
             <h2 style="color: #007AFF; margin-top: 30px;">Getting Started</h2>
             
             <ol>
-              <li style="margin-bottom: 10px;"><strong>Access the course directly</strong> using the link above.</li>
+              <li style="margin-bottom: 10px;"><strong>Log in to your account</strong> using the email and password above.</li>
               <li style="margin-bottom: 10px;"><strong>Start with Module 1</strong> to set up your development environment.</li>
               <li style="margin-bottom: 10px;"><strong>Follow along step-by-step</strong> to build your first app without coding.</li>
             </ol>
@@ -286,13 +263,7 @@ exports.handler = async function(event, context) {
         }
       } catch (apiError) {
         console.error('Error with direct API call:', apiError.toString());
-        
-        // If in test mode, don't treat this as a critical error
-        if (isTestMode) {
-          console.log('Test mode - continuing despite email error');
-        } else {
-          throw apiError; // Re-throw for non-test mode
-        }
+        throw apiError; // Re-throw to be caught by the outer try/catch
       }
     }
     
@@ -311,25 +282,7 @@ exports.handler = async function(event, context) {
     console.error('==================== EMAIL FUNCTION END (ERROR) ====================');
     console.error('Final error sending email:', error.toString());
     
-    // Determine if this is a test mode request by checking session ID
-    const data = JSON.parse(event.body);
-    const sessionId = data?.sessionId || '';
-    const isTestMode = sessionId.startsWith('test_');
-    
-    // For test mode, always return success
-    if (isTestMode) {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          success: true,
-          message: 'Test mode - continuing despite email error',
-          error: error.message
-        })
-      };
-    }
-    
-    // For non-test mode, still return success to not block checkout
+    // Return success anyway to not block checkout
     return {
       statusCode: 200,
       headers,
