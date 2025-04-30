@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({
               paymentMethodId: 'test_pm_' + Date.now(),
-              amount: 9900, // $99.00 in cents
+              amount: 19900, // $199.00 in cents
               currency: 'usd',
               customerEmail: customerData.email,
               customerName: customerData.name,
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         body: JSON.stringify({
           paymentMethodId: paymentMethod.id,
-          amount: 9900, // $99.00 in cents
+          amount: 19900, // $199.00 in cents
           currency: 'usd',
           customerEmail: customerData.email,
           customerName: customerData.name,
