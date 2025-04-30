@@ -831,9 +831,6 @@
     </div>
     
     <script>
-        // This is a standalone demo version of the admin interface
-        // It uses localStorage to store submissions instead of a backend API
-        
         // Current story being viewed/edited
         let currentStoryId = null;
         
@@ -922,8 +919,8 @@
             }
         }
         
-        // Load submissions from localStorage
-        function loadSubmissions() {
+        // Load submissions from both localStorage and API
+        async function loadSubmissions() {
             const adminToken = localStorage.getItem('appfoundry_admin_token');
             
             if (!adminToken) {
@@ -941,19 +938,61 @@
             storiesTable.style.display = 'none';
             emptyState.style.display = 'none';
             
-            // Simulate API call
-            setTimeout(() => {
+            try {
+                // Initialize all submissions array
+                let allNetlifySubmissions = [];
+                let localSubmissions = [];
+                
+                // Try to fetch from Netlify Function
+                try {
+                    console.log('Attempting to fetch submissions from Netlify Function...');
+                    const response = await fetch('/.netlify/functions/get-submissions', {
+                        headers: {
+                            'Authorization': `Bearer ${adminToken}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Received data from Netlify Function:', data);
+                        allNetlifySubmissions = data;
+                    } else {
+                        console.warn('Function returned non-OK response:', response.status);
+                    }
+                } catch (fetchError) {
+                    console.warn('Error fetching from API:', fetchError);
+                    // Continue with localStorage as fallback
+                }
+                
                 // Get submissions from localStorage
                 const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                
                 if (storedSubmissions) {
-                    allSubmissions = JSON.parse(storedSubmissions);
-                } else {
-                    // If no stored submissions, use sample data
-                    allSubmissions = getSampleData();
-                    // Save to localStorage
-                    localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
+                    localSubmissions = JSON.parse(storedSubmissions);
+                    console.log('Found submissions in localStorage:', localSubmissions.length);
                 }
+                
+                // Combine submissions (avoid duplicates by ID)
+                const combinedSubmissions = [...allNetlifySubmissions];
+                
+                // Add local submissions that don't exist in the API data
+                localSubmissions.forEach(localSub => {
+                    const exists = combinedSubmissions.some(apiSub => apiSub.id === localSub.id);
+                    if (!exists) {
+                        combinedSubmissions.push(localSub);
+                    }
+                });
+                
+                // If we still have no submissions, use sample data
+                if (combinedSubmissions.length === 0) {
+                    console.log('No submissions found, using sample data');
+                    allSubmissions = getSampleData();
+                } else {
+                    console.log('Using combined submissions:', combinedSubmissions.length);
+                    allSubmissions = combinedSubmissions;
+                }
+                
+                // Sort by date (newest first)
+                allSubmissions.sort((a, b) => new Date(b.date) - new Date(a.date));
                 
                 // Check if we have submissions
                 if (allSubmissions.length === 0) {
@@ -972,7 +1011,25 @@
                 
                 // Display submissions
                 displaySubmissions();
-            }, 1000); // Simulate network delay
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                
+                // Show error
+                loadingIndicator.style.display = 'none';
+                
+                // Create error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'admin-empty-state';
+                errorDiv.innerHTML = `
+                    <div class="admin-empty-state-icon">❌</div>
+                    <div class="admin-empty-state-title">Error Loading Submissions</div>
+                    <p>We encountered an issue loading the submissions. Please try again.</p>
+                    <button class="admin-button" onclick="loadSubmissions()">Retry</button>
+                `;
+                
+                // Add to container
+                document.getElementById('table-container').appendChild(errorDiv);
+            }
         }
         
         // Display submissions with pagination
@@ -1081,7 +1138,7 @@
             allSubmissions.unshift(newStory); // Add to start of array
             
             // Save to localStorage
-            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
+            saveSubmissionsToLocalStorage();
             
             // Reset form
             document.getElementById('add-story-form').reset();
@@ -1152,7 +1209,40 @@
             pagination.appendChild(prevButton);
             
             // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
+            // Maximum of 5 pages shown at once, with ellipsis if needed
+            const maxVisiblePages = 5;
+            const halfVisiblePages = Math.floor(maxVisiblePages / 2);
+            
+            let startPage = Math.max(1, currentPage - halfVisiblePages);
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            // Adjust if at the end
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            // Add ellipsis at the beginning if needed
+            if (startPage > 1) {
+                const firstPageItem = document.createElement('div');
+                firstPageItem.className = 'admin-pagination-item';
+                firstPageItem.textContent = '1';
+                firstPageItem.onclick = function() {
+                    currentPage = 1;
+                    displaySubmissions();
+                };
+                pagination.appendChild(firstPageItem);
+                
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('div');
+                    ellipsis.className = 'admin-pagination-item';
+                    ellipsis.textContent = '...';
+                    ellipsis.style.cursor = 'default';
+                    pagination.appendChild(ellipsis);
+                }
+            }
+            
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
                 const pageItem = document.createElement('div');
                 pageItem.className = 'admin-pagination-item';
                 if (i === currentPage) {
@@ -1164,6 +1254,26 @@
                     displaySubmissions();
                 };
                 pagination.appendChild(pageItem);
+            }
+            
+            // Add ellipsis at the end if needed
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('div');
+                    ellipsis.className = 'admin-pagination-item';
+                    ellipsis.textContent = '...';
+                    ellipsis.style.cursor = 'default';
+                    pagination.appendChild(ellipsis);
+                }
+                
+                const lastPageItem = document.createElement('div');
+                lastPageItem.className = 'admin-pagination-item';
+                lastPageItem.textContent = totalPages;
+                lastPageItem.onclick = function() {
+                    currentPage = totalPages;
+                    displaySubmissions();
+                };
+                pagination.appendChild(lastPageItem);
             }
             
             // Next button
@@ -1339,7 +1449,10 @@
             };
             
             // Save to localStorage
-            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
+            saveSubmissionsToLocalStorage();
+            
+            // Try to update via API as well
+            updateSubmissionViaAPI(allSubmissions[storyIndex]);
             
             // Close modal and refresh display
             closeModal('edit-story-modal');
@@ -1371,7 +1484,10 @@
             allSubmissions.splice(storyIndex, 1);
             
             // Save to localStorage
-            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
+            saveSubmissionsToLocalStorage();
+            
+            // Try to delete via API as well
+            deleteSubmissionViaAPI(currentStoryId);
             
             // Close modal and refresh display
             closeModal('delete-modal');
@@ -1397,7 +1513,10 @@
             allSubmissions[storyIndex].status = 'approved';
             
             // Save to localStorage
-            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
+            saveSubmissionsToLocalStorage();
+            
+            // Try to update via API as well
+            updateSubmissionStatusViaAPI(currentStoryId, 'approved');
             
             // Close modal and refresh display
             closeModal('view-story-modal');
@@ -1423,7 +1542,10 @@
             allSubmissions[storyIndex].status = 'rejected';
             
             // Save to localStorage
-            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
+            saveSubmissionsToLocalStorage();
+            
+            // Try to update via API as well
+            updateSubmissionStatusViaAPI(currentStoryId, 'rejected');
             
             // Close modal and refresh display
             closeModal('view-story-modal');
@@ -1431,6 +1553,89 @@
             
             // Show success message
             alert('Story rejected successfully!');
+        }
+        
+        // Save submissions to localStorage
+        function saveSubmissionsToLocalStorage() {
+            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
+        }
+        
+        // Update submission via API
+        async function updateSubmissionViaAPI(submission) {
+            const adminToken = localStorage.getItem('appfoundry_admin_token');
+            
+            if (!adminToken) return;
+            
+            try {
+                const response = await fetch('/.netlify/functions/update-submission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify(submission)
+                });
+                
+                if (!response.ok) {
+                    console.warn('API update failed:', await response.text());
+                } else {
+                    console.log('API update successful');
+                }
+            } catch (error) {
+                console.warn('Error updating submission via API:', error);
+            }
+        }
+        
+        // Update submission status via API
+        async function updateSubmissionStatusViaAPI(id, status) {
+            const adminToken = localStorage.getItem('appfoundry_admin_token');
+            
+            if (!adminToken) return;
+            
+            try {
+                const response = await fetch('/.netlify/functions/update-submission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ id, status })
+                });
+                
+                if (!response.ok) {
+                    console.warn('API status update failed:', await response.text());
+                } else {
+                    console.log('API status update successful');
+                }
+            } catch (error) {
+                console.warn('Error updating status via API:', error);
+            }
+        }
+        
+        // Delete submission via API
+        async function deleteSubmissionViaAPI(id) {
+            const adminToken = localStorage.getItem('appfoundry_admin_token');
+            
+            if (!adminToken) return;
+            
+            try {
+                const response = await fetch('/.netlify/functions/delete-submission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ id })
+                });
+                
+                if (!response.ok) {
+                    console.warn('API delete failed:', await response.text());
+                } else {
+                    console.log('API delete successful');
+                }
+            } catch (error) {
+                console.warn('Error deleting submission via API:', error);
+            }
         }
         
         // Open a modal
@@ -1443,7 +1648,7 @@
             document.getElementById(modalId).style.display = 'none';
         }
         
-        // Sample data
+        // Sample data for when no submissions exist
         function getSampleData() {
             return [
                 {
