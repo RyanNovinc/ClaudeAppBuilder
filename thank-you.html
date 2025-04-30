@@ -404,5 +404,50 @@
             }
         });
     </script>
+    
+    <script>
+        // Enhanced test mode script - runs after the main script
+        document.addEventListener('DOMContentLoaded', function() {
+            // Short delay to ensure this runs after the original script
+            setTimeout(function() {
+                // Check if in test mode
+                const urlParams = new URLSearchParams(window.location.search);
+                const isTestMode = urlParams.get('test_mode') === 'true';
+                const emailParam = urlParams.get('email');
+                
+                if (isTestMode) {
+                    // Always ensure the course button is properly configured
+                    const startCourseButton = document.getElementById('start-course-button');
+                    if (startCourseButton) {
+                        startCourseButton.href = 'modules/module1.html?test_mode=true';
+                        startCourseButton.style.backgroundColor = '#10b981';
+                        startCourseButton.style.fontSize = '1.2rem';
+                        startCourseButton.style.padding = '15px 30px';
+                        startCourseButton.style.marginTop = '30px';
+                        startCourseButton.style.marginBottom = '30px';
+                        startCourseButton.textContent = 'Access Course Content (Test Mode)';
+                    }
+                    
+                    // Make sure test mode account info is clear
+                    const accountInfo = document.getElementById('account-info');
+                    if (accountInfo) {
+                        accountInfo.innerHTML = `
+                            <h2>Test Mode Active</h2>
+                            <p>You're using test mode with the email: <strong>${emailParam || 'Not provided'}</strong></p>
+                            <p>In test mode, you don't need an account or login - you can access all course content directly.</p>
+                            <p>Simply click the "Access Course Content" button below.</p>
+                            <a href="modules/module1.html?test_mode=true" class="login-button" style="display:inline-block; margin-top:15px; background-color:#10b981;">Access Course Content</a>
+                        `;
+                    }
+                    
+                    // Always hide error notices in test mode
+                    const errorNotice = document.getElementById('server-error-notice');
+                    if (errorNotice) {
+                        errorNotice.style.display = 'none';
+                    }
+                }
+            }, 100);
+        });
+    </script>
 </body>
 </html>
