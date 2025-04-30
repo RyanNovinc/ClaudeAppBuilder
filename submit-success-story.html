@@ -1,557 +1,119 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Your Success Story - AppFoundry</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        .form-container {
-            max-width: 800px;
-            margin: 100px auto;
-            padding: 0 20px;
-        }
+function loadSubmissions() {
+    const adminToken = localStorage.getItem('appfoundry_admin_token');
+    
+    if (!adminToken) {
+        checkAdminLogin();
+        return;
+    }
+    
+    // Get elements
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const storiesTable = document.getElementById('stories-table');
+    const emptyState = document.getElementById('empty-state');
+    
+    // Show loading, hide others
+    loadingIndicator.style.display = 'flex';
+    storiesTable.style.display = 'none';
+    emptyState.style.display = 'none';
+    
+    try {
+        // Initialize all submissions array
+        let allNetlifySubmissions = [];
+        let localSubmissions = [];
         
-        .form-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .form-header p {
-            max-width: 700px;
-            margin: 0 auto;
-            color: #6b7280;
-            font-size: 18px;
-        }
-        
-        .form-content {
-            background-color: white;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #111827;
-        }
-        
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 16px;
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #0070f3;
-            box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
-        }
-        
-        .form-group textarea {
-            min-height: 150px;
-            resize: vertical;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .form-tip {
-            font-size: 14px;
-            color: #6b7280;
-            margin-top: 5px;
-        }
-        
-        .image-upload {
-            border: 2px dashed #d1d5db;
-            border-radius: 6px;
-            padding: 25px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .image-upload:hover {
-            border-color: #0070f3;
-            background-color: rgba(0, 112, 243, 0.05);
-        }
-        
-        .image-upload input {
-            display: none;
-        }
-        
-        .image-upload-icon {
-            font-size: 36px;
-            color: #9ca3af;
-            margin-bottom: 10px;
-        }
-        
-        .image-upload-text {
-            font-size: 16px;
-            color: #6b7280;
-        }
-        
-        .image-preview {
-            margin-top: 15px;
-            display: none;
-        }
-        
-        .image-preview img {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 6px;
-        }
-        
-        .submit-button {
-            background-color: #0070f3;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 14px 28px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            display: block;
-            margin: 30px auto 0;
-        }
-        
-        .submit-button:hover {
-            background-color: #0055b3;
-        }
-        
-        .form-note {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #6b7280;
-        }
-        
-        .status-message {
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .status-message.success {
-            background-color: #ecfdf5;
-            color: #10b981;
-            border: 1px solid #10b981;
-        }
-        
-        .status-message.error {
-            background-color: #fee2e2;
-            color: #dc2626;
-            border: 1px solid #dc2626;
-        }
-        
-        .image-preview-item {
-            display: inline-block;
-            position: relative;
-            margin: 5px;
-        }
-        
-        @media (max-width: 768px) {
-            .form-container {
-                margin: 60px auto;
-            }
-            
-            .form-content {
-                padding: 25px;
-            }
-            
-            .form-row {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <div class="container">
-            <div class="logo"><a href="index.html">AppFoundry</a></div>
-            <nav>
-                <ul>
-                    <li><a href="index.html#overview">Overview</a></li>
-                    <li><a href="index.html#curriculum">Curriculum</a></li>
-                    <li><a href="index.html#pricing">Pricing</a></li>
-                    <li><a href="success-stories.html">Success Stories</a></li>
-                    <li><a href="about-creator.html">About</a></li>
-                </ul>
-            </nav>
-            <button class="cta-button small" id="loginButton">Log in</button>
-        </div>
-    </header>
-
-    <div class="form-container">
-        <div class="form-header">
-            <h1>Share Your Success Story</h1>
-            <p>Tell us about the app you built with AppFoundry and inspire others to bring their ideas to life!</p>
-        </div>
-        
-        <div class="form-content">
-            <div id="status-message" class="status-message"></div>
-            
-            <form id="success-story-form">
-                <div class="form-group">
-                    <label for="name">Your Name</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" required>
-                        <div class="form-tip">Your email won't be displayed publicly.</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="app-type">Type of App</label>
-                        <select id="app-type" name="app-type" required>
-                            <option value="" disabled selected>Select app category</option>
-                            <option value="Health & Fitness">Health & Fitness</option>
-                            <option value="Productivity">Productivity</option>
-                            <option value="Lifestyle">Lifestyle</option>
-                            <option value="Business">Business</option>
-                            <option value="Education">Education</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Social">Social</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="experience-level">Your Experience Level</label>
-                    <select id="experience-level" name="experience-level" required>
-                        <option value="" disabled selected>Select your coding experience</option>
-                        <option value="No experience">No coding experience</option>
-                        <option value="Beginner">Beginner (less than 1 year)</option>
-                        <option value="Intermediate">Intermediate (1-3 years)</option>
-                        <option value="Advanced">Advanced (3+ years)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="app-name">Your App Name</label>
-                    <input type="text" id="app-name" name="app-name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="story">Your Success Story</label>
-                    <textarea id="story" name="story" required placeholder="Tell us about your experience building your app with AppFoundry. What challenges did you overcome? How has it impacted you or your business?"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>App Screenshots (Optional)</label>
-                    <div class="image-upload" id="image-upload">
-                        <input type="file" id="app-screenshots" name="app-screenshots" accept="image/*" multiple>
-                        <div class="image-upload-icon">📷</div>
-                        <div class="image-upload-text">Click to upload screenshots of your app</div>
-                        <div class="form-tip">You can select multiple images. Max 5 images total, 5MB per image.</div>
-                    </div>
-                    <div id="image-preview" class="image-preview"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="testimonial">Short Testimonial (for display)</label>
-                    <textarea id="testimonial" name="testimonial" required placeholder="Write a brief testimonial (1-2 sentences) that we can feature on our success stories page."></textarea>
-                </div>
-                
-                <button type="submit" class="submit-button">Submit Your Story</button>
-                
-                <div class="form-note">
-                    <p>By submitting this form, you agree to let us feature your story and app screenshots on our website.</p>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <footer>
-        <div class="container">
-            <div class="logo">AppFoundry</div>
-            <div class="footer-links">
-                <div class="link-group">
-                    <h4>Course</h4>
-                    <ul>
-                        <li><a href="index.html#overview">Overview</a></li>
-                        <li><a href="index.html#curriculum">Curriculum</a></li>
-                        <li><a href="index.html#pricing">Pricing</a></li>
-                        <li><a href="success-stories.html">Success Stories</a></li>
-                        <li><a href="about-creator.html">About Creator</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="terms-of-service.html">Terms of Service</a></li>
-                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
-                        <li><a href="refund-policy.html">Our Guarantee</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                © 2025 AppFoundry. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-    <script src="scripts.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Handle image upload preview
-            const imageUpload = document.getElementById('image-upload');
-            const fileInput = document.getElementById('app-screenshots');
-            const imagePreview = document.getElementById('image-preview');
-            let selectedFiles = []; // Track selected files
-            const MAX_IMAGES = 5;
-            
-            imageUpload.addEventListener('click', function() {
-                fileInput.click();
-            });
-            
-            fileInput.addEventListener('change', function() {
-                if (this.files && this.files.length > 0) {
-                    // Add new files to the existing selection, up to the maximum
-                    const newFiles = Array.from(this.files);
-                    
-                    // Add new files up to the maximum
-                    for (let i = 0; i < newFiles.length && selectedFiles.length < MAX_IMAGES; i++) {
-                        if (newFiles[i].type.startsWith('image/')) {
-                            selectedFiles.push(newFiles[i]);
-                        }
-                    }
-                    
-                    // Reset the file input to allow selecting more files later
-                    this.value = '';
-                    
-                    // Update preview
-                    updateImagePreview();
+        // Try to fetch from Netlify Function
+        try {
+            console.log('Attempting to fetch submissions from Netlify Function...');
+            const response = await fetch('/.netlify/functions/get-submissions', {
+                headers: {
+                    'Authorization': `Bearer ${adminToken}`
                 }
             });
             
-            // Function to update image preview
-            function updateImagePreview() {
-                // Show preview container if we have files
-                imagePreview.style.display = selectedFiles.length > 0 ? 'block' : 'none';
-                
-                // Clear existing preview
-                imagePreview.innerHTML = '';
-                
-                // Create preview for each file
-                selectedFiles.forEach((file, index) => {
-                    const previewContainer = document.createElement('div');
-                    previewContainer.className = 'image-preview-item';
-                    previewContainer.style.display = 'inline-block';
-                    previewContainer.style.position = 'relative';
-                    previewContainer.style.margin = '5px';
-                    
-                    // Create image preview
-                    const reader = new FileReader();
-                    
-                    reader.onload = function(e) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.maxHeight = '100px';
-                        img.style.maxWidth = '100px';
-                        img.style.borderRadius = '4px';
-                        previewContainer.appendChild(img);
-                    };
-                    
-                    reader.readAsDataURL(file);
-                    
-                    // Create remove button
-                    const removeBtn = document.createElement('button');
-                    removeBtn.innerHTML = '&times;';
-                    removeBtn.style.position = 'absolute';
-                    removeBtn.style.top = '-8px';
-                    removeBtn.style.right = '-8px';
-                    removeBtn.style.borderRadius = '50%';
-                    removeBtn.style.background = '#ef4444';
-                    removeBtn.style.color = 'white';
-                    removeBtn.style.width = '20px';
-                    removeBtn.style.height = '20px';
-                    removeBtn.style.border = 'none';
-                    removeBtn.style.cursor = 'pointer';
-                    removeBtn.style.display = 'flex';
-                    removeBtn.style.alignItems = 'center';
-                    removeBtn.style.justifyContent = 'center';
-                    
-                    removeBtn.addEventListener('click', function(e) {
-                        e.stopPropagation(); // Prevent triggering imageUpload click
-                        selectedFiles.splice(index, 1);
-                        updateImagePreview();
-                    });
-                    
-                    previewContainer.appendChild(removeBtn);
-                    imagePreview.appendChild(previewContainer);
-                });
-                
-                // Add information about remaining slots
-                const infoText = document.createElement('p');
-                infoText.style.margin = '10px 0 0 0';
-                infoText.style.fontSize = '0.8rem';
-                infoText.style.color = '#6b7280';
-                infoText.textContent = `${selectedFiles.length}/${MAX_IMAGES} images selected`;
-                imagePreview.appendChild(infoText);
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Received data from Netlify Function:', data);
+                allNetlifySubmissions = data;
+            } else {
+                console.warn('Function returned non-OK response:', response.status);
             }
-            
-            // Handle form submission
-            const form = document.getElementById('success-story-form');
-            const statusMessage = document.getElementById('status-message');
-            
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                // Show loading state
-                const submitButton = document.querySelector('.submit-button');
-                submitButton.disabled = true;
-                submitButton.textContent = 'Submitting...';
-                
-                try {
-                    // Get form data
-                    const name = document.getElementById('name').value;
-                    const email = document.getElementById('email').value;
-                    const appType = document.getElementById('app-type').value;
-                    const appName = document.getElementById('app-name').value;
-                    const story = document.getElementById('story').value;
-                    const testimonial = document.getElementById('testimonial').value;
-                    const experienceLevel = document.getElementById('experience-level').value;
-                    
-                    // Process images
-                    let images = [];
-                    
-                    if (selectedFiles.length > 0) {
-                        for (let file of selectedFiles) {
-                            try {
-                                const base64String = await convertFileToBase64(file);
-                                images.push(base64String);
-                            } catch (error) {
-                                console.error('Error converting image to base64:', error);
-                            }
-                        }
-                    }
-                    
-                    // Simple approach - immediately store in localStorage
-                    const newSubmission = {
-                        id: 'story_' + Date.now(),
-                        date: new Date().toISOString(),
-                        status: 'pending',
-                        name,
-                        email,
-                        appName,
-                        appType,
-                        experienceLevel,
-                        testimonial,
-                        story,
-                        images
-                    };
-                    
-                    // Get existing submissions
-                    let existingSubmissions = [];
-                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                    if (storedSubmissions) {
-                        existingSubmissions = JSON.parse(storedSubmissions);
-                    }
-                    
-                    // Add new submission
-                    existingSubmissions.unshift(newSubmission);
-                    
-                    // Store updated submissions
-                    localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
-                    
-                    console.log('Saved to localStorage:', newSubmission.id);
-                    
-                    // Also attempt to submit to API but don't wait for response
-                    try {
-                        fetch('/.netlify/functions/submit-success-story', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                name,
-                                email,
-                                'app-type': appType,
-                                'app-name': appName,
-                                'experience-level': experienceLevel,
-                                story,
-                                testimonial,
-                                images
-                            })
-                        });
-                    } catch (apiError) {
-                        console.error('API submission error:', apiError);
-                        // Ignore API errors since we already saved to localStorage
-                    }
-                    
-                    // Show success message
-                    statusMessage.textContent = 'Your success story has been submitted! After review, it will be featured on our success stories page.';
-                    statusMessage.className = 'status-message success';
-                    statusMessage.style.display = 'block';
-                    
-                    // Reset form and selected files
-                    form.reset();
-                    selectedFiles = [];
-                    imagePreview.style.display = 'none';
-                    imagePreview.innerHTML = '';
-                    
-                    // Scroll to top of form to show message
-                    window.scrollTo({
-                        top: statusMessage.offsetTop - 100,
-                        behavior: 'smooth'
-                    });
-                } catch (error) {
-                    console.error('Error submitting story:', error);
-                    
-                    // Show error message
-                    statusMessage.textContent = 'An error occurred while submitting your story. Please try again.';
-                    statusMessage.className = 'status-message error';
-                    statusMessage.style.display = 'block';
-                } finally {
-                    // Reset button
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Submit Your Story';
-                }
-            });
-            
-            // Helper function to convert file to base64
-            function convertFileToBase64(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(file);
-                });
+        } catch (fetchError) {
+            console.warn('Error fetching from API:', fetchError);
+            // Continue with localStorage as fallback
+        }
+        
+        // Get submissions from localStorage
+        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+        if (storedSubmissions) {
+            try {
+                localSubmissions = JSON.parse(storedSubmissions);
+                console.log('Found submissions in localStorage:', localSubmissions.length);
+            } catch (parseError) {
+                console.error('Error parsing localStorage submissions:', parseError);
+                localSubmissions = [];
+            }
+        }
+        
+        // Combine submissions (avoid duplicates by ID)
+        const combinedSubmissions = [...allNetlifySubmissions];
+        
+        // Add local submissions that don't exist in the API data
+        localSubmissions.forEach(localSub => {
+            const exists = combinedSubmissions.some(apiSub => apiSub.id === localSub.id);
+            if (!exists) {
+                combinedSubmissions.push(localSub);
             }
         });
-    </script>
-</body>
-</html>
+        
+        // If we still have no submissions, use sample data
+        if (combinedSubmissions.length === 0) {
+            console.log('No submissions found, using sample data');
+            allSubmissions = getSampleData();
+        } else {
+            console.log('Using combined submissions:', combinedSubmissions.length);
+            allSubmissions = combinedSubmissions;
+        }
+        
+        // Sort by date (newest first)
+        allSubmissions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        // Check if we have submissions
+        if (allSubmissions.length === 0) {
+            // Show empty state
+            loadingIndicator.style.display = 'none';
+            emptyState.style.display = 'block';
+            return;
+        }
+        
+        // Display submissions
+        loadingIndicator.style.display = 'none';
+        storiesTable.style.display = 'table';
+        
+        // Reset pagination
+        currentPage = 1;
+        
+        // Display submissions
+        displaySubmissions();
+        
+        // Log displayed submissions for debugging
+        console.log('Displayed submissions:', allSubmissions.slice(0, 3));
+    } catch (error) {
+        console.error('Error loading submissions:', error);
+        
+        // Show error
+        loadingIndicator.style.display = 'none';
+        
+        // Create error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'admin-empty-state';
+        errorDiv.innerHTML = `
+            <div class="admin-empty-state-icon">❌</div>
+            <div class="admin-empty-state-title">Error Loading Submissions</div>
+            <p>We encountered an issue loading the submissions. Please try again.</p>
+            <button class="admin-button" onclick="loadSubmissions()">Retry</button>
+        `;
+        
+        // Add to container
+        document.getElementById('table-container').appendChild(errorDiv);
+    }
+}
