@@ -97,14 +97,14 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     try {
-      // For test mode, we'll still call create-payment but with a special flag
+      // For test mode, we'll still call create-payment to generate credentials
       if (isTestMode) {
         console.log('Processing test mode purchase...');
         
         // Generate a test session ID
         const testSessionId = 'test_' + Date.now();
         
-        // Call the create-payment function to generate a test account and send email
+        // Call the create-payment function to get credentials
         try {
           const response = await fetch('/.netlify/functions/create-payment', {
             method: 'POST',
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
               productName: 'SleepTech Course',
               supportEmail: 'hello@risegg.net',
               testMode: true,
-              forceEmailSend: true // Flag to actually send the email in test mode
+              forceEmailSend: true // Force email sending in test mode
             }),
           });
           
@@ -128,10 +128,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             console.log('Test mode account creation successful:', result);
             
-            // Redirect to thank you page
+            // Redirect to thank you page with password (if available)
             window.location.href = '/thank-you.html?session_id=' + testSessionId + 
                                   '&test_mode=true&email=' + 
-                                  encodeURIComponent(customerData.email);
+                                  encodeURIComponent(customerData.email) + 
+                                  '&password=' + encodeURIComponent(result.tempPassword || '');
           } else {
             // If server call fails, still redirect to thank you page but with an error flag
             console.error('Error in test mode account creation');
@@ -201,7 +202,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loadingElement) loadingElement.style.display = 'none';
       } else {
         // Payment succeeded - redirect to success page
-        window.location.href = '/thank-you.html?session_id=' + result.paymentIntentId + '&email=' + encodeURIComponent(customerData.email);
+        window.location.href = '/thank-you.html?session_id=' + result.paymentIntentId + 
+                               '&email=' + encodeURIComponent(customerData.email) + 
+                               '&password=' + encodeURIComponent(result.tempPassword || '');
       }
     } catch (err) {
       console.error('Error:', err);
