@@ -51,11 +51,24 @@ exports.handler = async function(event, context) {
     // Check if this is a test mode request
     const isTestMode = sessionId.startsWith('test_');
     
-    // Get SendGrid API key from environment variables - try all possible keys
-    const apiKey = process.env.SENDGRID_API_KEY || 
-                   process.env.NETLIFY_EMAILS_PROVIDER_API_KEY || 
-                   process.env.SENDGRID_KEY;
+    // For test mode, always return success without trying to send email
+    if (isTestMode && !forceEmailInTestMode) {
+      console.log('Test mode detected - skipping email send process');
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Test mode - email sending skipped'
+        })
+      };
+    }
     
+    // Get SendGrid API key from environment variables - try multiple possible names
+    const apiKey = process.env.SENDGRID_API_KEY || 
+                   process.env.NETLIFY_EMAILS_PROVIDER_API_KEY ||
+                   process.env.SENDGRID_KEY;
+                   
     if (!apiKey) {
       console.log('SendGrid API key is not set in environment variables');
       
@@ -70,15 +83,15 @@ exports.handler = async function(event, context) {
       }
       console.log('Available env vars:', JSON.stringify(safeEnvVars, null, 2));
       
-      // For test mode, still return success to not block the flow
+      // For test mode, return success anyway
       if (isTestMode) {
-        console.log('Test mode detected - returning success despite missing API key');
+        console.log('Test mode - returning success despite missing API key');
         return {
           statusCode: 200,
           headers,
           body: JSON.stringify({
             success: true,
-            message: 'Email service is not configured, but test mode continues'
+            message: 'Test mode - email would be sent if API key was configured'
           })
         };
       }
@@ -191,19 +204,6 @@ exports.handler = async function(event, context) {
       htmlLength: msg.html?.length || 0
     }, null, 2));
     
-    // Skip actual email sending if it's test mode and we're having issues
-    if (isTestMode && (!apiKey || !fromEmail)) {
-      console.log('Test mode detected and email configuration issues - skipping email send');
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          success: true,
-          message: 'Test mode active - email would normally be sent here'
-        })
-      };
-    }
-    
     console.log('Attempting to send email via SendGrid');
     
     // Try the primary sending method
@@ -311,7 +311,25 @@ exports.handler = async function(event, context) {
     console.error('==================== EMAIL FUNCTION END (ERROR) ====================');
     console.error('Final error sending email:', error.toString());
     
-    // Return success anyway to not block checkout
+    // Determine if this is a test mode request by checking session ID
+    const data = JSON.parse(event.body);
+    const sessionId = data?.sessionId || '';
+    const isTestMode = sessionId.startsWith('test_');
+    
+    // For test mode, always return success
+    if (isTestMode) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Test mode - continuing despite email error',
+          error: error.message
+        })
+      };
+    }
+    
+    // For non-test mode, still return success to not block checkout
     return {
       statusCode: 200,
       headers,
