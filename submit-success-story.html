@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Your Success Story - AppFoundry</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 100px auto;
+            padding: 0 20px;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .form-header p {
+            max-width: 700px;
+            margin: 0 auto;
+            color: #6b7280;
+            font-size: 18px;
+        }
+        
+        .form-content {
+            background-color: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #111827;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0070f3;
+            box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
+        }
+        
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-tip {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        
+        .image-upload {
+            border: 2px dashed #d1d5db;
+            border-radius: 6px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .image-upload:hover {
+            border-color: #0070f3;
+            background-color: rgba(0, 112, 243, 0.05);
+        }
+        
+        .image-upload input {
+            display: none;
+        }
+        
+        .image-upload-icon {
+            font-size: 36px;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+        
+        .image-upload-text {
+            font-size: 16px;
+            color: #6b7280;
+        }
+        
+        .image-preview {
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 6px;
+        }
+        
+        .submit-button {
+            background-color: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: block;
+            margin: 30px auto 0;
+        }
+        
+        .submit-button:hover {
+            background-color: #0055b3;
+        }
+        
+        .form-note {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .status-message {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background-color: #ecfdf5;
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+        
+        .status-message.error {
+            background-color: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #dc2626;
+        }
+        
+        @media (max-width: 768px) {
+            .form-container {
+                margin: 60px auto;
+            }
+            
+            .form-content {
+                padding: 25px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo"><a href="index.html">AppFoundry</a></div>
+            <nav>
+                <ul>
+                    <li><a href="index.html#overview">Overview</a></li>
+                    <li><a href="index.html#curriculum">Curriculum</a></li>
+                    <li><a href="index.html#pricing">Pricing</a></li>
+                    <li><a href="success-stories.html">Success Stories</a></li>
+                    <li><a href="about-creator.html">About</a></li>
+                </ul>
+            </nav>
+            <button class="cta-button small" id="loginButton">Log in</button>
+        </div>
+    </header>
+
+    <div class="form-container">
+        <div class="form-header">
+            <h1>Share Your Success Story</h1>
+            <p>Tell us about the app you built with AppFoundry and inspire others to bring their ideas to life!</p>
+        </div>
+        
+        <div class="form-content">
+            <div id="status-message" class="status-message"></div>
+            
+            <form id="success-story-form">
+                <div class="form-group">
+                    <label for="name">Your Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required>
+                        <div class="form-tip">Your email won't be displayed publicly.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="app-type">Type of App</label>
+                        <select id="app-type" name="app-type" required>
+                            <option value="" disabled selected>Select app category</option>
+                            <option value="Health & Fitness">Health & Fitness</option>
+                            <option value="Productivity">Productivity</option>
+                            <option value="Lifestyle">Lifestyle</option>
+                            <option value="Business">Business</option>
+                            <option value="Education">Education</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Social">Social</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="app-name">Your App Name</label>
+                    <input type="text" id="app-name" name="app-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="story">Your Success Story</label>
+                    <textarea id="story" name="story" required placeholder="Tell us about your experience building your app with AppFoundry. What challenges did you overcome? How has it impacted you or your business?"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>App Screenshots (Optional)</label>
+                    <div class="image-upload" id="image-upload">
+                        <input type="file" id="app-screenshots" name="app-screenshots" accept="image/*" multiple>
+                        <div class="image-upload-icon">📷</div>
+                        <div class="image-upload-text">Click to upload screenshots of your app</div>
+                        <div class="form-tip">You can select multiple images. Max 5MB per image.</div>
+                    </div>
+                    <div id="image-preview" class="image-preview"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="testimonial">Short Testimonial (for display)</label>
+                    <textarea id="testimonial" name="testimonial" required placeholder="Write a brief testimonial (1-2 sentences) that we can feature on our success stories page."></textarea>
+                </div>
+                
+                <button type="submit" class="submit-button">Submit Your Story</button>
+                
+                <div class="form-note">
+                    <p>By submitting this form, you agree to let us feature your story and app screenshots on our website.</p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="logo">AppFoundry</div>
+            <div class="footer-links">
+                <div class="link-group">
+                    <h4>Course</h4>
+                    <ul>
+                        <li><a href="index.html#overview">Overview</a></li>
+                        <li><a href="index.html#curriculum">Curriculum</a></li>
+                        <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="success-stories.html">Success Stories</a></li>
+                        <li><a href="about-creator.html">About Creator</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="refund-policy.html">Our Guarantee</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 AppFoundry. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="scripts.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle image upload preview
+            const imageUpload = document.getElementById('image-upload');
+            const fileInput = document.getElementById('app-screenshots');
+            const imagePreview = document.getElementById('image-preview');
+            
+            imageUpload.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    imagePreview.style.display = 'block';
+                    imagePreview.innerHTML = '';
+                    
+                    // Limit to 3 preview images
+                    const maxPreview = Math.min(this.files.length, 3);
+                    
+                    for (let i = 0; i < maxPreview; i++) {
+                        const file = this.files[i];
+                        
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            
+                            reader.onload = function(e) {
+                                const img = document.createElement('img');
+                                img.src = e.target.result;
+                                imagePreview.appendChild(img);
+                            };
+                            
+                            reader.readAsDataURL(file);
+                        }
+                    }
+                    
+                    if (this.files.length > 3) {
+                        const moreText = document.createElement('p');
+                        moreText.textContent = `+ ${this.files.length - 3} more files selected`;
+                        moreText.style.color = '#6b7280';
+                        moreText.style.fontStyle = 'italic';
+                        imagePreview.appendChild(moreText);
+                    }
+                }
+            });
+            
+            // Handle form submission
+            const form = document.getElementById('success-story-form');
+            const statusMessage = document.getElementById('status-message');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // In a real implementation, you would send the form data to your server
+                // For this example, we'll just show a success message
+                
+                // Simulate form submission
+                statusMessage.textContent = 'Your success story has been submitted! After review, it will be featured on our success stories page.';
+                statusMessage.className = 'status-message success';
+                statusMessage.style.display = 'block';
+                
+                // Scroll to top of form to show message
+                window.scrollTo({
+                    top: statusMessage.offsetTop - 100,
+                    behavior: 'smooth'
+                });
+                
+                // Clear form
+                form.reset();
+                imagePreview.style.display = 'none';
+                imagePreview.innerHTML = '';
+                
+                // In a real implementation, you would now:
+                // 1. Create a FormData object and append all form fields
+                // 2. Include file uploads
+                // 3. Send via fetch() to your backend API
+                // 4. Process and store in your database
+                // 5. Have an admin interface to review and approve submissions
+            });
+        });
+    </script>
+</body>
+</html>
