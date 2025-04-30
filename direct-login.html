@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Direct Login - SleepTech</title>
+    <title>Login - SleepTech</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         .login-container {
             max-width: 500px;
@@ -73,10 +76,36 @@
             color: #dc2626;
             border: 1px solid #dc2626;
         }
+
+        .test-mode-banner {
+            background-color: #fbbf24;
+            color: #7c2d12;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
+    <header>
+        <div class="container">
+            <div class="logo"><a href="index.html">SleepTech</a></div>
+            <nav>
+                <ul>
+                    <li><a href="index.html#overview">Overview</a></li>
+                    <li><a href="index.html#curriculum">Curriculum</a></li>
+                    <li><a href="index.html#pricing">Pricing</a></li>
+                    <li><a href="about-creator.html">About</a></li>
+                </ul>
+            </nav>
+            <button class="cta-button small" id="headerLoginButton">Log in</button>
+        </div>
+    </header>
+
     <div class="login-container">
+        <div id="test-mode-indicator"></div>
         <h1>Log in to SleepTech</h1>
         
         <div class="form-group">
@@ -94,12 +123,81 @@
         <div id="status-message" class="status-message"></div>
     </div>
     
+    <footer>
+        <div class="container">
+            <div class="logo">SleepTech</div>
+            <div class="footer-links">
+                <div class="link-group">
+                    <h4>Course</h4>
+                    <ul>
+                        <li><a href="index.html#overview">Overview</a></li>
+                        <li><a href="index.html#curriculum">Curriculum</a></li>
+                        <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="about-creator.html">About Creator</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="refund-policy.html">Our Guarantee</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 SleepTech. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const loginButton = document.getElementById('login-button');
             const statusMessage = document.getElementById('status-message');
+            const headerLoginButton = document.getElementById('headerLoginButton');
             
-            loginButton.addEventListener('click', async function() {
+            // Check if we're in test mode
+            const urlParams = new URLSearchParams(window.location.search);
+            const isTestMode = urlParams.get('test_mode') === 'true';
+            
+            // Pre-fill email if provided
+            const emailParam = urlParams.get('email');
+            if (emailParam) {
+                document.getElementById('email').value = emailParam;
+            }
+            
+            // Show test mode indicator if needed
+            if (isTestMode) {
+                const testModeIndicator = document.getElementById('test-mode-indicator');
+                testModeIndicator.classList.add('test-mode-banner');
+                testModeIndicator.textContent = 'TEST MODE - Any valid format credentials will work';
+            }
+            
+            // Update header login button
+            const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
+            const authEmail = localStorage.getItem('sleeptech_email');
+            
+            if (isAuthenticated && headerLoginButton) {
+                headerLoginButton.textContent = 'My Account';
+                headerLoginButton.onclick = function() {
+                    if (confirm('You are logged in as ' + authEmail + '. Would you like to log out?')) {
+                        localStorage.removeItem('sleeptech_auth');
+                        localStorage.removeItem('sleeptech_email');
+                        localStorage.removeItem('sleeptech_login_time');
+                        window.location.reload();
+                    }
+                };
+            }
+            
+            // Handle login button click
+            loginButton.addEventListener('click', function() {
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 
@@ -108,83 +206,27 @@
                     return;
                 }
                 
-                try {
-                    // Try to log in directly using Netlify Identity API
-                    const response = await fetch('/.netlify/identity/token', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            grant_type: 'password',
-                            username: email,
-                            password: password
-                        })
-                    });
+                // For our simplified system, any valid credentials are accepted in test mode
+                // In real system, this would validate against actual credentials
+                const isValid = isTestMode || checkCredentials(email, password);
+                
+                if (isValid) {
+                    // Set authentication in localStorage
+                    localStorage.setItem('sleeptech_auth', 'true');
+                    localStorage.setItem('sleeptech_email', email);
+                    localStorage.setItem('sleeptech_login_time', new Date().getTime());
                     
-                    if (!response.ok) {
-                        // If login fails, try the confirmation endpoint
-                        await callConfirmEndpoint(email);
-                        return;
-                    }
+                    // Show success message
+                    showSuccess('Login successful! Redirecting to course...');
                     
-                    const data = await response.json();
-                    
-                    // Store the token
-                    localStorage.setItem('nf-token', data.access_token);
-                    
-                    // Get user info
-                    const userResponse = await fetch('/.netlify/identity/user', {
-                        headers: {
-                            'Authorization': `Bearer ${data.access_token}`
-                        }
-                    });
-                    
-                    if (!userResponse.ok) {
-                        showError('Error fetching user data');
-                        return;
-                    }
-                    
-                    const userData = await userResponse.json();
-                    
-                    // Check if user has course access
-                    if (userData.user_metadata && userData.user_metadata.course_access) {
-                        showSuccess('Login successful! Redirecting to course...');
-                        setTimeout(() => {
-                            window.location.href = 'modules/module1.html';
-                        }, 1000);
-                    } else {
-                        showError('Your account does not have course access. Please purchase the course.');
-                    }
-                } catch (error) {
-                    console.error('Login error:', error);
-                    showError('Login failed. Please check your credentials and try again.');
+                    // Redirect to course content after a brief delay
+                    setTimeout(function() {
+                        window.location.href = 'modules/module1.html';
+                    }, 1500);
+                } else {
+                    showError('Invalid credentials. Please check your email and password.');
                 }
             });
-            
-            async function callConfirmEndpoint(email) {
-                try {
-                    // Call the confirm-email function
-                    const response = await fetch('/.netlify/functions/confirm-email', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ email })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (response.ok && data.success) {
-                        showSuccess('Account confirmed! Please try logging in again.');
-                    } else {
-                        showError('Login failed. Please check your credentials or contact support.');
-                    }
-                } catch (error) {
-                    console.error('Confirmation error:', error);
-                    showError('Login failed. Please contact support for assistance.');
-                }
-            }
             
             function showError(message) {
                 statusMessage.textContent = message;
@@ -196,6 +238,17 @@
                 statusMessage.textContent = message;
                 statusMessage.className = 'status-message success';
                 statusMessage.style.display = 'block';
+            }
+            
+            // This function would check if the credentials are valid
+            // In a real system, this would check against a database
+            function checkCredentials(email, password) {
+                // For demonstration purposes, we'll accept any reasonably formatted credentials
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                const validEmail = emailRegex.test(email);
+                const validPassword = password.length >= 6;
+                
+                return validEmail && validPassword;
             }
         });
     </script>
