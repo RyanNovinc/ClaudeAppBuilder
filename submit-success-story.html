@@ -356,35 +356,156 @@
             const form = document.getElementById('success-story-form');
             const statusMessage = document.getElementById('status-message');
             
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                // In a real implementation, you would send the form data to your server
-                // For this example, we'll just show a success message
+                // Show loading state
+                const submitButton = document.querySelector('.submit-button');
+                submitButton.disabled = true;
+                submitButton.textContent = 'Submitting...';
                 
-                // Simulate form submission
-                statusMessage.textContent = 'Your success story has been submitted! After review, it will be featured on our success stories page.';
-                statusMessage.className = 'status-message success';
-                statusMessage.style.display = 'block';
-                
-                // Scroll to top of form to show message
-                window.scrollTo({
-                    top: statusMessage.offsetTop - 100,
-                    behavior: 'smooth'
-                });
-                
-                // Clear form
-                form.reset();
-                imagePreview.style.display = 'none';
-                imagePreview.innerHTML = '';
-                
-                // In a real implementation, you would now:
-                // 1. Create a FormData object and append all form fields
-                // 2. Include file uploads
-                // 3. Send via fetch() to your backend API
-                // 4. Process and store in your database
-                // 5. Have an admin interface to review and approve submissions
+                try {
+                    // Get form data
+                    const name = document.getElementById('name').value;
+                    const email = document.getElementById('email').value;
+                    const appType = document.getElementById('app-type').value;
+                    const appName = document.getElementById('app-name').value;
+                    const story = document.getElementById('story').value;
+                    const testimonial = document.getElementById('testimonial').value;
+                    
+                    // Handle images - convert to base64 strings or URLs
+                    const fileInput = document.getElementById('app-screenshots');
+                    const images = [];
+                    
+                    if (fileInput.files && fileInput.files.length > 0) {
+                        for (let i = 0; i < fileInput.files.length; i++) {
+                            const file = fileInput.files[i];
+                            if (file.type.startsWith('image/')) {
+                                // Convert to base64 for localStorage
+                                try {
+                                    const base64String = await convertFileToBase64(file);
+                                    images.push(base64String);
+                                } catch (error) {
+                                    console.error('Error converting file to base64:', error);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Create submission data
+                    const submissionData = {
+                        name,
+                        email,
+                        'app-type': appType,
+                        'app-name': appName,
+                        story,
+                        testimonial,
+                        images
+                    };
+                    
+                    console.log('Preparing to submit story:', { ...submissionData, images: `${images.length} images` });
+                    
+                    // Try to submit to Netlify Function
+                    let functionSuccess = false;
+                    try {
+                        console.log('Submitting to Netlify Function...');
+                        const response = await fetch('/.netlify/functions/submit-success-story', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(submissionData)
+                        });
+                        
+                        console.log('Function response status:', response.status);
+                        
+                        if (!response.ok) {
+                            throw new Error(`Function returned status ${response.status}`);
+                        }
+                        
+                        const result = await response.json();
+                        console.log('Submission successful:', result);
+                        functionSuccess = true;
+                    } catch (functionError) {
+                        console.error('Error submitting to function:', functionError);
+                        // Will fall back to localStorage
+                    }
+                    
+                    // If function failed, save to localStorage
+                    if (!functionSuccess) {
+                        console.log('Function submission failed, saving to localStorage instead');
+                        
+                        // Generate ID
+                        const submissionId = 'story_' + Date.now();
+                        
+                        // Create full submission object
+                        const newSubmission = {
+                            id: submissionId,
+                            date: new Date().toISOString(),
+                            status: 'pending',
+                            name,
+                            email,
+                            appName,
+                            appType,
+                            testimonial,
+                            story,
+                            images
+                        };
+                        
+                        // Get existing submissions
+                        let existingSubmissions = [];
+                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                        if (storedSubmissions) {
+                            existingSubmissions = JSON.parse(storedSubmissions);
+                        }
+                        
+                        // Add new submission
+                        existingSubmissions.unshift(newSubmission);
+                        
+                        // Store updated submissions
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
+                        
+                        console.log('Saved to localStorage:', submissionId);
+                    }
+                    
+                    // Show success message
+                    statusMessage.textContent = 'Your success story has been submitted! After review, it will be featured on our success stories page.';
+                    statusMessage.className = 'status-message success';
+                    statusMessage.style.display = 'block';
+                    
+                    // Reset form
+                    form.reset();
+                    imagePreview.style.display = 'none';
+                    imagePreview.innerHTML = '';
+                    
+                    // Scroll to top of form to show message
+                    window.scrollTo({
+                        top: statusMessage.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                } catch (error) {
+                    console.error('Error submitting story:', error);
+                    
+                    // Show error message
+                    statusMessage.textContent = 'An error occurred while submitting your story. Please try again.';
+                    statusMessage.className = 'status-message error';
+                    statusMessage.style.display = 'block';
+                } finally {
+                    // Reset button
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Submit Your Story';
+                }
             });
+            
+            // Helper function to convert file to base64
+            function convertFileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            }
         });
     </script>
 </body>
