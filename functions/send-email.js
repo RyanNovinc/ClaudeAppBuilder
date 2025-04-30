@@ -51,21 +51,11 @@ exports.handler = async function(event, context) {
     // Check if this is a test mode request
     const isTestMode = sessionId.startsWith('test_');
     
-    // Only proceed if we're either in real mode OR we've been explicitly told to force email in test mode
-    if (isTestMode && !forceEmailInTestMode) {
-      console.log('Test mode detected but forceEmailInTestMode not set - skipping email send');
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          success: true,
-          message: 'Email sending skipped in test mode'
-        })
-      };
-    }
+    // Get SendGrid API key from environment variables - try all possible keys
+    const apiKey = process.env.SENDGRID_API_KEY || 
+                   process.env.NETLIFY_EMAILS_PROVIDER_API_KEY || 
+                   process.env.SENDGRID_KEY;
     
-    // Get SendGrid API key from environment variables - try both possible keys
-    const apiKey = process.env.SENDGRID_API_KEY || process.env.NETLIFY_EMAILS_PROVIDER_API_KEY;
     if (!apiKey) {
       console.log('SendGrid API key is not set in environment variables');
       
@@ -79,6 +69,19 @@ exports.handler = async function(event, context) {
         }
       }
       console.log('Available env vars:', JSON.stringify(safeEnvVars, null, 2));
+      
+      // For test mode, still return success to not block the flow
+      if (isTestMode) {
+        console.log('Test mode detected - returning success despite missing API key');
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            message: 'Email service is not configured, but test mode continues'
+          })
+        };
+      }
       
       return {
         statusCode: 500,
@@ -105,8 +108,8 @@ exports.handler = async function(event, context) {
     console.log('Sending from:', fromEmail);
     
     // Get site URL for links
-    const siteUrl = process.env.URL || 'https://radiant-travesseiro-481254.netlify.app';
-    const courseUrl = `${siteUrl}/modules/module1.html`;
+    const siteUrl = process.env.URL || 'https://claudeappbuilder.netlify.app';
+    const courseUrl = `${siteUrl}/modules/module1.html${isTestMode ? '?test_mode=true' : ''}`;
     
     // Add test mode indicator to subject if in test mode
     const emailSubject = isTestMode 
@@ -144,6 +147,9 @@ exports.handler = async function(event, context) {
               <p style="margin: 0;"><strong>Email:</strong> ${customerEmail}</p>
               <p style="margin: 10px 0 0;"><strong>Password:</strong> ${loginDetails?.password || 'Use the "Login with Email" option to set your password'}</p>
               <p style="margin: 10px 0 0;"><strong>Course URL:</strong> <a href="${courseUrl}">${courseUrl}</a></p>
+              ${isTestMode ? `
+              <p style="margin: 10px 0 0;"><strong>Test Mode Access:</strong> Click the link above to access the course directly in test mode without needing to log in.</p>
+              ` : ''}
             </div>
             
             <h2 style="color: #007AFF; margin-top: 30px;">Your Receipt</h2>
@@ -158,7 +164,7 @@ exports.handler = async function(event, context) {
             <h2 style="color: #007AFF; margin-top: 30px;">Getting Started</h2>
             
             <ol>
-              <li style="margin-bottom: 10px;"><strong>Log in to your account</strong> using the email and password above.</li>
+              <li style="margin-bottom: 10px;"><strong>Access the course directly</strong> using the link above.</li>
               <li style="margin-bottom: 10px;"><strong>Start with Module 1</strong> to set up your development environment.</li>
               <li style="margin-bottom: 10px;"><strong>Follow along step-by-step</strong> to build your first app without coding.</li>
             </ol>
@@ -184,6 +190,19 @@ exports.handler = async function(event, context) {
       subject: msg.subject,
       htmlLength: msg.html?.length || 0
     }, null, 2));
+    
+    // Skip actual email sending if it's test mode and we're having issues
+    if (isTestMode && (!apiKey || !fromEmail)) {
+      console.log('Test mode detected and email configuration issues - skipping email send');
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Test mode active - email would normally be sent here'
+        })
+      };
+    }
     
     console.log('Attempting to send email via SendGrid');
     
@@ -267,7 +286,13 @@ exports.handler = async function(event, context) {
         }
       } catch (apiError) {
         console.error('Error with direct API call:', apiError.toString());
-        throw apiError; // Re-throw to be caught by the outer try/catch
+        
+        // If in test mode, don't treat this as a critical error
+        if (isTestMode) {
+          console.log('Test mode - continuing despite email error');
+        } else {
+          throw apiError; // Re-throw for non-test mode
+        }
       }
     }
     
