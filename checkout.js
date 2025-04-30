@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
               currency: 'usd',
               customerEmail: customerData.email,
               customerName: customerData.name,
-              productName: 'SleepTech Course',
+              productName: 'AppFoundry Course',
               supportEmail: 'hello@risegg.net',
               testMode: true,
               forceEmailSend: true // Force email sending in test mode
@@ -127,6 +127,11 @@ document.addEventListener('DOMContentLoaded', function() {
           if (response.ok) {
             const result = await response.json();
             console.log('Test mode account creation successful:', result);
+            
+            // Store the password for future logins
+            if (result.tempPassword) {
+              localStorage.setItem('sleeptech_password_' + customerData.email, result.tempPassword);
+            }
             
             // Redirect to thank you page with password (if available)
             window.location.href = '/thank-you.html?session_id=' + testSessionId + 
@@ -186,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
           currency: 'usd',
           customerEmail: customerData.email,
           customerName: customerData.name,
-          productName: 'SleepTech Course',
+          productName: 'AppFoundry Course',
           supportEmail: 'hello@risegg.net'
         }),
       });
@@ -201,6 +206,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('submit-button').textContent = 'Complete Purchase';
         if (loadingElement) loadingElement.style.display = 'none';
       } else {
+        // Store the password for future logins
+        if (result.tempPassword) {
+          localStorage.setItem('sleeptech_password_' + customerData.email, result.tempPassword);
+        }
+        
         // Payment succeeded - redirect to success page
         window.location.href = '/thank-you.html?session_id=' + result.paymentIntentId + 
                                '&email=' + encodeURIComponent(customerData.email) + 
