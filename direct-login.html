@@ -91,12 +91,13 @@
 <body>
     <header>
         <div class="container">
-            <div class="logo"><a href="index.html">SleepTech</a></div>
+            <div class="logo"><a href="index.html">AppFoundry</a></div>
             <nav>
                 <ul>
                     <li><a href="index.html#overview">Overview</a></li>
                     <li><a href="index.html#curriculum">Curriculum</a></li>
                     <li><a href="index.html#pricing">Pricing</a></li>
+                    <li><a href="success-stories.html">Success Stories</a></li>
                     <li><a href="about-creator.html">About</a></li>
                 </ul>
             </nav>
@@ -106,7 +107,7 @@
 
     <div class="login-container">
         <div id="test-mode-indicator"></div>
-        <h1>Log in to SleepTech</h1>
+        <h1>Log in to AppFoundry</h1>
         
         <div class="form-group">
             <label for="email">Email Address</label>
@@ -125,7 +126,7 @@
     
     <footer>
         <div class="container">
-            <div class="logo">SleepTech</div>
+            <div class="logo">AppFoundry</div>
             <div class="footer-links">
                 <div class="link-group">
                     <h4>Course</h4>
@@ -133,6 +134,7 @@
                         <li><a href="index.html#overview">Overview</a></li>
                         <li><a href="index.html#curriculum">Curriculum</a></li>
                         <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="success-stories.html">Success Stories</a></li>
                         <li><a href="about-creator.html">About Creator</a></li>
                     </ul>
                 </div>
@@ -152,7 +154,7 @@
                 </div>
             </div>
             <div class="copyright">
-                © 2025 SleepTech. All rights reserved.
+                © 2025 AppFoundry. All rights reserved.
             </div>
         </div>
     </footer>
@@ -177,7 +179,7 @@
             if (isTestMode) {
                 const testModeIndicator = document.getElementById('test-mode-indicator');
                 testModeIndicator.classList.add('test-mode-banner');
-                testModeIndicator.textContent = 'TEST MODE - Any valid format credentials will work';
+                testModeIndicator.textContent = 'TEST MODE - You must use the provided test credentials';
             }
             
             // Update header login button
@@ -206,9 +208,29 @@
                     return;
                 }
                 
-                // For our simplified system, any valid credentials are accepted in test mode
-                // In real system, this would validate against actual credentials
-                const isValid = isTestMode || checkCredentials(email, password);
+                // Get stored password for this email
+                const storedPassword = localStorage.getItem('sleeptech_password_' + email);
+                
+                // In test mode, we check if the provided password matches the stored one
+                // In regular mode, we also check if we have a stored password for comparison
+                let isValid = false;
+                
+                if (storedPassword) {
+                    // If we have a stored password, validate against it
+                    isValid = password === storedPassword;
+                } else if (isTestMode) {
+                    // In test mode without stored password, check basic format
+                    isValid = checkCredentials(email, password);
+                } else {
+                    // For regular login without stored password, check credentials format
+                    // In a real system, this would be a server-side check
+                    isValid = checkCredentials(email, password);
+                    
+                    // Store the password for this new user
+                    if (isValid) {
+                        localStorage.setItem('sleeptech_password_' + email, password);
+                    }
+                }
                 
                 if (isValid) {
                     // Set authentication in localStorage
