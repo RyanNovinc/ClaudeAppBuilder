@@ -309,7 +309,6 @@
         </div>
     </footer>
 
-    <script src="scripts.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             loadSuccessStories();
@@ -329,14 +328,31 @@
                 errorState.style.display = 'none';
                 successGrid.style.display = 'none';
                 
-                // Fetch approved stories
-                const response = await fetch('/.netlify/functions/get-approved-stories');
+                // In a full implementation, this would be an API call
+                // const response = await fetch('/.netlify/functions/get-approved-stories');
+                // if (!response.ok) throw new Error('Failed to load stories');
+                // const stories = await response.json();
                 
-                if (!response.ok) {
-                    throw new Error('Failed to load stories');
+                // For standalone testing, we'll use localStorage or sample data
+                let stories = [];
+                
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Check localStorage for approved stories from admin interface
+                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                if (storedSubmissions) {
+                    // Filter for approved stories only
+                    const allSubmissions = JSON.parse(storedSubmissions);
+                    stories = allSubmissions.filter(s => s.status === 'approved');
                 }
                 
-                const stories = await response.json();
+                // If no stories in localStorage, use sample data
+                if (stories.length === 0) {
+                    // Check if we should use empty state or sample data
+                    // For testing, we'll use sample data
+                    stories = getSampleStories();
+                }
                 
                 // Hide loading
                 loadingIndicator.style.display = 'none';
@@ -358,14 +374,6 @@
                 stories.forEach(story => {
                     const storyElement = document.createElement('div');
                     storyElement.className = 'success-story';
-                    
-                    // Format date
-                    const storyDate = new Date(story.date);
-                    const formattedDate = storyDate.toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: 'numeric' 
-                    });
                     
                     // Create image HTML
                     let imageHTML;
@@ -403,6 +411,39 @@
                 loadingIndicator.style.display = 'none';
                 errorState.style.display = 'block';
             }
+        }
+        
+        // Sample stories for testing
+        function getSampleStories() {
+            return [
+                {
+                    id: '1',
+                    name: 'Sarah Johnson',
+                    appName: 'SleepTrack',
+                    appType: 'Health & Fitness',
+                    testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
+                    images: ['https://placeholder.pics/svg/300x200'],
+                    date: '2025-04-15T10:30:00Z'
+                },
+                {
+                    id: '2',
+                    name: 'Michael Chen',
+                    appName: 'RecipeKeeper',
+                    appType: 'Lifestyle',
+                    testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
+                    images: ['https://placeholder.pics/svg/300x200'],
+                    date: '2025-04-22T14:45:00Z'
+                },
+                {
+                    id: '3',
+                    name: 'Lisa Rodriguez',
+                    appName: 'EventPlanner Pro',
+                    appType: 'Productivity',
+                    testimonial: '"My clients love the custom event planning app I built. I never thought I\'d be able to create something this professional without hiring expensive developers."',
+                    images: ['https://placeholder.pics/svg/300x200'],
+                    date: '2025-04-10T09:15:00Z'
+                }
+            ];
         }
     </script>
 </body>
