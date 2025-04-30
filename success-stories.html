@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success Stories - AppFoundry</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .success-container {
+            max-width: 1000px;
+            margin: 100px auto;
+            padding: 0 20px;
+        }
+        
+        .success-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .success-header p {
+            max-width: 700px;
+            margin: 0 auto;
+            color: #6b7280;
+            font-size: 18px;
+        }
+        
+        .success-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .success-story {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .success-story:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .story-image {
+            width: 100%;
+            height: 200px;
+            background-color: #f3f4f6;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .story-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .story-content {
+            padding: 25px;
+        }
+        
+        .story-content h3 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .app-type {
+            display: inline-block;
+            background-color: #e0f2ff;
+            color: #0070f3;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .story-content p {
+            margin-bottom: 15px;
+            color: #4b5563;
+        }
+        
+        .author-info {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f3f4f6;
+            margin-right: 10px;
+            overflow: hidden;
+        }
+        
+        .author-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .author-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .empty-state {
+            background-color: #f9fafb;
+            border-radius: 12px;
+            padding: 60px 40px;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .empty-state p {
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto 20px;
+        }
+        
+        .share-story-cta {
+            margin-top: 60px;
+            text-align: center;
+            background-color: #f3f4f6;
+            border-radius: 12px;
+            padding: 60px 40px;
+        }
+        
+        .share-story-cta h2 {
+            margin-bottom: 20px;
+        }
+        
+        .share-story-cta p {
+            max-width: 600px;
+            margin: 0 auto 30px;
+            color: #4b5563;
+        }
+        
+        @media (max-width: 768px) {
+            .success-container {
+                margin: 60px auto;
+            }
+            
+            .success-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo"><a href="index.html">AppFoundry</a></div>
+            <nav>
+                <ul>
+                    <li><a href="index.html#overview">Overview</a></li>
+                    <li><a href="index.html#curriculum">Curriculum</a></li>
+                    <li><a href="index.html#pricing">Pricing</a></li>
+                    <li><a href="success-stories.html">Success Stories</a></li>
+                    <li><a href="about-creator.html">About</a></li>
+                </ul>
+            </nav>
+            <button class="cta-button small" id="loginButton">Log in</button>
+        </div>
+    </header>
+
+    <div class="guarantee-banner">
+        <div class="container">
+            <span class="guarantee-icon">🔒</span>
+            <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 30 days or get 100% of your money back</span>
+            <a href="refund-policy.html" class="guarantee-link">Learn More</a>
+        </div>
+    </div>
+
+    <div class="success-container">
+        <div class="success-header">
+            <h1>Success Stories</h1>
+            <p>See what our students have built with no coding experience using the AppFoundry method</p>
+        </div>
+        
+        <!-- Empty state (will be shown if no success stories available) -->
+        <div class="empty-state">
+            <h3>Our First Success Stories Are Coming Soon!</h3>
+            <p>Our students are currently building amazing apps with the AppFoundry method. Check back soon to see what they've created!</p>
+            <button class="cta-button" onclick="window.location.href='checkout.html'">Join Them Today</button>
+        </div>
+        
+        <!-- This section will be populated with actual success stories later -->
+        <div class="success-grid" style="display: none;">
+            <!-- Success story examples (hidden until real stories are available) -->
+            <div class="success-story">
+                <div class="story-image">
+                    <img src="https://placeholder.pics/svg/300x200" alt="Sleep Tracker App Screenshot">
+                </div>
+                <div class="story-content">
+                    <span class="app-type">Health & Fitness</span>
+                    <h3>Sleep Tracker App</h3>
+                    <p>"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"</p>
+                    <div class="author-info">
+                        <div class="author-avatar">
+                            <img src="https://placeholder.pics/svg/40x40" alt="User Avatar">
+                        </div>
+                        <div class="author-name">Sarah Johnson</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="success-story">
+                <div class="story-image">
+                    <img src="https://placeholder.pics/svg/300x200" alt="Recipe Manager App Screenshot">
+                </div>
+                <div class="story-content">
+                    <span class="app-type">Lifestyle</span>
+                    <h3>Recipe Manager App</h3>
+                    <p>"I've been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"</p>
+                    <div class="author-info">
+                        <div class="author-avatar">
+                            <img src="https://placeholder.pics/svg/40x40" alt="User Avatar">
+                        </div>
+                        <div class="author-name">Michael Chen</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="success-story">
+                <div class="story-image">
+                    <img src="https://placeholder.pics/svg/300x200" alt="Event Planner App Screenshot">
+                </div>
+                <div class="story-content">
+                    <span class="app-type">Productivity</span>
+                    <h3>Event Planner App</h3>
+                    <p>"My clients love the custom event planning app I built. I never thought I'd be able to create something this professional without hiring expensive developers."</p>
+                    <div class="author-info">
+                        <div class="author-avatar">
+                            <img src="https://placeholder.pics/svg/40x40" alt="User Avatar">
+                        </div>
+                        <div class="author-name">Lisa Rodriguez</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="share-story-cta">
+            <h2>Have You Built an App with AppFoundry?</h2>
+            <p>We'd love to feature your success story! Share your experience and inspire others to bring their app ideas to life.</p>
+            <button class="cta-button large" onclick="window.location.href='mailto:hello@risegg.net?subject=My%20AppFoundry%20Success%20Story'">Share Your Story</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="logo">AppFoundry</div>
+            <div class="footer-links">
+                <div class="link-group">
+                    <h4>Course</h4>
+                    <ul>
+                        <li><a href="index.html#overview">Overview</a></li>
+                        <li><a href="index.html#curriculum">Curriculum</a></li>
+                        <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="success-stories.html">Success Stories</a></li>
+                        <li><a href="about-creator.html">About Creator</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="refund-policy.html">Our Guarantee</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 AppFoundry. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
