@@ -1,11 +1,11 @@
 // access-control.js - Add this to your site for course content protection with test mode
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if we're in test mode
+    // Check if we're in test mode - make this check robust and reliable
     const urlParams = new URLSearchParams(window.location.search);
     const isTestMode = urlParams.get('test_mode') === 'true';
     
-    // If in test mode, automatically grant access
+    // If in test mode, immediately grant access without any other checks
     if (isTestMode) {
         showTestModeIndicator();
         showContent();
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     } else {
         console.error('Netlify Identity widget not loaded');
-        // If Netlify Identity is not available, check if test mode was requested in URL
+        // If Netlify Identity is not available, check if we should use test mode
         if (window.location.href.includes('test_mode=true')) {
             showTestModeIndicator();
             showContent();
