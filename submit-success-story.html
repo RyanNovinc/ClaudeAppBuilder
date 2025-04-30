@@ -373,112 +373,73 @@
                     const story = document.getElementById('story').value;
                     const testimonial = document.getElementById('testimonial').value;
                     
-                    // Handle images - convert to base64 strings or URLs
+                    // Process images
                     const fileInput = document.getElementById('app-screenshots');
-                    const images = [];
+                    let images = [];
                     
                     if (fileInput.files && fileInput.files.length > 0) {
-                        for (let i = 0; i < fileInput.files.length; i++) {
+                        for (let i = 0; i < Math.min(fileInput.files.length, 3); i++) {
                             const file = fileInput.files[i];
                             if (file.type.startsWith('image/')) {
-                                // Convert to base64 for localStorage
                                 try {
                                     const base64String = await convertFileToBase64(file);
                                     images.push(base64String);
                                 } catch (error) {
-                                    console.error('Error converting file to base64:', error);
+                                    console.error('Error converting image to base64:', error);
                                 }
                             }
                         }
                     }
                     
-                    // Create submission data
-                    const submissionData = {
+                    // Simple approach - immediately store in localStorage
+                    const newSubmission = {
+                        id: 'story_' + Date.now(),
+                        date: new Date().toISOString(),
+                        status: 'pending',
                         name,
                         email,
-                        'app-type': appType,
-                        'app-name': appName,
-                        story,
+                        appName,
+                        appType,
                         testimonial,
+                        story,
                         images
                     };
                     
-                    console.log('Preparing to submit story:', { ...submissionData, images: `${images.length} images` });
+                    // Get existing submissions
+                    let existingSubmissions = [];
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    if (storedSubmissions) {
+                        existingSubmissions = JSON.parse(storedSubmissions);
+                    }
                     
-                    // Try to submit to Netlify Function
-                    let functionSuccess = false;
-                    let apiSubmission = null;
+                    // Add new submission
+                    existingSubmissions.unshift(newSubmission);
                     
+                    // Store updated submissions
+                    localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
+                    
+                    console.log('Saved to localStorage:', newSubmission.id);
+                    
+                    // Also attempt to submit to API but don't wait for response
                     try {
-                        console.log('Submitting to Netlify Function...');
-                        const response = await fetch('/.netlify/functions/submit-success-story', {
+                        fetch('/.netlify/functions/submit-success-story', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify(submissionData)
+                            body: JSON.stringify({
+                                name,
+                                email,
+                                'app-type': appType,
+                                'app-name': appName,
+                                story,
+                                testimonial,
+                                images
+                            })
                         });
-                        
-                        console.log('Function response status:', response.status);
-                        
-                        if (!response.ok) {
-                            throw new Error(`Function returned status ${response.status}`);
-                        }
-                        
-                        const result = await response.json();
-                        console.log('Submission successful:', result);
-                        functionSuccess = true;
-                        
-                        // If the API returned a submission object, use it
-                        if (result.submission) {
-                            apiSubmission = result.submission;
-                        }
-                        
-                        // If the API signals to use localStorage, we'll still save locally
-                        if (result.useLocalStorage) {
-                            functionSuccess = false; // Force localStorage save
-                            // But keep apiSubmission so we use the server-generated ID
-                        }
-                    } catch (functionError) {
-                        console.error('Error submitting to function:', functionError);
-                        // Will fall back to localStorage
-                    }
-                    
-                    // Save to localStorage if function failed OR if API specifically requested it
-                    if (!functionSuccess) {
-                        console.log('Saving to localStorage...');
-                        
-                        // Generate ID (use API-provided ID if available)
-                        const submissionId = apiSubmission ? apiSubmission.id : 'story_' + Date.now();
-                        
-                        // Create full submission object
-                        const newSubmission = apiSubmission || {
-                            id: submissionId,
-                            date: new Date().toISOString(),
-                            status: 'pending',
-                            name,
-                            email,
-                            appName,
-                            appType,
-                            testimonial,
-                            story,
-                            images
-                        };
-                        
-                        // Get existing submissions
-                        let existingSubmissions = [];
-                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                        if (storedSubmissions) {
-                            existingSubmissions = JSON.parse(storedSubmissions);
-                        }
-                        
-                        // Add new submission
-                        existingSubmissions.unshift(newSubmission);
-                        
-                        // Store updated submissions
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
-                        
-                        console.log('Saved to localStorage:', submissionId);
+                    } catch (apiError) {
+                        console.error('API submission error:', apiError);
+                        // Ignore API errors since we already saved to localStorage
                     }
                     
                     // Show success message
