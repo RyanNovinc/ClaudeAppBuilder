@@ -1,6 +1,9 @@
 // functions/submit-success-story.js
 const { v4: uuidv4 } = require('uuid');
-const { storeSubmission } = require('./utils/kv-store');
+
+// Simple in-memory storage for development
+// In production, you would use a database
+const submissions = [];
 
 exports.handler = async function(event, context) {
   // Set CORS headers
@@ -59,13 +62,10 @@ exports.handler = async function(event, context) {
       images: data.images || [] // Array of image URLs
     };
     
-    // Store the submission
-    await storeSubmission(submission);
+    // For local testing, just store in memory
+    // In production, you would store in a database
+    submissions.push(submission);
     
-    // Send email notification (optional - would be implemented in production)
-    // In a production system, you'd notify admins of the new submission
-    
-    // Log the submission
     console.log('New success story submission:', submission.id);
     
     return {
