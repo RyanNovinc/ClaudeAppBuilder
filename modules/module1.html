@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Module 1: Setting Up Your Environment - SleepTech</title>
+    <title>Module 1: Setting Up Your Environment - AppFoundry</title>
     <link rel="stylesheet" href="../styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -239,6 +239,25 @@
             color: #6b7280;
         }
         
+        /* Success story box styles */
+        .share-success-box {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .share-success-box h3 {
+            color: #0070f3;
+            margin-bottom: 10px;
+        }
+        
+        .share-success-box p {
+            margin-bottom: 20px;
+        }
+        
         @media (max-width: 992px) {
             .course-container {
                 flex-direction: column;
@@ -255,12 +274,13 @@
 <body>
     <header>
         <div class="container">
-            <div class="logo"><a href="../index.html">SleepTech</a></div>
+            <div class="logo"><a href="../index.html">AppFoundry</a></div>
             <nav>
                 <ul>
                     <li><a href="../index.html#overview">Overview</a></li>
                     <li><a href="../index.html#curriculum">Curriculum</a></li>
                     <li><a href="../index.html#pricing">Pricing</a></li>
+                    <li><a href="../success-stories.html">Success Stories</a></li>
                     <li><a href="../about-creator.html">About</a></li>
                 </ul>
             </nav>
@@ -411,6 +431,13 @@
                     </ul>
                 </div>
                 
+                <!-- Success Story Submission Box -->
+                <div class="share-success-box">
+                    <h3>Built Something Amazing?</h3>
+                    <p>We'd love to feature your app in our Success Stories! Share your experience and inspire others.</p>
+                    <button class="cta-button" onclick="window.location.href='../submit-success-story.html'">Share Your Success Story</button>
+                </div>
+                
                 <div class="course-navigation">
                     <a href="../index.html" class="nav-button prev">← Back to Course Overview</a>
                     <a href="module2.html" class="nav-button next">Next Module: Creating Your First AI Project →</a>
@@ -421,7 +448,7 @@
 
     <footer>
         <div class="container">
-            <div class="logo">SleepTech</div>
+            <div class="logo">AppFoundry</div>
             <div class="footer-links">
                 <div class="link-group">
                     <h4>Course</h4>
@@ -429,6 +456,7 @@
                         <li><a href="../index.html#overview">Overview</a></li>
                         <li><a href="../index.html#curriculum">Curriculum</a></li>
                         <li><a href="../index.html#pricing">Pricing</a></li>
+                        <li><a href="../success-stories.html">Success Stories</a></li>
                         <li><a href="../about-creator.html">About Creator</a></li>
                     </ul>
                 </div>
@@ -448,7 +476,7 @@
                 </div>
             </div>
             <div class="copyright">
-                © 2025 SleepTech. All rights reserved.
+                © 2025 AppFoundry. All rights reserved.
             </div>
         </div>
     </footer>
