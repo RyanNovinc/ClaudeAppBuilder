@@ -1,18 +1,19 @@
 {
-  "name": "sleeptech-course",
+  "name": "appfoundry-course",
   "version": "1.0.0",
-  "description": "SleepTech Course Website",
+  "description": "AppFoundry Course Website",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "sleeptech",
+    "appfoundry",
     "course",
-    "sleep",
-    "technology"
+    "ai",
+    "app development",
+    "claude"
   ],
-  "author": "SleepTech",
+  "author": "AppFoundry",
   "license": "ISC",
   "dependencies": {
     "stripe": "^12.18.0",
@@ -22,6 +23,10 @@
     "jsonwebtoken": "^9.0.0",
     "bcryptjs": "^2.4.3",
     "node-fetch": "^2.6.7",
-    "@sendgrid/mail": "^7.7.0"
+    "@sendgrid/mail": "^7.7.0",
+    "@netlify/blobs": "^3.2.0",
+    "busboy": "^1.6.0",
+    "multiparty": "^4.2.3",
+    "fs-extra": "^11.1.1"
   }
 }
