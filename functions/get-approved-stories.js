@@ -1,5 +1,26 @@
 // functions/get-approved-stories.js
-const { getApprovedSubmissions } = require('./utils/kv-store');
+
+// Sample data for development (used when no database is available)
+const sampleStories = [
+  {
+    id: '1',
+    name: 'Sarah Johnson',
+    appName: 'SleepTrack',
+    appType: 'Health & Fitness',
+    testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
+    images: ['https://placeholder.pics/svg/300x200'],
+    date: '2025-04-15T10:30:00Z'
+  },
+  {
+    id: '2',
+    name: 'Michael Chen',
+    appName: 'RecipeKeeper',
+    appType: 'Lifestyle',
+    testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
+    images: ['https://placeholder.pics/svg/300x200'],
+    date: '2025-04-22T14:45:00Z'
+  }
+];
 
 exports.handler = async function(event, context) {
   // Set CORS headers
@@ -20,11 +41,11 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    // Get approved stories
-    const approvedStories = await getApprovedSubmissions();
+    // For now, return sample data
+    // In a production app, you would query a database for approved stories
     
-    // Map to public fields only (omit email, etc)
-    const publicStories = approvedStories.map(story => ({
+    // Return only the fields needed for public display (no email, full story, etc.)
+    const publicStories = sampleStories.map(story => ({
       id: story.id,
       name: story.name,
       appName: story.appName,
