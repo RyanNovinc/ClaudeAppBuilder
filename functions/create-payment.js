@@ -234,7 +234,7 @@ exports.handler = async function(event, context) {
       // Don't fail the process if email sending fails
     }
     
-    // Send success response
+    // Send success response with password
     return {
       statusCode: 200,
       headers,
@@ -245,7 +245,8 @@ exports.handler = async function(event, context) {
         amount: isTestMode ? 0 : amount / 100, // Convert back to dollars for display
         userCreated: true,
         tempPassword: tempPassword, // Include this in response for test mode only
-        emailSent: true // Indicate that we attempted to send an email
+        emailSent: true, // Indicate that we attempted to send an email
+        testMode: isTestMode
       })
     };
   } catch (error) {
