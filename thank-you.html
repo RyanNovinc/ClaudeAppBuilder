@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thank You - SleepTech</title>
+    <title>Thank You - AppFoundry</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -200,12 +200,13 @@
 <body>
     <header>
         <div class="container">
-            <div class="logo"><a href="index.html">SleepTech</a></div>
+            <div class="logo"><a href="index.html">AppFoundry</a></div>
             <nav>
                 <ul>
                     <li><a href="index.html#overview">Overview</a></li>
                     <li><a href="index.html#curriculum">Curriculum</a></li>
                     <li><a href="index.html#pricing">Pricing</a></li>
+                    <li><a href="success-stories.html">Success Stories</a></li>
                     <li><a href="about-creator.html">About</a></li>
                 </ul>
             </nav>
@@ -217,7 +218,7 @@
         <div id="test-mode-indicator"></div>
         <div class="success-icon">✓</div>
         <h1>Thank You for Your Purchase!</h1>
-        <p>Your order has been successfully processed. You now have access to the complete SleepTech course.</p>
+        <p>Your order has been successfully processed. You now have access to the complete AppFoundry course.</p>
         
         <div id="account-info" class="account-info">
             <h2>Your Account Information</h2>
@@ -281,7 +282,7 @@
 
     <footer>
         <div class="container">
-            <div class="logo">SleepTech</div>
+            <div class="logo">AppFoundry</div>
             <div class="footer-links">
                 <div class="link-group">
                     <h4>Course</h4>
@@ -289,6 +290,7 @@
                         <li><a href="index.html#overview">Overview</a></li>
                         <li><a href="index.html#curriculum">Curriculum</a></li>
                         <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="success-stories.html">Success Stories</a></li>
                         <li><a href="about-creator.html">About Creator</a></li>
                     </ul>
                 </div>
@@ -308,7 +310,7 @@
                 </div>
             </div>
             <div class="copyright">
-                © 2025 SleepTech. All rights reserved.
+                © 2025 AppFoundry. All rights reserved.
             </div>
         </div>
     </footer>
@@ -321,6 +323,7 @@
             const sessionId = urlParams.get('session_id');
             const isTestMode = urlParams.get('test_mode') === 'true';
             const emailParam = urlParams.get('email');
+            const passwordParam = urlParams.get('password');
             const serverError = urlParams.get('server_error') === 'true';
             
             // Update account email if provided
@@ -351,65 +354,13 @@
                 
                 // Update start course button with test mode parameter
                 document.getElementById('start-course-button').href = 'modules/module1.html?test_mode=true';
-                
-                // Update account info section for test mode if there was an error
-                if (serverError) {
-                    const accountInfo = document.getElementById('account-info');
-                    accountInfo.innerHTML = `
-                        <h2>Test Mode Account</h2>
-                        <p>We tried to create a test account for <strong>${emailParam}</strong>, but encountered an issue with the test email delivery.</p>
-                        <p>In a real purchase, you would receive an email with login details. For now, you can access all content in test mode.</p>
-                        <a href="modules/module1.html?test_mode=true" class="login-button">Access Course Content</a>
-                    `;
-                } else {
-                    // No server error, but still in test mode - show appropriate message
-                    const accountInfo = document.getElementById('account-info');
-                    accountInfo.innerHTML = `
-                        <h2>Test Mode Account</h2>
-                        <p>In test mode, we've simulated creating an account for <strong>${emailParam}</strong>.</p>
-                        <p>We've sent a test welcome email to your inbox with login credentials. Please check your email!</p>
-                        <a href="modules/module1.html?test_mode=true" class="login-button">Access Course Content</a>
-                    `;
-                }
-            } else if (sessionId) {
-                // Real purchase
-                document.getElementById('order-id').textContent = 'ST-' + sessionId.substring(0, 8);
             }
             
-            // Set the current date for the order
-            const today = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('order-date').textContent = today.toLocaleDateString('en-US', options);
-            
-            // Check if user is already logged in
-            const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
-            const authEmail = localStorage.getItem('sleeptech_email');
-            
-            if (isAuthenticated && !isTestMode) {
-                // User is already logged in with our simplified auth system
-                const accountInfo = document.getElementById('account-info');
-                accountInfo.innerHTML = `
-                    <h2>You're Already Logged In!</h2>
-                    <p>You're currently logged in as <strong>${authEmail}</strong>.</p>
-                    <p>You can now access all course materials immediately.</p>
-                    <button id="go-to-account" class="login-button">Go to Course Content</button>
-                `;
-                
-                document.getElementById('go-to-account').addEventListener('click', function() {
-                    window.location.href = 'modules/module1.html';
-                });
+            // If in test mode and password was provided, store it
+            if (isTestMode && emailParam && passwordParam) {
+                // Store the password for future logins
+                localStorage.setItem('sleeptech_password_' + emailParam, passwordParam);
             }
-        });
-    </script>
-    
-    <script>
-        // Enhanced account info display for test mode
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const isTestMode = urlParams.get('test_mode') === 'true';
-            const emailParam = urlParams.get('email');
-            const passwordParam = urlParams.get('password');
             
             // Update account info for test mode with password
             if (isTestMode && emailParam) {
@@ -445,15 +396,40 @@
                 if (errorNotice) {
                     errorNotice.style.display = 'none';
                 }
+            } else if (sessionId) {
+                // Real purchase
+                document.getElementById('order-id').textContent = 'ST-' + sessionId.substring(0, 8);
+                document.getElementById('order-amount').textContent = '$199.00';
+            }
+            
+            // Set the current date for the order
+            const today = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('order-date').textContent = today.toLocaleDateString('en-US', options);
+            
+            // Check if user is already logged in
+            const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
+            const authEmail = localStorage.getItem('sleeptech_email');
+            
+            if (isAuthenticated && !isTestMode) {
+                // User is already logged in with our simplified auth system
+                const accountInfo = document.getElementById('account-info');
+                accountInfo.innerHTML = `
+                    <h2>You're Already Logged In!</h2>
+                    <p>You're currently logged in as <strong>${authEmail}</strong>.</p>
+                    <p>You can now access all course materials immediately.</p>
+                    <button id="go-to-account" class="login-button">Go to Course Content</button>
+                `;
+                
+                document.getElementById('go-to-account').addEventListener('click', function() {
+                    window.location.href = 'modules/module1.html';
+                });
             }
             
             // Update login button in header
             const loginButton = document.getElementById('loginButton');
             if (loginButton) {
                 // Check if the user is authenticated with our simplified system
-                const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
-                const authEmail = localStorage.getItem('sleeptech_email');
-                
                 if (isAuthenticated) {
                     // User is logged in
                     loginButton.textContent = 'My Account';
@@ -463,6 +439,7 @@
                             localStorage.removeItem('sleeptech_auth');
                             localStorage.removeItem('sleeptech_email');
                             localStorage.removeItem('sleeptech_login_time');
+                            // Don't remove the password to allow future logins
                             
                             // Refresh the page
                             window.location.reload();
