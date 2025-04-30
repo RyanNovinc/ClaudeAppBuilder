@@ -101,35 +101,83 @@ exports.handler = async function(event, context) {
       
       console.log('Using Netlify Identity endpoint:', netlifyIdentityEndpoint);
       
-      // Create the user with confirmed_at to auto-verify the email
-      const userResponse = await fetch(netlifyIdentityEndpoint, {
-        method: 'POST',
+      // First check if the user already exists
+      const getUsersResponse = await fetch(netlifyIdentityEndpoint, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
-        },
-        body: JSON.stringify({
-          email: customerEmail,
-          password: tempPassword,
-          confirmed_at: new Date().toISOString(), // Auto-confirm the user's email
-          app_metadata: {
-            roles: ["paying_customer"] // Optional: assign a role for access control
-          },
-          user_metadata: {
-            full_name: customerName,
-            course_access: true,
-            purchase_date: new Date().toISOString(),
-            payment_id: paymentIntent.id
-          }
-        })
+        }
       });
       
-      if (!userResponse.ok) {
-        const errorData = await userResponse.text();
-        console.error('Error creating user in Netlify Identity:', errorData);
-        // Continue even if user creation failed - we'll handle it via email
+      if (getUsersResponse.ok) {
+        const users = await getUsersResponse.json();
+        const existingUser = users.find(u => u.email === customerEmail);
+        
+        if (existingUser) {
+          console.log('User already exists, updating instead of creating');
+          
+          // Update the existing user
+          const updateResponse = await fetch(`${netlifyIdentityEndpoint}/${existingUser.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
+            },
+            body: JSON.stringify({
+              email: customerEmail,
+              confirmed_at: new Date().toISOString(),
+              app_metadata: {
+                ...(existingUser.app_metadata || {}),
+                roles: ["paying_customer"]
+              },
+              user_metadata: {
+                ...(existingUser.user_metadata || {}),
+                full_name: customerName,
+                course_access: true,
+                purchase_date: new Date().toISOString(),
+                payment_id: paymentIntent.id
+              }
+            })
+          });
+          
+          if (!updateResponse.ok) {
+            console.error('Error updating user:', await updateResponse.text());
+          } else {
+            console.log('User updated successfully');
+          }
+        } else {
+          // Create a new user
+          const userResponse = await fetch(netlifyIdentityEndpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
+            },
+            body: JSON.stringify({
+              email: customerEmail,
+              password: tempPassword,
+              confirmed_at: new Date().toISOString(),
+              app_metadata: {
+                roles: ["paying_customer"]
+              },
+              user_metadata: {
+                full_name: customerName,
+                course_access: true,
+                purchase_date: new Date().toISOString(),
+                payment_id: paymentIntent.id
+              }
+            })
+          });
+          
+          if (!userResponse.ok) {
+            const errorData = await userResponse.text();
+            console.error('Error creating user in Netlify Identity:', errorData);
+          } else {
+            console.log('User account created successfully');
+          }
+        }
       } else {
-        console.log('User account created successfully');
+        console.error('Failed to get users from Netlify Identity');
       }
     } catch (userError) {
       console.error('Error creating user account:', userError);
