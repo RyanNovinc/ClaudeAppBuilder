@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Page - AppFoundry Admin</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9fafb;
+        }
+        
+        h1, h2, h3 {
+            color: #111827;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .admin-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        
+        .button {
+            background-color: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .button:hover {
+            background-color: #0055b3;
+        }
+        
+        .button.secondary {
+            background-color: white;
+            color: #4b5563;
+            border: 1px solid #d1d5db;
+        }
+        
+        .button.secondary:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .button.danger {
+            background-color: #ef4444;
+        }
+        
+        .button.danger:hover {
+            background-color: #dc2626;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        pre {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        
+        .info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        th {
+            background-color: #f9fafb;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: #f3f4f6;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AppFoundry Admin Debug</h1>
+        <p>This page helps diagnose issues with submissions and localStorage</p>
+        
+        <div class="button-group">
+            <button class="button" id="view-localstorage">View localStorage Data</button>
+            <button class="button secondary" id="test-localstorage">Test localStorage Write</button>
+            <button class="button danger" id="clear-localstorage">Clear All localStorage</button>
+        </div>
+        
+        <div class="admin-card">
+            <h2>Current localStorage Data</h2>
+            <pre id="localstorage-content">Click "View localStorage Data" to display</pre>
+        </div>
+        
+        <div class="admin-card">
+            <h2>Edit localStorage Data</h2>
+            <textarea id="localstorage-editor"></textarea>
+            <button class="button" id="save-localstorage">Save to localStorage</button>
+            <div id="save-status"></div>
+        </div>
+        
+        <div class="admin-card">
+            <h2>Sample Success Story</h2>
+            <button class="button" id="add-sample">Add Sample Success Story</button>
+            <button class="button secondary" id="view-submissions">View All Submissions</button>
+            <div id="sample-status"></div>
+            <pre id="sample-story-content"></pre>
+        </div>
+        
+        <div class="admin-card">
+            <h2>API Test</h2>
+            <button class="button" id="test-api">Test API Connection</button>
+            <pre id="api-result">Click "Test API Connection" to check</pre>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // View localStorage data
+            document.getElementById('view-localstorage').addEventListener('click', function() {
+                const localStorageContent = document.getElementById('localstorage-content');
+                const editor = document.getElementById('localstorage-editor');
+                
+                try {
+                    const allData = {};
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        try {
+                            // Try to parse as JSON
+                            allData[key] = JSON.parse(localStorage.getItem(key));
+                        } catch (e) {
+                            // If not JSON, store as string
+                            allData[key] = localStorage.getItem(key);
+                        }
+                    }
+                    
+                    localStorageContent.textContent = JSON.stringify(allData, null, 2);
+                    editor.value = JSON.stringify(allData, null, 2);
+                } catch (error) {
+                    localStorageContent.textContent = `Error reading localStorage: ${error.message}`;
+                }
+            });
+            
+            // Test localStorage write
+            document.getElementById('test-localstorage').addEventListener('click', function() {
+                try {
+                    localStorage.setItem('appfoundry_debug_test', JSON.stringify({
+                        test: 'This is a test',
+                        timestamp: new Date().toISOString()
+                    }));
+                    
+                    const localStorageContent = document.getElementById('localstorage-content');
+                    localStorageContent.textContent = 'Test data written to localStorage successfully. Click "View localStorage Data" to see all data.';
+                    localStorageContent.className = 'success';
+                    
+                    // Refresh the display
+                    document.getElementById('view-localstorage').click();
+                } catch (error) {
+                    const localStorageContent = document.getElementById('localstorage-content');
+                    localStorageContent.textContent = `Error writing to localStorage: ${error.message}`;
+                    localStorageContent.className = 'error';
+                }
+            });
+            
+            // Clear localStorage
+            document.getElementById('clear-localstorage').addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear all localStorage data? This cannot be undone.')) {
+                    localStorage.clear();
+                    const localStorageContent = document.getElementById('localstorage-content');
+                    localStorageContent.textContent = 'All localStorage data has been cleared.';
+                    document.getElementById('localstorage-editor').value = '';
+                }
+            });
+            
+            // Save edited localStorage
+            document.getElementById('save-localstorage').addEventListener('click', function() {
+                const editor = document.getElementById('localstorage-editor');
+                const saveStatus = document.getElementById('save-status');
+                
+                try {
+                    const data = JSON.parse(editor.value);
+                    
+                    // Clear existing
+                    localStorage.clear();
+                    
+                    // Write new data
+                    for (const key in data) {
+                        localStorage.setItem(key, JSON.stringify(data[key]));
+                    }
+                    
+                    saveStatus.textContent = 'Data saved to localStorage successfully.';
+                    saveStatus.className = 'success';
+                    
+                    // Refresh the display
+                    document.getElementById('view-localstorage').click();
+                } catch (error) {
+                    saveStatus.textContent = `Error: ${error.message}`;
+                    saveStatus.className = 'error';
+                }
+            });
+            
+            // Add sample success story
+            document.getElementById('add-sample').addEventListener('click', function() {
+                const sampleStatus = document.getElementById('sample-status');
+                const sampleStoryContent = document.getElementById('sample-story-content');
+                
+                // Create sample story
+                const sampleStory = {
+                    id: 'sample_' + Date.now(),
+                    name: 'Debug User',
+                    email: 'debug@example.com',
+                    appName: 'Debug App',
+                    appType: 'Testing',
+                    testimonial: '"This is a test submission created from the debug page. It should appear in the admin dashboard."',
+                    story: 'This is a sample success story generated for testing purposes. It should appear in the admin dashboard and can be approved to show on the public success stories page.',
+                    images: ['https://placeholder.pics/svg/300x200'],
+                    date: new Date().toISOString(),
+                    status: 'pending'
+                };
+                
+                try {
+                    // Get existing submissions
+                    let submissions = [];
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    if (storedSubmissions) {
+                        submissions = JSON.parse(storedSubmissions);
+                    }
+                    
+                    // Add new submission
+                    submissions.unshift(sampleStory);
+                    
+                    // Save to localStorage
+                    localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                    
+                    sampleStatus.textContent = 'Sample story added successfully. Go to admin/success-stories.html to see it.';
+                    sampleStatus.className = 'success';
+                    
+                    sampleStoryContent.textContent = JSON.stringify(sampleStory, null, 2);
+                } catch (error) {
+                    sampleStatus.textContent = `Error: ${error.message}`;
+                    sampleStatus.className = 'error';
+                }
+            });
+            
+            // View all submissions
+            document.getElementById('view-submissions').addEventListener('click', function() {
+                const sampleStoryContent = document.getElementById('sample-story-content');
+                
+                try {
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    if (storedSubmissions) {
+                        sampleStoryContent.textContent = JSON.stringify(JSON.parse(storedSubmissions), null, 2);
+                    } else {
+                        sampleStoryContent.textContent = 'No submissions found in localStorage.';
+                    }
+                } catch (error) {
+                    sampleStoryContent.textContent = `Error: ${error.message}`;
+                }
+            });
+            
+            // Test API connection
+            document.getElementById('test-api').addEventListener('click', async function() {
+                const apiResult = document.getElementById('api-result');
+                
+                apiResult.textContent = 'Testing API connection...';
+                
+                try {
+                    // Test connection to function
+                    const testData = {
+                        name: 'API Test User',
+                        email: 'test@example.com',
+                        'app-type': 'Testing',
+                        'app-name': 'API Test App',
+                        story: 'This is a test story to check if the API connection is working.',
+                        testimonial: 'This is a test testimonial.'
+                    };
+                    
+                    const response = await fetch('/.netlify/functions/submit-success-story', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(testData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    apiResult.textContent = `API Response:\n${JSON.stringify(result, null, 2)}`;
+                } catch (error) {
+                    apiResult.textContent = `Error testing API: ${error.message}`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
