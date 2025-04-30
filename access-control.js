@@ -1,66 +1,35 @@
-// access-control.js - Add this to your site for course content protection with test mode
+// access-control.js - Add this to your site for course content protection with simplified login
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if we're in test mode - make this check robust and reliable
+    // Check if we're in test mode
     const urlParams = new URLSearchParams(window.location.search);
     const isTestMode = urlParams.get('test_mode') === 'true';
     
-    // If in test mode, immediately grant access without any other checks
+    // If in test mode, automatically grant access
     if (isTestMode) {
         showTestModeIndicator();
         showContent();
         return;
     }
     
-    // Check if Netlify Identity is available
-    if (window.netlifyIdentity) {
-        // Initialize user state
-        netlifyIdentity.on('init', user => {
-            handleUserState(user);
-        });
-        
-        // Handle login events
-        netlifyIdentity.on('login', user => {
-            handleUserState(user);
-        });
-        
-        // Handle logout events
-        netlifyIdentity.on('logout', () => {
-            showLoginPrompt();
-        });
-    } else {
-        console.error('Netlify Identity widget not loaded');
-        // If Netlify Identity is not available, check if we should use test mode
-        if (window.location.href.includes('test_mode=true')) {
-            showTestModeIndicator();
-            showContent();
-        } else {
-            showError('Authentication system not available. Please try again later or use test mode.');
-        }
+    // Check if the user is authenticated with our simplified system
+    const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
+    const authEmail = localStorage.getItem('sleeptech_email');
+    const authTime = localStorage.getItem('sleeptech_login_time');
+    
+    // Check if authentication is valid (not expired)
+    const now = new Date().getTime();
+    const oneDay = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    const isAuthValid = authTime && (now - parseInt(authTime) < oneDay);
+    
+    if (isAuthenticated && isAuthValid) {
+        // User is authenticated with our simplified system
+        showContent();
+        return;
     }
     
-    // Update UI based on login and course access state
-    function handleUserState(user) {
-        if (!user) {
-            // Not logged in
-            showLoginPrompt();
-            return;
-        }
-        
-        // User is logged in, check for course access
-        const userMeta = user.user_metadata || {};
-        
-        if (userMeta.course_access === true) {
-            // User has access, show content
-            showContent();
-            
-            // Log this access for analytics (optional)
-            logAccess(user.id);
-        } else {
-            // User is logged in but doesn't have course access
-            showAccessDenied();
-        }
-    }
+    // No valid authentication, show login prompt
+    showLoginPrompt();
     
     // Show a test mode indicator
     function showTestModeIndicator() {
@@ -94,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="access-box">
                 <h2>Course Access Required</h2>
                 <p>Please log in to access this course content.</p>
-                <button class="cta-button large" onclick="netlifyIdentity && netlifyIdentity.open('login')">Log In</button>
+                <button class="cta-button large" onclick="window.location.href='../direct-login.html'">Log In</button>
                 <p class="small-text">Don't have an account? <a href="../checkout.html">Purchase the course</a> to gain access.</p>
                 <p class="small-text">Or <a href="?test_mode=true">activate test mode</a> to preview the course.</p>
             </div>
@@ -131,10 +100,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loginButton) {
             loginButton.textContent = 'My Account';
             loginButton.onclick = function() {
-                if (window.netlifyIdentity) {
-                    netlifyIdentity.open('user');
+                // If user is logged in with simple auth, show their info
+                if (isAuthenticated && authEmail) {
+                    if (confirm('You are logged in as ' + authEmail + '. Would you like to log out?')) {
+                        localStorage.removeItem('sleeptech_auth');
+                        localStorage.removeItem('sleeptech_email');
+                        localStorage.removeItem('sleeptech_login_time');
+                        window.location.reload();
+                    }
                 } else if (isTestMode) {
                     alert('This is test mode. In a real account, this would open your user profile.');
+                } else {
+                    window.location.href = '../direct-login.html';
                 }
             };
         }
@@ -155,30 +132,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p class="small-text">Or <a href="?test_mode=true">activate test mode</a> to preview the course.</p>
             </div>
         `;
-    }
-    
-    // Log access for analytics (optional)
-    async function logAccess(userId) {
-        // This is optional - you can implement a function to log access
-        // to track usage, prevent sharing, etc.
-        try {
-            // Example - you would need to create this function in Netlify
-            /*
-            await fetch('/.netlify/functions/log-access', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: userId,
-                    page: window.location.pathname,
-                    timestamp: new Date().toISOString()
-                })
-            });
-            */
-        } catch (error) {
-            console.error('Error logging access:', error);
-            // Non-critical, so we don't show an error to the user
-        }
     }
 });
