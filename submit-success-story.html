@@ -407,6 +407,8 @@
                     
                     // Try to submit to Netlify Function
                     let functionSuccess = false;
+                    let apiSubmission = null;
+                    
                     try {
                         console.log('Submitting to Netlify Function...');
                         const response = await fetch('/.netlify/functions/submit-success-story', {
@@ -426,20 +428,31 @@
                         const result = await response.json();
                         console.log('Submission successful:', result);
                         functionSuccess = true;
+                        
+                        // If the API returned a submission object, use it
+                        if (result.submission) {
+                            apiSubmission = result.submission;
+                        }
+                        
+                        // If the API signals to use localStorage, we'll still save locally
+                        if (result.useLocalStorage) {
+                            functionSuccess = false; // Force localStorage save
+                            // But keep apiSubmission so we use the server-generated ID
+                        }
                     } catch (functionError) {
                         console.error('Error submitting to function:', functionError);
                         // Will fall back to localStorage
                     }
                     
-                    // If function failed, save to localStorage
+                    // Save to localStorage if function failed OR if API specifically requested it
                     if (!functionSuccess) {
-                        console.log('Function submission failed, saving to localStorage instead');
+                        console.log('Saving to localStorage...');
                         
-                        // Generate ID
-                        const submissionId = 'story_' + Date.now();
+                        // Generate ID (use API-provided ID if available)
+                        const submissionId = apiSubmission ? apiSubmission.id : 'story_' + Date.now();
                         
                         // Create full submission object
-                        const newSubmission = {
+                        const newSubmission = apiSubmission || {
                             id: submissionId,
                             date: new Date().toISOString(),
                             status: 'pending',
