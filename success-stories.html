@@ -61,6 +61,16 @@
             object-fit: cover;
         }
         
+        .placeholder-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 64px;
+            color: #d1d5db;
+        }
+        
         .story-content {
             padding: 25px;
         }
@@ -148,6 +158,48 @@
             color: #4b5563;
         }
         
+        .loading-indicator {
+            text-align: center;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(0, 112, 243, 0.2);
+            border-radius: 50%;
+            border-top: 4px solid #0070f3;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-state {
+            background-color: #fee2e2;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 60px;
+            border: 1px solid #ef4444;
+        }
+        
+        .error-state h3 {
+            color: #b91c1c;
+            margin-bottom: 15px;
+        }
+        
+        .error-state p {
+            color: #7f1d1d;
+        }
+        
         @media (max-width: 768px) {
             .success-container {
                 margin: 60px auto;
@@ -190,72 +242,35 @@
             <p>See what our students have built with no coding experience using the AppFoundry method</p>
         </div>
         
-        <!-- Empty state (will be shown if no success stories available) -->
-        <div class="empty-state">
+        <!-- Loading indicator (initially shown) -->
+        <div class="loading-indicator" id="loading-indicator">
+            <div class="loading-spinner"></div>
+            <p>Loading success stories...</p>
+        </div>
+        
+        <!-- Empty state (hidden until needed) -->
+        <div class="empty-state" id="empty-state" style="display: none;">
             <h3>Our First Success Stories Are Coming Soon!</h3>
             <p>Our students are currently building amazing apps with the AppFoundry method. Check back soon to see what they've created!</p>
             <button class="cta-button" onclick="window.location.href='checkout.html'">Join Them Today</button>
         </div>
         
-        <!-- This section will be populated with actual success stories later -->
-        <div class="success-grid" style="display: none;">
-            <!-- Success story examples (hidden until real stories are available) -->
-            <div class="success-story">
-                <div class="story-image">
-                    <img src="https://placeholder.pics/svg/300x200" alt="Sleep Tracker App Screenshot">
-                </div>
-                <div class="story-content">
-                    <span class="app-type">Health & Fitness</span>
-                    <h3>Sleep Tracker App</h3>
-                    <p>"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"</p>
-                    <div class="author-info">
-                        <div class="author-avatar">
-                            <img src="https://placeholder.pics/svg/40x40" alt="User Avatar">
-                        </div>
-                        <div class="author-name">Sarah Johnson</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="success-story">
-                <div class="story-image">
-                    <img src="https://placeholder.pics/svg/300x200" alt="Recipe Manager App Screenshot">
-                </div>
-                <div class="story-content">
-                    <span class="app-type">Lifestyle</span>
-                    <h3>Recipe Manager App</h3>
-                    <p>"I've been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"</p>
-                    <div class="author-info">
-                        <div class="author-avatar">
-                            <img src="https://placeholder.pics/svg/40x40" alt="User Avatar">
-                        </div>
-                        <div class="author-name">Michael Chen</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="success-story">
-                <div class="story-image">
-                    <img src="https://placeholder.pics/svg/300x200" alt="Event Planner App Screenshot">
-                </div>
-                <div class="story-content">
-                    <span class="app-type">Productivity</span>
-                    <h3>Event Planner App</h3>
-                    <p>"My clients love the custom event planning app I built. I never thought I'd be able to create something this professional without hiring expensive developers."</p>
-                    <div class="author-info">
-                        <div class="author-avatar">
-                            <img src="https://placeholder.pics/svg/40x40" alt="User Avatar">
-                        </div>
-                        <div class="author-name">Lisa Rodriguez</div>
-                    </div>
-                </div>
-            </div>
+        <!-- Error state (hidden until needed) -->
+        <div class="error-state" id="error-state" style="display: none;">
+            <h3>Unable to Load Stories</h3>
+            <p>We encountered an issue loading our success stories. Please try again later.</p>
+            <button class="cta-button" onclick="window.location.reload()">Retry</button>
+        </div>
+        
+        <!-- Success stories grid (hidden until stories are loaded) -->
+        <div class="success-grid" id="success-grid" style="display: none;">
+            <!-- Will be populated dynamically with success stories -->
         </div>
         
         <div class="share-story-cta">
             <h2>Have You Built an App with AppFoundry?</h2>
             <p>We'd love to feature your success story! Share your experience and inspire others to bring their app ideas to life.</p>
-            <button class="cta-button large" onclick="window.location.href='mailto:hello@risegg.net?subject=My%20AppFoundry%20Success%20Story'">Share Your Story</button>
+            <button class="cta-button large" onclick="window.location.href='submit-success-story.html'">Share Your Story</button>
         </div>
     </div>
 
@@ -295,5 +310,100 @@
     </footer>
 
     <script src="scripts.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSuccessStories();
+        });
+        
+        async function loadSuccessStories() {
+            // Get elements
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const emptyState = document.getElementById('empty-state');
+            const errorState = document.getElementById('error-state');
+            const successGrid = document.getElementById('success-grid');
+            
+            try {
+                // Show loading, hide others
+                loadingIndicator.style.display = 'flex';
+                emptyState.style.display = 'none';
+                errorState.style.display = 'none';
+                successGrid.style.display = 'none';
+                
+                // Fetch approved stories
+                const response = await fetch('/.netlify/functions/get-approved-stories');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load stories');
+                }
+                
+                const stories = await response.json();
+                
+                // Hide loading
+                loadingIndicator.style.display = 'none';
+                
+                // Check if we have stories
+                if (!stories || stories.length === 0) {
+                    // Show empty state
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                // Show stories grid
+                successGrid.style.display = 'grid';
+                
+                // Clear any previous content
+                successGrid.innerHTML = '';
+                
+                // Add each story to the grid
+                stories.forEach(story => {
+                    const storyElement = document.createElement('div');
+                    storyElement.className = 'success-story';
+                    
+                    // Format date
+                    const storyDate = new Date(story.date);
+                    const formattedDate = storyDate.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                    });
+                    
+                    // Create image HTML
+                    let imageHTML;
+                    if (story.images && story.images.length > 0) {
+                        imageHTML = `<img src="${story.images[0]}" alt="${story.appName} Screenshot">`;
+                    } else {
+                        imageHTML = `<div class="placeholder-image">📱</div>`;
+                    }
+                    
+                    // Add story HTML
+                    storyElement.innerHTML = `
+                        <div class="story-image">
+                            ${imageHTML}
+                        </div>
+                        <div class="story-content">
+                            <span class="app-type">${story.appType}</span>
+                            <h3>${story.appName}</h3>
+                            <p>${story.testimonial}</p>
+                            <div class="author-info">
+                                <div class="author-avatar">
+                                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(story.name)}&background=random" alt="${story.name}">
+                                </div>
+                                <div class="author-name">${story.name}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    successGrid.appendChild(storyElement);
+                });
+                
+            } catch (error) {
+                console.error('Error loading success stories:', error);
+                
+                // Hide loading, show error
+                loadingIndicator.style.display = 'none';
+                errorState.style.display = 'block';
+            }
+        }
+    </script>
 </body>
 </html>
