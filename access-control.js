@@ -30,7 +30,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     } else {
         console.error('Netlify Identity widget not loaded');
-        showError('Authentication system not available. Please try again later or use test mode.');
+        // If Netlify Identity is not available, check if test mode was requested in URL
+        if (window.location.href.includes('test_mode=true')) {
+            showTestModeIndicator();
+            showContent();
+        } else {
+            showError('Authentication system not available. Please try again later or use test mode.');
+        }
     }
     
     // Update UI based on login and course access state
