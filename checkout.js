@@ -98,54 +98,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     try {
       // For test mode, we can skip the actual payment processing with Stripe
-      // but still want to call our create-payment function to create a user account
+      // and directly redirect to the thank you page
       if (isTestMode) {
         console.log('Processing test mode purchase...');
         
-        // Call the create-payment function directly with test mode flag
-        try {
-          const response = await fetch('/.netlify/functions/create-payment', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              paymentMethodId: 'test_pm_' + Date.now(),
-              amount: 9900, // $99.00 in cents
-              currency: 'usd',
-              customerEmail: customerData.email,
-              customerName: customerData.name,
-              productName: 'SleepTech Course',
-              supportEmail: 'hello@risegg.net',
-              testMode: true
-            }),
-          });
-          
-          // If the function call succeeds, proceed to thank-you page
-          if (response.ok) {
-            const result = await response.json();
-            window.location.href = '/thank-you.html?session_id=' + (result.paymentIntentId || 'test_' + Date.now()) + '&test_mode=true&email=' + encodeURIComponent(customerData.email);
-            return;
-          } else {
-            // If there's an error with the function, show the error and fall back to direct routing
-            console.error('Server function error in test mode, falling back to direct access');
-            
-            // Log the error for debugging
-            const errorText = await response.text();
-            console.error('Server error details:', errorText);
-            
-            // Still redirect to thank you page, but with an error flag
-            window.location.href = '/thank-you.html?session_id=test_' + Date.now() + '&test_mode=true&email=' + encodeURIComponent(customerData.email) + '&server_error=true';
-            return;
-          }
-        } catch (error) {
-          // If the function call fails entirely (network error), fall back to direct access
-          console.error('Failed to call server function in test mode:', error);
-          
-          // Redirect to thank you page with error flag
-          window.location.href = '/thank-you.html?session_id=test_' + Date.now() + '&test_mode=true&email=' + encodeURIComponent(customerData.email) + '&server_error=true';
-          return;
-        }
+        // Generate a test session ID
+        const testSessionId = 'test_' + Date.now();
+        
+        // Skip all server-side processing in test mode
+        // Just redirect directly to the thank you page with test_mode flag
+        window.location.href = '/thank-you.html?session_id=' + testSessionId + 
+                               '&test_mode=true&email=' + 
+                               encodeURIComponent(customerData.email);
+        return;
       }
       
       // For real payments, proceed with Stripe
