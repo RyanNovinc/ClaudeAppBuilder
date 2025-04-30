@@ -1,119 +1,248 @@
-function loadSubmissions() {
-    const adminToken = localStorage.getItem('appfoundry_admin_token');
+// Complete form submission code for submit-success-story.html
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle image upload preview
+    const imageUpload = document.getElementById('image-upload');
+    const fileInput = document.getElementById('app-screenshots');
+    const imagePreview = document.getElementById('image-preview');
+    let selectedFiles = []; // Track selected files
+    const MAX_IMAGES = 5;
     
-    if (!adminToken) {
-        checkAdminLogin();
-        return;
-    }
+    imageUpload.addEventListener('click', function() {
+        fileInput.click();
+    });
     
-    // Get elements
-    const loadingIndicator = document.getElementById('loading-indicator');
-    const storiesTable = document.getElementById('stories-table');
-    const emptyState = document.getElementById('empty-state');
-    
-    // Show loading, hide others
-    loadingIndicator.style.display = 'flex';
-    storiesTable.style.display = 'none';
-    emptyState.style.display = 'none';
-    
-    try {
-        // Initialize all submissions array
-        let allNetlifySubmissions = [];
-        let localSubmissions = [];
-        
-        // Try to fetch from Netlify Function
-        try {
-            console.log('Attempting to fetch submissions from Netlify Function...');
-            const response = await fetch('/.netlify/functions/get-submissions', {
-                headers: {
-                    'Authorization': `Bearer ${adminToken}`
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+            // Add new files to the existing selection, up to the maximum
+            const newFiles = Array.from(this.files);
+            
+            // Add new files up to the maximum
+            for (let i = 0; i < newFiles.length && selectedFiles.length < MAX_IMAGES; i++) {
+                if (newFiles[i].type.startsWith('image/')) {
+                    selectedFiles.push(newFiles[i]);
                 }
+            }
+            
+            // Reset the file input to allow selecting more files later
+            this.value = '';
+            
+            // Update preview
+            updateImagePreview();
+        }
+    });
+    
+    // Function to update image preview
+    function updateImagePreview() {
+        // Show preview container if we have files
+        imagePreview.style.display = selectedFiles.length > 0 ? 'block' : 'none';
+        
+        // Clear existing preview
+        imagePreview.innerHTML = '';
+        
+        // Create preview for each file
+        selectedFiles.forEach((file, index) => {
+            const previewContainer = document.createElement('div');
+            previewContainer.className = 'image-preview-item';
+            previewContainer.style.display = 'inline-block';
+            previewContainer.style.position = 'relative';
+            previewContainer.style.margin = '5px';
+            
+            // Create image preview
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxHeight = '100px';
+                img.style.maxWidth = '100px';
+                img.style.borderRadius = '4px';
+                previewContainer.appendChild(img);
+            };
+            
+            reader.readAsDataURL(file);
+            
+            // Create remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '&times;';
+            removeBtn.style.position = 'absolute';
+            removeBtn.style.top = '-8px';
+            removeBtn.style.right = '-8px';
+            removeBtn.style.borderRadius = '50%';
+            removeBtn.style.background = '#ef4444';
+            removeBtn.style.color = 'white';
+            removeBtn.style.width = '20px';
+            removeBtn.style.height = '20px';
+            removeBtn.style.border = 'none';
+            removeBtn.style.cursor = 'pointer';
+            removeBtn.style.display = 'flex';
+            removeBtn.style.alignItems = 'center';
+            removeBtn.style.justifyContent = 'center';
+            
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent triggering imageUpload click
+                selectedFiles.splice(index, 1);
+                updateImagePreview();
             });
             
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Received data from Netlify Function:', data);
-                allNetlifySubmissions = data;
-            } else {
-                console.warn('Function returned non-OK response:', response.status);
-            }
-        } catch (fetchError) {
-            console.warn('Error fetching from API:', fetchError);
-            // Continue with localStorage as fallback
-        }
-        
-        // Get submissions from localStorage
-        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-        if (storedSubmissions) {
-            try {
-                localSubmissions = JSON.parse(storedSubmissions);
-                console.log('Found submissions in localStorage:', localSubmissions.length);
-            } catch (parseError) {
-                console.error('Error parsing localStorage submissions:', parseError);
-                localSubmissions = [];
-            }
-        }
-        
-        // Combine submissions (avoid duplicates by ID)
-        const combinedSubmissions = [...allNetlifySubmissions];
-        
-        // Add local submissions that don't exist in the API data
-        localSubmissions.forEach(localSub => {
-            const exists = combinedSubmissions.some(apiSub => apiSub.id === localSub.id);
-            if (!exists) {
-                combinedSubmissions.push(localSub);
-            }
+            previewContainer.appendChild(removeBtn);
+            imagePreview.appendChild(previewContainer);
         });
         
-        // If we still have no submissions, use sample data
-        if (combinedSubmissions.length === 0) {
-            console.log('No submissions found, using sample data');
-            allSubmissions = getSampleData();
-        } else {
-            console.log('Using combined submissions:', combinedSubmissions.length);
-            allSubmissions = combinedSubmissions;
-        }
-        
-        // Sort by date (newest first)
-        allSubmissions.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        // Check if we have submissions
-        if (allSubmissions.length === 0) {
-            // Show empty state
-            loadingIndicator.style.display = 'none';
-            emptyState.style.display = 'block';
-            return;
-        }
-        
-        // Display submissions
-        loadingIndicator.style.display = 'none';
-        storiesTable.style.display = 'table';
-        
-        // Reset pagination
-        currentPage = 1;
-        
-        // Display submissions
-        displaySubmissions();
-        
-        // Log displayed submissions for debugging
-        console.log('Displayed submissions:', allSubmissions.slice(0, 3));
-    } catch (error) {
-        console.error('Error loading submissions:', error);
-        
-        // Show error
-        loadingIndicator.style.display = 'none';
-        
-        // Create error message
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'admin-empty-state';
-        errorDiv.innerHTML = `
-            <div class="admin-empty-state-icon">❌</div>
-            <div class="admin-empty-state-title">Error Loading Submissions</div>
-            <p>We encountered an issue loading the submissions. Please try again.</p>
-            <button class="admin-button" onclick="loadSubmissions()">Retry</button>
-        `;
-        
-        // Add to container
-        document.getElementById('table-container').appendChild(errorDiv);
+        // Add information about remaining slots
+        const infoText = document.createElement('p');
+        infoText.style.margin = '10px 0 0 0';
+        infoText.style.fontSize = '0.8rem';
+        infoText.style.color = '#6b7280';
+        infoText.textContent = `${selectedFiles.length}/${MAX_IMAGES} images selected`;
+        imagePreview.appendChild(infoText);
     }
-}
+    
+    // Handle form submission
+    const form = document.getElementById('success-story-form');
+    const statusMessage = document.getElementById('status-message');
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Show loading state
+        const submitButton = document.querySelector('.submit-button');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+        
+        try {
+            // Get form data
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const appType = document.getElementById('app-type').value;
+            const appName = document.getElementById('app-name').value;
+            const story = document.getElementById('story').value;
+            const testimonial = document.getElementById('testimonial').value;
+            const experienceLevel = document.getElementById('experience-level').value;
+            
+            // Process images
+            let images = [];
+            
+            if (selectedFiles.length > 0) {
+                for (let file of selectedFiles) {
+                    try {
+                        const base64String = await convertFileToBase64(file);
+                        images.push(base64String);
+                    } catch (error) {
+                        console.error('Error converting image to base64:', error);
+                    }
+                }
+            }
+            
+            // Create submission object
+            const newSubmission = {
+                id: 'story_' + Date.now(),
+                date: new Date().toISOString(),
+                status: 'pending',
+                name,
+                email,
+                appName,
+                appType,
+                experienceLevel,
+                testimonial,
+                story,
+                images
+            };
+            
+            console.log('New submission created:', newSubmission);
+            
+            // Get existing submissions from localStorage
+            let existingSubmissions = [];
+            try {
+                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                if (storedSubmissions) {
+                    existingSubmissions = JSON.parse(storedSubmissions);
+                    console.log('Found existing submissions:', existingSubmissions.length);
+                }
+            } catch (error) {
+                console.error('Error parsing existing submissions:', error);
+                // Continue with empty array if there's an error
+            }
+            
+            // Add new submission to the beginning of the array
+            existingSubmissions.unshift(newSubmission);
+            
+            // Save updated submissions back to localStorage
+            try {
+                localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
+                console.log('Successfully saved submissions to localStorage');
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+                // Show error to user
+                alert('There was an error saving your submission. Please try again or contact support.');
+                
+                // Reset button state
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Your Story';
+                
+                return; // Exit the function early
+            }
+            
+            // Also attempt to submit to API but don't wait for response
+            try {
+                fetch('/.netlify/functions/submit-success-story', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        'app-type': appType,
+                        'app-name': appName,
+                        'experience-level': experienceLevel,
+                        story,
+                        testimonial,
+                        images
+                    })
+                });
+            } catch (apiError) {
+                console.error('API submission error:', apiError);
+                // Ignore API errors since we already saved to localStorage
+            }
+            
+            // Display success message
+            statusMessage.textContent = 'Your success story has been submitted! After review, it will be featured on our success stories page.';
+            statusMessage.className = 'status-message success';
+            statusMessage.style.display = 'block';
+            
+            // Reset form and selected files
+            form.reset();
+            selectedFiles = [];
+            imagePreview.style.display = 'none';
+            imagePreview.innerHTML = '';
+            
+            // Scroll to top of form to show message
+            window.scrollTo({
+                top: statusMessage.offsetTop - 100,
+                behavior: 'smooth'
+            });
+        } catch (error) {
+            console.error('Error submitting story:', error);
+            
+            // Show error message
+            statusMessage.textContent = 'An error occurred while submitting your story. Please try again.';
+            statusMessage.className = 'status-message error';
+            statusMessage.style.display = 'block';
+        } finally {
+            // Reset button
+            submitButton.disabled = false;
+            submitButton.textContent = 'Submit Your Story';
+        }
+    });
+    
+    // Helper function to convert file to base64
+    function convertFileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+        });
+    }
+});
