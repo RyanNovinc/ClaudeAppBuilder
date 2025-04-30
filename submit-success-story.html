@@ -3,574 +3,1809 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Your Success Story - AppFoundry</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Admin: Success Stories - AppFoundry</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .form-container {
-            max-width: 800px;
-            margin: 100px auto;
-            padding: 0 20px;
+        /* Admin Panel Styles */
+        :root {
+            --admin-primary: #0070f3;
+            --admin-secondary: #6b7280;
+            --admin-success: #10b981;
+            --admin-warning: #fbbf24;
+            --admin-danger: #ef4444;
+            --admin-bg: #f9fafb;
+            --admin-card-bg: #ffffff;
+            --admin-border: #e5e7eb;
         }
         
-        .form-header {
-            text-align: center;
-            margin-bottom: 40px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        .form-header p {
-            max-width: 700px;
-            margin: 0 auto;
-            color: #6b7280;
-            font-size: 18px;
-        }
-        
-        .form-content {
-            background-color: white;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--admin-bg);
             color: #111827;
         }
         
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .admin-sidebar {
+            width: 250px;
+            background-color: var(--admin-card-bg);
+            border-right: 1px solid var(--admin-border);
+            padding: 30px 0;
+            flex-shrink: 0;
+        }
+        
+        .admin-sidebar-header {
+            padding: 0 20px;
+            margin-bottom: 30px;
+        }
+        
+        .admin-logo {
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: var(--admin-primary);
+            margin-bottom: 10px;
+        }
+        
+        .admin-version {
+            font-size: 0.8rem;
+            color: var(--admin-secondary);
+        }
+        
+        .admin-nav {
+            margin-bottom: 20px;
+        }
+        
+        .admin-nav-title {
+            padding: 0 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--admin-secondary);
+            margin-bottom: 10px;
+        }
+        
+        .admin-nav-item {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #4b5563;
+            transition: background-color 0.2s;
+        }
+        
+        .admin-nav-item:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .admin-nav-item.active {
+            background-color: #e0f2ff;
+            color: var(--admin-primary);
+            font-weight: 500;
+        }
+        
+        .admin-nav-icon {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .admin-main {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .admin-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .admin-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .admin-button {
+            background-color: var(--admin-primary);
+            color: white;
+            border: none;
             border-radius: 6px;
-            font-size: 16px;
-            font-family: 'Inter', sans-serif;
+            padding: 8px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
         
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #0070f3;
-            box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
+        .admin-button:hover {
+            background-color: #0055b3;
         }
         
-        .form-group textarea {
-            min-height: 150px;
-            resize: vertical;
+        .admin-button.secondary {
+            background-color: white;
+            color: #4b5563;
+            border: 1px solid var(--admin-border);
         }
         
-        .form-row {
+        .admin-button.secondary:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .admin-card {
+            background-color: var(--admin-card-bg);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .admin-card-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--admin-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .admin-card-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .admin-card-content {
+            padding: 20px;
+        }
+        
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .admin-table th {
+            text-align: left;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--admin-border);
+            color: var(--admin-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .admin-table td {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--admin-border);
+        }
+        
+        .admin-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .admin-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .admin-badge.pending {
+            background-color: #fff7ed;
+            color: #c2410c;
+        }
+        
+        .admin-badge.approved {
+            background-color: #ecfdf5;
+            color: #047857;
+        }
+        
+        .admin-badge.rejected {
+            background-color: #fef2f2;
+            color: #b91c1c;
+        }
+        
+        .admin-action-button {
+            background: none;
+            border: none;
+            color: var(--admin-primary);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .admin-action-button:hover {
+            background-color: #e0f2ff;
+        }
+        
+        .admin-action-button.danger {
+            color: var(--admin-danger);
+        }
+        
+        .admin-action-button.danger:hover {
+            background-color: #fee2e2;
+        }
+        
+        .admin-pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .admin-pagination-item {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .admin-pagination-item:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .admin-pagination-item.active {
+            background-color: var(--admin-primary);
+            color: white;
+        }
+        
+        .admin-empty-state {
+            padding: 50px 20px;
+            text-align: center;
+            color: var(--admin-secondary);
+        }
+        
+        .admin-empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .admin-empty-state-title {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        
+        .admin-form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
         
-        .form-tip {
-            font-size: 14px;
-            color: #6b7280;
-            margin-top: 5px;
+        .admin-form-group {
+            margin-bottom: 20px;
         }
         
-        .image-upload {
-            border: 2px dashed #d1d5db;
+        .admin-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .admin-form-group input,
+        .admin-form-group textarea,
+        .admin-form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--admin-border);
             border-radius: 6px;
-            padding: 25px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            font-size: 0.95rem;
         }
         
-        .image-upload:hover {
-            border-color: #0070f3;
-            background-color: rgba(0, 112, 243, 0.05);
+        .admin-form-group textarea {
+            min-height: 100px;
         }
         
-        .image-upload input {
+        /* Modal styles */
+        .admin-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
             display: none;
         }
         
-        .image-upload-icon {
-            font-size: 36px;
-            color: #9ca3af;
+        .admin-modal {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .admin-modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--admin-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .admin-modal-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .admin-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--admin-secondary);
+        }
+        
+        .admin-modal-body {
+            padding: 20px;
+        }
+        
+        .admin-modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--admin-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .admin-user-info {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--admin-border);
+        }
+        
+        .admin-story-content {
+            margin-bottom: 20px;
+        }
+        
+        .admin-story-content h3 {
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .admin-story-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .admin-story-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .admin-story-image {
+            width: 100%;
+            height: 120px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+        
+        .admin-info-row {
+            display: flex;
             margin-bottom: 10px;
         }
         
-        .image-upload-text {
-            font-size: 16px;
-            color: #6b7280;
+        .admin-info-label {
+            width: 120px;
+            font-weight: 500;
+            color: var(--admin-secondary);
         }
         
-        .image-preview {
-            margin-top: 15px;
-            display: none;
+        .admin-info-value {
+            flex: 1;
         }
         
-        .image-preview img {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 6px;
+        .admin-search {
+            display: flex;
+            margin-bottom: 20px;
         }
         
-        .submit-button {
-            background-color: #0070f3;
+        .admin-search input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--admin-border);
+            border-radius: 6px 0 0 6px;
+            font-size: 0.95rem;
+        }
+        
+        .admin-search button {
+            background-color: var(--admin-primary);
             color: white;
             border: none;
-            border-radius: 6px;
-            padding: 14px 28px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 0 6px 6px 0;
+            padding: 0 15px;
             cursor: pointer;
-            transition: background-color 0.2s ease;
-            display: block;
-            margin: 30px auto 0;
         }
         
-        .submit-button:hover {
-            background-color: #0055b3;
+        .admin-loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 60px 0;
         }
         
-        .form-note {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #6b7280;
+        .admin-spinner {
+            border: 4px solid rgba(0, 112, 243, 0.2);
+            border-radius: 50%;
+            border-top: 4px solid var(--admin-primary);
+            width: 36px;
+            height: 36px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
         }
         
-        .status-message {
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .status-message.success {
-            background-color: #ecfdf5;
-            color: #10b981;
-            border: 1px solid #10b981;
-        }
-        
-        .status-message.error {
-            background-color: #fee2e2;
-            color: #dc2626;
-            border: 1px solid #dc2626;
-        }
-        
-        .image-preview-item {
-            display: inline-block;
-            position: relative;
-            margin: 5px;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         @media (max-width: 768px) {
-            .form-container {
-                margin: 60px auto;
+            .admin-container {
+                flex-direction: column;
             }
             
-            .form-content {
-                padding: 25px;
+            .admin-sidebar {
+                width: 100%;
+                padding: 15px 0;
             }
             
-            .form-row {
+            .admin-main {
+                padding: 15px;
+            }
+            
+            .admin-form-grid {
                 grid-template-columns: 1fr;
-                gap: 15px;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="logo"><a href="index.html">AppFoundry</a></div>
-            <nav>
-                <ul>
-                    <li><a href="index.html#overview">Overview</a></li>
-                    <li><a href="index.html#curriculum">Curriculum</a></li>
-                    <li><a href="index.html#pricing">Pricing</a></li>
-                    <li><a href="success-stories.html">Success Stories</a></li>
-                    <li><a href="about-creator.html">About</a></li>
-                </ul>
-            </nav>
-            <button class="cta-button small" id="loginButton">Log in</button>
-        </div>
-    </header>
-
-    <div class="form-container">
-        <div class="form-header">
-            <h1>Share Your Success Story</h1>
-            <p>Tell us about the app you built with AppFoundry and inspire others to bring their ideas to life!</p>
+    <div class="admin-container">
+        <div class="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-logo">AppFoundry</div>
+                <div class="admin-version">Admin Panel v1.0</div>
+            </div>
+            
+            <div class="admin-nav">
+                <div class="admin-nav-title">Content</div>
+                <a href="#" class="admin-nav-item">
+                    <span class="admin-nav-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="#" class="admin-nav-item active">
+                    <span class="admin-nav-icon">📱</span>
+                    Success Stories
+                </a>
+                <a href="#" class="admin-nav-item">
+                    <span class="admin-nav-icon">👥</span>
+                    Users
+                </a>
+            </div>
+            
+            <div class="admin-nav">
+                <div class="admin-nav-title">Settings</div>
+                <a href="#" class="admin-nav-item">
+                    <span class="admin-nav-icon">⚙️</span>
+                    General
+                </a>
+                <a href="#" class="admin-nav-item">
+                    <span class="admin-nav-icon">🔒</span>
+                    Security
+                </a>
+                <a href="index.html" class="admin-nav-item">
+                    <span class="admin-nav-icon">🏠</span>
+                    Back to Site
+                </a>
+            </div>
         </div>
         
-        <div class="form-content">
-            <div id="status-message" class="status-message"></div>
-            
-            <form id="success-story-form">
-                <div class="form-group">
-                    <label for="name">Your Name</label>
-                    <input type="text" id="name" name="name" required>
+        <div class="admin-main">
+            <div class="admin-header">
+                <h1 class="admin-title">Success Stories</h1>
+                <div class="admin-controls">
+                    <button class="admin-button secondary" id="refresh-button">Refresh</button>
+                    <button class="admin-button" id="add-story-button">Add New Story</button>
                 </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" required>
-                        <div class="form-tip">Your email won't be displayed publicly.</div>
+            </div>
+            
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <div class="admin-card-title">Manage Success Stories</div>
+                    <div class="admin-controls">
+                        <button class="admin-button secondary" id="filter-button">Filter</button>
+                    </div>
+                </div>
+                <div class="admin-search">
+                    <input type="text" placeholder="Search by name, app name, or content..." id="search-input">
+                    <button id="search-button">🔍</button>
+                </div>
+                <div class="admin-card-content" id="table-container">
+                    <!-- Loading indicator (initially shown) -->
+                    <div class="admin-loading" id="loading-indicator">
+                        <div class="admin-spinner"></div>
+                        <p>Loading submissions...</p>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="app-type">Type of App</label>
-                        <select id="app-type" name="app-type" required>
-                            <option value="" disabled selected>Select app category</option>
-                            <option value="Health & Fitness">Health & Fitness</option>
-                            <option value="Productivity">Productivity</option>
-                            <option value="Lifestyle">Lifestyle</option>
-                            <option value="Business">Business</option>
-                            <option value="Education">Education</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Social">Social</option>
-                            <option value="Other">Other</option>
-                        </select>
+                    <!-- Table (hidden until data is loaded) -->
+                    <table class="admin-table" id="stories-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>App Name</th>
+                                <th>Type</th>
+                                <th>Submission Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stories-table-body">
+                            <!-- Will be populated dynamically -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- Empty state (hidden until needed) -->
+                    <div class="admin-empty-state" id="empty-state" style="display: none;">
+                        <div class="admin-empty-state-icon">📱</div>
+                        <div class="admin-empty-state-title">No Success Stories Yet</div>
+                        <p>When students submit their success stories, they'll appear here.</p>
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="experience-level">Your Experience Level</label>
-                    <select id="experience-level" name="experience-level" required>
-                        <option value="" disabled selected>Select your coding experience</option>
-                        <option value="No experience">No coding experience</option>
-                        <option value="Beginner">Beginner (less than 1 year)</option>
-                        <option value="Intermediate">Intermediate (1-3 years)</option>
-                        <option value="Advanced">Advanced (3+ years)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="app-name">Your App Name</label>
-                    <input type="text" id="app-name" name="app-name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="story">Your Success Story</label>
-                    <textarea id="story" name="story" required placeholder="Tell us about your experience building your app with AppFoundry. What challenges did you overcome? How has it impacted you or your business?"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>App Screenshots (Optional)</label>
-                    <div class="image-upload" id="image-upload">
-                        <input type="file" id="app-screenshots" name="app-screenshots" accept="image/*" multiple>
-                        <div class="image-upload-icon">📷</div>
-                        <div class="image-upload-text">Click to upload screenshots of your app</div>
-                        <div class="form-tip">You can select multiple images. Max 5 images total, 5MB per image.</div>
-                    </div>
-                    <div id="image-preview" class="image-preview"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="testimonial">Short Testimonial (for display)</label>
-                    <textarea id="testimonial" name="testimonial" required placeholder="Write a brief testimonial (1-2 sentences) that we can feature on our success stories page."></textarea>
-                </div>
-                
-                <button type="submit" class="submit-button">Submit Your Story</button>
-                
-                <div class="form-note">
-                    <p>By submitting this form, you agree to let us feature your story and app screenshots on our website.</p>
-                </div>
-            </form>
+            </div>
+            
+            <div class="admin-pagination" id="pagination">
+                <div class="admin-pagination-item" id="prev-page">«</div>
+                <div class="admin-pagination-item active">1</div>
+                <div class="admin-pagination-item" id="next-page">»</div>
+            </div>
         </div>
     </div>
-
-    <footer>
-        <div class="container">
-            <div class="logo">AppFoundry</div>
-            <div class="footer-links">
-                <div class="link-group">
-                    <h4>Course</h4>
-                    <ul>
-                        <li><a href="index.html#overview">Overview</a></li>
-                        <li><a href="index.html#curriculum">Curriculum</a></li>
-                        <li><a href="index.html#pricing">Pricing</a></li>
-                        <li><a href="success-stories.html">Success Stories</a></li>
-                        <li><a href="about-creator.html">About Creator</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="terms-of-service.html">Terms of Service</a></li>
-                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
-                        <li><a href="refund-policy.html">Our Guarantee</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
-                    </ul>
-                </div>
+    
+    <!-- Login Modal -->
+    <div class="admin-modal-backdrop" id="login-modal">
+        <div class="admin-modal" style="max-width: 400px;">
+            <div class="admin-modal-header">
+                <div class="admin-modal-title">Admin Login</div>
             </div>
-            <div class="copyright">
-                © 2025 AppFoundry. All rights reserved.
+            <div class="admin-modal-body">
+                <div class="admin-form-group">
+                    <label for="admin-password">Admin Password</label>
+                    <input type="password" id="admin-password" autocomplete="current-password">
+                </div>
+                <div id="login-error" style="color: var(--admin-danger); margin-top: 10px; display: none;"></div>
+            </div>
+            <div class="admin-modal-footer">
+                <button class="admin-button" id="login-button">Login</button>
             </div>
         </div>
-    </footer>
-
-    <script src="scripts.js"></script>
+    </div>
+    
+    <!-- View Story Modal -->
+    <div class="admin-modal-backdrop" id="view-story-modal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <div class="admin-modal-title">View Success Story</div>
+                <button class="admin-modal-close" onclick="closeModal('view-story-modal')">&times;</button>
+            </div>
+            <div class="admin-modal-body">
+                <div class="admin-user-info">
+                    <div class="admin-info-row">
+                        <div class="admin-info-label">Name:</div>
+                        <div class="admin-info-value" id="view-name"></div>
+                    </div>
+                    <div class="admin-info-row">
+                        <div class="admin-info-label">Email:</div>
+                        <div class="admin-info-value" id="view-email"></div>
+                    </div>
+                    <div class="admin-info-row">
+                        <div class="admin-info-label">App Name:</div>
+                        <div class="admin-info-value" id="view-app-name"></div>
+                    </div>
+                    <div class="admin-info-row">
+                        <div class="admin-info-label">App Type:</div>
+                        <div class="admin-info-value" id="view-app-type"></div>
+                    </div>
+                    <div class="admin-info-row">
+                        <div class="admin-info-label">Experience:</div>
+                        <div class="admin-info-value" id="view-experience-level"></div>
+                    </div>
+                    <div class="admin-info-row">
+                        <div class="admin-info-label">Submission Date:</div>
+                        <div class="admin-info-value" id="view-date"></div>
+                    </div>
+                    <div class="admin-info-row">
+                        <div class="admin-info-label">Status:</div>
+                        <div class="admin-info-value" id="view-status"></div>
+                    </div>
+                </div>
+                
+                <div class="admin-story-content">
+                    <h3>Testimonial (Short Version for Display)</h3>
+                    <p id="view-testimonial"></p>
+                    
+                    <h3>Full Success Story</h3>
+                    <p id="view-story"></p>
+                    
+                    <h3>App Screenshots</h3>
+                    <div class="admin-story-images" id="view-images">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div class="admin-modal-footer">
+                <button class="admin-button secondary" onclick="closeModal('view-story-modal')">Close</button>
+                <button class="admin-button" id="approve-button" onclick="approveStory()">Approve</button>
+                <button class="admin-button secondary" id="reject-button" onclick="rejectStory()">Reject</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Story Modal -->
+    <div class="admin-modal-backdrop" id="edit-story-modal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <div class="admin-modal-title">Edit Success Story</div>
+                <button class="admin-modal-close" onclick="closeModal('edit-story-modal')">&times;</button>
+            </div>
+            <div class="admin-modal-body">
+                <form id="edit-story-form">
+                    <div class="admin-form-grid">
+                        <div class="admin-form-group">
+                            <label for="edit-name">Name</label>
+                            <input type="text" id="edit-name">
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="edit-email">Email</label>
+                            <input type="email" id="edit-email" readonly>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="edit-app-name">App Name</label>
+                            <input type="text" id="edit-app-name">
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="edit-app-type">App Type</label>
+                            <select id="edit-app-type">
+                                <option value="Health & Fitness">Health & Fitness</option>
+                                <option value="Productivity">Productivity</option>
+                                <option value="Lifestyle">Lifestyle</option>
+                                <option value="Business">Business</option>
+                                <option value="Education">Education</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Social">Social</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="edit-experience-level">Experience Level</label>
+                            <select id="edit-experience-level">
+                                <option value="No experience">No coding experience</option>
+                                <option value="Beginner">Beginner (less than 1 year)</option>
+                                <option value="Intermediate">Intermediate (1-3 years)</option>
+                                <option value="Advanced">Advanced (3+ years)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label for="edit-testimonial">Testimonial (Short Version for Display)</label>
+                        <textarea id="edit-testimonial"></textarea>
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label for="edit-story">Full Success Story</label>
+                        <textarea id="edit-story"></textarea>
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label>Status</label>
+                        <div>
+                            <label style="display: inline; margin-right: 15px;">
+                                <input type="radio" name="status" value="pending"> Pending
+                            </label>
+                            <label style="display: inline; margin-right: 15px;">
+                                <input type="radio" name="status" value="approved"> Approved
+                            </label>
+                            <label style="display: inline;">
+                                <input type="radio" name="status" value="rejected"> Rejected
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="admin-modal-footer">
+                <button class="admin-button secondary" onclick="closeModal('edit-story-modal')">Cancel</button>
+                <button class="admin-button" onclick="saveStory()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Story Modal -->
+    <div class="admin-modal-backdrop" id="add-story-modal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <div class="admin-modal-title">Add New Success Story</div>
+                <button class="admin-modal-close" onclick="closeModal('add-story-modal')">&times;</button>
+            </div>
+            <div class="admin-modal-body">
+                <form id="add-story-form">
+                    <div class="admin-form-grid">
+                        <div class="admin-form-group">
+                            <label for="add-name">Name</label>
+                            <input type="text" id="add-name" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="add-email">Email</label>
+                            <input type="email" id="add-email" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="add-app-name">App Name</label>
+                            <input type="text" id="add-app-name" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="add-app-type">App Type</label>
+                            <select id="add-app-type" required>
+                                <option value="" disabled selected>Select app category</option>
+                                <option value="Health & Fitness">Health & Fitness</option>
+                                <option value="Productivity">Productivity</option>
+                                <option value="Lifestyle">Lifestyle</option>
+                                <option value="Business">Business</option>
+                                <option value="Education">Education</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Social">Social</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="add-experience-level">Experience Level</label>
+                            <select id="add-experience-level" required>
+                                <option value="" disabled selected>Select experience level</option>
+                                <option value="No experience">No coding experience</option>
+                                <option value="Beginner">Beginner (less than 1 year)</option>
+                                <option value="Intermediate">Intermediate (1-3 years)</option>
+                                <option value="Advanced">Advanced (3+ years)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label for="add-testimonial">Testimonial (Short Version for Display)</label>
+                        <textarea id="add-testimonial" required placeholder="A brief testimonial (1-2 sentences) about their experience"></textarea>
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label for="add-story">Full Success Story</label>
+                        <textarea id="add-story" required placeholder="The detailed success story about their experience building an app"></textarea>
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label for="add-image-url">Image URL (Optional)</label>
+                        <input type="url" id="add-image-url" placeholder="https://example.com/image.jpg">
+                        <p style="font-size: 0.8rem; color: var(--admin-secondary); margin-top: 5px;">Enter a URL to an image of the app. For multiple images, separate URLs with commas.</p>
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label>Status</label>
+                        <div>
+                            <label style="display: inline; margin-right: 15px;">
+                                <input type="radio" name="add-status" value="pending" checked> Pending
+                            </label>
+                            <label style="display: inline; margin-right: 15px;">
+                                <input type="radio" name="add-status" value="approved"> Approved
+                            </label>
+                            <label style="display: inline;">
+                                <input type="radio" name="add-status" value="rejected"> Rejected
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="admin-modal-footer">
+                <button class="admin-button secondary" onclick="closeModal('add-story-modal')">Cancel</button>
+                <button class="admin-button" onclick="addNewStory()">Add Story</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="admin-modal-backdrop" id="delete-modal">
+        <div class="admin-modal" style="max-width: 400px;">
+            <div class="admin-modal-header">
+                <div class="admin-modal-title">Confirm Deletion</div>
+                <button class="admin-modal-close" onclick="closeModal('delete-modal')">&times;</button>
+            </div>
+            <div class="admin-modal-body">
+                <p>Are you sure you want to delete this success story? This action cannot be undone.</p>
+            </div>
+            <div class="admin-modal-footer">
+                <button class="admin-button secondary" onclick="closeModal('delete-modal')">Cancel</button>
+                <button class="admin-button" style="background-color: var(--admin-danger);" onclick="deleteStory()">Delete</button>
+            </div>
+        </div>
+    </div>
+    
     <script>
+        // Current story being viewed/edited
+        let currentStoryId = null;
+        
+        // All submissions data
+        let allSubmissions = [];
+        
+        // Pagination settings
+        const itemsPerPage = 10;
+        let currentPage = 1;
+        
+        // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
-            // Handle image upload preview
-            const imageUpload = document.getElementById('image-upload');
-            const fileInput = document.getElementById('app-screenshots');
-            const imagePreview = document.getElementById('image-preview');
-            let selectedFiles = []; // Track selected files
-            const MAX_IMAGES = 5;
+            // Check if admin is logged in
+            checkAdminLogin();
             
-            imageUpload.addEventListener('click', function() {
-                fileInput.click();
+            // Setup event listeners
+            document.getElementById('refresh-button').addEventListener('click', function() {
+                loadSubmissions();
             });
             
-            fileInput.addEventListener('change', function() {
-                if (this.files && this.files.length > 0) {
-                    // Add new files to the existing selection, up to the maximum
-                    const newFiles = Array.from(this.files);
-                    
-                    // Add new files up to the maximum
-                    for (let i = 0; i < newFiles.length && selectedFiles.length < MAX_IMAGES; i++) {
-                        if (newFiles[i].type.startsWith('image/')) {
-                            selectedFiles.push(newFiles[i]);
-                        }
-                    }
-                    
-                    // Reset the file input to allow selecting more files later
-                    this.value = '';
-                    
-                    // Update preview
-                    updateImagePreview();
+            document.getElementById('login-button').addEventListener('click', attemptLogin);
+            
+            document.getElementById('add-story-button').addEventListener('click', function() {
+                openModal('add-story-modal');
+            });
+            
+            document.getElementById('search-button').addEventListener('click', function() {
+                filterSubmissions();
+            });
+            
+            document.getElementById('search-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    filterSubmissions();
                 }
             });
             
-            // Function to update image preview
-            function updateImagePreview() {
-                // Show preview container if we have files
-                imagePreview.style.display = selectedFiles.length > 0 ? 'block' : 'none';
-                
-                // Clear existing preview
-                imagePreview.innerHTML = '';
-                
-                // Create preview for each file
-                selectedFiles.forEach((file, index) => {
-                    const previewContainer = document.createElement('div');
-                    previewContainer.className = 'image-preview-item';
-                    previewContainer.style.display = 'inline-block';
-                    previewContainer.style.position = 'relative';
-                    previewContainer.style.margin = '5px';
-                    
-                    // Create image preview
-                    const reader = new FileReader();
-                    
-                    reader.onload = function(e) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.maxHeight = '100px';
-                        img.style.maxWidth = '100px';
-                        img.style.borderRadius = '4px';
-                        previewContainer.appendChild(img);
-                    };
-                    
-                    reader.readAsDataURL(file);
-                    
-                    // Create remove button
-                    const removeBtn = document.createElement('button');
-                    removeBtn.innerHTML = '&times;';
-                    removeBtn.style.position = 'absolute';
-                    removeBtn.style.top = '-8px';
-                    removeBtn.style.right = '-8px';
-                    removeBtn.style.borderRadius = '50%';
-                    removeBtn.style.background = '#ef4444';
-                    removeBtn.style.color = 'white';
-                    removeBtn.style.width = '20px';
-                    removeBtn.style.height = '20px';
-                    removeBtn.style.border = 'none';
-                    removeBtn.style.cursor = 'pointer';
-                    removeBtn.style.display = 'flex';
-                    removeBtn.style.alignItems = 'center';
-                    removeBtn.style.justifyContent = 'center';
-                    
-                    removeBtn.addEventListener('click', function(e) {
-                        e.stopPropagation(); // Prevent triggering imageUpload click
-                        selectedFiles.splice(index, 1);
-                        updateImagePreview();
-                    });
-                    
-                    previewContainer.appendChild(removeBtn);
-                    imagePreview.appendChild(previewContainer);
-                });
-                
-                // Add information about remaining slots
-                const infoText = document.createElement('p');
-                infoText.style.margin = '10px 0 0 0';
-                infoText.style.fontSize = '0.8rem';
-                infoText.style.color = '#6b7280';
-                infoText.textContent = `${selectedFiles.length}/${MAX_IMAGES} images selected`;
-                imagePreview.appendChild(infoText);
-            }
-            
-            // Handle form submission
-            const form = document.getElementById('success-story-form');
-            const statusMessage = document.getElementById('status-message');
-            
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                // Show loading state
-                const submitButton = document.querySelector('.submit-button');
-                submitButton.disabled = true;
-                submitButton.textContent = 'Submitting...';
-                
-                try {
-                    // Get form data
-                    const name = document.getElementById('name').value;
-                    const email = document.getElementById('email').value;
-                    const appType = document.getElementById('app-type').value;
-                    const appName = document.getElementById('app-name').value;
-                    const story = document.getElementById('story').value;
-                    const testimonial = document.getElementById('testimonial').value;
-                    const experienceLevel = document.getElementById('experience-level').value;
-                    
-                    // Process images
-                    let images = [];
-                    
-                    if (selectedFiles.length > 0) {
-                        for (let file of selectedFiles) {
-                            try {
-                                const base64String = await convertFileToBase64(file);
-                                images.push(base64String);
-                            } catch (error) {
-                                console.error('Error converting image to base64:', error);
-                            }
-                        }
-                    }
-                    
-                    // Create submission object
-                    const newSubmission = {
-                        id: 'story_' + Date.now(),
-                        date: new Date().toISOString(),
-                        status: 'pending',
-                        name,
-                        email,
-                        appName,
-                        appType,
-                        experienceLevel,
-                        testimonial,
-                        story,
-                        images
-                    };
-                    
-                    console.log('New submission created:', newSubmission);
-                    
-                    // Get existing submissions from localStorage
-                    let existingSubmissions = [];
-                    try {
-                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                        if (storedSubmissions) {
-                            existingSubmissions = JSON.parse(storedSubmissions);
-                            console.log('Found existing submissions:', existingSubmissions.length);
-                        }
-                    } catch (error) {
-                        console.error('Error parsing existing submissions:', error);
-                        // Continue with empty array if there's an error
-                    }
-                    
-                    // Add new submission to the beginning of the array
-                    existingSubmissions.unshift(newSubmission);
-                    
-                    // Save updated submissions back to localStorage
-                    try {
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
-                        console.log('Successfully saved submissions to localStorage');
-                    } catch (error) {
-                        console.error('Error saving to localStorage:', error);
-                        // Show error to user
-                        alert('There was an error saving your submission. Please try again or contact support.');
-                        
-                        // Reset button state
-                        submitButton.disabled = false;
-                        submitButton.textContent = 'Submit Your Story';
-                        
-                        return; // Exit the function early
-                    }
-                    
-                    // Also attempt to submit to API but don't wait for response
-                    try {
-                        fetch('/.netlify/functions/submit-success-story', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                name,
-                                email,
-                                'app-type': appType,
-                                'app-name': appName,
-                                'experience-level': experienceLevel,
-                                story,
-                                testimonial,
-                                images
-                            })
-                        });
-                    } catch (apiError) {
-                        console.error('API submission error:', apiError);
-                        // Ignore API errors since we already saved to localStorage
-                    }
-                    
-                    // Display success message
-                    statusMessage.textContent = 'Your success story has been submitted! After review, it will be featured on our success stories page.';
-                    statusMessage.className = 'status-message success';
-                    statusMessage.style.display = 'block';
-                    
-                    // Reset form and selected files
-                    form.reset();
-                    selectedFiles = [];
-                    imagePreview.style.display = 'none';
-                    imagePreview.innerHTML = '';
-                    
-                    // Scroll to top of form to show message
-                    window.scrollTo({
-                        top: statusMessage.offsetTop - 100,
-                        behavior: 'smooth'
-                    });
-                } catch (error) {
-                    console.error('Error submitting story:', error);
-                    
-                    // Show error message
-                    statusMessage.textContent = 'An error occurred while submitting your story. Please try again.';
-                    statusMessage.className = 'status-message error';
-                    statusMessage.style.display = 'block';
-                } finally {
-                    // Reset button
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Submit Your Story';
+            document.getElementById('prev-page').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displaySubmissions();
                 }
             });
             
-            // Helper function to convert file to base64
-            function convertFileToBase64(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(file);
-                });
-            }
+            document.getElementById('next-page').addEventListener('click', function() {
+                const maxPages = Math.ceil(allSubmissions.length / itemsPerPage);
+                if (currentPage < maxPages) {
+                    currentPage++;
+                    displaySubmissions();
+                }
+            });
         });
+        
+        // Check if admin is logged in
+        function checkAdminLogin() {
+            const adminToken = localStorage.getItem('appfoundry_admin_token');
+            
+            if (!adminToken) {
+                // Show login modal
+                openModal('login-modal');
+            } else {
+                // Load submissions
+                loadSubmissions();
+            }
+        }
+        
+        // Attempt login
+        function attemptLogin() {
+            const password = document.getElementById('admin-password').value;
+            const loginError = document.getElementById('login-error');
+            
+            // In production, this should be a secure API call
+            // For demonstration, we're using a simple password check
+            if (password === 'admin123') { // Change this to your secure password!
+                const token = 'admin_token_' + Date.now(); // Generate a simple token
+                
+                // Store token in localStorage
+                localStorage.setItem('appfoundry_admin_token', token);
+                
+                // Close modal and load submissions
+                closeModal('login-modal');
+                loadSubmissions();
+            } else {
+                // Show error
+                loginError.textContent = 'Invalid password. Please try again.';
+                loginError.style.display = 'block';
+            }
+        }
+        
+        // Load submissions from both localStorage and API
+        async function loadSubmissions() {
+            const adminToken = localStorage.getItem('appfoundry_admin_token');
+            
+            if (!adminToken) {
+                checkAdminLogin();
+                return;
+            }
+            
+            // Get elements
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const storiesTable = document.getElementById('stories-table');
+            const emptyState = document.getElementById('empty-state');
+            
+            // Show loading, hide others
+            loadingIndicator.style.display = 'flex';
+            storiesTable.style.display = 'none';
+            emptyState.style.display = 'none';
+            
+            try {
+                // Initialize all submissions array
+                let serverSubmissions = [];
+                let localSubmissions = [];
+                
+                // Try to fetch from Netlify Function
+                try {
+                    console.log('Attempting to fetch submissions from Netlify Function...');
+                    const response = await fetch('/.netlify/functions/get-submissions', {
+                        headers: {
+                            'Authorization': `Bearer ${adminToken}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Received data from Netlify Function:', data);
+                        serverSubmissions = data;
+                    } else {
+                        console.warn('Function returned non-OK response:', response.status);
+                    }
+                } catch (fetchError) {
+                    console.warn('Error fetching from API:', fetchError);
+                    // Continue with localStorage as fallback
+                }
+                
+                // Get submissions from localStorage
+                try {
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    if (storedSubmissions) {
+                        localSubmissions = JSON.parse(storedSubmissions);
+                        console.log('Found submissions in localStorage:', localSubmissions.length);
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing localStorage submissions:', parseError);
+                }
+                
+                // Try to fetch directly from netlify function logs
+                try {
+                    // This is a placeholder - in a real system, you'd have an API to fetch log entries
+                    // Instead, we'll look for any submissions that might have come through the API
+                    // but aren't in localStorage yet
+                    
+                    // In a production system, you would have a database that both the form
+                    // and admin panel can access
+                } catch (logError) {
+                    console.warn('Error fetching from logs:', logError);
+                }
+                
+                // Combine submissions from all sources (avoid duplicates by ID)
+                const seenIds = new Set();
+                const combinedSubmissions = [];
+                
+                // Add server submissions first
+                serverSubmissions.forEach(submission => {
+                    seenIds.add(submission.id);
+                    combinedSubmissions.push(submission);
+                });
+                
+                // Add local submissions that don't exist in the server data
+                localSubmissions.forEach(submission => {
+                    if (!seenIds.has(submission.id)) {
+                        seenIds.add(submission.id);
+                        combinedSubmissions.push(submission);
+                    }
+                });
+                
+                // Display debug information
+                console.log('Server submissions:', serverSubmissions.length);
+                console.log('Local submissions:', localSubmissions.length);
+                console.log('Combined unique submissions:', combinedSubmissions.length);
+                
+                // If we still have no submissions, use sample data
+                if (combinedSubmissions.length === 0) {
+                    console.log('No submissions found, using sample data');
+                    allSubmissions = getSampleData();
+                } else {
+                    console.log('Using combined submissions:', combinedSubmissions.length);
+                    allSubmissions = combinedSubmissions;
+                }
+                
+                // Sort by date (newest first)
+                allSubmissions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                // Log the first few submissions for debugging
+                if (allSubmissions.length > 0) {
+                    console.log('First submission:', JSON.stringify(allSubmissions[0], null, 2));
+                }
+                
+                // Check if we have submissions
+                if (allSubmissions.length === 0) {
+                    // Show empty state
+                    loadingIndicator.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                // Display submissions
+                loadingIndicator.style.display = 'none';
+                storiesTable.style.display = 'table';
+                
+                // Reset pagination
+                currentPage = 1;
+                
+                // Display submissions
+                displaySubmissions();
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                
+                // Show error
+                loadingIndicator.style.display = 'none';
+                
+                // Create error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'admin-empty-state';
+                errorDiv.innerHTML = `
+                    <div class="admin-empty-state-icon">❌</div>
+                    <div class="admin-empty-state-title">Error Loading Submissions</div>
+                    <p>We encountered an issue loading the submissions. Please try again.</p>
+                    <button class="admin-button" onclick="loadSubmissions()">Retry</button>
+                `;
+                
+                // Add to container
+                document.getElementById('table-container').appendChild(errorDiv);
+            }
+        }
+        
+        // Display submissions with pagination
+        function displaySubmissions() {
+            const tableBody = document.getElementById('stories-table-body');
+            tableBody.innerHTML = '';
+            
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedItems = allSubmissions.slice(startIndex, endIndex);
+            
+            // Add each submission to the table
+            paginatedItems.forEach(submission => {
+                const row = document.createElement('tr');
+                
+                // Format date
+                const submissionDate = new Date(submission.date);
+                const formattedDate = submissionDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                // Create status badge
+                const statusClass = {
+                    'pending': 'pending',
+                    'approved': 'approved',
+                    'rejected': 'rejected'
+                }[submission.status] || 'pending';
+                
+                // Get values safely with fallbacks
+                const name = submission.name || 'Unknown';
+                const appName = submission.appName || submission['app-name'] || 'Unnamed App';
+                const appType = submission.appType || submission['app-type'] || 'Other';
+                
+                // Set row content
+                row.innerHTML = `
+                    <td>${name}</td>
+                    <td>${appName}</td>
+                    <td>${appType}</td>
+                    <td>${formattedDate}</td>
+                    <td><span class="admin-badge ${statusClass}">${submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}</span></td>
+                    <td>
+                        <button class="admin-action-button" onclick="viewStory('${submission.id}')">View</button>
+                        <button class="admin-action-button" onclick="editStory('${submission.id}')">Edit</button>
+                        <button class="admin-action-button danger" onclick="confirmDelete('${submission.id}')">Delete</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Update pagination
+            updatePagination();
+        }
+        
+        // Add a new story
+        function addNewStory() {
+            // Get values from form
+            const name = document.getElementById('add-name').value;
+            const email = document.getElementById('add-email').value;
+            const appName = document.getElementById('add-app-name').value;
+            const appType = document.getElementById('add-app-type').value;
+            const experienceLevel = document.getElementById('add-experience-level').value;
+            const testimonial = document.getElementById('add-testimonial').value;
+            const story = document.getElementById('add-story').value;
+            const imageUrl = document.getElementById('add-image-url').value;
+            
+            // Get status
+            let status = 'pending';
+            const statusRadios = document.getElementsByName('add-status');
+            for (let i = 0; i < statusRadios.length; i++) {
+                if (statusRadios[i].checked) {
+                    status = statusRadios[i].value;
+                    break;
+                }
+            }
+            
+            // Validate required fields
+            if (!name || !email || !appName || !appType || !testimonial || !story) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            // Process images
+            const images = [];
+            if (imageUrl) {
+                const urls = imageUrl.split(',').map(url => url.trim());
+                for (const url of urls) {
+                    if (url) {
+                        images.push(url);
+                    }
+                }
+            }
+            
+            // Create new story object
+            const newStory = {
+                id: 'story_' + Date.now(),
+                name,
+                email,
+                appName,
+                appType,
+                experienceLevel,
+                testimonial,
+                story,
+                images,
+                date: new Date().toISOString(),
+                status
+            };
+            
+            // Add to submissions
+            allSubmissions.unshift(newStory); // Add to start of array
+            
+            // Save to localStorage
+            saveSubmissionsToLocalStorage();
+            
+            // Reset form
+            document.getElementById('add-story-form').reset();
+            
+            // Close modal
+            closeModal('add-story-modal');
+            
+            // Refresh display
+            displaySubmissions();
+            
+            // Show success message
+            alert('Success story added successfully!');
+        }
+        
+        // Filter submissions based on search
+        function filterSubmissions() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            
+            if (!searchTerm) {
+                // If search is empty, show all
+                displaySubmissions();
+                return;
+            }
+            
+            // Filter submissions
+            const filteredSubmissions = allSubmissions.filter(submission => {
+                const name = submission.name || '';
+                const appName = submission.appName || submission['app-name'] || '';
+                const appType = submission.appType || submission['app-type'] || '';
+                const testimonial = submission.testimonial || '';
+                const story = submission.story || '';
+                
+                return (
+                    name.toLowerCase().includes(searchTerm) ||
+                    appName.toLowerCase().includes(searchTerm) ||
+                    appType.toLowerCase().includes(searchTerm) ||
+                    testimonial.toLowerCase().includes(searchTerm) ||
+                    story.toLowerCase().includes(searchTerm)
+                );
+            });
+            
+            // Update allSubmissions temporarily
+            const originalSubmissions = [...allSubmissions];
+            allSubmissions = filteredSubmissions;
+            
+            // Reset pagination
+            currentPage = 1;
+            
+            // Display filtered submissions
+            displaySubmissions();
+            
+            // Restore original submissions
+            allSubmissions = originalSubmissions;
+        }
+        
+        // Update pagination controls
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            const totalPages = Math.ceil(allSubmissions.length / itemsPerPage);
+            
+            // Clear pagination
+            pagination.innerHTML = '';
+            
+            // Previous button
+            const prevButton = document.createElement('div');
+            prevButton.className = 'admin-pagination-item';
+            prevButton.textContent = '«';
+            prevButton.onclick = function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displaySubmissions();
+                }
+            };
+            pagination.appendChild(prevButton);
+            
+            // Page numbers
+            // Maximum of 5 pages shown at once, with ellipsis if needed
+            const maxVisiblePages = 5;
+            const halfVisiblePages = Math.floor(maxVisiblePages / 2);
+            
+            let startPage = Math.max(1, currentPage - halfVisiblePages);
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            // Adjust if at the end
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            // Add ellipsis at the beginning if needed
+            if (startPage > 1) {
+                const firstPageItem = document.createElement('div');
+                firstPageItem.className = 'admin-pagination-item';
+                firstPageItem.textContent = '1';
+                firstPageItem.onclick = function() {
+                    currentPage = 1;
+                    displaySubmissions();
+                };
+                pagination.appendChild(firstPageItem);
+                
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('div');
+                    ellipsis.className = 'admin-pagination-item';
+                    ellipsis.textContent = '...';
+                    ellipsis.style.cursor = 'default';
+                    pagination.appendChild(ellipsis);
+                }
+            }
+            
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                const pageItem = document.createElement('div');
+                pageItem.className = 'admin-pagination-item';
+                if (i === currentPage) {
+                    pageItem.classList.add('active');
+                }
+                pageItem.textContent = i;
+                pageItem.onclick = function() {
+                    currentPage = i;
+                    displaySubmissions();
+                };
+                pagination.appendChild(pageItem);
+            }
+            
+            // Add ellipsis at the end if needed
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('div');
+                    ellipsis.className = 'admin-pagination-item';
+                    ellipsis.textContent = '...';
+                    ellipsis.style.cursor = 'default';
+                    pagination.appendChild(ellipsis);
+                }
+                
+                const lastPageItem = document.createElement('div');
+                lastPageItem.className = 'admin-pagination-item';
+                lastPageItem.textContent = totalPages;
+                lastPageItem.onclick = function() {
+                    currentPage = totalPages;
+                    displaySubmissions();
+                };
+                pagination.appendChild(lastPageItem);
+            }
+            
+            // Next button
+            const nextButton = document.createElement('div');
+            nextButton.className = 'admin-pagination-item';
+            nextButton.textContent = '»';
+            nextButton.onclick = function() {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displaySubmissions();
+                }
+            };
+            pagination.appendChild(nextButton);
+            
+            // Hide pagination if only one page
+            pagination.style.display = totalPages <= 1 ? 'none' : 'flex';
+        }
+        
+        // View a story
+        function viewStory(id) {
+            currentStoryId = id;
+            
+            // Find the story
+            const story = allSubmissions.find(s => s.id === id);
+            
+            if (!story) {
+                alert('Story not found.');
+                return;
+            }
+            
+            console.log('Viewing story:', story);
+            
+            // Format date
+            const storyDate = new Date(story.date);
+            const formattedDate = storyDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Get values safely with fallbacks
+            const name = story.name || 'Unknown';
+            const email = story.email || 'No email provided';
+            const appName = story.appName || story['app-name'] || 'Unnamed App';
+            const appType = story.appType || story['app-type'] || 'Other';
+            const experienceLevel = story.experienceLevel || story['experience-level'] || 'Not specified';
+            const testimonial = story.testimonial || 'No testimonial provided';
+            const storyText = story.story || 'No story provided';
+            
+            // Fill in the modal fields
+            document.getElementById('view-name').textContent = name;
+            document.getElementById('view-email').textContent = email;
+            document.getElementById('view-app-name').textContent = appName;
+            document.getElementById('view-app-type').textContent = appType;
+            document.getElementById('view-experience-level').textContent = experienceLevel;
+            document.getElementById('view-date').textContent = formattedDate;
+            document.getElementById('view-testimonial').textContent = testimonial;
+            document.getElementById('view-story').textContent = storyText;
+            
+            // Create status badge
+            const statusClass = {
+                'pending': 'pending',
+                'approved': 'approved',
+                'rejected': 'rejected'
+            }[story.status] || 'pending';
+            
+            document.getElementById('view-status').innerHTML = `
+                <span class="admin-badge ${statusClass}">${story.status.charAt(0).toUpperCase() + story.status.slice(1)}</span>
+            `;
+            
+            // Show/hide approve/reject buttons based on current status
+            const approveButton = document.getElementById('approve-button');
+            const rejectButton = document.getElementById('reject-button');
+            
+            if (story.status === 'pending') {
+                approveButton.style.display = 'block';
+                rejectButton.style.display = 'block';
+            } else if (story.status === 'approved') {
+                approveButton.style.display = 'none';
+                rejectButton.style.display = 'block';
+            } else if (story.status === 'rejected') {
+                approveButton.style.display = 'block';
+                rejectButton.style.display = 'none';
+            }
+            
+            // Fill in images
+            const imagesContainer = document.getElementById('view-images');
+            imagesContainer.innerHTML = '';
+            
+            const images = story.images || [];
+            if (images.length > 0) {
+                images.forEach(imageUrl => {
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.alt = 'App Screenshot';
+                    img.className = 'admin-story-image';
+                    imagesContainer.appendChild(img);
+                });
+            } else {
+                imagesContainer.innerHTML = '<p>No screenshots provided</p>';
+            }
+            
+            // Show the modal
+            openModal('view-story-modal');
+        }
+        
+        // Edit a story
+        function editStory(id) {
+            currentStoryId = id;
+            
+            // Find the story
+            const story = allSubmissions.find(s => s.id === id);
+            
+            if (!story) {
+                alert('Story not found.');
+                return;
+            }
+            
+            // Get values safely with fallbacks
+            const name = story.name || '';
+            const email = story.email || '';
+            const appName = story.appName || story['app-name'] || '';
+            const appType = story.appType || story['app-type'] || 'Other';
+            const experienceLevel = story.experienceLevel || story['experience-level'] || 'No experience';
+            const testimonial = story.testimonial || '';
+            const storyText = story.story || '';
+            
+            // Fill in the form fields
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-email').value = email;
+            document.getElementById('edit-app-name').value = appName;
+            document.getElementById('edit-testimonial').value = testimonial;
+            document.getElementById('edit-story').value = storyText;
+            
+            // Set the app type dropdown
+            const appTypeSelect = document.getElementById('edit-app-type');
+            for (let i = 0; i < appTypeSelect.options.length; i++) {
+                if (appTypeSelect.options[i].value === appType) {
+                    appTypeSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            // Set experience level dropdown
+            const expLevelSelect = document.getElementById('edit-experience-level');
+            for (let i = 0; i < expLevelSelect.options.length; i++) {
+                if (expLevelSelect.options[i].value === experienceLevel) {
+                    expLevelSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            // Set status radio buttons
+            const statusRadios = document.getElementsByName('status');
+            for (let i = 0; i < statusRadios.length; i++) {
+                if (statusRadios[i].value === story.status) {
+                    statusRadios[i].checked = true;
+                    break;
+                }
+            }
+            
+            // Show the modal
+            openModal('edit-story-modal');
+        }
+        
+        // Save edited story
+        function saveStory() {
+            if (!currentStoryId) return;
+            
+            // Find the story
+            const storyIndex = allSubmissions.findIndex(s => s.id === currentStoryId);
+            
+            if (storyIndex === -1) {
+                alert('Story not found.');
+                return;
+            }
+            
+            // Get values from form
+            const name = document.getElementById('edit-name').value;
+            const appName = document.getElementById('edit-app-name').value;
+            const appType = document.getElementById('edit-app-type').value;
+            const experienceLevel = document.getElementById('edit-experience-level').value;
+            const testimonial = document.getElementById('edit-testimonial').value;
+            const story = document.getElementById('edit-story').value;
+            
+            // Get status
+            let status = 'pending';
+            const statusRadios = document.getElementsByName('status');
+            for (let i = 0; i < statusRadios.length; i++) {
+                if (statusRadios[i].checked) {
+                    status = statusRadios[i].value;
+                    break;
+                }
+            }
+            
+            // Update story
+            allSubmissions[storyIndex] = {
+                ...allSubmissions[storyIndex],
+                name,
+                appName,
+                appType,
+                experienceLevel,
+                testimonial,
+                story,
+                status
+            };
+            
+            // Save to localStorage
+            saveSubmissionsToLocalStorage();
+            
+            // Try to update via API as well
+            updateSubmissionViaAPI(allSubmissions[storyIndex]);
+            
+            // Close modal and refresh display
+            closeModal('edit-story-modal');
+            displaySubmissions();
+            
+            // Show success message
+            alert('Story updated successfully!');
+        }
+        
+        // Confirm deletion
+        function confirmDelete(id) {
+            currentStoryId = id;
+            openModal('delete-modal');
+        }
+        
+        // Delete a story
+        function deleteStory() {
+            if (!currentStoryId) return;
+            
+            // Find the story index
+            const storyIndex = allSubmissions.findIndex(s => s.id === currentStoryId);
+            
+            if (storyIndex === -1) {
+                alert('Story not found.');
+                return;
+            }
+            
+            // Remove the story
+            allSubmissions.splice(storyIndex, 1);
+            
+            // Save to localStorage
+            saveSubmissionsToLocalStorage();
+            
+            // Try to delete via API as well
+            deleteSubmissionViaAPI(currentStoryId);
+            
+            // Close modal and refresh display
+            closeModal('delete-modal');
+            displaySubmissions();
+            
+            // Show success message
+            alert('Story deleted successfully!');
+        }
+        
+        // Approve a story
+        function approveStory() {
+            if (!currentStoryId) return;
+            
+            // Find the story
+            const storyIndex = allSubmissions.findIndex(s => s.id === currentStoryId);
+            
+            if (storyIndex === -1) {
+                alert('Story not found.');
+                return;
+            }
+            
+            // Update status
+            allSubmissions[storyIndex].status = 'approved';
+            
+            // Save to localStorage
+            saveSubmissionsToLocalStorage();
+            
+            // Try to update via API as well
+            updateSubmissionStatusViaAPI(currentStoryId, 'approved');
+            
+            // Close modal and refresh display
+            closeModal('view-story-modal');
+            displaySubmissions();
+            
+            // Show success message
+            alert('Story approved successfully!');
+        }
+        
+        // Reject a story
+        function rejectStory() {
+            if (!currentStoryId) return;
+            
+            // Find the story
+            const storyIndex = allSubmissions.findIndex(s => s.id === currentStoryId);
+            
+            if (storyIndex === -1) {
+                alert('Story not found.');
+                return;
+            }
+            
+            // Update status
+            allSubmissions[storyIndex].status = 'rejected';
+            
+            // Save to localStorage
+            saveSubmissionsToLocalStorage();
+            
+            // Try to update via API as well
+            updateSubmissionStatusViaAPI(currentStoryId, 'rejected');
+            
+            // Close modal and refresh display
+            closeModal('view-story-modal');
+            displaySubmissions();
+            
+            // Show success message
+            alert('Story rejected successfully!');
+        }
+        
+        // Save submissions to localStorage
+        function saveSubmissionsToLocalStorage() {
+            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
+        }
+        
+        // Update submission via API
+        async function updateSubmissionViaAPI(submission) {
+            const adminToken = localStorage.getItem('appfoundry_admin_token');
+            
+            if (!adminToken) return;
+            
+            try {
+                const response = await fetch('/.netlify/functions/update-submission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify(submission)
+                });
+                
+                if (!response.ok) {
+                    console.warn('API update failed:', await response.text());
+                } else {
+                    console.log('API update successful');
+                }
+            } catch (error) {
+                console.warn('Error updating submission via API:', error);
+            }
+        }
+        
+        // Update submission status via API
+        async function updateSubmissionStatusViaAPI(id, status) {
+            const adminToken = localStorage.getItem('appfoundry_admin_token');
+            
+            if (!adminToken) return;
+            
+            try {
+                const response = await fetch('/.netlify/functions/update-submission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ id, status })
+                });
+                
+                if (!response.ok) {
+                    console.warn('API status update failed:', await response.text());
+                } else {
+                    console.log('API status update successful');
+                }
+            } catch (error) {
+                console.warn('Error updating status via API:', error);
+            }
+        }
+        
+        // Delete submission via API
+        async function deleteSubmissionViaAPI(id) {
+            const adminToken = localStorage.getItem('appfoundry_admin_token');
+            
+            if (!adminToken) return;
+            
+            try {
+                const response = await fetch('/.netlify/functions/delete-submission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    },
+                    body: JSON.stringify({ id })
+                });
+                
+                if (!response.ok) {
+                    console.warn('API delete failed:', await response.text());
+                } else {
+                    console.log('API delete successful');
+                }
+            } catch (error) {
+                console.warn('Error deleting submission via API:', error);
+            }
+        }
+        
+        // Open a modal
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        // Close a modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Sample data for when no submissions exist
+        function getSampleData() {
+            return [
+                {
+                    id: '1',
+                    name: 'Sarah Johnson',
+                    email: 'sarah@example.com',
+                    appName: 'SleepTrack',
+                    appType: 'Health & Fitness',
+                    experienceLevel: 'No experience',
+                    date: '2025-04-15T10:30:00Z',
+                    status: 'approved',
+                    testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
+                    story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
+                    images: ['https://placeholder.pics/svg/300x200', 'https://placeholder.pics/svg/300x200']
+                },
+                {
+                    id: '2',
+                    name: 'Michael Chen',
+                    email: 'michael@example.com',
+                    appName: 'RecipeKeeper',
+                    appType: 'Lifestyle',
+                    experienceLevel: 'Beginner',
+                    date: '2025-04-22T14:45:00Z',
+                    status: 'pending',
+                    testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
+                    story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
+                    images: ['https://placeholder.pics/svg/300x200']
+                },
+                {
+                    id: '3',
+                    name: 'Alex Thompson',
+                    email: 'alex@example.com',
+                    appName: 'TaskMaster Pro',
+                    appType: 'Productivity',
+                    experienceLevel: 'No experience',
+                    date: '2025-04-05T09:15:00Z',
+                    status: 'rejected',
+                    testimonial: '"After trying several complex project management tools, I decided to build my own tailored exactly to my workflow. It was surprisingly easy with AppFoundry!"',
+                    story: 'I run a small marketing agency, and we needed a project management tool that worked exactly the way our team operates. After evaluating dozens of existing solutions, I realized none of them quite fit our unique workflow.\n\nI considered hiring a developer to build a custom solution, but the quotes I got were astronomical - $15,000 to $25,000 for even a basic version! That\'s when I discovered AppFoundry.\n\nUsing the course methods, I was able to design and build our custom project management tool in just a few weeks. It has all the features we wanted: milestone tracking, client approvals, time tracking, and automated reporting.\n\nNow our team is more efficient than ever, and we\'ve even started offering the app to our clients as part of our service package. It\'s become a revenue stream I never expected!',
+                    images: ['https://placeholder.pics/svg/300x200']
+                }
+            ];
+        }
+        
+        // Function to directly fetch submissions from Netlify
+        async function fetchFromNetlifyLogs() {
+            // This is a placeholder function - in a real system, you'd have an API
+            // that could retrieve submission data directly from your database
+            
+            // For now, this does nothing, but in a production system, you could
+            // have this function fetch data from a central database that both
+            // the submission form and admin panel access
+            console.log('Attempted to fetch submissions directly from server logs');
+            return [];
+        }
     </script>
 </body>
 </html>
