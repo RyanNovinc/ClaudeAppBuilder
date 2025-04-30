@@ -71,6 +71,30 @@ exports.handler = async function(event, context) {
       }
       console.log('Available env vars:', JSON.stringify(safeEnvVars, null, 2));
       
+      // For test mode, simulate a successful email send
+      if (isTestMode) {
+        console.log('Test mode - simulating successful email send without API key');
+        console.log('EMAIL WOULD HAVE BEEN SENT WITH THIS CONTENT:');
+        console.log(`To: ${customerEmail}`);
+        console.log(`Subject: ${isTestMode ? '[TEST MODE] Welcome to SleepTech: Your Course Access Details' : 'Welcome to SleepTech: Your Course Access Details'}`);
+        console.log('Login credentials:');
+        console.log(`Email: ${customerEmail}`);
+        console.log(`Password: ${loginDetails?.password || 'N/A'}`);
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            message: 'Test mode - simulated email send successful',
+            testCredentials: {
+              email: customerEmail,
+              password: loginDetails?.password || 'generated_password'
+            }
+          })
+        };
+      }
+      
       return {
         statusCode: 500,
         headers,
@@ -134,13 +158,19 @@ exports.handler = async function(event, context) {
             
             <div style="background-color: #f9fafb; border-radius: 8px; padding: 15px; margin: 15px 0;">
               <p style="margin: 0;"><strong>Email:</strong> ${customerEmail}</p>
-              <p style="margin: 10px 0 0;"><strong>Password:</strong> ${loginDetails?.password || 'Use the "Login with Email" option to set your password'}</p>
-              <p style="margin: 10px 0 0;"><strong>Course URL:</strong> <a href="${courseUrl}">${courseUrl}</a></p>
+              <p style="margin: 10px 0 0;"><strong>Password:</strong> ${loginDetails?.password || 'Use the password provided during checkout'}</p>
               <p style="margin: 10px 0 0;"><strong>Login URL:</strong> <a href="${loginUrl}">${loginUrl}</a></p>
-              ${isTestMode ? `
-              <p style="margin: 10px 0 0;"><strong>Test Mode Access:</strong> You can either log in with the credentials above, or access the course directly using the Test Mode link.</p>
-              ` : ''}
+              <p style="margin: 10px 0 0;"><strong>Course URL:</strong> <a href="${courseUrl}">${courseUrl}</a></p>
             </div>
+            
+            <h2 style="color: #007AFF; margin-top: 30px;">How to Access Your Course</h2>
+            
+            <p>You have two ways to access your course content:</p>
+            
+            <ol>
+              <li style="margin-bottom: 10px;"><strong>Direct Login:</strong> Use the email and password above to log in at the Login URL.</li>
+              <li style="margin-bottom: 10px;"><strong>Bookmarked Link:</strong> ${isTestMode ? 'In test mode, you can use the Course URL to access content directly with test_mode=true in the URL.' : 'For your convenience, we\'ve included a direct link to the course content above.'}</li>
+            </ol>
             
             <h2 style="color: #007AFF; margin-top: 30px;">Your Receipt</h2>
             
