@@ -535,7 +535,7 @@
                 <h1 class="admin-title">Success Stories</h1>
                 <div class="admin-controls">
                     <button class="admin-button secondary" id="refresh-button">Refresh</button>
-                    <button class="admin-button">Add New Story</button>
+                    <button class="admin-button" id="add-story-button">Add New Story</button>
                 </div>
             </div>
             
@@ -736,6 +736,83 @@
         </div>
     </div>
     
+    <!-- Add Story Modal -->
+    <div class="admin-modal-backdrop" id="add-story-modal">
+        <div class="admin-modal">
+            <div class="admin-modal-header">
+                <div class="admin-modal-title">Add New Success Story</div>
+                <button class="admin-modal-close" onclick="closeModal('add-story-modal')">&times;</button>
+            </div>
+            <div class="admin-modal-body">
+                <form id="add-story-form">
+                    <div class="admin-form-grid">
+                        <div class="admin-form-group">
+                            <label for="add-name">Name</label>
+                            <input type="text" id="add-name" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="add-email">Email</label>
+                            <input type="email" id="add-email" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="add-app-name">App Name</label>
+                            <input type="text" id="add-app-name" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="add-app-type">App Type</label>
+                            <select id="add-app-type" required>
+                                <option value="" disabled selected>Select app category</option>
+                                <option value="Health & Fitness">Health & Fitness</option>
+                                <option value="Productivity">Productivity</option>
+                                <option value="Lifestyle">Lifestyle</option>
+                                <option value="Business">Business</option>
+                                <option value="Education">Education</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Social">Social</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label for="add-testimonial">Testimonial (Short Version for Display)</label>
+                        <textarea id="add-testimonial" required placeholder="A brief testimonial (1-2 sentences) about their experience"></textarea>
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label for="add-story">Full Success Story</label>
+                        <textarea id="add-story" required placeholder="The detailed success story about their experience building an app"></textarea>
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label for="add-image-url">Image URL (Optional)</label>
+                        <input type="url" id="add-image-url" placeholder="https://example.com/image.jpg">
+                        <p style="font-size: 0.8rem; color: var(--admin-secondary); margin-top: 5px;">Enter a URL to an image of the app. For multiple images, separate URLs with commas.</p>
+                    </div>
+                    
+                    <div class="admin-form-group">
+                        <label>Status</label>
+                        <div>
+                            <label style="display: inline; margin-right: 15px;">
+                                <input type="radio" name="add-status" value="pending" checked> Pending
+                            </label>
+                            <label style="display: inline; margin-right: 15px;">
+                                <input type="radio" name="add-status" value="approved"> Approved
+                            </label>
+                            <label style="display: inline;">
+                                <input type="radio" name="add-status" value="rejected"> Rejected
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="admin-modal-footer">
+                <button class="admin-button secondary" onclick="closeModal('add-story-modal')">Cancel</button>
+                <button class="admin-button" onclick="addNewStory()">Add Story</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Delete Confirmation Modal -->
     <div class="admin-modal-backdrop" id="delete-modal">
         <div class="admin-modal" style="max-width: 400px;">
@@ -754,6 +831,9 @@
     </div>
     
     <script>
+        // This is a standalone demo version of the admin interface
+        // It uses localStorage to store submissions instead of a backend API
+        
         // Current story being viewed/edited
         let currentStoryId = null;
         
@@ -775,6 +855,10 @@
             });
             
             document.getElementById('login-button').addEventListener('click', attemptLogin);
+            
+            document.getElementById('add-story-button').addEventListener('click', function() {
+                openModal('add-story-modal');
+            });
             
             document.getElementById('search-button').addEventListener('click', function() {
                 filterSubmissions();
@@ -838,8 +922,8 @@
             }
         }
         
-        // Load submissions from API
-        async function loadSubmissions() {
+        // Load submissions from localStorage
+        function loadSubmissions() {
             const adminToken = localStorage.getItem('appfoundry_admin_token');
             
             if (!adminToken) {
@@ -857,53 +941,19 @@
             storiesTable.style.display = 'none';
             emptyState.style.display = 'none';
             
-            try {
-                // In a real implementation, this would be an API call
-                // For demonstration, we'll use the sample data from above
+            // Simulate API call
+            setTimeout(() => {
+                // Get submissions from localStorage
+                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
                 
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // In production, you would fetch from your Netlify function
-                // const response = await fetch('/.netlify/functions/get-submissions', {
-                //     headers: {
-                //         'Authorization': `Bearer ${adminToken}`
-                //     }
-                // });
-                
-                // if (!response.ok) {
-                //     throw new Error('Failed to load submissions');
-                // }
-                
-                // allSubmissions = await response.json();
-                
-                // SAMPLE DATA - Replace with real API call in production
-                allSubmissions = [
-                    {
-                        id: '1',
-                        name: 'Sarah Johnson',
-                        email: 'sarah@example.com',
-                        appName: 'SleepTrack',
-                        appType: 'Health & Fitness',
-                        date: '2025-04-15T10:30:00Z',
-                        status: 'approved',
-                        testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
-                        story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
-                        images: ['https://placeholder.pics/svg/300x200', 'https://placeholder.pics/svg/300x200']
-                    },
-                    {
-                        id: '2',
-                        name: 'Michael Chen',
-                        email: 'michael@example.com',
-                        appName: 'RecipeKeeper',
-                        appType: 'Lifestyle',
-                        date: '2025-04-22T14:45:00Z',
-                        status: 'pending',
-                        testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
-                        story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
-                        images: ['https://placeholder.pics/svg/300x200']
-                    }
-                ];
+                if (storedSubmissions) {
+                    allSubmissions = JSON.parse(storedSubmissions);
+                } else {
+                    // If no stored submissions, use sample data
+                    allSubmissions = getSampleData();
+                    // Save to localStorage
+                    localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
+                }
                 
                 // Check if we have submissions
                 if (allSubmissions.length === 0) {
@@ -922,26 +972,7 @@
                 
                 // Display submissions
                 displaySubmissions();
-                
-            } catch (error) {
-                console.error('Error loading submissions:', error);
-                
-                // Show error
-                loadingIndicator.style.display = 'none';
-                
-                // Create error message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'admin-empty-state';
-                errorDiv.innerHTML = `
-                    <div class="admin-empty-state-icon">❌</div>
-                    <div class="admin-empty-state-title">Error Loading Submissions</div>
-                    <p>We encountered an issue loading the submissions. Please try again.</p>
-                    <button class="admin-button" onclick="loadSubmissions()">Retry</button>
-                `;
-                
-                // Add to container
-                document.getElementById('table-container').appendChild(errorDiv);
-            }
+            }, 1000); // Simulate network delay
         }
         
         // Display submissions with pagination
@@ -992,6 +1023,77 @@
             
             // Update pagination
             updatePagination();
+        }
+        
+        // Add a new story
+        function addNewStory() {
+            // Get values from form
+            const name = document.getElementById('add-name').value;
+            const email = document.getElementById('add-email').value;
+            const appName = document.getElementById('add-app-name').value;
+            const appType = document.getElementById('add-app-type').value;
+            const testimonial = document.getElementById('add-testimonial').value;
+            const story = document.getElementById('add-story').value;
+            const imageUrl = document.getElementById('add-image-url').value;
+            
+            // Get status
+            let status = 'pending';
+            const statusRadios = document.getElementsByName('add-status');
+            for (let i = 0; i < statusRadios.length; i++) {
+                if (statusRadios[i].checked) {
+                    status = statusRadios[i].value;
+                    break;
+                }
+            }
+            
+            // Validate required fields
+            if (!name || !email || !appName || !appType || !testimonial || !story) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            // Process images
+            const images = [];
+            if (imageUrl) {
+                const urls = imageUrl.split(',').map(url => url.trim());
+                for (const url of urls) {
+                    if (url) {
+                        images.push(url);
+                    }
+                }
+            }
+            
+            // Create new story object
+            const newStory = {
+                id: 'story_' + Date.now(),
+                name,
+                email,
+                appName,
+                appType,
+                testimonial,
+                story,
+                images,
+                date: new Date().toISOString(),
+                status
+            };
+            
+            // Add to submissions
+            allSubmissions.unshift(newStory); // Add to start of array
+            
+            // Save to localStorage
+            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
+            
+            // Reset form
+            document.getElementById('add-story-form').reset();
+            
+            // Close modal
+            closeModal('add-story-modal');
+            
+            // Refresh display
+            displaySubmissions();
+            
+            // Show success message
+            alert('Success story added successfully!');
         }
         
         // Filter submissions based on search
@@ -1236,8 +1338,8 @@
                 status
             };
             
-            // In production, you would send this update to your API
-            // updateStoryOnServer(allSubmissions[storyIndex]);
+            // Save to localStorage
+            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
             
             // Close modal and refresh display
             closeModal('edit-story-modal');
@@ -1268,8 +1370,8 @@
             // Remove the story
             allSubmissions.splice(storyIndex, 1);
             
-            // In production, you would call your API to delete the story
-            // deleteStoryOnServer(currentStoryId);
+            // Save to localStorage
+            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
             
             // Close modal and refresh display
             closeModal('delete-modal');
@@ -1294,8 +1396,8 @@
             // Update status
             allSubmissions[storyIndex].status = 'approved';
             
-            // In production, you would call your API to update the story
-            // updateStoryStatusOnServer(currentStoryId, 'approved');
+            // Save to localStorage
+            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
             
             // Close modal and refresh display
             closeModal('view-story-modal');
@@ -1320,8 +1422,8 @@
             // Update status
             allSubmissions[storyIndex].status = 'rejected';
             
-            // In production, you would call your API to update the story
-            // updateStoryStatusOnServer(currentStoryId, 'rejected');
+            // Save to localStorage
+            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
             
             // Close modal and refresh display
             closeModal('view-story-modal');
@@ -1341,61 +1443,35 @@
             document.getElementById(modalId).style.display = 'none';
         }
         
-        // In production, these functions would make API calls to your backend
-        
-        // async function updateStoryOnServer(story) {
-        //     const adminToken = localStorage.getItem('appfoundry_admin_token');
-        //     
-        //     const response = await fetch('/.netlify/functions/update-submission', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'Authorization': `Bearer ${adminToken}`
-        //         },
-        //         body: JSON.stringify(story)
-        //     });
-        //     
-        //     if (!response.ok) {
-        //         throw new Error('Failed to update story');
-        //     }
-        //     
-        //     return response.json();
-        // }
-        // 
-        // async function updateStoryStatusOnServer(id, status) {
-        //     const adminToken = localStorage.getItem('appfoundry_admin_token');
-        //     
-        //     const response = await fetch('/.netlify/functions/update-submission', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'Authorization': `Bearer ${adminToken}`
-        //         },
-        //         body: JSON.stringify({ id, status })
-        //     });
-        //     
-        //     if (!response.ok) {
-        //         throw new Error('Failed to update story status');
-        //     }
-        //     
-        //     return response.json();
-        // }
-        // 
-        // async function deleteStoryOnServer(id) {
-        //     const adminToken = localStorage.getItem('appfoundry_admin_token');
-        //     
-        //     const response = await fetch('/.netlify/functions/delete-submission', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'Authorization': `Bearer ${adminToken}`
-        //         },
-        //         body: JSON.stringify({ id })
-        //     });
-        //     
-        //     if (!response.ok) {
-        //         throw new Error('Failed to delete story');
-        //     }
-        //     
-        //     return response.json();
-        // }
+        // Sample data
+        function getSampleData() {
+            return [
+                {
+                    id: '1',
+                    name: 'Sarah Johnson',
+                    email: 'sarah@example.com',
+                    appName: 'SleepTrack',
+                    appType: 'Health & Fitness',
+                    date: '2025-04-15T10:30:00Z',
+                    status: 'approved',
+                    testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
+                    story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
+                    images: ['https://placeholder.pics/svg/300x200', 'https://placeholder.pics/svg/300x200']
+                },
+                {
+                    id: '2',
+                    name: 'Michael Chen',
+                    email: 'michael@example.com',
+                    appName: 'RecipeKeeper',
+                    appType: 'Lifestyle',
+                    date: '2025-04-22T14:45:00Z',
+                    status: 'pending',
+                    testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
+                    story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
+                    images: ['https://placeholder.pics/svg/300x200']
+                }
+            ];
+        }
+    </script>
+</body>
+</html>
