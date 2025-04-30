@@ -35,12 +35,14 @@ exports.handler = async function(event, context) {
   try {
     // Parse the incoming request body
     const data = JSON.parse(event.body);
-    const { paymentMethodId, amount, currency, customerEmail, customerName, productName, testMode } = data;
+    const { paymentMethodId, amount, currency, customerEmail, customerName, productName, testMode, forceEmailSend } = data;
     
     console.log('Payment request received for:', customerEmail);
+    console.log('Test mode:', testMode === true);
+    console.log('Force email send:', forceEmailSend === true);
     
     // Validate the required fields
-    if (!paymentMethodId || !amount || !currency || !customerEmail) {
+    if (!paymentMethodId || !customerEmail) {
       console.log('Missing required parameters');
       return {
         statusCode: 400,
@@ -86,10 +88,10 @@ exports.handler = async function(event, context) {
       console.log('Test mode payment with ID:', paymentIntent.id);
     }
     
-    // Create user account in Netlify Identity
-    // Generate a random password or use one provided
-    const tempPassword = data.password || generatePassword();
+    // Generate a random password for test users
+    const tempPassword = generatePassword();
     
+    // Create user account in Netlify Identity (for both real and test mode)
     try {
       console.log('Creating user account in Netlify Identity');
       
@@ -101,90 +103,98 @@ exports.handler = async function(event, context) {
       
       console.log('Using Netlify Identity endpoint:', netlifyIdentityEndpoint);
       
-      // First check if the user already exists
-      const getUsersResponse = await fetch(netlifyIdentityEndpoint, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
-        }
-      });
-      
-      if (getUsersResponse.ok) {
-        const users = await getUsersResponse.json();
-        const existingUser = users.find(u => u.email === customerEmail);
+      // For testing purposes, we'll skip the actual Netlify Identity API call
+      // but still send the welcome email with login credentials
+      if (isTestMode) {
+        console.log('Test mode - bypassing actual Netlify Identity API call');
+        console.log('But we will still send a welcome email with test credentials');
+      } else {
+        // For real payments, try to create a Netlify Identity user
+        // First check if the user already exists
+        const getUsersResponse = await fetch(netlifyIdentityEndpoint, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
+          }
+        });
         
-        if (existingUser) {
-          console.log('User already exists, updating instead of creating');
+        if (getUsersResponse.ok) {
+          const users = await getUsersResponse.json();
+          const existingUser = users.find(u => u.email === customerEmail);
           
-          // Update the existing user
-          const updateResponse = await fetch(`${netlifyIdentityEndpoint}/${existingUser.id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
-            },
-            body: JSON.stringify({
-              email: customerEmail,
-              confirmed_at: new Date().toISOString(),
-              app_metadata: {
-                ...(existingUser.app_metadata || {}),
-                roles: ["paying_customer"]
+          if (existingUser) {
+            console.log('User already exists, updating instead of creating');
+            
+            // Update the existing user
+            const updateResponse = await fetch(`${netlifyIdentityEndpoint}/${existingUser.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
               },
-              user_metadata: {
-                ...(existingUser.user_metadata || {}),
-                full_name: customerName,
-                course_access: true,
-                purchase_date: new Date().toISOString(),
-                payment_id: paymentIntent.id
-              }
-            })
-          });
-          
-          if (!updateResponse.ok) {
-            console.error('Error updating user:', await updateResponse.text());
+              body: JSON.stringify({
+                email: customerEmail,
+                confirmed_at: new Date().toISOString(),
+                app_metadata: {
+                  ...(existingUser.app_metadata || {}),
+                  roles: ["paying_customer"]
+                },
+                user_metadata: {
+                  ...(existingUser.user_metadata || {}),
+                  full_name: customerName,
+                  course_access: true,
+                  purchase_date: new Date().toISOString(),
+                  payment_id: paymentIntent.id
+                }
+              })
+            });
+            
+            if (!updateResponse.ok) {
+              console.error('Error updating user:', await updateResponse.text());
+            } else {
+              console.log('User updated successfully');
+            }
           } else {
-            console.log('User updated successfully');
+            // Create a new user
+            const userResponse = await fetch(netlifyIdentityEndpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
+              },
+              body: JSON.stringify({
+                email: customerEmail,
+                password: tempPassword,
+                confirmed_at: new Date().toISOString(),
+                app_metadata: {
+                  roles: ["paying_customer"]
+                },
+                user_metadata: {
+                  full_name: customerName,
+                  course_access: true,
+                  purchase_date: new Date().toISOString(),
+                  payment_id: paymentIntent.id
+                }
+              })
+            });
+            
+            if (!userResponse.ok) {
+              const errorData = await userResponse.text();
+              console.error('Error creating user in Netlify Identity:', errorData);
+            } else {
+              console.log('User account created successfully');
+            }
           }
         } else {
-          // Create a new user
-          const userResponse = await fetch(netlifyIdentityEndpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
-            },
-            body: JSON.stringify({
-              email: customerEmail,
-              password: tempPassword,
-              confirmed_at: new Date().toISOString(),
-              app_metadata: {
-                roles: ["paying_customer"]
-              },
-              user_metadata: {
-                full_name: customerName,
-                course_access: true,
-                purchase_date: new Date().toISOString(),
-                payment_id: paymentIntent.id
-              }
-            })
-          });
-          
-          if (!userResponse.ok) {
-            const errorData = await userResponse.text();
-            console.error('Error creating user in Netlify Identity:', errorData);
-          } else {
-            console.log('User account created successfully');
-          }
+          console.error('Failed to get users from Netlify Identity');
         }
-      } else {
-        console.error('Failed to get users from Netlify Identity');
       }
     } catch (userError) {
       console.error('Error creating user account:', userError);
       // Don't fail the whole process if user creation fails
     }
     
-    // Send welcome email with receipt and login details
+    // Send welcome email with receipt and login details for both real and test modes
     try {
       console.log('Sending welcome email');
       
@@ -194,7 +204,7 @@ exports.handler = async function(event, context) {
       
       console.log('Using email function URL:', emailFunctionUrl);
       
-      // We'll send real emails even in test mode
+      // We'll send real emails in both real mode and test mode
       await fetch(emailFunctionUrl, {
         method: 'POST',
         headers: {
@@ -204,7 +214,7 @@ exports.handler = async function(event, context) {
           customerEmail,
           customerName,
           orderDetails: {
-            amount: (amount / 100).toFixed(2), // Convert cents to dollars
+            amount: isTestMode ? '0.00 (Test)' : (amount / 100).toFixed(2), // Convert cents to dollars
             paymentMethod: isTestMode ? 'Test Mode (No Charge)' : 'Credit Card',
             date: new Date().toISOString(),
             productName
@@ -214,7 +224,8 @@ exports.handler = async function(event, context) {
             email: customerEmail,
             password: tempPassword
           },
-          forceEmailInTestMode: true // New flag to force email sending in test mode
+          forceEmailInTestMode: true, // Force email sending in test mode
+          testMode: isTestMode
         })
       });
       console.log('Welcome email request sent');
@@ -231,7 +242,7 @@ exports.handler = async function(event, context) {
         success: true,
         paymentIntentId: paymentIntent.id,
         customerEmail: customerEmail,
-        amount: amount / 100, // Convert back to dollars for display
+        amount: isTestMode ? 0 : amount / 100, // Convert back to dollars for display
         userCreated: true,
         tempPassword: tempPassword, // Include this in response for test mode only
         emailSent: true // Indicate that we attempted to send an email
