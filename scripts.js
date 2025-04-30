@@ -41,6 +41,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle login/my account button in header
     const loginButton = document.getElementById('loginButton');
     if (loginButton) {
+        // Remove any existing onclick attribute to prevent conflicts
+        loginButton.removeAttribute('onclick');
+        
         // Check if the user is authenticated with our simplified system
         const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
         const authEmail = localStorage.getItem('sleeptech_email');
@@ -48,7 +51,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isAuthenticated) {
             // User is logged in
             loginButton.textContent = 'My Account';
-            loginButton.onclick = function() {
+            loginButton.addEventListener('click', function(e) {
+                e.preventDefault();
                 if (confirm('You are logged in as ' + authEmail + '. Would you like to log out?')) {
                     // Clear auth data
                     localStorage.removeItem('sleeptech_auth');
@@ -58,11 +62,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Refresh the page
                     window.location.reload();
                 }
-            };
+            });
         } else {
             // User is not logged in
             loginButton.textContent = 'Log In';
-            loginButton.onclick = function() {
+            loginButton.addEventListener('click', function(e) {
+                e.preventDefault();
                 // Check if we're in the root directory or a subdirectory
                 const path = window.location.pathname;
                 const isInSubdirectory = path.split('/').length > 2;
@@ -72,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     window.location.href = 'direct-login.html';
                 }
-            };
+            });
         }
     }
     
