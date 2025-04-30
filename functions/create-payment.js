@@ -66,18 +66,18 @@ exports.handler = async function(event, context) {
       
       // Create a payment intent
       paymentIntent = await stripe.paymentIntents.create({
-        amount: amount,
-        currency: currency,
-        customer: customer.id,
-        payment_method: paymentMethodId,
-        description: `Purchase of ${productName}`,
-        confirm: true,
-        receipt_email: customerEmail,
-        metadata: {
-          product: productName,
-          support_email: 'hello@risegg.net'
-        }
-      });
+  amount: 19900, // $199.00 in cents, updated from 9900
+  currency: currency,
+  customer: customer.id,
+  payment_method: paymentMethodId,
+  description: `Purchase of ${productName}`,
+  confirm: true,
+  receipt_email: customerEmail,
+  metadata: {
+    product: productName,
+    support_email: 'hello@risegg.net'
+  }
+});
       
       console.log('Payment processed successfully:', paymentIntent.id);
     } else {
