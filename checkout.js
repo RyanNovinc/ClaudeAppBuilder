@@ -97,19 +97,59 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     try {
-      // For test mode, we can skip the actual payment processing with Stripe
-      // and directly redirect to the thank you page
+      // For test mode, we'll still call create-payment but with a special flag
       if (isTestMode) {
         console.log('Processing test mode purchase...');
         
         // Generate a test session ID
         const testSessionId = 'test_' + Date.now();
         
-        // Skip all server-side processing in test mode
-        // Just redirect directly to the thank you page with test_mode flag
-        window.location.href = '/thank-you.html?session_id=' + testSessionId + 
-                               '&test_mode=true&email=' + 
-                               encodeURIComponent(customerData.email);
+        // Call the create-payment function to generate a test account and send email
+        try {
+          const response = await fetch('/.netlify/functions/create-payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              paymentMethodId: 'test_pm_' + Date.now(),
+              amount: 9900, // $99.00 in cents
+              currency: 'usd',
+              customerEmail: customerData.email,
+              customerName: customerData.name,
+              productName: 'SleepTech Course',
+              supportEmail: 'hello@risegg.net',
+              testMode: true,
+              forceEmailSend: true // Flag to actually send the email in test mode
+            }),
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Test mode account creation successful:', result);
+            
+            // Redirect to thank you page
+            window.location.href = '/thank-you.html?session_id=' + testSessionId + 
+                                  '&test_mode=true&email=' + 
+                                  encodeURIComponent(customerData.email);
+          } else {
+            // If server call fails, still redirect to thank you page but with an error flag
+            console.error('Error in test mode account creation');
+            window.location.href = '/thank-you.html?session_id=' + testSessionId + 
+                                  '&test_mode=true&email=' + 
+                                  encodeURIComponent(customerData.email) + 
+                                  '&server_error=true';
+          }
+        } catch (error) {
+          console.error('Error in test mode:', error);
+          
+          // Still redirect to thank you page even if there's an error
+          window.location.href = '/thank-you.html?session_id=' + testSessionId + 
+                                '&test_mode=true&email=' + 
+                                encodeURIComponent(customerData.email) + 
+                                '&server_error=true';
+        }
+        
         return;
       }
       
