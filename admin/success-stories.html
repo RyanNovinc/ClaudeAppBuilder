@@ -4,320 +4,356 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin: Success Stories - AppFoundry</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Admin Panel Styles */
-        :root {
-            --admin-primary: #0070f3;
-            --admin-secondary: #6b7280;
-            --admin-success: #10b981;
-            --admin-warning: #fbbf24;
-            --admin-danger: #ef4444;
-            --admin-bg: #f9fafb;
-            --admin-card-bg: #ffffff;
-            --admin-border: #e5e7eb;
+    
+    <!-- Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
+    <script>
+    // Universal Story Manager - ensures stories are consistently available
+    (function() {
+      // Run on all pages to ensure localStorage data consistency
+      console.log("📊 Story Manager initializing on admin page");
+      
+      // Check if we need to seed the localStorage from our backup
+      function seedStoriesIfNeeded() {
+        // Only run if appfoundry_submissions doesn't exist or is empty
+        if (!localStorage.getItem('appfoundry_submissions')) {
+          console.log("🌱 No stories found in localStorage, checking for seed data");
+          
+          // Check if we have any stories in our seed
+          if (localStorage.getItem('appfoundry_approved_seed')) {
+            console.log("🔄 Restoring stories from seed");
+            try {
+              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+              console.log("✅ Successfully restored", seed.length, "stories from seed");
+            } catch (e) {
+              console.error("❌ Error restoring from seed:", e);
+            }
+          }
+        } else {
+          // If we have submissions, make sure we have an up-to-date seed
+          try {
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log("💾 Seed updated with", submissions.length, "stories");
+          } catch (e) {
+            console.error("❌ Error updating seed:", e);
+          }
         }
+      }
+      
+      // Run the seed check immediately
+      seedStoriesIfNeeded();
+      
+      // For the admin page, we need to ensure that any status changes also update the seed
+      function hookApprovalButtons() {
+        // This needs to run after the DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+          console.log("🔍 Looking for approval/rejection buttons to hook");
+          
+          // We'll use a mutation observer to watch for changes to the DOM
+          // This way we can catch buttons that are added dynamically
+          const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+              if (mutation.type === 'childList') {
+                const addedNodes = Array.from(mutation.addedNodes);
+                addedNodes.forEach(function(node) {
+                  if (node.nodeType === 1) { // Element node
+                    // Look for approve/reject buttons in this node
+                    const buttons = node.querySelectorAll('button[onclick*="approve"], button[onclick*="reject"]');
+                    buttons.forEach(hookButton);
+                    
+                    // Also look for buttons directly added
+                    if (node.tagName === 'BUTTON') {
+                      if (node.getAttribute('onclick')?.includes('approve') || 
+                          node.getAttribute('onclick')?.includes('reject')) {
+                        hookButton(node);
+                      }
+                    }
+                  }
+                });
+              }
+            });
+          });
+          
+          // Start observing the entire document
+          observer.observe(document.body, { 
+            childList: true, 
+            subtree: true 
+          });
+          
+          // Also hook any buttons that are already on the page
+          const existingButtons = document.querySelectorAll('button[onclick*="approve"], button[onclick*="reject"]');
+          existingButtons.forEach(hookButton);
+          
+          console.log("👁️ Now watching for approval/rejection actions");
+        });
+      }
+      
+      // Hook a button to update the seed when clicked
+      function hookButton(button) {
+        // Don't hook buttons that are already hooked
+        if (button.dataset.hooked) return;
         
-        * {
+        // Mark this button as hooked so we don't hook it again
+        button.dataset.hooked = "true";
+        console.log("🔗 Hooking button:", button.textContent);
+        
+        // Get the original onclick handler
+        const originalOnclick = button.getAttribute('onclick');
+        
+        // Replace it with our own handler
+        button.setAttribute('onclick', '');
+        button.addEventListener('click', function(e) {
+          // Call the original handler
+          if (originalOnclick) {
+            eval(originalOnclick);
+          }
+          
+          // Then update the seed
+          console.log("🔄 Button clicked, updating seed after delay");
+          
+          // We need to wait a bit for the original handler to finish
+          setTimeout(function() {
+            try {
+              const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+              localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+              console.log("💾 Seed updated after approval/rejection with", submissions.length, "stories");
+              
+              // Count the approved stories
+              const approvedCount = submissions.filter(s => s.status === 'approved').length;
+              console.log("✓ There are now", approvedCount, "approved stories");
+            } catch (e) {
+              console.error("❌ Error updating seed after approval/rejection:", e);
+            }
+          }, 200);
+        });
+      }
+      
+      // Hook the approval buttons on the admin page
+      hookApprovalButtons();
+    })();
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            background-color: #f9fafb;
         }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--admin-bg);
-            color: #111827;
-        }
-        
-        .admin-container {
-            display: flex;
-            min-height: 100vh;
-        }
-        
-        .admin-sidebar {
-            width: 250px;
-            background-color: var(--admin-card-bg);
-            border-right: 1px solid var(--admin-border);
-            padding: 30px 0;
-            flex-shrink: 0;
-        }
-        
-        .admin-sidebar-header {
-            padding: 0 20px;
-            margin-bottom: 30px;
-        }
-        
-        .admin-logo {
-            font-weight: 700;
-            font-size: 1.4rem;
-            color: var(--admin-primary);
-            margin-bottom: 10px;
-        }
-        
-        .admin-version {
-            font-size: 0.8rem;
-            color: var(--admin-secondary);
-        }
-        
-        .admin-nav {
-            margin-bottom: 20px;
-        }
-        
-        .admin-nav-title {
-            padding: 0 20px;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--admin-secondary);
-            margin-bottom: 10px;
-        }
-        
-        .admin-nav-item {
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: #4b5563;
-            transition: background-color 0.2s;
-        }
-        
-        .admin-nav-item:hover {
-            background-color: #f3f4f6;
-        }
-        
-        .admin-nav-item.active {
-            background-color: #e0f2ff;
-            color: var(--admin-primary);
-            font-weight: 500;
-        }
-        
-        .admin-nav-icon {
-            margin-right: 10px;
-            width: 20px;
-            text-align: center;
-        }
-        
-        .admin-main {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-        
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        
-        .admin-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-        
-        .admin-controls {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .admin-button {
-            background-color: var(--admin-primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .admin-button:hover {
-            background-color: #0055b3;
-        }
-        
-        .admin-button.secondary {
-            background-color: white;
-            color: #4b5563;
-            border: 1px solid var(--admin-border);
-        }
-        
-        .admin-button.secondary:hover {
-            background-color: #f3f4f6;
-        }
-        
-        .admin-card {
-            background-color: var(--admin-card-bg);
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        
-        .admin-card-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--admin-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .admin-card-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-        
-        .admin-card-content {
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
         }
-        
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
+        header {
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 15px 0;
         }
-        
-        .admin-table th {
-            text-align: left;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--admin-border);
-            color: var(--admin-secondary);
-            font-weight: 500;
-            font-size: 0.9rem;
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        
-        .admin-table td {
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--admin-border);
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0070f3;
         }
-        
-        .admin-table tr:last-child td {
-            border-bottom: none;
-        }
-        
         .admin-badge {
-            display: inline-block;
+            background-color: #0070f3;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .header-actions a {
+            color: #0070f3;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #111827;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 12px 20px;
+            font-weight: 500;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            color: #0070f3;
+            border-bottom-color: #0070f3;
+        }
+        .tab:hover {
+            color: #0070f3;
+        }
+        .submissions-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .submission-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .submission-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: box-shadow 0.3s;
+        }
+        .submission-card:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #f3f4f6;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .status-badge {
             padding: 4px 8px;
             border-radius: 4px;
-            font-size: 0.8rem;
+            font-size: 12px;
             font-weight: 500;
         }
-        
-        .admin-badge.pending {
-            background-color: #fff7ed;
-            color: #c2410c;
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
         }
-        
-        .admin-badge.approved {
-            background-color: #ecfdf5;
-            color: #047857;
+        .status-approved {
+            background-color: #d1fae5;
+            color: #065f46;
         }
-        
-        .admin-badge.rejected {
-            background-color: #fef2f2;
+        .status-rejected {
+            background-color: #fee2e2;
             color: #b91c1c;
         }
-        
-        .admin-action-button {
-            background: none;
-            border: none;
-            color: var(--admin-primary);
-            cursor: pointer;
-            padding: 5px;
+        .card-body {
+            padding: 15px;
+        }
+        .card-field {
+            margin-bottom: 12px;
+        }
+        .card-field:last-child {
+            margin-bottom: 0;
+        }
+        .field-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 3px;
+        }
+        .field-value {
+            font-size: 14px;
+            color: #111827;
+        }
+        .testimonial {
+            font-style: italic;
+            background-color: #f9fafb;
+            padding: 10px;
             border-radius: 4px;
+            margin-top: 10px;
+        }
+        .card-images {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .card-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 4px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .card-image:hover {
+            transform: scale(1.05);
+        }
+        .card-actions {
+            padding: 12px 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
             transition: background-color 0.2s;
         }
-        
-        .admin-action-button:hover {
-            background-color: #e0f2ff;
-        }
-        
-        .admin-action-button.danger {
-            color: var(--admin-danger);
-        }
-        
-        .admin-action-button.danger:hover {
-            background-color: #fee2e2;
-        }
-        
-        .admin-pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        
-        .admin-pagination-item {
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 5px;
-            border-radius: 6px;
-            cursor: pointer;
-            user-select: none;
-        }
-        
-        .admin-pagination-item:hover {
-            background-color: #f3f4f6;
-        }
-        
-        .admin-pagination-item.active {
-            background-color: var(--admin-primary);
+        .btn-approve {
+            background-color: #10b981;
             color: white;
         }
-        
-        .admin-empty-state {
-            padding: 50px 20px;
+        .btn-approve:hover {
+            background-color: #059669;
+        }
+        .btn-reject {
+            background-color: #ef4444;
+            color: white;
+        }
+        .btn-reject:hover {
+            background-color: #dc2626;
+        }
+        .btn-view {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .btn-view:hover {
+            background-color: #e5e7eb;
+        }
+        .empty-state {
             text-align: center;
-            color: var(--admin-secondary);
+            padding: 40px 20px;
         }
-        
-        .admin-empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            opacity: 0.5;
+        .empty-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: #9ca3af;
         }
-        
-        .admin-empty-state-title {
-            font-size: 1.1rem;
-            font-weight: 500;
+        .empty-title {
+            font-size: 18px;
+            font-weight: 600;
             margin-bottom: 10px;
+            color: #111827;
+        }
+        .empty-description {
+            color: #6b7280;
+            max-width: 400px;
+            margin: 0 auto;
         }
         
-        .admin-form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .admin-form-group {
-            margin-bottom: 20px;
-        }
-        
-        .admin-form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .admin-form-group input,
-        .admin-form-group textarea,
-        .admin-form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--admin-border);
-            border-radius: 6px;
-            font-size: 0.95rem;
-        }
-        
-        .admin-form-group textarea {
-            min-height: 100px;
-        }
-        
-        /* Modal styles */
-        .admin-modal-backdrop {
+        /* Modal Styles */
+        .modal-backdrop {
             position: fixed;
             top: 0;
             left: 0;
@@ -330,1397 +366,691 @@
             z-index: 1000;
             display: none;
         }
-        
-        .admin-modal {
+        .modal {
             background-color: white;
             border-radius: 8px;
             width: 90%;
             max-width: 800px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
-        .admin-modal-header {
+        .modal-header {
             padding: 15px 20px;
-            border-bottom: 1px solid var(--admin-border);
+            border-bottom: 1px solid #e5e7eb;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
-        .admin-modal-title {
+        .modal-title {
+            font-size: 18px;
             font-weight: 600;
-            font-size: 1.1rem;
         }
-        
-        .admin-modal-close {
+        .modal-close {
             background: none;
             border: none;
-            font-size: 1.5rem;
+            font-size: 20px;
             cursor: pointer;
-            color: var(--admin-secondary);
+            color: #6b7280;
         }
-        
-        .admin-modal-body {
+        .modal-body {
             padding: 20px;
         }
-        
-        .admin-modal-footer {
-            padding: 15px 20px;
-            border-top: 1px solid var(--admin-border);
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        
-        .admin-user-info {
+        .story-content {
+            white-space: pre-line;
             margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--admin-border);
+            line-height: 1.7;
         }
-        
-        .admin-story-content {
-            margin-bottom: 20px;
-        }
-        
-        .admin-story-content h3 {
-            margin-bottom: 10px;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-        
-        .admin-story-content p {
-            margin-bottom: 15px;
-            line-height: 1.6;
-        }
-        
-        .admin-story-images {
+        .modal-images {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
         }
-        
-        .admin-story-image {
+        .modal-image {
             width: 100%;
-            height: 120px;
             border-radius: 6px;
-            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .modal-image:hover {
+            transform: scale(1.02);
         }
         
-        .admin-info-row {
+        /* Image Viewer */
+        .image-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
             display: flex;
-            margin-bottom: 10px;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            display: none;
         }
-        
-        .admin-info-label {
-            width: 120px;
-            font-weight: 500;
-            color: var(--admin-secondary);
+        .viewer-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90vh;
         }
-        
-        .admin-info-value {
-            flex: 1;
+        .viewer-image {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
         }
-        
-        .admin-search {
-            display: flex;
-            margin-bottom: 20px;
-        }
-        
-        .admin-search input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid var(--admin-border);
-            border-radius: 6px 0 0 6px;
-            font-size: 0.95rem;
-        }
-        
-        .admin-search button {
-            background-color: var(--admin-primary);
-            color: white;
+        .viewer-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
             border: none;
-            border-radius: 0 6px 6px 0;
-            padding: 0 15px;
+            color: white;
+            font-size: 30px;
             cursor: pointer;
         }
         
-        .admin-loading {
+        /* Pagination */
+        .pagination {
             display: flex;
             justify-content: center;
+            padding: 20px;
+            gap: 10px;
+        }
+        .page-button {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            background-color: white;
+            color: #374151;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .page-button:hover {
+            border-color: #0070f3;
+            color: #0070f3;
+        }
+        .page-button.active {
+            background-color: #0070f3;
+            border-color: #0070f3;
+            color: white;
+        }
+        .page-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .switch-container {
+            display: flex;
             align-items: center;
-            flex-direction: column;
-            padding: 60px 0;
+            margin-left: auto;
+            margin-right: 20px;
         }
-        
-        .admin-spinner {
-            border: 4px solid rgba(0, 112, 243, 0.2);
+        .switch-container label {
+            margin-right: 10px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
             border-radius: 50%;
-            border-top: 4px solid var(--admin-primary);
-            width: 36px;
-            height: 36px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        input:checked + .slider {
+            background-color: #0070f3;
         }
-        
-        @media (max-width: 768px) {
-            .admin-container {
-                flex-direction: column;
-            }
-            
-            .admin-sidebar {
-                width: 100%;
-                padding: 15px 0;
-            }
-            
-            .admin-main {
-                padding: 15px;
-            }
-            
-            .admin-form-grid {
-                grid-template-columns: 1fr;
-            }
+        input:checked + .slider:before {
+            transform: translateX(16px);
         }
     </style>
 </head>
 <body>
-    <!-- CROSS-DOMAIN DATA TRANSFER -->
+    <header>
+        <div class="container header-container">
+            <div>
+                <span class="logo">AppFoundry</span>
+                <span class="admin-badge">Admin</span>
+            </div>
+            <div class="header-actions">
+                <a href="../index.html">View Site</a>
+                <a href="../success-stories.html">Success Stories</a>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <h1>Success Story Submissions</h1>
+        
+        <div class="tabs">
+            <div class="tab active" data-status="all" onclick="changeTab('all')">All Submissions</div>
+            <div class="tab" data-status="pending" onclick="changeTab('pending')">Pending</div>
+            <div class="tab" data-status="approved" onclick="changeTab('approved')">Approved</div>
+            <div class="tab" data-status="rejected" onclick="changeTab('rejected')">Rejected</div>
+            
+            <div class="switch-container">
+                <label for="sort-switch">Newest First</label>
+                <label class="switch">
+                    <input type="checkbox" id="sort-switch" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="submissions-container">
+            <div id="submissions" class="submission-cards">
+                <!-- Submissions will be displayed here -->
+            </div>
+            
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-icon">📪</div>
+                <div class="empty-title">No submissions found</div>
+                <div class="empty-description">There are no success story submissions in this category yet.</div>
+            </div>
+            
+            <div class="pagination" id="pagination">
+                <!-- Pagination will be added here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Full Story Modal -->
+    <div class="modal-backdrop" id="story-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">App Name</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-content">
+                    <!-- Story content will be loaded here -->
+                </div>
+                <div class="modal-images" id="modal-images">
+                    <!-- Images will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Viewer -->
+    <div class="image-viewer" id="image-viewer">
+        <div class="viewer-content">
+            <button class="viewer-close" onclick="closeImageViewer()">&times;</button>
+            <img src="" id="full-image" class="viewer-image">
+        </div>
+    </div>
+    
     <script>
-    // This script will help you recover data from preview deployments
-
-    // Run this once the page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        // Check if we received data from URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const importedData = urlParams.get('imported_data');
-        
-        if (importedData) {
-            try {
-                // Decode and parse the data
-                const decodedData = decodeURIComponent(importedData);
-                const submissions = JSON.parse(decodedData);
-                
-                // Get existing submissions
-                let existingSubmissions = [];
-                try {
-                    const storedData = localStorage.getItem('appfoundry_submissions');
-                    if (storedData) {
-                        existingSubmissions = JSON.parse(storedData);
-                    }
-                } catch (e) {
-                    console.error('Error reading existing submissions:', e);
-                }
-                
-                // Merge the submissions, avoiding duplicates
-                const mergedSubmissions = [...existingSubmissions];
-                
-                // Add new submissions if they don't already exist
-                for (const newSub of submissions) {
-                    if (!mergedSubmissions.some(existingSub => existingSub.id === newSub.id)) {
-                        mergedSubmissions.unshift(newSub);
-                    }
-                }
-                
-                // Save merged submissions
-                localStorage.setItem('appfoundry_submissions', JSON.stringify(mergedSubmissions));
-                
-                // Show success message
-                alert(`Successfully imported ${submissions.length} submissions!`);
-                
-                // Reload the page without the parameter
-                window.location.href = window.location.pathname;
-                return;
-            } catch (error) {
-                console.error('Error importing data:', error);
-                alert('Error importing data. See console for details.');
-            }
-        }
-        
-        // Check for admin panel access
-        const isAdminPanel = window.location.pathname.includes('admin') || 
-                            window.location.pathname.includes('success-stories.html');
-        
-        if (isAdminPanel) {
-            // Add a button to import data from preview domains
-            setTimeout(function() {
-                const adminHeader = document.querySelector('.admin-header');
-                if (adminHeader) {
-                    const importButton = document.createElement('button');
-                    importButton.className = 'admin-button secondary';
-                    importButton.textContent = 'Import From Preview';
-                    importButton.style.marginLeft = '10px';
-                    
-                    importButton.addEventListener('click', function() {
-                        const previewUrl = prompt('Enter the preview deployment URL (e.g., https://preview--your-site.netlify.app):');
-                        if (previewUrl) {
-                            window.open(`${previewUrl}/export-data.html?target=${encodeURIComponent(window.location.href)}`, '_blank');
-                        }
-                    });
-                    
-                    const controls = adminHeader.querySelector('.admin-controls');
-                    if (controls) {
-                        controls.appendChild(importButton);
-                    }
-                }
-            }, 500); // Short delay to ensure elements are loaded
-        }
-    });
-    </script>
-
-    <div class="admin-container">
-        <div class="admin-sidebar">
-            <div class="admin-sidebar-header">
-                <div class="admin-logo">AppFoundry</div>
-                <div class="admin-version">Admin Panel v1.0</div>
-            </div>
-            
-            <div class="admin-nav">
-                <div class="admin-nav-title">Content</div>
-                <a href="#" class="admin-nav-item">
-                    <span class="admin-nav-icon">📊</span>
-                    Dashboard
-                </a>
-                <a href="#" class="admin-nav-item active">
-                    <span class="admin-nav-icon">📱</span>
-                    Success Stories
-                </a>
-                <a href="#" class="admin-nav-item">
-                    <span class="admin-nav-icon">👥</span>
-                    Users
-                </a>
-            </div>
-            
-            <div class="admin-nav">
-                <div class="admin-nav-title">Settings</div>
-                <a href="#" class="admin-nav-item">
-                    <span class="admin-nav-icon">⚙️</span>
-                    General
-                </a>
-                <a href="#" class="admin-nav-item">
-                    <span class="admin-nav-icon">🔒</span>
-                    Security
-                </a>
-                <a href="../index.html" class="admin-nav-item">
-                    <span class="admin-nav-icon">🏠</span>
-                    Back to Site
-                </a>
-            </div>
-        </div>
-        
-        <div class="admin-main">
-            <div class="admin-header">
-                <h1 class="admin-title">Success Stories</h1>
-                <div class="admin-controls">
-                    <button class="admin-button secondary" id="refresh-button">Refresh</button>
-                    <button class="admin-button" id="add-story-button">Add New Story</button>
-                </div>
-            </div>
-            
-            <div class="admin-card">
-                <div class="admin-card-header">
-                    <div class="admin-card-title">Manage Success Stories</div>
-                    <div class="admin-controls">
-                        <button class="admin-button secondary" id="filter-button">Filter</button>
-                    </div>
-                </div>
-                <div class="admin-search">
-                    <input type="text" placeholder="Search by name, app name, or content..." id="search-input">
-                    <button id="search-button">🔍</button>
-                </div>
-                <div class="admin-card-content" id="table-container">
-                    <!-- Loading indicator (initially shown) -->
-                    <div class="admin-loading" id="loading-indicator">
-                        <div class="admin-spinner"></div>
-                        <p>Loading submissions...</p>
-                    </div>
-                    
-                    <!-- Table (hidden until data is loaded) -->
-                    <table class="admin-table" id="stories-table" style="display: none;">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>App Name</th>
-                                <th>Type</th>
-                                <th>Submission Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stories-table-body">
-                            <!-- Will be populated dynamically -->
-                        </tbody>
-                    </table>
-                    
-                    <!-- Empty state (hidden until needed) -->
-                    <div class="admin-empty-state" id="empty-state" style="display: none;">
-                        <div class="admin-empty-state-icon">📱</div>
-                        <div class="admin-empty-state-title">No Success Stories Yet</div>
-                        <p>When students submit their success stories, they'll appear here.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="admin-pagination" id="pagination">
-                <div class="admin-pagination-item" id="prev-page">«</div>
-                <div class="admin-pagination-item active">1</div>
-                <div class="admin-pagination-item" id="next-page">»</div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Login Modal -->
-    <div class="admin-modal-backdrop" id="login-modal">
-        <div class="admin-modal" style="max-width: 400px;">
-            <div class="admin-modal-header">
-                <div class="admin-modal-title">Admin Login</div>
-            </div>
-            <div class="admin-modal-body">
-                <div class="admin-form-group">
-                    <label for="admin-password">Admin Password</label>
-                    <input type="password" id="admin-password" autocomplete="current-password">
-                </div>
-                <div id="login-error" style="color: var(--admin-danger); margin-top: 10px; display: none;"></div>
-            </div>
-            <div class="admin-modal-footer">
-                <button class="admin-button" id="login-button">Login</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- View Story Modal -->
-    <div class="admin-modal-backdrop" id="view-story-modal">
-        <div class="admin-modal">
-            <div class="admin-modal-header">
-                <div class="admin-modal-title">View Success Story</div>
-                <button class="admin-modal-close" onclick="closeModal('view-story-modal')">&times;</button>
-            </div>
-            <div class="admin-modal-body">
-                <div class="admin-user-info">
-                    <div class="admin-info-row">
-                        <div class="admin-info-label">Name:</div>
-                        <div class="admin-info-value" id="view-name"></div>
-                    </div>
-                    <div class="admin-info-row">
-                        <div class="admin-info-label">Email:</div>
-                        <div class="admin-info-value" id="view-email"></div>
-                    </div>
-                    <div class="admin-info-row">
-                        <div class="admin-info-label">App Name:</div>
-                        <div class="admin-info-value" id="view-app-name"></div>
-                    </div>
-                    <div class="admin-info-row">
-                        <div class="admin-info-label">App Type:</div>
-                        <div class="admin-info-value" id="view-app-type"></div>
-                    </div>
-                    <div class="admin-info-row">
-                        <div class="admin-info-label">Submission Date:</div>
-                        <div class="admin-info-value" id="view-date"></div>
-                    </div>
-                    <div class="admin-info-row">
-                        <div class="admin-info-label">Status:</div>
-                        <div class="admin-info-value" id="view-status"></div>
-                    </div>
-                </div>
-                
-                <div class="admin-story-content">
-                    <h3>Testimonial (Short Version for Display)</h3>
-                    <p id="view-testimonial"></p>
-                    
-                    <h3>Full Success Story</h3>
-                    <p id="view-story"></p>
-                    
-                    <h3>App Screenshots</h3>
-                    <div class="admin-story-images" id="view-images">
-                        <!-- Will be populated dynamically -->
-                    </div>
-                </div>
-            </div>
-            <div class="admin-modal-footer">
-                <button class="admin-button secondary" onclick="closeModal('view-story-modal')">Close</button>
-                <button class="admin-button" id="approve-button" onclick="approveStory()">Approve</button>
-                <button class="admin-button secondary" id="reject-button" onclick="rejectStory()">Reject</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Edit Story Modal -->
-    <div class="admin-modal-backdrop" id="edit-story-modal">
-        <div class="admin-modal">
-            <div class="admin-modal-header">
-                <div class="admin-modal-title">Edit Success Story</div>
-                <button class="admin-modal-close" onclick="closeModal('edit-story-modal')">&times;</button>
-            </div>
-            <div class="admin-modal-body">
-                <form id="edit-story-form">
-                    <div class="admin-form-grid">
-                        <div class="admin-form-group">
-                            <label for="edit-name">Name</label>
-                            <input type="text" id="edit-name">
-                        </div>
-                        <div class="admin-form-group">
-                            <label for="edit-email">Email</label>
-                            <input type="email" id="edit-email" readonly>
-                        </div>
-                        <div class="admin-form-group">
-                            <label for="edit-app-name">App Name</label>
-                            <input type="text" id="edit-app-name">
-                        </div>
-                        <div class="admin-form-group">
-                            <label for="edit-app-type">App Type</label>
-                            <select id="edit-app-type">
-                                <option value="Health & Fitness">Health & Fitness</option>
-                                <option value="Productivity">Productivity</option>
-                                <option value="Lifestyle">Lifestyle</option>
-                                <option value="Business">Business</option>
-                                <option value="Education">Education</option>
-                                <option value="Entertainment">Entertainment</option>
-                                <option value="Social">Social</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="admin-form-group">
-                        <label for="edit-testimonial">Testimonial (Short Version for Display)</label>
-                        <textarea id="edit-testimonial"></textarea>
-                    </div>
-                    
-                    <div class="admin-form-group">
-                        <label for="edit-story">Full Success Story</label>
-                        <textarea id="edit-story"></textarea>
-                    </div>
-                    
-                    <div class="admin-form-group">
-                        <label>Status</label>
-                        <div>
-                            <label style="display: inline; margin-right: 15px;">
-                                <input type="radio" name="status" value="pending"> Pending
-                            </label>
-                            <label style="display: inline; margin-right: 15px;">
-                                <input type="radio" name="status" value="approved"> Approved
-                            </label>
-                            <label style="display: inline;">
-                                <input type="radio" name="status" value="rejected"> Rejected
-                            </label>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="admin-modal-footer">
-                <button class="admin-button secondary" onclick="closeModal('edit-story-modal')">Cancel</button>
-                <button class="admin-button" onclick="saveStory()">Save Changes</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Add Story Modal -->
-    <div class="admin-modal-backdrop" id="add-story-modal">
-        <div class="admin-modal">
-            <div class="admin-modal-header">
-                <div class="admin-modal-title">Add New Success Story</div>
-                <button class="admin-modal-close" onclick="closeModal('add-story-modal')">&times;</button>
-            </div>
-            <div class="admin-modal-body">
-                <form id="add-story-form">
-                    <div class="admin-form-grid">
-                        <div class="admin-form-group">
-                            <label for="add-name">Name</label>
-                            <input type="text" id="add-name" required>
-                        </div>
-                        <div class="admin-form-group">
-                            <label for="add-email">Email</label>
-                            <input type="email" id="add-email" required>
-                        </div>
-                        <div class="admin-form-group">
-                            <label for="add-app-name">App Name</label>
-                            <input type="text" id="add-app-name" required>
-                        </div>
-                        <div class="admin-form-group">
-                            <label for="add-app-type">App Type</label>
-                            <select id="add-app-type" required>
-                                <option value="" disabled selected>Select app category</option>
-                                <option value="Health & Fitness">Health & Fitness</option>
-                                <option value="Productivity">Productivity</option>
-                                <option value="Lifestyle">Lifestyle</option>
-                                <option value="Business">Business</option>
-                                <option value="Education">Education</option>
-                                <option value="Entertainment">Entertainment</option>
-                                <option value="Social">Social</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="admin-form-group">
-                        <label for="add-testimonial">Testimonial (Short Version for Display)</label>
-                        <textarea id="add-testimonial" required placeholder="A brief testimonial (1-2 sentences) about their experience"></textarea>
-                    </div>
-                    
-                    <div class="admin-form-group">
-                        <label for="add-story">Full Success Story</label>
-                        <textarea id="add-story" required placeholder="The detailed success story about their experience building an app"></textarea>
-                    </div>
-                    
-                    <div class="admin-form-group">
-                        <label for="add-image-url">Image URL (Optional)</label>
-                        <input type="url" id="add-image-url" placeholder="https://example.com/image.jpg">
-                        <p style="font-size: 0.8rem; color: var(--admin-secondary); margin-top: 5px;">Enter a URL to an image of the app. For multiple images, separate URLs with commas.</p>
-                    </div>
-                    
-                    <div class="admin-form-group">
-                        <label>Status</label>
-                        <div>
-                            <label style="display: inline; margin-right: 15px;">
-                                <input type="radio" name="add-status" value="pending" checked> Pending
-                            </label>
-                            <label style="display: inline; margin-right: 15px;">
-                                <input type="radio" name="add-status" value="approved"> Approved
-                            </label>
-                            <label style="display: inline;">
-                                <input type="radio" name="add-status" value="rejected"> Rejected
-                            </label>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="admin-modal-footer">
-                <button class="admin-button secondary" onclick="closeModal('add-story-modal')">Cancel</button>
-                <button class="admin-button" onclick="addNewStory()">Add Story</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Delete Confirmation Modal -->
-    <div class="admin-modal-backdrop" id="delete-modal">
-        <div class="admin-modal" style="max-width: 400px;">
-            <div class="admin-modal-header">
-                <div class="admin-modal-title">Confirm Deletion</div>
-                <button class="admin-modal-close" onclick="closeModal('delete-modal')">&times;</button>
-            </div>
-            <div class="admin-modal-body">
-                <p>Are you sure you want to delete this success story? This action cannot be undone.</p>
-            </div>
-            <div class="admin-modal-footer">
-                <button class="admin-button secondary" onclick="closeModal('delete-modal')">Cancel</button>
-                <button class="admin-button" style="background-color: var(--admin-danger);" onclick="deleteStory()">Delete</button>
-            </div>
-        </div>
-    </div>
-    
-    <script src="/storage-helper.js"></script>
-    <script>
-        // Current story being viewed/edited
-        let currentStoryId = null;
-        
-        // All submissions data
+        // Global variables
         let allSubmissions = [];
-        
-        // Pagination settings
-        const itemsPerPage = 10;
+        let currentTab = 'all';
         let currentPage = 1;
+        let itemsPerPage = 6;
+        let sortNewestFirst = true;
         
-        // Initialize the page
+        // Load submissions when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if admin is logged in
-            checkAdminLogin();
+            console.log("Admin page loaded, loading submissions");
+            loadSubmissions();
             
-            // Setup event listeners
-            document.getElementById('refresh-button').addEventListener('click', function() {
-                loadSubmissions();
-            });
-            
-            document.getElementById('login-button').addEventListener('click', attemptLogin);
-            
-            document.getElementById('add-story-button').addEventListener('click', function() {
-                openModal('add-story-modal');
-            });
-            
-            document.getElementById('search-button').addEventListener('click', function() {
-                filterSubmissions();
-            });
-            
-            document.getElementById('search-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    filterSubmissions();
-                }
-            });
-            
-            document.getElementById('prev-page').addEventListener('click', function() {
-                if (currentPage > 1) {
-                    currentPage--;
-                    displaySubmissions();
-                }
-            });
-            
-            document.getElementById('next-page').addEventListener('click', function() {
-                const maxPages = Math.ceil(allSubmissions.length / itemsPerPage);
-                if (currentPage < maxPages) {
-                    currentPage++;
-                    displaySubmissions();
-                }
+            // Set up sort switch
+            document.getElementById('sort-switch').addEventListener('change', function() {
+                sortNewestFirst = this.checked;
+                displaySubmissions();
             });
         });
         
-        // Check if admin is logged in
-        function checkAdminLogin() {
-            const adminToken = localStorage.getItem('appfoundry_admin_token');
-            
-            if (!adminToken) {
-                // Show login modal
-                openModal('login-modal');
-            } else {
-                // Load submissions
-                loadSubmissions();
-            }
-        }
-        
-        // Attempt login
-        function attemptLogin() {
-            const password = document.getElementById('admin-password').value;
-            const loginError = document.getElementById('login-error');
-            
-            // In production, this should be a secure API call
-            // For demonstration, we're using a simple password check
-            if (password === 'admin123') { // Change this to your secure password!
-                const token = 'admin_token_' + Date.now(); // Generate a simple token
-                
-                // Store token in localStorage
-                localStorage.setItem('appfoundry_admin_token', token);
-                
-                // Close modal and load submissions
-                closeModal('login-modal');
-                loadSubmissions();
-            } else {
-                // Show error
-                loginError.textContent = 'Invalid password. Please try again.';
-                loginError.style.display = 'block';
-            }
-        }
-        
-        // Load submissions
+        // Load submissions from localStorage
         function loadSubmissions() {
-            const adminToken = localStorage.getItem('appfoundry_admin_token');
+            try {
+                // Get submissions from localStorage
+                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                
+                if (storedSubmissions) {
+                    allSubmissions = JSON.parse(storedSubmissions);
+                    console.log("Loaded", allSubmissions.length, "submissions from localStorage");
+                    
+                    // Display submissions
+                    displaySubmissions();
+                } else {
+                    console.log("No submissions found in localStorage");
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error("Error loading submissions:", error);
+                showEmptyState();
+            }
+        }
+        
+        // Display submissions based on current filter
+        function displaySubmissions() {
+            // Filter submissions based on current tab
+            let filteredSubmissions = allSubmissions;
             
-            if (!adminToken) {
-                checkAdminLogin();
+            if (currentTab !== 'all') {
+                filteredSubmissions = allSubmissions.filter(submission => submission.status === currentTab);
+            }
+            
+            // Sort submissions
+            filteredSubmissions.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return sortNewestFirst ? dateB - dateA : dateA - dateB;
+            });
+            
+            // Show empty state if no submissions
+            if (filteredSubmissions.length === 0) {
+                showEmptyState();
                 return;
             }
             
-            // Get elements
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const storiesTable = document.getElementById('stories-table');
-            const emptyState = document.getElementById('empty-state');
-            
-            // Show loading, hide others
-            loadingIndicator.style.display = 'flex';
-            storiesTable.style.display = 'none';
-            emptyState.style.display = 'none';
-            
-            try {
-                // Try to get submissions from localStorage
-                let submissions = [];
-                
-                // Use StorageHelper if available
-                if (typeof StorageHelper !== 'undefined') {
-                    console.log('Using StorageHelper to load submissions');
-                    submissions = StorageHelper.getSubmissions();
-                } else {
-                    // Direct localStorage access
-                    try {
-                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                        console.log('Raw localStorage data:', storedSubmissions);
-                        
-                        if (storedSubmissions) {
-                            try {
-                                submissions = JSON.parse(storedSubmissions);
-                                console.log('Successfully parsed submissions:', submissions.length);
-                            } catch (parseError) {
-                                console.error('Error parsing localStorage submissions:', parseError);
-                                // Continue with empty array
-                            }
-                        } else {
-                            console.log('No submissions found in localStorage');
-                        }
-                    } catch (localStorageError) {
-                        console.error('Error accessing localStorage:', localStorageError);
-                    }
-                }
-                
-                // Store submissions in global variable
-                allSubmissions = submissions;
-                
-                // Sort by date (newest first)
-                allSubmissions.sort((a, b) => new Date(b.date) - new Date(a.date));
-                
-                console.log('Final submissions to display:', allSubmissions.length);
-                
-                // Check if we have submissions
-                if (allSubmissions.length === 0) {
-                    // Show empty state
-                    loadingIndicator.style.display = 'none';
-                    emptyState.style.display = 'block';
-                    return;
-                }
-                
-                // Reset pagination
-                currentPage = 1;
-                
-                // Display submissions
-                loadingIndicator.style.display = 'none';
-                storiesTable.style.display = 'table';
-                displaySubmissions();
-            } catch (error) {
-                console.error('Error loading submissions:', error);
-                
-                // Show error
-                loadingIndicator.style.display = 'none';
-                
-                // Create error message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'admin-empty-state';
-                errorDiv.innerHTML = `
-                    <div class="admin-empty-state-icon">❌</div>
-                    <div class="admin-empty-state-title">Error Loading Submissions</div>
-                    <p>We encountered an issue loading the submissions: ${error.message}</p>
-                    <button class="admin-button" onclick="loadSubmissions()">Retry</button>
-                `;
-                
-                // Add to container
-                const tableContainer = document.getElementById('table-container');
-                // Clear any existing error messages
-                const existingError = tableContainer.querySelector('.admin-empty-state');
-                if (existingError) {
-                    tableContainer.removeChild(existingError);
-                }
-                tableContainer.appendChild(errorDiv);
-            }
-        }
-        
-        // Display submissions with pagination
-        function displaySubmissions() {
-            const tableBody = document.getElementById('stories-table-body');
-            tableBody.innerHTML = '';
-            
             // Calculate pagination
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const paginatedItems = allSubmissions.slice(startIndex, endIndex);
+            const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
+            if (currentPage > totalPages) {
+                currentPage = 1;
+            }
             
-            // Add each submission to the table
-            paginatedItems.forEach(submission => {
-                const row = document.createElement('tr');
-                
-                // Format date
-                const submissionDate = new Date(submission.date);
-                const formattedDate = submissionDate.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-                
-                // Create status badge
-                const statusClass = {
-                    'pending': 'pending',
-                    'approved': 'approved',
-                    'rejected': 'rejected'
-                }[submission.status] || 'pending';
-                
-                // Set row content
-                row.innerHTML = `
-                    <td>${submission.name}</td>
-                    <td>${submission.appName}</td>
-                    <td>${submission.appType}</td>
-                    <td>${formattedDate}</td>
-                    <td><span class="admin-badge ${statusClass}">${submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}</span></td>
-                    <td>
-                        <button class="admin-action-button" onclick="viewStory('${submission.id}')">View</button>
-                        <button class="admin-action-button" onclick="editStory('${submission.id}')">Edit</button>
-                        <button class="admin-action-button danger" onclick="confirmDelete('${submission.id}')">Delete</button>
-                    </td>
-                `;
-                
-                tableBody.appendChild(row);
+            // Get current page items
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredSubmissions.length);
+            const currentItems = filteredSubmissions.slice(startIndex, endIndex);
+            
+            // Display current items
+            const submissionsContainer = document.getElementById('submissions');
+            submissionsContainer.innerHTML = '';
+            
+            currentItems.forEach(submission => {
+                const submissionCard = createSubmissionCard(submission);
+                submissionsContainer.appendChild(submissionCard);
             });
             
             // Update pagination
-            updatePagination();
+            updatePagination(totalPages);
+            
+            // Hide empty state
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('submissions').style.display = 'grid';
         }
         
-        // Add a new story
-        function addNewStory() {
-            // Get values from form
-            const name = document.getElementById('add-name').value;
-            const email = document.getElementById('add-email').value;
-            const appName = document.getElementById('add-app-name').value;
-            const appType = document.getElementById('add-app-type').value;
-            const testimonial = document.getElementById('add-testimonial').value;
-            const story = document.getElementById('add-story').value;
-            const imageUrl = document.getElementById('add-image-url').value;
+        // Create a submission card
+        function createSubmissionCard(submission) {
+            const card = document.createElement('div');
+            card.className = 'submission-card';
             
-            // Get status
-            let status = 'pending';
-            const statusRadios = document.getElementsByName('add-status');
-            for (let i = 0; i < statusRadios.length; i++) {
-                if (statusRadios[i].checked) {
-                    status = statusRadios[i].value;
-                    break;
-                }
+            // Get status label and class
+            let statusLabel = 'Pending';
+            let statusClass = 'status-pending';
+            
+            if (submission.status === 'approved') {
+                statusLabel = 'Approved';
+                statusClass = 'status-approved';
+            } else if (submission.status === 'rejected') {
+                statusLabel = 'Rejected';
+                statusClass = 'status-rejected';
             }
             
-            // Validate required fields
-            if (!name || !email || !appName || !appType || !testimonial || !story) {
-                alert('Please fill in all required fields.');
-                return;
-            }
+            // Format date
+            const date = new Date(submission.date);
+            const formattedDate = date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
             
-            // Process images
-            const images = [];
-            if (imageUrl) {
-                const urls = imageUrl.split(',').map(url => url.trim());
-                for (const url of urls) {
-                    if (url) {
-                        images.push(url);
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="card-title">${submission.appName}</div>
+                    <div class="status-badge ${statusClass}">${statusLabel}</div>
+                </div>
+                <div class="card-body">
+                    <div class="card-field">
+                        <div class="field-label">Submitted By</div>
+                        <div class="field-value">${submission.name}</div>
+                    </div>
+                    <div class="card-field">
+                        <div class="field-label">Email</div>
+                        <div class="field-value">${submission.email}</div>
+                    </div>
+                    <div class="card-field">
+                        <div class="field-label">App Type</div>
+                        <div class="field-value">${submission.appType || submission.app_type || 'Not specified'}</div>
+                    </div>
+                    <div class="card-field">
+                        <div class="field-label">Experience Level</div>
+                        <div class="field-value">${submission.experienceLevel || 'Not specified'}</div>
+                    </div>
+                    <div class="card-field">
+                        <div class="field-label">Testimonial</div>
+                        <div class="testimonial">${submission.testimonial}</div>
+                    </div>
+                    <div class="card-field">
+                        <div class="field-label">Submitted On</div>
+                        <div class="field-value">${formattedDate}</div>
+                    </div>
+                </div>
+            `;
+            
+            // Add images if available
+            if (submission.images && submission.images.length > 0) {
+                const cardBody = card.querySelector('.card-body');
+                const imagesDiv = document.createElement('div');
+                imagesDiv.className = 'card-images';
+                
+                submission.images.forEach((imageUrl, index) => {
+                    if (imageUrl) {
+                        const img = document.createElement('img');
+                        img.src = imageUrl;
+                        img.alt = `${submission.appName} Screenshot ${index + 1}`;
+                        img.className = 'card-image';
+                        img.onclick = function() {
+                            showImage(imageUrl);
+                        };
+                        imagesDiv.appendChild(img);
                     }
-                }
+                });
+                
+                cardBody.appendChild(imagesDiv);
             }
             
-            // Create new story object
-            const newStory = {
-                id: 'story_' + Date.now(),
-                name,
-                email,
-                appName,
-                appType,
-                testimonial,
-                story,
-                images,
-                date: new Date().toISOString(),
-                status
-            };
+            // Add action buttons
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'card-actions';
             
-            // Add to submissions
-            allSubmissions.unshift(newStory); // Add to start of array
+            // View Full Story button
+            const viewButton = document.createElement('button');
+            viewButton.className = 'btn btn-view';
+            viewButton.textContent = 'View Full Story';
+            viewButton.onclick = function() {
+                showStory(submission);
+            };
+            actionsDiv.appendChild(viewButton);
+            
+            // Add approve/reject buttons based on current status
+            if (submission.status === 'pending') {
+                // Approve button
+                const approveButton = document.createElement('button');
+                approveButton.className = 'btn btn-approve';
+                approveButton.textContent = 'Approve';
+                approveButton.onclick = function() {
+                    approveSubmission(submission.id);
+                };
+                actionsDiv.appendChild(approveButton);
+                
+                // Reject button
+                const rejectButton = document.createElement('button');
+                rejectButton.className = 'btn btn-reject';
+                rejectButton.textContent = 'Reject';
+                rejectButton.onclick = function() {
+                    rejectSubmission(submission.id);
+                };
+                actionsDiv.appendChild(rejectButton);
+            } else if (submission.status === 'approved') {
+                // Reject button (can change from approved to rejected)
+                const rejectButton = document.createElement('button');
+                rejectButton.className = 'btn btn-reject';
+                rejectButton.textContent = 'Reject';
+                rejectButton.onclick = function() {
+                    rejectSubmission(submission.id);
+                };
+                actionsDiv.appendChild(rejectButton);
+            } else if (submission.status === 'rejected') {
+                // Approve button (can change from rejected to approved)
+                const approveButton = document.createElement('button');
+                approveButton.className = 'btn btn-approve';
+                approveButton.textContent = 'Approve';
+                approveButton.onclick = function() {
+                    approveSubmission(submission.id);
+                };
+                actionsDiv.appendChild(approveButton);
+            }
+            
+            card.appendChild(actionsDiv);
+            
+            return card;
+        }
+        
+        // Update submission status to approved
+        function approveSubmission(id) {
+            // Find the submission
+            const submission = allSubmissions.find(s => s.id === id);
+            if (!submission) return;
+            
+            // Update status
+            submission.status = 'approved';
             
             // Save to localStorage
-            if (typeof StorageHelper !== 'undefined') {
-                StorageHelper.addSubmission(newStory);
-            } else {
-                localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
-            }
+            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
             
-            // Reset form
-            document.getElementById('add-story-form').reset();
-            
-            // Close modal
-            closeModal('add-story-modal');
+            // Update seed immediately too
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(allSubmissions));
+            console.log("💾 Seed updated after approval with", allSubmissions.length, "stories");
             
             // Refresh display
             displaySubmissions();
-            
-            // Show success message
-            alert('Success story added successfully!');
         }
         
-        // Filter submissions based on search
-        function filterSubmissions() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+        // Update submission status to rejected
+        function rejectSubmission(id) {
+            // Find the submission
+            const submission = allSubmissions.find(s => s.id === id);
+            if (!submission) return;
             
-            if (!searchTerm) {
-                // If search is empty, show all
-                displaySubmissions();
+            // Update status
+            submission.status = 'rejected';
+            
+            // Save to localStorage
+            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
+            
+            // Update seed immediately too
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(allSubmissions));
+            console.log("💾 Seed updated after rejection with", allSubmissions.length, "stories");
+            
+            // Refresh display
+            displaySubmissions();
+        }
+        
+        // Change tab
+        function changeTab(status) {
+            // Update current tab
+            currentTab = status;
+            
+            // Update UI
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                if (tab.dataset.status === status) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Reset to first page
+            currentPage = 1;
+            
+            // Display submissions for the new tab
+            displaySubmissions();
+        }
+        
+        // Show full story in modal
+        function showStory(submission) {
+            // Set modal title
+            document.getElementById('modal-title').textContent = submission.appName;
+            
+            // Create modal content
+            let modalContent = `
+                <div class="card-field">
+                    <div class="field-label">Submitted By</div>
+                    <div class="field-value">${submission.name} (${submission.email})</div>
+                </div>
+                <div class="card-field">
+                    <div class="field-label">App Type</div>
+                    <div class="field-value">${submission.appType || submission.app_type || 'Not specified'}</div>
+                </div>
+                <div class="card-field">
+                    <div class="field-label">Experience Level</div>
+                    <div class="field-value">${submission.experienceLevel || 'Not specified'}</div>
+                </div>
+                <div class="card-field">
+                    <div class="field-label">Testimonial</div>
+                    <div class="testimonial">${submission.testimonial}</div>
+                </div>
+                <div class="card-field">
+                    <div class="field-label">Full Story</div>
+                    <div class="story-content">${submission.story}</div>
+                </div>
+            `;
+            
+            document.getElementById('modal-content').innerHTML = modalContent;
+            
+            // Add images
+            const imagesContainer = document.getElementById('modal-images');
+            imagesContainer.innerHTML = '';
+            
+            if (submission.images && submission.images.length > 0) {
+                submission.images.forEach((imageUrl, index) => {
+                    if (imageUrl) {
+                        const img = document.createElement('img');
+                        img.src = imageUrl;
+                        img.alt = `${submission.appName} Screenshot ${index + 1}`;
+                        img.className = 'modal-image';
+                        img.onclick = function() {
+                            showImage(imageUrl);
+                        };
+                        imagesContainer.appendChild(img);
+                    }
+                });
+                imagesContainer.style.display = 'grid';
+            } else {
+                imagesContainer.style.display = 'none';
+            }
+            
+            // Show modal
+            document.getElementById('story-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Close the modal
+        function closeModal() {
+            document.getElementById('story-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Show image in viewer
+        function showImage(imageUrl) {
+            document.getElementById('full-image').src = imageUrl;
+            document.getElementById('image-viewer').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Close image viewer
+        function closeImageViewer() {
+            document.getElementById('image-viewer').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Show empty state
+        function showEmptyState() {
+            document.getElementById('submissions').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'block';
+            document.getElementById('pagination').innerHTML = '';
+        }
+        
+        // Update pagination UI
+        function updatePagination(totalPages) {
+            const paginationContainer = document.getElementById('pagination');
+            paginationContainer.innerHTML = '';
+            
+            // Only show pagination if more than one page
+            if (totalPages <= 1) {
                 return;
             }
             
-            // Filter submissions
-            const filteredSubmissions = allSubmissions.filter(submission => {
-                return (
-                    submission.name.toLowerCase().includes(searchTerm) ||
-                    submission.appName.toLowerCase().includes(searchTerm) ||
-                    submission.appType.toLowerCase().includes(searchTerm) ||
-                    submission.testimonial.toLowerCase().includes(searchTerm) ||
-                    submission.story.toLowerCase().includes(searchTerm)
-                );
-            });
-            
-            // Update allSubmissions temporarily
-            const originalSubmissions = [...allSubmissions];
-            allSubmissions = filteredSubmissions;
-            
-            // Reset pagination
-            currentPage = 1;
-            
-            // Display filtered submissions
-            displaySubmissions();
-            
-            // Restore original submissions
-            allSubmissions = originalSubmissions;
-        }
-        
-        // Update pagination controls
-        function updatePagination() {
-            const pagination = document.getElementById('pagination');
-            const totalPages = Math.ceil(allSubmissions.length / itemsPerPage);
-            
-            // Clear pagination
-            pagination.innerHTML = '';
-            
             // Previous button
-            const prevButton = document.createElement('div');
-            prevButton.className = 'admin-pagination-item';
-            prevButton.textContent = '«';
+            const prevButton = document.createElement('button');
+            prevButton.className = 'page-button' + (currentPage === 1 ? ' disabled' : '');
+            prevButton.textContent = 'Previous';
             prevButton.onclick = function() {
                 if (currentPage > 1) {
                     currentPage--;
                     displaySubmissions();
                 }
             };
-            pagination.appendChild(prevButton);
+            paginationContainer.appendChild(prevButton);
             
-            // Page numbers
-            // Maximum of 5 pages shown at once, with ellipsis if needed
-            const maxVisiblePages = 5;
-            const halfVisiblePages = Math.floor(maxVisiblePages / 2);
-            
-            let startPage = Math.max(1, currentPage - halfVisiblePages);
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-            
-            // Adjust if at the end
-            if (endPage - startPage + 1 < maxVisiblePages) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
-            
-            // Add ellipsis at the beginning if needed
-            if (startPage > 1) {
-                const firstPageItem = document.createElement('div');
-                firstPageItem.className = 'admin-pagination-item';
-                firstPageItem.textContent = '1';
-                firstPageItem.onclick = function() {
-                    currentPage = 1;
-                    displaySubmissions();
-                };
-                pagination.appendChild(firstPageItem);
-                
-                if (startPage > 2) {
-                    const ellipsis = document.createElement('div');
-                    ellipsis.className = 'admin-pagination-item';
-                    ellipsis.textContent = '...';
-                    ellipsis.style.cursor = 'default';
-                    pagination.appendChild(ellipsis);
-                }
-            }
-            
-            // Page numbers
-            for (let i = startPage; i <= endPage; i++) {
-                const pageItem = document.createElement('div');
-                pageItem.className = 'admin-pagination-item';
-                if (i === currentPage) {
-                    pageItem.classList.add('active');
-                }
-                pageItem.textContent = i;
-                pageItem.onclick = function() {
+            // Page buttons
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = 'page-button' + (i === currentPage ? ' active' : '');
+                pageButton.textContent = i;
+                pageButton.onclick = function() {
                     currentPage = i;
                     displaySubmissions();
                 };
-                pagination.appendChild(pageItem);
-            }
-            
-            // Add ellipsis at the end if needed
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    const ellipsis = document.createElement('div');
-                    ellipsis.className = 'admin-pagination-item';
-                    ellipsis.textContent = '...';
-                    ellipsis.style.cursor = 'default';
-                    pagination.appendChild(ellipsis);
-                }
-                
-                const lastPageItem = document.createElement('div');
-                lastPageItem.className = 'admin-pagination-item';
-                lastPageItem.textContent = totalPages;
-                lastPageItem.onclick = function() {
-                    currentPage = totalPages;
-                    displaySubmissions();
-                };
-                pagination.appendChild(lastPageItem);
+                paginationContainer.appendChild(pageButton);
             }
             
             // Next button
-            const nextButton = document.createElement('div');
-            nextButton.className = 'admin-pagination-item';
-            nextButton.textContent = '»';
+            const nextButton = document.createElement('button');
+            nextButton.className = 'page-button' + (currentPage === totalPages ? ' disabled' : '');
+            nextButton.textContent = 'Next';
             nextButton.onclick = function() {
                 if (currentPage < totalPages) {
                     currentPage++;
                     displaySubmissions();
                 }
             };
-            pagination.appendChild(nextButton);
-            
-            // Hide pagination if only one page
-            pagination.style.display = totalPages <= 1 ? 'none' : 'flex';
+            paginationContainer.appendChild(nextButton);
         }
         
-        // View a story
-        function viewStory(id) {
-            currentStoryId = id;
-            
-            // Find the story
-            const story = allSubmissions.find(s => s.id === id);
-            
-            if (!story) {
-                alert('Story not found.');
-                return;
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeImageViewer();
             }
-            
-            // Format date
-            const storyDate = new Date(story.date);
-            const formattedDate = storyDate.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            
-            // Fill in the modal fields
-            document.getElementById('view-name').textContent = story.name;
-            document.getElementById('view-email').textContent = story.email;
-            document.getElementById('view-app-name').textContent = story.appName;
-            document.getElementById('view-app-type').textContent = story.appType;
-            document.getElementById('view-date').textContent = formattedDate;
-            document.getElementById('view-testimonial').textContent = story.testimonial;
-            document.getElementById('view-story').textContent = story.story;
-            
-            // Create status badge
-            const statusClass = {
-                'pending': 'pending',
-                'approved': 'approved',
-                'rejected': 'rejected'
-            }[story.status] || 'pending';
-            
-            document.getElementById('view-status').innerHTML = `
-                <span class="admin-badge ${statusClass}">${story.status.charAt(0).toUpperCase() + story.status.slice(1)}</span>
-            `;
-            
-            // Show/hide approve/reject buttons based on current status
-            const approveButton = document.getElementById('approve-button');
-            const rejectButton = document.getElementById('reject-button');
-            
-            if (story.status === 'pending') {
-                approveButton.style.display = 'block';
-                rejectButton.style.display = 'block';
-            } else if (story.status === 'approved') {
-                approveButton.style.display = 'none';
-                rejectButton.style.display = 'block';
-            } else if (story.status === 'rejected') {
-                approveButton.style.display = 'block';
-                rejectButton.style.display = 'none';
-            }
-            
-            // Fill in images
-            const imagesContainer = document.getElementById('view-images');
-            imagesContainer.innerHTML = '';
-            
-            if (story.images && story.images.length > 0) {
-                story.images.forEach(imageUrl => {
-                    const img = document.createElement('img');
-                    img.src = imageUrl;
-                    img.alt = 'App Screenshot';
-                    img.className = 'admin-story-image';
-                    imagesContainer.appendChild(img);
-                });
-            } else {
-                imagesContainer.innerHTML = '<p>No screenshots provided</p>';
-            }
-            
-            // Show the modal
-            openModal('view-story-modal');
-        }
+        });
         
-        // Edit a story
-        function editStory(id) {
-            currentStoryId = id;
+        // Close modals when clicking outside
+        window.addEventListener('click', function(e) {
+            const storyModal = document.getElementById('story-modal');
+            const imageViewer = document.getElementById('image-viewer');
             
-            // Find the story
-            const story = allSubmissions.find(s => s.id === id);
-            
-            if (!story) {
-                alert('Story not found.');
-                return;
+            if (e.target === storyModal) {
+                closeModal();
             }
             
-            // Fill in the form fields
-            document.getElementById('edit-name').value = story.name;
-            document.getElementById('edit-email').value = story.email;
-            document.getElementById('edit-app-name').value = story.appName;
-            document.getElementById('edit-testimonial').value = story.testimonial;
-            document.getElementById('edit-story').value = story.story;
-            
-            // Set the app type dropdown
-            const appTypeSelect = document.getElementById('edit-app-type');
-            for (let i = 0; i < appTypeSelect.options.length; i++) {
-                if (appTypeSelect.options[i].value === story.appType) {
-                    appTypeSelect.selectedIndex = i;
-                    break;
-                }
+            if (e.target === imageViewer) {
+                closeImageViewer();
             }
-            
-            // Set status radio buttons
-            const statusRadios = document.getElementsByName('status');
-            for (let i = 0; i < statusRadios.length; i++) {
-                if (statusRadios[i].value === story.status) {
-                    statusRadios[i].checked = true;
-                    break;
-                }
-            }
-            
-            // Show the modal
-            openModal('edit-story-modal');
-        }
-        
-        // Save edited story
-        function saveStory() {
-            if (!currentStoryId) return;
-            
-            const adminToken = localStorage.getItem('appfoundry_admin_token');
-            if (!adminToken) {
-                alert('You must be logged in to save stories.');
-                return;
-            }
-            
-            try {
-                // Get values from form
-                const name = document.getElementById('edit-name').value;
-                const appName = document.getElementById('edit-app-name').value;
-                const appType = document.getElementById('edit-app-type').value;
-                const testimonial = document.getElementById('edit-testimonial').value;
-                const story = document.getElementById('edit-story').value;
-                
-                // Get status
-                let status = 'pending';
-                const statusRadios = document.getElementsByName('status');
-                for (let i = 0; i < statusRadios.length; i++) {
-                    if (statusRadios[i].checked) {
-                        status = statusRadios[i].value;
-                        break;
-                    }
-                }
-                
-                // Use StorageHelper if available
-                if (typeof StorageHelper !== 'undefined') {
-                    StorageHelper.updateSubmission(currentStoryId, {
-                        name,
-                        appName,
-                        appType,
-                        testimonial,
-                        story,
-                        status
-                    });
-                } else {
-                    // Find the story index
-                    const storyIndex = allSubmissions.findIndex(s => s.id === currentStoryId);
-                    
-                    if (storyIndex === -1) {
-                        throw new Error('Story not found.');
-                    }
-                    
-                    // Update story
-                    allSubmissions[storyIndex] = {
-                        ...allSubmissions[storyIndex],
-                        name,
-                        appName,
-                        appType,
-                        testimonial,
-                        story,
-                        status
-                    };
-                    
-                    // Save to localStorage
-                    localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
-                }
-                
-                console.log('Updated story in localStorage:', currentStoryId);
-                
-                // Close modal and refresh display
-                closeModal('edit-story-modal');
-                displaySubmissions();
-                
-                // Show success message
-                alert('Story updated successfully!');
-            } catch (error) {
-                console.error('Error saving story:', error);
-                alert('An error occurred while saving the story. Please try again.');
-            }
-        }
-        
-        // Approve a story
-        function approveStory() {
-            if (!currentStoryId) return;
-            
-            const adminToken = localStorage.getItem('appfoundry_admin_token');
-            if (!adminToken) {
-                alert('You must be logged in to approve stories.');
-                return;
-            }
-            
-            // Show loading state
-            const approveButton = document.getElementById('approve-button');
-            const originalText = approveButton.textContent;
-            approveButton.disabled = true;
-            approveButton.textContent = 'Processing...';
-            
-            try {
-                // Use StorageHelper if available
-                if (typeof StorageHelper !== 'undefined') {
-                    StorageHelper.updateSubmission(currentStoryId, { status: 'approved' });
-                } else {
-                    // Find the story in our current submissions
-                    const storyIndex = allSubmissions.findIndex(s => s.id === currentStoryId);
-                    
-                    if (storyIndex === -1) {
-                        throw new Error('Story not found in submissions.');
-                    }
-                    
-                    // Update status
-                    allSubmissions[storyIndex].status = 'approved';
-                    
-                    // Save to localStorage
-                    localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
-                }
-                
-                console.log('Updated status to approved in localStorage:', currentStoryId);
-                
-                // Close modal and refresh display
-                closeModal('view-story-modal');
-                displaySubmissions();
-                
-                // Show success message
-                alert('Story approved successfully!');
-            } catch (error) {
-                console.error('Error approving story:', error);
-                alert('An error occurred while approving the story. Please try again.');
-            } finally {
-                // Reset button state
-                approveButton.disabled = false;
-                approveButton.textContent = originalText;
-            }
-        }
-        
-        // Reject a story
-        function rejectStory() {
-            if (!currentStoryId) return;
-            
-            const adminToken = localStorage.getItem('appfoundry_admin_token');
-            if (!adminToken) {
-                alert('You must be logged in to reject stories.');
-                return;
-            }
-            
-            // Show loading state
-            const rejectButton = document.getElementById('reject-button');
-            const originalText = rejectButton.textContent;
-            rejectButton.disabled = true;
-            rejectButton.textContent = 'Processing...';
-            
-            try {
-                // Use StorageHelper if available
-                if (typeof StorageHelper !== 'undefined') {
-                    StorageHelper.updateSubmission(currentStoryId, { status: 'rejected' });
-                } else {
-                    // Find the story in our current submissions
-                    const storyIndex = allSubmissions.findIndex(s => s.id === currentStoryId);
-                    
-                    if (storyIndex === -1) {
-                        throw new Error('Story not found in submissions.');
-                    }
-                    
-                    // Update status
-                    allSubmissions[storyIndex].status = 'rejected';
-                    
-                    // Save to localStorage
-                    localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
-                }
-                
-                console.log('Updated status to rejected in localStorage:', currentStoryId);
-                
-                // Close modal and refresh display
-                closeModal('view-story-modal');
-                displaySubmissions();
-                
-                // Show success message
-                alert('Story rejected successfully!');
-            } catch (error) {
-                console.error('Error rejecting story:', error);
-                alert('An error occurred while rejecting the story. Please try again.');
-            } finally {
-                // Reset button state
-                rejectButton.disabled = false;
-                rejectButton.textContent = originalText;
-            }
-        }
-        
-        // Confirm deletion
-        function confirmDelete(id) {
-            currentStoryId = id;
-            openModal('delete-modal');
-        }
-        
-        // Delete a story
-        function deleteStory() {
-            if (!currentStoryId) return;
-            
-            const adminToken = localStorage.getItem('appfoundry_admin_token');
-            if (!adminToken) {
-                alert('You must be logged in to delete stories.');
-                return;
-            }
-            
-            try {
-                // Use StorageHelper if available
-                if (typeof StorageHelper !== 'undefined') {
-                    StorageHelper.deleteSubmission(currentStoryId);
-                } else {
-                    // Find the story index
-                    const storyIndex = allSubmissions.findIndex(s => s.id === currentStoryId);
-                    
-                    if (storyIndex === -1) {
-                        throw new Error('Story not found in local submissions.');
-                    }
-                    
-                    // Remove the story
-                    allSubmissions.splice(storyIndex, 1);
-                    
-                    // Save to localStorage
-                    localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
-                }
-                
-                console.log('Deleted story from localStorage:', currentStoryId);
-                
-                // Close modal and refresh display
-                closeModal('delete-modal');
-                displaySubmissions();
-                
-                // Show success message
-                alert('Story deleted successfully!');
-            } catch (error) {
-                console.error('Error deleting story:', error);
-                alert('An error occurred while deleting the story. Please try again.');
-            }
-        }
-        
-        // Open a modal
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
-        }
-        
-        // Close a modal
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
+        });
     </script>
 </body>
 </html>
