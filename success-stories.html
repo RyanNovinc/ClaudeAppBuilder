@@ -4,116 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Success Stories - AppFoundry</title>
-    
-    <!-- Story Manager Script - IMPORTANT: This must be the first script in the head -->
-    <script>
-    // Universal Story Manager - ensures stories are consistently available
-    (function() {
-      // Run on all pages to ensure localStorage data consistency
-      console.log("📊 Story Manager initializing");
-      
-      // Check if we need to seed the localStorage from our backup
-      function seedStoriesIfNeeded() {
-        // Only run if appfoundry_submissions doesn't exist or is empty
-        if (!localStorage.getItem('appfoundry_submissions')) {
-          console.log("🌱 No stories found in localStorage, checking for seed data");
-          
-          // Check if we have any stories in our seed
-          if (localStorage.getItem('appfoundry_approved_seed')) {
-            console.log("🔄 Restoring stories from seed");
-            try {
-              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
-              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
-              console.log("✅ Successfully restored", seed.length, "stories from seed");
-            } catch (e) {
-              console.error("❌ Error restoring from seed:", e);
-            }
-          } else {
-            // No seed exists - Create default stories
-            console.log("🔍 No seed found, creating sample stories");
-            createDefaultStories();
-          }
-        } else {
-          // If we have submissions, make sure we have an up-to-date seed
-          try {
-            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
-            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-            console.log("💾 Seed updated with", submissions.length, "stories");
-          } catch (e) {
-            console.error("❌ Error updating seed:", e);
-          }
-        }
-      }
-      
-      // Create default sample stories
-      function createDefaultStories() {
-        // Create two sample approved stories
-        const sampleStories = [
-          {
-            id: 'sample_1',
-            name: 'Sarah Johnson',
-            email: 'sarah@example.com',
-            appName: 'SleepTrack',
-            appType: 'Health & Fitness',
-            experienceLevel: 'No experience',
-            testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
-            story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
-            images: ['https://placeholder.pics/svg/300x200', 'https://placeholder.pics/svg/300x200'],
-            date: '2025-04-15T10:30:00Z',
-            status: 'approved'
-          },
-          {
-            id: 'sample_2',
-            name: 'Michael Chen',
-            email: 'michael@example.com',
-            appName: 'RecipeKeeper',
-            appType: 'Lifestyle',
-            experienceLevel: 'Beginner',
-            testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
-            story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
-            images: ['https://placeholder.pics/svg/300x200'],
-            date: '2025-04-22T14:45:00Z',
-            status: 'approved'
-          }
-        ];
-        
-        // Save to localStorage
-        try {
-          localStorage.setItem('appfoundry_submissions', JSON.stringify(sampleStories));
-          localStorage.setItem('appfoundry_approved_seed', JSON.stringify(sampleStories));
-          console.log("✅ Added", sampleStories.length, "sample stories to localStorage");
-        } catch (e) {
-          console.error("❌ Error adding sample stories:", e);
-        }
-      }
-      
-      // Run the seed check immediately
-      seedStoriesIfNeeded();
-      
-      // Special handling for the success stories page
-      if (window.location.pathname.includes('success-stories.html') && !window.location.pathname.includes('admin')) {
-        // For success stories page, we need to ensure there are approved stories
-        console.log("🔍 On success stories page, checking for approved stories");
-        
-        try {
-          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-          const approvedStories = submissions.filter(s => s.status === 'approved');
-          
-          if (approvedStories.length === 0) {
-            console.log("⚠️ No approved stories found, adding sample approved stories");
-            createDefaultStories();
-          } else {
-            console.log("✓ Found", approvedStories.length, "approved stories");
-          }
-        } catch (e) {
-          console.error("❌ Error checking for approved stories:", e);
-          // On error, create default stories anyway
-          createDefaultStories();
-        }
-      }
-    })();
-    </script>
-    
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -509,79 +399,46 @@
         // Global variables
         let allStories = [];
         
-        // Load approved stories once the page is loaded
+        // Load approved stories when the page loads
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("📄 DOM loaded, initializing stories display");
-            loadApprovedStories();
+            console.log("📄 DOM loaded, loading approved stories");
+            loadApprovedStoriesFromJSON();
         });
         
-        // Function to load approved stories from all possible sources
-        function loadApprovedStories() {
-            console.log("🔍 Loading approved stories from all sources");
-            let approvedStories = [];
+        // Function to load approved stories from the JSON file
+        function loadApprovedStoriesFromJSON() {
+            console.log("🔍 Loading approved stories from JSON file");
             
-            try {
-                // First try using the main localStorage
-                console.log("📁 Checking main localStorage");
-                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                
-                if (storedSubmissions) {
-                    try {
-                        const allSubmissions = JSON.parse(storedSubmissions);
-                        console.log("📊 All submissions from localStorage:", allSubmissions.length);
-                        
-                        // Filter to only show approved stories
-                        approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                        console.log("✓ Approved stories from localStorage:", approvedStories.length);
-                    } catch (parseError) {
-                        console.error("⚠️ Error parsing localStorage data:", parseError);
+            // Show loading indicator
+            document.getElementById('loading-indicator').style.display = 'block';
+            document.getElementById('success-stories-grid').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+            
+            // Fetch the approved-stories.json file
+            fetch('approved-stories.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
                     }
-                } else {
-                    console.log("📭 No submissions found in main localStorage");
-                }
-                
-                // If no approved stories, try the backup seed
-                if (approvedStories.length === 0) {
-                    console.log("🔍 Checking backup seed");
-                    const seedData = localStorage.getItem('appfoundry_approved_seed');
+                    return response.json();
+                })
+                .then(stories => {
+                    console.log("✅ Successfully loaded", stories.length, "approved stories from JSON");
                     
-                    if (seedData) {
-                        try {
-                            const allSeedSubmissions = JSON.parse(seedData);
-                            console.log("📊 All submissions from seed:", allSeedSubmissions.length);
-                            
-                            // Filter to only show approved stories
-                            approvedStories = allSeedSubmissions.filter(story => story.status === 'approved');
-                            console.log("✓ Approved stories from seed:", approvedStories.length);
-                            
-                            // Restore to main localStorage if we found stories in the seed
-                            if (approvedStories.length > 0) {
-                                localStorage.setItem('appfoundry_submissions', seedData);
-                                console.log("💾 Restored seed data to main localStorage");
-                            }
-                        } catch (seedError) {
-                            console.error("⚠️ Error parsing seed data:", seedError);
-                        }
+                    // Store the approved stories
+                    allStories = stories;
+                    
+                    // Display the stories
+                    if (stories.length > 0) {
+                        displayStories(stories);
                     } else {
-                        console.log("📭 No seed data found");
+                        showEmptyState();
                     }
-                }
-                
-                // Store for later use
-                allStories = approvedStories;
-                
-                // Display stories or empty state
-                if (approvedStories.length > 0) {
-                    console.log("🖼️ Displaying", approvedStories.length, "approved stories");
-                    displayStories(approvedStories);
-                } else {
-                    console.log("📭 No approved stories found, showing empty state");
+                })
+                .catch(error => {
+                    console.error("❌ Error loading approved stories:", error);
                     showEmptyState();
-                }
-            } catch (error) {
-                console.error("❌ Error in loadApprovedStories:", error);
-                showEmptyState();
-            }
+                });
         }
         
         // Function to display stories in the grid
