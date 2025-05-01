@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppFoundry localStorage Debug</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9fafb;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #0070f3;
+        }
+        pre {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0055b3;
+        }
+        button.danger {
+            background-color: #ef4444;
+        }
+        button.secondary {
+            background-color: #6b7280;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+        .action-bar {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AppFoundry localStorage Debugger</h1>
+        <p>This tool helps diagnose issues with localStorage submissions and the admin panel.</p>
+        
+        <div class="action-bar">
+            <button id="view-all">View All localStorage Data</button>
+            <button id="view-submissions">View Success Story Submissions</button>
+            <button id="add-sample">Add Sample Submission</button>
+            <button id="clear-submissions" class="danger">Clear Submissions</button>
+            <button id="clear-all" class="danger">Clear All localStorage</button>
+        </div>
+        
+        <div id="status-message"></div>
+        
+        <h2>localStorage Contents</h2>
+        <pre id="localstorage-output">Click "View All localStorage Data" to see contents</pre>
+        
+        <h2>Edit Submissions</h2>
+        <p>You can edit the JSON below and save it back to localStorage</p>
+        <textarea id="submissions-editor"></textarea>
+        <button id="save-submissions">Save to localStorage</button>
+        
+        <h2>Storage Information</h2>
+        <pre id="storage-info"></pre>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show domain info
+            const storageInfo = document.getElementById('storage-info');
+            storageInfo.textContent = `Current domain: ${window.location.hostname}\n`;
+            storageInfo.textContent += `localStorage is domain-specific. Submissions made on ${window.location.hostname} will only be visible in the admin panel on ${window.location.hostname}.\n`;
+            
+            // Handle viewing all localStorage
+            document.getElementById('view-all').addEventListener('click', function() {
+                const output = document.getElementById('localstorage-output');
+                try {
+                    const allStorage = {};
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        try {
+                            allStorage[key] = JSON.parse(localStorage.getItem(key));
+                        } catch (e) {
+                            allStorage[key] = localStorage.getItem(key);
+                        }
+                    }
+                    output.textContent = JSON.stringify(allStorage, null, 2);
+                    showMessage('Successfully retrieved all localStorage data', 'success');
+                } catch (error) {
+                    output.textContent = 'Error: ' + error.message;
+                    showMessage('Error retrieving localStorage data: ' + error.message, 'error');
+                }
+            });
+            
+            // Handle viewing submissions
+            document.getElementById('view-submissions').addEventListener('click', function() {
+                const output = document.getElementById('localstorage-output');
+                const editor = document.getElementById('submissions-editor');
+                try {
+                    const submissionsData = localStorage.getItem('appfoundry_submissions');
+                    if (submissionsData) {
+                        const submissions = JSON.parse(submissionsData);
+                        output.textContent = JSON.stringify(submissions, null, 2);
+                        editor.value = JSON.stringify(submissions, null, 2);
+                        showMessage(`Found ${submissions.length} submissions in localStorage`, 'success');
+                    } else {
+                        output.textContent = 'No submissions found in localStorage';
+                        editor.value = '[]';
+                        showMessage('No submissions found in localStorage', 'error');
+                    }
+                } catch (error) {
+                    output.textContent = 'Error: ' + error.message;
+                    showMessage('Error retrieving submissions: ' + error.message, 'error');
+                }
+            });
+            
+            // Handle adding a sample submission
+            document.getElementById('add-sample').addEventListener('click', function() {
+                try {
+                    // Get existing submissions or create new array
+                    let submissions = [];
+                    try {
+                        const existingData = localStorage.getItem('appfoundry_submissions');
+                        if (existingData) {
+                            submissions = JSON.parse(existingData);
+                        }
+                    } catch (e) {
+                        // If parsing fails, start with empty array
+                    }
+                    
+                    // Create sample submission
+                    const sampleSubmission = {
+                        id: 'debug_' + Date.now(),
+                        name: 'Debug Test User',
+                        email: 'debug@example.com',
+                        appName: 'Debug Test App',
+                        appType: 'Testing',
+                        experienceLevel: 'No experience',
+                        testimonial: '"This is a test submission created from the debug tool. It should appear in the admin panel."',
+                        story: 'This is a sample success story generated for testing purposes. It should appear in the admin panel and can be approved or rejected.',
+                        images: ['https://placeholder.pics/svg/300x200'],
+                        date: new Date().toISOString(),
+                        status: 'pending'
+                    };
+                    
+                    // Add to array
+                    submissions.unshift(sampleSubmission);
+                    
+                    // Save back to localStorage
+                    localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                    
+                    // Update display
+                    document.getElementById('view-submissions').click();
+                    showMessage('Sample submission added successfully', 'success');
+                } catch (error) {
+                    showMessage('Error adding sample submission: ' + error.message, 'error');
+                }
+            });
+            
+            // Handle saving edited submissions
+            document.getElementById('save-submissions').addEventListener('click', function() {
+                const editor = document.getElementById('submissions-editor');
+                try {
+                    const submissions = JSON.parse(editor.value);
+                    localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                    showMessage('Submissions saved successfully to localStorage', 'success');
+                    document.getElementById('view-submissions').click();
+                } catch (error) {
+                    showMessage('Error saving submissions: ' + error.message, 'error');
+                }
+            });
+            
+            // Handle clearing submissions
+            document.getElementById('clear-submissions').addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete all submissions? This cannot be undone.')) {
+                    localStorage.removeItem('appfoundry_submissions');
+                    document.getElementById('localstorage-output').textContent = 'Submissions cleared';
+                    document.getElementById('submissions-editor').value = '[]';
+                    showMessage('All submissions have been cleared from localStorage', 'success');
+                }
+            });
+            
+            // Handle clearing all localStorage
+            document.getElementById('clear-all').addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear ALL localStorage data? This will affect all settings and data, not just submissions!')) {
+                    localStorage.clear();
+                    document.getElementById('localstorage-output').textContent = 'All localStorage data cleared';
+                    document.getElementById('submissions-editor').value = '';
+                    showMessage('All localStorage data has been cleared', 'success');
+                }
+            });
+            
+            // Helper function to show status messages
+            function showMessage(message, type) {
+                const statusMessage = document.getElementById('status-message');
+                statusMessage.textContent = message;
+                statusMessage.className = type;
+                
+                // Clear after 5 seconds
+                setTimeout(function() {
+                    statusMessage.textContent = '';
+                    statusMessage.className = '';
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>
