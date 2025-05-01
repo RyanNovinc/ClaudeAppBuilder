@@ -315,25 +315,26 @@
         </div>
     </footer>
 
-    <script src="identity-widget.js"></script>
     <script>
+        // Custom script for thank-you.html to prevent flickering
         document.addEventListener('DOMContentLoaded', function() {
-            // Parse URL parameters
+            // Check for test mode and session details
             const urlParams = new URLSearchParams(window.location.search);
-            const sessionId = urlParams.get('session_id');
             const isTestMode = urlParams.get('test_mode') === 'true';
+            const sessionId = urlParams.get('session_id');
             const emailParam = urlParams.get('email');
             const passwordParam = urlParams.get('password');
             const serverError = urlParams.get('server_error') === 'true';
             
-            // Update account email if provided
+            // Update email display if provided
             if (emailParam) {
                 document.getElementById('account-email').textContent = emailParam;
             }
             
             // Set up login button
             document.getElementById('open-login').addEventListener('click', function() {
-                window.location.href = 'direct-login.html?email=' + encodeURIComponent(emailParam || '');
+                window.location.href = 'direct-login.html?email=' + encodeURIComponent(emailParam || '') + 
+                                      (isTestMode ? '&test_mode=true' : '');
             });
             
             // If server error was flagged, show the notice
@@ -356,9 +357,8 @@
                 document.getElementById('start-course-button').href = 'modules/module1.html?test_mode=true';
             }
             
-            // If in test mode and password was provided, store it
-            if (isTestMode && emailParam && passwordParam) {
-                // Store the password for future logins
+            // Store password if provided (for future logins)
+            if (emailParam && passwordParam) {
                 localStorage.setItem('sleeptech_password_' + emailParam, passwordParam);
             }
             
@@ -376,9 +376,22 @@
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
                             <a href="direct-login.html?email=${encodeURIComponent(emailParam)}&test_mode=true" class="login-button" style="display:inline-block;">Login with Credentials</a>
-                            <a href="modules/module1.html?test_mode=true" class="login-button" style="display:inline-block; background-color: #10b981;">Access with Test Mode</a>
+                            <a href="modules/module1.html?test_mode=true" id="access-test-mode-btn" class="login-button" style="display:inline-block; background-color: #10b981;">Access with Test Mode</a>
                         </div>
                     `;
+                    
+                    // Add event listener to the "Access with Test Mode" button - set auth ONLY when clicked
+                    setTimeout(() => {
+                        const accessTestModeBtn = document.getElementById('access-test-mode-btn');
+                        if (accessTestModeBtn) {
+                            accessTestModeBtn.addEventListener('click', function(e) {
+                                // Set authentication when this button is clicked
+                                localStorage.setItem('appfoundry_auth', 'true');
+                                localStorage.setItem('sleeptech_email', emailParam);
+                                localStorage.setItem('sleeptech_login_time', new Date().getTime());
+                            });
+                        }
+                    }, 100);
                 }
                 
                 // Update start course button to be more visible
@@ -389,17 +402,30 @@
                     startCourseButton.style.marginTop = '30px';
                     startCourseButton.style.marginBottom = '30px';
                     startCourseButton.textContent = 'Start Learning Now (Test Mode)';
-                }
-                
-                // Hide any error messages in test mode
-                const errorNotice = document.getElementById('server-error-notice');
-                if (errorNotice) {
-                    errorNotice.style.display = 'none';
+                    
+                    // Add event listener - set auth ONLY when clicked
+                    startCourseButton.addEventListener('click', function(e) {
+                        // Set authentication when this button is clicked
+                        localStorage.setItem('appfoundry_auth', 'true');
+                        localStorage.setItem('sleeptech_email', emailParam || 'test@example.com');
+                        localStorage.setItem('sleeptech_login_time', new Date().getTime());
+                    });
                 }
             } else if (sessionId) {
-                // Real purchase
+                // For real purchases
                 document.getElementById('order-id').textContent = 'ST-' + sessionId.substring(0, 8);
                 document.getElementById('order-amount').textContent = '$199.00';
+                
+                const startCourseButton = document.getElementById('start-course-button');
+                if (startCourseButton) {
+                    // Add event listener - set auth ONLY when clicked for real users too
+                    startCourseButton.addEventListener('click', function(e) {
+                        // Set authentication when this button is clicked
+                        localStorage.setItem('sleeptech_auth', 'true');
+                        localStorage.setItem('sleeptech_email', emailParam || 'user@example.com');
+                        localStorage.setItem('sleeptech_login_time', new Date().getTime());
+                    });
+                }
             }
             
             // Set the current date for the order
@@ -407,57 +433,17 @@
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('order-date').textContent = today.toLocaleDateString('en-US', options);
             
-            // Check if user is already logged in
-            const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
-            const authEmail = localStorage.getItem('sleeptech_email');
-            
-            if (isAuthenticated && !isTestMode) {
-                // User is already logged in with our simplified auth system
-                const accountInfo = document.getElementById('account-info');
-                accountInfo.innerHTML = `
-                    <h2>You're Already Logged In!</h2>
-                    <p>You're currently logged in as <strong>${authEmail}</strong>.</p>
-                    <p>You can now access all course materials immediately.</p>
-                    <button id="go-to-account" class="login-button">Go to Course Content</button>
-                `;
-                
-                document.getElementById('go-to-account').addEventListener('click', function() {
-                    window.location.href = 'modules/module1.html';
-                });
-            }
-            
-            // Update login button in header
+            // Initialize login button
             const loginButton = document.getElementById('loginButton');
             if (loginButton) {
-                // Check if the user is authenticated with our simplified system
-                if (isAuthenticated) {
-                    // User is logged in
-                    loginButton.textContent = 'My Account';
-                    loginButton.onclick = function() {
-                        if (confirm('You are logged in as ' + authEmail + '. Would you like to log out?')) {
-                            // Clear auth data
-                            localStorage.removeItem('sleeptech_auth');
-                            localStorage.removeItem('sleeptech_email');
-                            localStorage.removeItem('sleeptech_login_time');
-                            // Don't remove the password to allow future logins
-                            
-                            // Refresh the page
-                            window.location.reload();
-                        }
-                    };
-                } else if (isTestMode) {
-                    // In test mode
-                    loginButton.textContent = 'Test Mode';
-                    loginButton.onclick = function() {
-                        alert('You are in test mode. Access the course content directly using the buttons below.');
-                    };
-                } else {
-                    // User is not logged in
-                    loginButton.textContent = 'Log In';
-                    loginButton.onclick = function() {
-                        window.location.href = 'direct-login.html';
-                    };
-                }
+                // Clear any existing handlers and set correct text
+                loginButton.removeAttribute('onclick');
+                loginButton.textContent = 'Log In';
+                
+                // Set up click handler
+                loginButton.addEventListener('click', function() {
+                    window.location.href = 'direct-login.html' + (isTestMode ? '?test_mode=true' : '');
+                });
             }
         });
     </script>
