@@ -18,34 +18,63 @@ document.addEventListener('DOMContentLoaded', function() {
   
   console.log('Auth status check - authenticated:', isAuthenticated);
   
-  // Initialize the login/enroll button if present
-  initializeHeaderButton();
+  // Initialize the login button if present
+  const loginButton = document.getElementById('loginButton');
   
-  // Force immediate addition of Course tab for logged-in users
-  addCourseTab();
-  
-  // Also add a fragment navigation listener to ensure Course tab appears after hash changes
-  window.addEventListener('hashchange', function() {
-    console.log('Hash changed - checking for Course tab');
-    setTimeout(addCourseTab, 100); // Small delay to ensure DOM is updated
-    setTimeout(initializeHeaderButton, 100); // Also make sure header button is correct
-  });
-  
-  // Function to initialize the header button (Enroll Now / Log In / My Account)
-  function initializeHeaderButton() {
-    // Look for the button in different forms (both CTA button and login button)
-    const loginButton = document.getElementById('loginButton');
+  if (loginButton) {
+    // Remove any existing onclick attribute
+    loginButton.removeAttribute('onclick');
     
-    if (loginButton) {
-      // Remove any existing onclick attribute to avoid conflicts
-      loginButton.removeAttribute('onclick');
-      
-      const authEmail = localStorage.getItem('sleeptech_email') || 'test@example.com';
-      
+    const authEmail = localStorage.getItem('sleeptech_email') || 'test@example.com';
+    
+    if (isAuthenticated) {
+      // User is logged in
+      loginButton.textContent = 'My Account';
+      loginButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (confirm('You are logged in as ' + authEmail + '. Would you like to log out?')) {
+          // Clear auth data
+          localStorage.removeItem('sleeptech_auth');
+          localStorage.removeItem('sleeptech_email');
+          localStorage.removeItem('sleeptech_login_time');
+          localStorage.removeItem('appfoundry_auth');
+          
+          // Refresh the page without test_mode parameter if present
+          if (isTestMode) {
+            window.location.href = window.location.pathname;
+          } else {
+            window.location.reload();
+          }
+        }
+      });
+    } else {
+      // User is not logged in
+      loginButton.textContent = 'Log In';
+      loginButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Check if we're in the root directory or a subdirectory
+        const path = window.location.pathname;
+        const isInSubdirectory = path.split('/').length > 2;
+        
+        if (isInSubdirectory) {
+          window.location.href = '../direct-login.html';
+        } else {
+          window.location.href = 'direct-login.html';
+        }
+      });
+    }
+  } else {
+    // Check for header button with "Enroll Now" text (for index.html)
+    const headerButtons = document.querySelectorAll('header .cta-button');
+    headerButtons.forEach(button => {
+      // If this is a header button and user is authenticated, change it to "My Account"
       if (isAuthenticated) {
-        // User is logged in - should show "My Account"
-        loginButton.textContent = 'My Account';
-        loginButton.addEventListener('click', function(e) {
+        button.textContent = 'My Account';
+        button.removeAttribute('onclick');
+        
+        const authEmail = localStorage.getItem('sleeptech_email') || 'test@example.com';
+        
+        button.addEventListener('click', function(e) {
           e.preventDefault();
           if (confirm('You are logged in as ' + authEmail + '. Would you like to log out?')) {
             // Clear auth data
@@ -62,46 +91,37 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           }
         });
-      } else {
-        // User is not logged in - should show "Log In"
-        loginButton.textContent = 'Log In';
-        loginButton.addEventListener('click', function(e) {
+      } 
+      // If not authenticated but button doesn't have proper login behavior, change it
+      else if (!button.id && (button.textContent.includes('Enroll') || button.textContent.includes('Sign'))) {
+        // Add ID for easier reference
+        button.id = 'headerLoginButton';
+        
+        // Change to "Log In" if current page is not index.html (main sales page)
+        if (!window.location.pathname.endsWith('index.html') && 
+            window.location.pathname !== '/' && 
+            !window.location.pathname.endsWith('/')) {
+          button.textContent = 'Log In';
+        }
+        
+        // Update the click behavior
+        button.removeAttribute('onclick');
+        button.addEventListener('click', function(e) {
           e.preventDefault();
-          // Check if we're in the root directory or a subdirectory
-          const path = window.location.pathname;
-          const isInSubdirectory = path.split('/').length > 2;
-          
-          if (isInSubdirectory) {
-            window.location.href = '../direct-login.html';
-          } else {
-            window.location.href = 'direct-login.html';
-          }
+          window.location.href = 'direct-login.html';
         });
       }
-    } else {
-      // Check for CTA button as an alternative
-      const ctaButtons = document.querySelectorAll('.cta-button');
-      ctaButtons.forEach(button => {
-        if (button.textContent.includes('Enroll') && !isAuthenticated) {
-          // If user is not authenticated, make sure it still says "Enroll Now"
-          // This is the default state, no change needed
-        } else if (button.textContent.includes('Enroll') && isAuthenticated) {
-          // If user is authenticated, change "Enroll Now" to "Go to Course"
-          button.textContent = 'Go to Course';
-          button.removeAttribute('onclick');
-          button.addEventListener('click', function(e) {
-            e.preventDefault();
-            // Determine correct path for course.html
-            const path = window.location.pathname;
-            const isInSubdirectory = path.split('/').length > 2;
-            const testParam = isTestMode ? '?test_mode=true' : '';
-            const coursePath = isInSubdirectory ? `../course.html${testParam}` : `course.html${testParam}`;
-            window.location.href = coursePath;
-          });
-        }
-      });
-    }
+    });
   }
+  
+  // Force immediate addition of Course tab for logged-in users
+  addCourseTab();
+  
+  // Also add a fragment navigation listener to ensure Course tab appears after hash changes
+  window.addEventListener('hashchange', function() {
+    console.log('Hash changed - checking for Course tab');
+    setTimeout(addCourseTab, 100); // Small delay to ensure DOM is updated
+  });
   
   // Function to add Course tab
   function addCourseTab() {
