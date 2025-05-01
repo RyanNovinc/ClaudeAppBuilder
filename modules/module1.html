@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     <style>
         /* Course page specific styles */
         .course-container {
@@ -272,21 +271,33 @@
     </style>
 </head>
 <body>
+    <!-- MODIFIED HEADER - Navigation removed -->
     <header>
         <div class="container">
-            <div class="logo"><a href="../index.html">AppFoundry</a></div>
-            <nav>
-                <ul>
-                    <li><a href="../index.html#overview">Overview</a></li>
-                    <li><a href="../index.html#curriculum">Curriculum</a></li>
-                    <li><a href="../index.html#pricing">Pricing</a></li>
-                    <li><a href="../success-stories.html">Success Stories</a></li>
-                    <li><a href="../about-creator.html">About</a></li>
-                </ul>
-            </nav>
-            <button class="cta-button small" id="loginButton">My Account</button>
+            <div class="logo"><a href="../course.html">AppFoundry</a></div>
+            <!-- Navigation removed intentionally -->
+            <button class="cta-button small" id="loginButton" style="background-color: #ef4444;">Log Out</button>
         </div>
     </header>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Setup logout button
+        const logoutButton = document.getElementById('loginButton');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function() {
+                // Clear auth data
+                localStorage.removeItem('sleeptech_auth');
+                localStorage.removeItem('sleeptech_email');
+                localStorage.removeItem('sleeptech_login_time');
+                localStorage.removeItem('appfoundry_auth');
+                
+                // Redirect to home page
+                window.location.href = '../index.html';
+            });
+        }
+    });
+    </script>
 
     <!-- Access overlay will be shown for unauthorized users -->
     <div id="access-overlay" class="access-overlay">
@@ -439,7 +450,7 @@
                 </div>
                 
                 <div class="course-navigation">
-                    <a href="../index.html" class="nav-button prev">← Back to Course Overview</a>
+                    <a href="../course.html" class="nav-button prev">← Back to Course Overview</a>
                     <a href="module2.html" class="nav-button next">Next Module: Creating Your First AI Project →</a>
                 </div>
             </main>
@@ -481,7 +492,7 @@
         </div>
     </footer>
 
-    <script src="../identity-widget.js"></script>
+    <!-- Modified script includes - Use only access-control.js -->
     <script src="../access-control.js"></script>
 </body>
 </html>
