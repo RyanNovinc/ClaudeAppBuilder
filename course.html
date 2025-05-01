@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Dashboard - AppFoundry</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .course-container {
+            max-width: 1000px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+        
+        .course-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .course-header h1 {
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        
+        .course-header p {
+            color: #6b7280;
+            font-size: 18px;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .module-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        
+        .module-number {
+            background-color: #0070f3;
+            color: white;
+            font-weight: 700;
+            padding: 10px 20px;
+            font-size: 18px;
+        }
+        
+        .module-content {
+            padding: 25px;
+        }
+        
+        .module-content h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #111827;
+        }
+        
+        .module-content p {
+            color: #6b7280;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .module-status {
+            display: flex;
+            align-items: center;
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-icon.not-started {
+            background-color: #e5e7eb;
+        }
+        
+        .status-icon.in-progress {
+            background-color: #fbbf24;
+        }
+        
+        .status-icon.completed {
+            background-color: #10b981;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .module-button {
+            display: inline-block;
+            background-color: #0070f3;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .module-button:hover {
+            background-color: #0055b3;
+        }
+        
+        .continue-box {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .continue-content h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #0070f3;
+        }
+        
+        .continue-content p {
+            color: #6b7280;
+        }
+        
+        .extra-resources {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .extra-resources h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #111827;
+        }
+        
+        .resource-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .resource-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .resource-item:hover {
+            transform: translateY(-3px);
+            border-color: #d1d5db;
+        }
+        
+        .resource-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .resource-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #111827;
+        }
+        
+        .resource-description {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .access-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .access-box {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .access-box h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .access-box p {
+            margin-bottom: 20px;
+            color: #4b5563;
+        }
+        
+        .access-box .cta-button {
+            margin-bottom: 20px;
+        }
+        
+        .small-text {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        @media (max-width: 768px) {
+            .continue-box {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .continue-content {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo"><a href="index.html">AppFoundry</a></div>
+            <nav>
+                <ul>
+                    <li><a href="index.html#overview">Overview</a></li>
+                    <li><a href="index.html#curriculum">Curriculum</a></li>
+                    <li><a href="index.html#pricing">Pricing</a></li>
+                    <!-- Course nav item will be added by JavaScript for logged-in users -->
+                    <li><a href="success-stories.html">Success Stories</a></li>
+                    <li><a href="about-creator.html">About</a></li>
+                </ul>
+            </nav>
+            <button class="cta-button small" id="loginButton">My Account</button>
+        </div>
+    </header>
+
+    <!-- Access overlay will be shown for unauthorized users -->
+    <div id="access-overlay" class="access-overlay">
+        <!-- Content will be dynamically inserted by access-control.js -->
+    </div>
+
+    <div id="course-content" style="display: none;">
+        <div class="course-container">
+            <div class="course-header">
+                <h1>Your Course Dashboard</h1>
+                <p>Welcome to the AppFoundry course! Here you'll find all course modules and additional resources to help you build amazing apps without coding.</p>
+            </div>
+            
+            <!-- Continue where you left off box -->
+            <div class="continue-box">
+                <div class="continue-content">
+                    <h2>Continue Where You Left Off</h2>
+                    <p>You were last working on Module 1: Setting Up Your Environment</p>
+                </div>
+                <a href="modules/module1.html" class="module-button">Continue Learning</a>
+            </div>
+            
+            <!-- Module Grid -->
+            <div class="module-grid">
+                <!-- Module 1 -->
+                <div class="module-card">
+                    <div class="module-number">Module 1</div>
+                    <div class="module-content">
+                        <div class="module-status">
+                            <div class="status-icon in-progress"></div>
+                            <span>In Progress</span>
+                        </div>
+                        <h3>Setting Up Your Environment</h3>
+                        <p>Learn how to configure everything you need to start building apps with Claude.</p>
+                        <a href="modules/module1.html" class="module-button">Continue</a>
+                    </div>
+                </div>
+                
+                <!-- Module 2 -->
+                <div class="module-card">
+                    <div class="module-number">Module 2</div>
+                    <div class="module-content">
+                        <div class="module-status">
+                            <div class="status-icon not-started"></div>
+                            <span>Not Started</span>
+                        </div>
+                        <h3>Creating Your First AI Project</h3>
+                        <p>Learn how to "speak" to Claude so it creates exactly what you want.</p>
+                        <a href="modules/module2.html" class="module-button">Start</a>
+                    </div>
+                </div>
+                
+                <!-- Module 3 -->
+                <div class="module-card">
+                    <div class="module-number">Module 3</div>
+                    <div class="module-content">
+                        <div class="module-status">
+                            <div class="status-icon not-started"></div>
+                            <span>Not Started</span>
+                        </div>
+                        <h3>Testing Your App</h3>
+                        <p>See your app work on your device without writing a single line of code.</p>
+                        <a href="modules/module3.html" class="module-button">Start</a>
+                    </div>
+                </div>
+                
+                <!-- Module 4 -->
+                <div class="module-card">
+                    <div class="module-number">Module 4</div>
+                    <div class="module-content">
+                        <div class="module-status">
+                            <div class="status-icon not-started"></div>
+                            <span>Not Started</span>
+                        </div>
+                        <h3>Creating Professional UI</h3>
+                        <p>Learn the exact prompts to get beautiful interfaces from Claude.</p>
+                        <a href="modules/module4.html" class="module-button">Start</a>
+                    </div>
+                </div>
+                
+                <!-- Module 5 -->
+                <div class="module-card">
+                    <div class="module-number">Module 5</div>
+                    <div class="module-content">
+                        <div class="module-status">
+                            <div class="status-icon not-started"></div>
+                            <span>Not Started</span>
+                        </div>
+                        <h3>Building Your App Structure</h3>
+                        <p>Create a complete app blueprint that Claude can turn into reality.</p>
+                        <a href="modules/module5.html" class="module-button">Start</a>
+                    </div>
+                </div>
+                
+                <!-- Module 6 -->
+                <div class="module-card">
+                    <div class="module-number">Module 6</div>
+                    <div class="module-content">
+                        <div class="module-status">
+                            <div class="status-icon not-started"></div>
+                            <span>Not Started</span>
+                        </div>
+                        <h3>Building Out Your App</h3>
+                        <p>Let Claude do all the technical work while you focus on design and features.</p>
+                        <a href="modules/module6.html" class="module-button">Start</a>
+                    </div>
+                </div>
+                
+                <!-- Module 7 -->
+                <div class="module-card">
+                    <div class="module-number">Module 7</div>
+                    <div class="module-content">
+                        <div class="module-status">
+                            <div class="status-icon not-started"></div>
+                            <span>Not Started</span>
+                        </div>
+                        <h3>Submitting to the App Store</h3>
+                        <p>Get your AI-built app published quickly and professionally.</p>
+                        <a href="modules/module7.html" class="module-button">Start</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Extra Resources -->
+            <div class="extra-resources">
+                <h2>Additional Resources</h2>
+                <div class="resource-list">
+                    <div class="resource-item">
+                        <div class="resource-icon">📝</div>
+                        <div class="resource-title">Prompt Library</div>
+                        <div class="resource-description">Ready-to-use prompts for getting the best results from Claude.</div>
+                    </div>
+                    <div class="resource-item">
+                        <div class="resource-icon">🎬</div>
+                        <div class="resource-title">Video Tutorials</div>
+                        <div class="resource-description">Step-by-step visual guides for each module.</div>
+                    </div>
+                    <div class="resource-item">
+                        <div class="resource-icon">💬</div>
+                        <div class="resource-title">Support Forum</div>
+                        <div class="resource-description">Get help from other students and our team.</div>
+                    </div>
+                    <div class="resource-item">
+                        <div class="resource-icon">⚡</div>
+                        <div class="resource-title">App Templates</div>
+                        <div class="resource-description">Ready-to-customize templates for common app types.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="logo">AppFoundry</div>
+            <div class="footer-links">
+                <div class="link-group">
+                    <h4>Course</h4>
+                    <ul>
+                        <li><a href="index.html#overview">Overview</a></li>
+                        <li><a href="index.html#curriculum">Curriculum</a></li>
+                        <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="success-stories.html">Success Stories</a></li>
+                        <li><a href="about-creator.html">About Creator</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="refund-policy.html">Our Guarantee</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 AppFoundry. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="identity-widget.js"></script>
+    <script src="access-control.js"></script>
+    <script>
+        // Track course progress (basic implementation)
+        document.addEventListener('DOMContentLoaded', function() {
+            // You can expand this to track actual progress in localStorage
+            // For demonstration, we'll set Module 1 as in progress
+            
+            // Example of how to update status when a module is completed
+            function updateModuleStatus(moduleNumber, status) {
+                // status can be 'not-started', 'in-progress', 'completed'
+                localStorage.setItem(`module_${moduleNumber}_status`, status);
+                
+                // Update the UI
+                const moduleCards = document.querySelectorAll('.module-card');
+                if (moduleCards[moduleNumber - 1]) {
+                    const statusIcon = moduleCards[moduleNumber - 1].querySelector('.status-icon');
+                    const statusText = moduleCards[moduleNumber - 1].querySelector('.module-status span');
+                    
+                    // Remove all status classes
+                    statusIcon.classList.remove('not-started', 'in-progress', 'completed');
+                    
+                    // Add appropriate class
+                    statusIcon.classList.add(status);
+                    
+                    // Update status text
+                    statusText.textContent = status === 'not-started' ? 'Not Started' : 
+                                           status === 'in-progress' ? 'In Progress' : 'Completed';
+                    
+                    // Add checkmark for completed modules
+                    if (status === 'completed') {
+                        statusIcon.textContent = '✓';
+                    } else {
+                        statusIcon.textContent = '';
+                    }
+                }
+            }
+            
+            // Load existing progress from localStorage (if any)
+            for (let i = 1; i <= 7; i++) {
+                const status = localStorage.getItem(`module_${i}_status`) || 'not-started';
+                if (i === 1 && status === 'not-started') {
+                    // Set first module to in-progress by default if not started yet
+                    updateModuleStatus(1, 'in-progress');
+                } else {
+                    updateModuleStatus(i, status);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
