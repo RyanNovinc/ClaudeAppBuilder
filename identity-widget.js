@@ -121,6 +121,13 @@ document.addEventListener('DOMContentLoaded', function() {
   function addCourseTab() {
     if (!isAuthenticated) {
       console.log('User is not authenticated, Course tab not added');
+      
+      // Extra safety: REMOVE Course tab if it exists and user is not authenticated
+      const existingCourseTab = document.querySelector('#course-nav-item');
+      if (existingCourseTab) {
+        console.log('Found Course tab while user is NOT authenticated - removing it');
+        existingCourseTab.parentNode.removeChild(existingCourseTab);
+      }
       return;
     }
     
