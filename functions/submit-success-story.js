@@ -1,5 +1,5 @@
 // functions/submit-success-story.js
-const { v4: uuidv4 } = require('uuid');
+const { NetlifyBlobStore } = require('@netlify/blobs');
 
 exports.handler = async function(event, context) {
   // Set CORS headers
@@ -44,15 +44,19 @@ exports.handler = async function(event, context) {
       }
     }
     
+    // Generate a unique ID using timestamp and random string
+    const uniqueId = `story_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    
     // Create submission object
     const submission = {
-      id: uuidv4(),
+      id: uniqueId,
       date: new Date().toISOString(),
       status: 'pending', // pending, approved, rejected
       name: data.name,
       email: data.email,
       appType: data['app-type'],
       appName: data['app-name'],
+      experienceLevel: data['experience-level'] || 'No experience',
       story: data.story,
       testimonial: data.testimonial,
       images: data.images || [] // Array of image URLs
@@ -60,19 +64,77 @@ exports.handler = async function(event, context) {
     
     console.log('New success story submission:', submission.id);
     
-    // Important: Set special flag to instruct client to store in localStorage
-    // This is a workaround until we have proper database integration
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        message: 'Success story submitted successfully',
-        submissionId: submission.id,
-        submission: submission, // Include full submission data
-        useLocalStorage: true // Signal to client to store in localStorage
-      })
-    };
+    // Initialize Netlify Blob Storage
+    const store = new NetlifyBlobStore({
+      namespace: 'success-stories'
+    });
+    
+    // Store the submission in Netlify Blob Storage
+    try {
+      // Save the complete submission
+      await store.set(`submission-${submission.id}`, JSON.stringify(submission));
+      console.log(`Success story saved to Netlify Blob Storage with key: submission-${submission.id}`);
+      
+      // Also maintain an index of all submissions
+      try {
+        // Get the current index (or create if it doesn't exist)
+        let submissionIndex = [];
+        try {
+          const existingIndex = await store.get('submission-index');
+          if (existingIndex) {
+            submissionIndex = JSON.parse(existingIndex);
+          }
+        } catch (indexError) {
+          console.log('No existing index found, creating new index');
+        }
+        
+        // Add this submission to the index (just store minimal info)
+        submissionIndex.unshift({
+          id: submission.id,
+          name: submission.name,
+          appName: submission.appName,
+          date: submission.date,
+          status: submission.status
+        });
+        
+        // Save the updated index
+        await store.set('submission-index', JSON.stringify(submissionIndex));
+        console.log('Submission index updated');
+      } catch (indexError) {
+        console.error('Error updating submission index:', indexError);
+        // Continue even if index update fails
+      }
+      
+      // Return success response
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Success story submitted successfully',
+          submissionId: submission.id,
+          submission: submission, // Include full submission data
+          useLocalStorage: true // Also signal to client to store in localStorage as backup
+        })
+      };
+    } catch (storageError) {
+      console.error('Error storing submission in Netlify Blob Storage:', storageError);
+      
+      // If Netlify Blob Storage fails, fall back to returning a response that will
+      // instruct the client to store in localStorage
+      return {
+        statusCode: 200, // Still return 200 to client
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Success story processed with localStorage fallback',
+          submissionId: submission.id,
+          submission: submission,
+          useLocalStorage: true,
+          storageFallback: true
+        })
+      };
+    }
   } catch (error) {
     console.error('Error processing success story submission:', error);
     
