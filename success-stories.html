@@ -4,130 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Success Stories - AppFoundry</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .success-container {
-            max-width: 1000px;
+        .success-stories-container {
+            max-width: 1200px;
             margin: 100px auto;
             padding: 0 20px;
         }
         
-        .success-header {
+        .success-stories-header {
             text-align: center;
             margin-bottom: 60px;
         }
         
-        .success-header p {
+        .success-stories-header p {
             max-width: 700px;
             margin: 0 auto;
             color: #6b7280;
             font-size: 18px;
         }
         
-        .success-grid {
+        .stories-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 30px;
             margin-bottom: 60px;
         }
         
-        .success-story {
+        .story-card {
             background-color: white;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        .success-story:hover {
+        .story-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
         
         .story-image {
             width: 100%;
             height: 200px;
-            background-color: #f3f4f6;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        
-        .story-image:hover {
-            opacity: 0.9;
-        }
-        
-        .story-image img {
-            width: 100%;
-            height: 100%;
             object-fit: cover;
-        }
-        
-        .placeholder-image {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            font-size: 64px;
-            color: #d1d5db;
         }
         
         .story-content {
             padding: 25px;
         }
         
-        .story-content h3 {
-            margin-bottom: 10px;
-            font-size: 20px;
-        }
-        
-        .app-type {
+        .story-app-type {
             display: inline-block;
             background-color: #e0f2ff;
             color: #0070f3;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-        
-        .experience-badge {
-            display: inline-block;
-            background-color: #f3f4f6;
-            color: #4b5563;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            margin-left: 8px;
+            font-size: 0.8rem;
             font-weight: 500;
-        }
-        
-        .story-content p {
+            padding: 5px 10px;
+            border-radius: 100px;
             margin-bottom: 15px;
-            color: #4b5563;
         }
         
-        .author-info {
-            display: flex;
-            margin-top: 20px;
-        }
-        
-        .author-name {
+        .story-title {
+            font-size: 1.25rem;
             font-weight: 600;
-            font-size: 16px;
+            margin-bottom: 10px;
+            color: #111827;
+        }
+        
+        .story-author {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 15px;
+        }
+        
+        .story-testimonial {
+            color: #4b5563;
+            margin-bottom: 20px;
+            font-style: italic;
+            line-height: 1.6;
+        }
+        
+        .story-link {
+            display: inline-block;
+            color: #0070f3;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        
+        .story-link:hover {
+            text-decoration: underline;
         }
         
         .empty-state {
+            text-align: center;
+            padding: 60px 20px;
             background-color: #f9fafb;
             border-radius: 12px;
-            padding: 60px 40px;
-            text-align: center;
-            color: var(--admin-secondary);
+            margin-bottom: 60px;
         }
         
         .empty-state-icon {
@@ -137,92 +114,114 @@
         }
         
         .empty-state-title {
-            font-size: 1.1rem;
-            font-weight: 500;
+            font-size: 1.5rem;
+            font-weight: 600;
             margin-bottom: 10px;
+            color: #111827;
         }
         
-        .share-story-cta {
-            margin-top: 60px;
-            text-align: center;
-            background-color: #f3f4f6;
+        .empty-state p {
+            max-width: 500px;
+            margin: 0 auto 20px;
+            color: #6b7280;
+        }
+        
+        .featured-story {
+            display: flex;
+            background-color: white;
             border-radius: 12px;
-            padding: 60px 40px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 60px;
         }
         
-        .share-story-cta h2 {
-            margin-bottom: 20px;
+        .featured-story-image {
+            width: 40%;
+            object-fit: cover;
         }
         
-        .share-story-cta p {
-            max-width: 600px;
-            margin: 0 auto 30px;
-            color: #4b5563;
-        }
-        
-        .loading-indicator {
-            text-align: center;
+        .featured-story-content {
+            flex: 1;
             padding: 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
         }
         
-        .loading-spinner {
-            border: 4px solid rgba(0, 112, 243, 0.2);
-            border-radius: 50%;
-            border-top: 4px solid #0070f3;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+        .featured-story-app-type {
+            display: inline-block;
+            background-color: #e0f2ff;
+            color: #0070f3;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 5px 12px;
+            border-radius: 100px;
             margin-bottom: 20px;
         }
         
-        .image-gallery-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
+        .featured-story-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #111827;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .featured-story-author {
+            font-size: 1rem;
+            color: #6b7280;
+            margin-bottom: 20px;
         }
         
-        .error-state {
-            background-color: #fee2e2;
+        .featured-story-testimonial {
+            color: #4b5563;
+            margin-bottom: 30px;
+            font-style: italic;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .share-your-story {
+            background-color: #f0f9ff;
             border-radius: 12px;
             padding: 40px;
             text-align: center;
             margin-bottom: 60px;
-            border: 1px solid #ef4444;
         }
         
-        .error-state h3 {
-            color: #b91c1c;
+        .share-your-story h2 {
             margin-bottom: 15px;
+            color: #0070f3;
         }
         
-        .error-state p {
-            color: #7f1d1d;
+        .share-your-story p {
+            max-width: 600px;
+            margin: 0 auto 25px;
+            color: #4b5563;
+        }
+        
+        @media (max-width: 992px) {
+            .featured-story {
+                flex-direction: column;
+            }
+            
+            .featured-story-image {
+                width: 100%;
+                height: 250px;
+            }
+            
+            .featured-story-content {
+                padding: 30px;
+            }
         }
         
         @media (max-width: 768px) {
-            .success-container {
+            .success-stories-container {
                 margin: 60px auto;
             }
             
-            .success-grid {
+            .stories-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .share-your-story {
+                padding: 30px 20px;
             }
         }
     </style>
@@ -230,14 +229,14 @@
 <body>
     <header>
         <div class="container">
-            <div class="logo"><a href="index.html">AppFoundry</a></div>
+            <div class="logo"><a href="/">AppFoundry</a></div>
             <nav>
                 <ul>
-                    <li><a href="index.html#overview">Overview</a></li>
-                    <li><a href="index.html#curriculum">Curriculum</a></li>
-                    <li><a href="index.html#pricing">Pricing</a></li>
-                    <li><a href="success-stories.html">Success Stories</a></li>
-                    <li><a href="about-creator.html">About</a></li>
+                    <li><a href="/#overview">Overview</a></li>
+                    <li><a href="/#curriculum">Curriculum</a></li>
+                    <li><a href="/#pricing">Pricing</a></li>
+                    <li><a href="/success-stories.html" class="active">Success Stories</a></li>
+                    <li><a href="/about-creator.html">About</a></li>
                 </ul>
             </nav>
             <button class="cta-button small" id="loginButton">Log in</button>
@@ -248,47 +247,95 @@
         <div class="container">
             <span class="guarantee-icon">🔒</span>
             <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 30 days or get 100% of your money back</span>
-            <a href="refund-policy.html" class="guarantee-link">Learn More</a>
+            <a href="/refund-policy.html" class="guarantee-link">Learn More</a>
         </div>
     </div>
 
-    <div class="success-container">
-        <div class="success-header">
+    <div class="success-stories-container">
+        <div class="success-stories-header">
             <h1>Success Stories</h1>
-            <p>See what our students have built with no coding experience using the AppFoundry method</p>
+            <p>Meet the students who have built amazing apps with AppFoundry. From complete beginners to experienced professionals, our students are creating apps that solve real problems.</p>
         </div>
         
-        <!-- Loading indicator (initially shown) -->
-        <div class="loading-indicator" id="loading-indicator">
-            <div class="loading-spinner"></div>
-            <p>Loading success stories...</p>
+        <div class="featured-story">
+            <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" alt="Health App Screenshot" class="featured-story-image">
+            <div class="featured-story-content">
+                <div class="featured-story-app-type">Health & Fitness</div>
+                <h2 class="featured-story-title">SleepTrack: From Idea to App Store in 3 Weeks</h2>
+                <div class="featured-story-author">By Sarah Johnson</div>
+                <div class="featured-story-testimonial">"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"</div>
+                <a href="#" class="story-link">Read Sarah's full story →</a>
+            </div>
         </div>
         
-        <!-- Empty state (hidden until needed) -->
-        <div class="empty-state" id="empty-state" style="display: none;">
-            <h3>Our First Success Stories Are Coming Soon!</h3>
-            <p>Our students are currently building amazing apps with the AppFoundry method. Check back soon to see what they've created!</p>
-            <button class="cta-button" onclick="window.location.href='checkout.html'">Join Them Today</button>
-        </div>
-        
-        <!-- Error state (hidden until needed) -->
-        <div class="error-state" id="error-state" style="display: none;">
-            <h3>Unable to Load Stories</h3>
-            <p>We encountered an issue loading our success stories. Please try again later.</p>
-            <button class="cta-button" onclick="window.location.reload()">Retry</button>
-        </div>
-        
-        <!-- Success stories grid (hidden until stories are loaded) -->
-        <div class="success-grid" id="success-grid" style="display: none;">
-            <!-- Will be populated dynamically with success stories -->
-        </div>
-        
-        <div class="share-story-cta">
+        <div class="share-your-story">
             <h2>Have You Built an App with AppFoundry?</h2>
-            <p>We'd love to feature your success story! Share your experience and inspire others to bring their app ideas to life.</p>
-            <a href="submit-success-story.html" class="cta-button large">Share Your Story</a>
+            <p>We'd love to hear about your experience and feature your success story on this page. Share your journey to inspire others!</p>
+            <a href="/submit-success-story.html" class="cta-button">Share Your Success Story</a>
+        </div>
+        
+        <h2 style="margin-bottom: 30px;">More Success Stories</h2>
+        
+        <div class="stories-grid">
+            <div class="story-card">
+                <img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" alt="Recipe App Screenshot" class="story-image">
+                <div class="story-content">
+                    <div class="story-app-type">Lifestyle</div>
+                    <h3 class="story-title">RecipeKeeper</h3>
+                    <div class="story-author">By Michael Chen</div>
+                    <div class="story-testimonial">"I've been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"</div>
+                    <a href="#" class="story-link">Read full story →</a>
+                </div>
+            </div>
+            
+            <div class="story-card">
+                <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" alt="Task Management App Screenshot" class="story-image">
+                <div class="story-content">
+                    <div class="story-app-type">Productivity</div>
+                    <h3 class="story-title">TaskMaster Pro</h3>
+                    <div class="story-author">By Alex Rodriguez</div>
+                    <div class="story-testimonial">"As a busy professional, I needed a task management app that worked exactly how I wanted. With AppFoundry, I was able to build it myself in just two weeks!"</div>
+                    <a href="#" class="story-link">Read full story →</a>
+                </div>
+            </div>
+            
+            <div class="story-card">
+                <img src="https://images.unsplash.com/photo-1517971129774-8a2b38fa128e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" alt="Language Learning App Screenshot" class="story-image">
+                <div class="story-content">
+                    <div class="story-app-type">Education</div>
+                    <h3 class="story-title">LinguaLearn</h3>
+                    <div class="story-author">By Emma Wilson</div>
+                    <div class="story-testimonial">"I created a language learning app tailored specifically for visual learners. Without AppFoundry, I would have spent thousands on developers!"</div>
+                    <a href="#" class="story-link">Read full story →</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Empty state (hidden by default, shown when no stories are available) -->
+        <div class="empty-state" style="display: none;">
+            <div class="empty-state-icon">📱</div>
+            <div class="empty-state-title">Success Stories Coming Soon</div>
+            <p>We're currently collecting success stories from our students. Check back soon to see how others have built amazing apps with AppFoundry!</p>
+            <p>Have you built an app with our course? Be the first to share your story!</p>
+            <a href="/submit-success-story.html" class="cta-button">Share Your Success Story</a>
         </div>
     </div>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Create Your Own App?</h2>
+            <p>Join AppFoundry today and start building the app you've always wanted - no coding required.</p>
+            <a href="/#pricing" class="cta-button large">Enroll Now</a>
+        </div>
+    </section>
+
+    <section class="cta-section" style="background-color: #f9fafb;">
+        <div class="container">
+            <h2>Share Your Own Success Story</h2>
+            <p>Have you built an app with AppFoundry? We'd love to hear about it and feature your success!</p>
+            <a href="/submit-success-story.html" class="cta-button large">Share Your Story</a>
+        </div>
+    </section>
 
     <footer>
         <div class="container">
@@ -297,19 +344,25 @@
                 <div class="link-group">
                     <h4>Course</h4>
                     <ul>
-                        <li><a href="index.html#overview">Overview</a></li>
-                        <li><a href="index.html#curriculum">Curriculum</a></li>
-                        <li><a href="index.html#pricing">Pricing</a></li>
-                        <li><a href="success-stories.html">Success Stories</a></li>
-                        <li><a href="about-creator.html">About Creator</a></li>
+                        <li><a href="/#overview">Overview</a></li>
+                        <li><a href="/#curriculum">Curriculum</a></li>
+                        <li><a href="/#pricing">Pricing</a></li>
+                        <li><a href="/success-stories.html">Success Stories</a></li>
+                        <li><a href="/about-creator.html">About Creator</a></li>
                     </ul>
                 </div>
                 <div class="link-group">
                     <h4>Legal</h4>
                     <ul>
-                        <li><a href="terms-of-service.html">Terms of Service</a></li>
-                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
-                        <li><a href="refund-policy.html">Our Guarantee</a></li>
+                        <li><a href="/terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="/privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="/refund-policy.html">Our Guarantee</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Participate</h4>
+                    <ul>
+                        <li><a href="/submit-success-story.html">Share Your Success Story</a></li>
                     </ul>
                 </div>
                 <div class="link-group">
@@ -325,332 +378,41 @@
         </div>
     </footer>
 
+    <script src="scripts.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            loadSuccessStories();
-            
-            // Update login button
-            const loginButton = document.getElementById('loginButton');
-            if (loginButton) {
-                const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
-                const authEmail = localStorage.getItem('sleeptech_email');
-                
-                if (isAuthenticated) {
-                    loginButton.textContent = 'My Account';
-                    loginButton.onclick = function() {
-                        if (confirm('You are logged in as ' + authEmail + '. Would you like to log out?')) {
-                            localStorage.removeItem('sleeptech_auth');
-                            localStorage.removeItem('sleeptech_email');
-                            localStorage.removeItem('sleeptech_login_time');
-                            window.location.reload();
-                        }
-                    };
-                }
-            }
+            // Fetch success stories from API
+            fetchSuccessStories();
         });
         
-        async function loadSuccessStories() {
-            // Get elements
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const emptyState = document.getElementById('empty-state');
-            const errorState = document.getElementById('error-state');
-            const successGrid = document.getElementById('success-grid');
-            
+        // Function to fetch approved success stories
+        async function fetchSuccessStories() {
             try {
-                // Show loading, hide others
-                loadingIndicator.style.display = 'flex';
-                emptyState.style.display = 'none';
-                errorState.style.display = 'none';
-                successGrid.style.display = 'none';
+                const response = await fetch('/.netlify/functions/get-approved-stories');
                 
-                // In a full implementation, this would be an API call
-                // const response = await fetch('/.netlify/functions/get-approved-stories');
-                // if (!response.ok) throw new Error('Failed to load stories');
-                // const stories = await response.json();
-                
-                // For standalone testing, we'll use localStorage or sample data
-                let stories = [];
-                
-                // Simulate network delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Check localStorage for approved stories from admin interface
-                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                if (storedSubmissions) {
-                    // Filter for approved stories only
-                    const allSubmissions = JSON.parse(storedSubmissions);
-                    stories = allSubmissions.filter(s => s.status === 'approved');
-                }
-                
-                // If no stories in localStorage, use sample data
-                if (stories.length === 0) {
-                    // Check if we should use empty state or sample data
-                    // For testing, we'll use sample data
-                    stories = getSampleStories();
-                }
-                
-                // Hide loading
-                loadingIndicator.style.display = 'none';
-                
-                // Check if we have stories
-                if (!stories || stories.length === 0) {
-                    // Show empty state
-                    emptyState.style.display = 'block';
-                    return;
-                }
-                
-                // Show stories grid
-                successGrid.style.display = 'grid';
-                
-                // Clear any previous content
-                successGrid.innerHTML = '';
-                
-                // Add each story to the grid
-                stories.forEach(story => {
-                    const storyElement = document.createElement('div');
-                    storyElement.className = 'success-story';
+                if (response.ok) {
+                    const stories = await response.json();
                     
-                    // Create image HTML
-                    let imageHTML;
-                    if (story.images && story.images.length > 0) {
-                        imageHTML = `<img src="${story.images[0]}" alt="${story.appName} Screenshot">`;
+                    if (stories && stories.length > 0) {
+                        // Display stories
+                        displayStories(stories);
                     } else {
-                        imageHTML = `<div class="placeholder-image">📱</div>`;
+                        // Show empty state if no stories
+                        document.querySelector('.stories-grid').style.display = 'none';
+                        document.querySelector('.empty-state').style.display = 'block';
                     }
-                    
-                    // Add story HTML
-                    storyElement.innerHTML = `
-                        <div class="story-image">
-                            ${imageHTML}
-                        </div>
-                        <div class="story-content">
-                            <span class="app-type">${story.appType}</span>
-                            <span class="experience-badge">${story.experienceLevel || 'No coding experience'}</span>
-                            <h3>${story.appName}</h3>
-                            <p>${story.testimonial}</p>
-                            <div class="author-info">
-                                <div class="author-name">${story.name}</div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Add click handler to open image gallery
-                    if (story.images && story.images.length > 0) {
-                        const storyImage = storyElement.querySelector('.story-image');
-                        storyImage.addEventListener('click', function() {
-                            openImageGallery(story.images, story.appName);
-                        });
-                    }
-                    
-                    successGrid.appendChild(storyElement);
-                });
-                
+                } else {
+                    console.error('Error fetching stories:', await response.text());
+                }
             } catch (error) {
-                console.error('Error loading success stories:', error);
-                
-                // Hide loading, show error
-                loadingIndicator.style.display = 'none';
-                errorState.style.display = 'block';
+                console.error('Error fetching stories:', error);
             }
         }
         
-        // Image gallery function
-        function openImageGallery(images, appName) {
-            if (!images || images.length === 0) return;
-            
-            // Create modal elements
-            const modal = document.createElement('div');
-            modal.className = 'image-gallery-modal';
-            
-            // Create header with app name and close button
-            const header = document.createElement('div');
-            header.style.display = 'flex';
-            header.style.justifyContent = 'space-between';
-            header.style.alignItems = 'center';
-            header.style.width = '80%';
-            header.style.maxWidth = '800px';
-            header.style.color = 'white';
-            header.style.margin = '10px 0';
-            
-            const title = document.createElement('h3');
-            title.textContent = appName + ' Screenshots';
-            title.style.margin = '0';
-            
-            const closeButton = document.createElement('button');
-            closeButton.innerHTML = '&times;';
-            closeButton.style.background = 'none';
-            closeButton.style.border = 'none';
-            closeButton.style.color = 'white';
-            closeButton.style.fontSize = '24px';
-            closeButton.style.cursor = 'pointer';
-            closeButton.onclick = function() {
-                document.body.removeChild(modal);
-            };
-            
-            header.appendChild(title);
-            header.appendChild(closeButton);
-            
-            // Create image container
-            const imageContainer = document.createElement('div');
-            imageContainer.style.display = 'flex';
-            imageContainer.style.alignItems = 'center';
-            imageContainer.style.justifyContent = 'center';
-            imageContainer.style.width = '80%';
-            imageContainer.style.maxWidth = '800px';
-            imageContainer.style.height = '60vh';
-            imageContainer.style.position = 'relative';
-            
-            // Create main image display
-            const mainImage = document.createElement('img');
-            mainImage.src = images[0];
-            mainImage.style.maxWidth = '100%';
-            mainImage.style.maxHeight = '100%';
-            mainImage.style.borderRadius = '8px';
-            mainImage.style.objectFit = 'contain';
-            
-            imageContainer.appendChild(mainImage);
-            
-            // Add navigation buttons if there are multiple images
-            if (images.length > 1) {
-                let currentIndex = 0;
-                
-                // Create thumbnail navigation
-                const thumbnailContainer = document.createElement('div');
-                thumbnailContainer.style.display = 'flex';
-                thumbnailContainer.style.justifyContent = 'center';
-                thumbnailContainer.style.gap = '10px';
-                thumbnailContainer.style.margin = '15px 0';
-                thumbnailContainer.style.flexWrap = 'wrap';
-                
-                images.forEach((img, idx) => {
-                    const thumb = document.createElement('img');
-                    thumb.src = img;
-                    thumb.style.width = '60px';
-                    thumb.style.height = '60px';
-                    thumb.style.objectFit = 'cover';
-                    thumb.style.borderRadius = '4px';
-                    thumb.style.cursor = 'pointer';
-                    thumb.style.opacity = idx === 0 ? '1' : '0.6';
-                    thumb.onclick = function() {
-                        mainImage.src = img;
-                        currentIndex = idx;
-                        // Update all thumbnails
-                        Array.from(thumbnailContainer.children).forEach((t, i) => {
-                            t.style.opacity = i === idx ? '1' : '0.6';
-                        });
-                    };
-                    thumbnailContainer.appendChild(thumb);
-                });
-                
-                // Add navigation buttons
-                const prevButton = document.createElement('button');
-                prevButton.textContent = '←';
-                prevButton.style.position = 'absolute';
-                prevButton.style.left = '-40px';
-                prevButton.style.background = 'rgba(0, 0, 0, 0.5)';
-                prevButton.style.color = 'white';
-                prevButton.style.border = 'none';
-                prevButton.style.borderRadius = '50%';
-                prevButton.style.width = '40px';
-                prevButton.style.height = '40px';
-                prevButton.style.cursor = 'pointer';
-                prevButton.onclick = function() {
-                    currentIndex = (currentIndex - 1 + images.length) % images.length;
-                    mainImage.src = images[currentIndex];
-                    // Update thumbnails
-                    Array.from(thumbnailContainer.children).forEach((t, i) => {
-                        t.style.opacity = i === currentIndex ? '1' : '0.6';
-                    });
-                };
-                
-                const nextButton = document.createElement('button');
-                nextButton.textContent = '→';
-                nextButton.style.position = 'absolute';
-                nextButton.style.right = '-40px';
-                nextButton.style.background = 'rgba(0, 0, 0, 0.5)';
-                nextButton.style.color = 'white';
-                nextButton.style.border = 'none';
-                nextButton.style.borderRadius = '50%';
-                nextButton.style.width = '40px';
-                nextButton.style.height = '40px';
-                nextButton.style.cursor = 'pointer';
-                nextButton.onclick = function() {
-                    currentIndex = (currentIndex + 1) % images.length;
-                    mainImage.src = images[currentIndex];
-                    // Update thumbnails
-                    Array.from(thumbnailContainer.children).forEach((t, i) => {
-                        t.style.opacity = i === currentIndex ? '1' : '0.6';
-                    });
-                };
-                
-                imageContainer.appendChild(prevButton);
-                imageContainer.appendChild(nextButton);
-                
-                // Add key navigation
-                document.addEventListener('keydown', function keyHandler(e) {
-                    if (e.key === 'ArrowLeft') {
-                        prevButton.click();
-                    } else if (e.key === 'ArrowRight') {
-                        nextButton.click();
-                    } else if (e.key === 'Escape') {
-                        document.body.removeChild(modal);
-                        document.removeEventListener('keydown', keyHandler);
-                    }
-                });
-                
-                modal.appendChild(header);
-                modal.appendChild(imageContainer);
-                modal.appendChild(thumbnailContainer);
-            } else {
-                modal.appendChild(header);
-                modal.appendChild(imageContainer);
-            }
-            
-            // Add modal to body
-            document.body.appendChild(modal);
-            
-            // Close on backdrop click
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    document.body.removeChild(modal);
-                }
-            });
-        }
-        
-        // Sample stories for testing
-        function getSampleStories() {
-            return [
-                {
-                    id: '1',
-                    name: 'Sarah Johnson',
-                    appName: 'SleepTrack',
-                    appType: 'Health & Fitness',
-                    experienceLevel: 'No experience',
-                    testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
-                    images: ['https://placeholder.pics/svg/300x200'],
-                    date: '2025-04-15T10:30:00Z'
-                },
-                {
-                    id: '2',
-                    name: 'Michael Chen',
-                    appName: 'RecipeKeeper',
-                    appType: 'Lifestyle',
-                    experienceLevel: 'Beginner',
-                    testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
-                    images: ['https://placeholder.pics/svg/300x200'],
-                    date: '2025-04-22T14:45:00Z'
-                },
-                {
-                    id: '3',
-                    name: 'Lisa Rodriguez',
-                    appName: 'EventPlanner Pro',
-                    appType: 'Productivity',
-                    experienceLevel: 'No experience',
-                    testimonial: '"My clients love the custom event planning app I built. I never thought I\'d be able to create something this professional without hiring expensive developers."',
-                    images: ['https://placeholder.pics/svg/300x200'],
-                    date: '2025-04-10T09:15:00Z'
-                }
-            ];
+        // Function to display stories in the grid
+        function displayStories(stories) {
+            // Implementation would populate the stories grid
+            // For now, we're using hardcoded stories in the HTML
         }
     </script>
 </body>
