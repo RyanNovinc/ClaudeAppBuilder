@@ -453,53 +453,5 @@
 
     <script src="identity-widget.js"></script>
     <script src="access-control.js"></script>
-    <script>
-        // Track course progress (basic implementation)
-        document.addEventListener('DOMContentLoaded', function() {
-            // You can expand this to track actual progress in localStorage
-            // For demonstration, we'll set Module 1 as in progress
-            
-            // Example of how to update status when a module is completed
-            function updateModuleStatus(moduleNumber, status) {
-                // status can be 'not-started', 'in-progress', 'completed'
-                localStorage.setItem(`module_${moduleNumber}_status`, status);
-                
-                // Update the UI
-                const moduleCards = document.querySelectorAll('.module-card');
-                if (moduleCards[moduleNumber - 1]) {
-                    const statusIcon = moduleCards[moduleNumber - 1].querySelector('.status-icon');
-                    const statusText = moduleCards[moduleNumber - 1].querySelector('.module-status span');
-                    
-                    // Remove all status classes
-                    statusIcon.classList.remove('not-started', 'in-progress', 'completed');
-                    
-                    // Add appropriate class
-                    statusIcon.classList.add(status);
-                    
-                    // Update status text
-                    statusText.textContent = status === 'not-started' ? 'Not Started' : 
-                                           status === 'in-progress' ? 'In Progress' : 'Completed';
-                    
-                    // Add checkmark for completed modules
-                    if (status === 'completed') {
-                        statusIcon.textContent = '✓';
-                    } else {
-                        statusIcon.textContent = '';
-                    }
-                }
-            }
-            
-            // Load existing progress from localStorage (if any)
-            for (let i = 1; i <= 7; i++) {
-                const status = localStorage.getItem(`module_${i}_status`) || 'not-started';
-                if (i === 1 && status === 'not-started') {
-                    // Set first module to in-progress by default if not started yet
-                    updateModuleStatus(1, 'in-progress');
-                } else {
-                    updateModuleStatus(i, status);
-                }
-            }
-        });
-    </script>
 </body>
 </html>
