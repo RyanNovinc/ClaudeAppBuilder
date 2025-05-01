@@ -1,4 +1,4 @@
-// auth-implementation.js - Unified authentication with additional customizations
+// auth-implementation.js - Final version with complete nav hiding in modules
 // This file can replace all your existing auth JS files
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -18,21 +18,44 @@ document.addEventListener('DOMContentLoaded', function() {
     // 1. REMOVE ANY COURSE TAB FROM NAVIGATION
     removeCourseTab();
     
-    // 2. HANDLE LOGIN/LOGOUT BUTTON
+    // 2. CHECK IF WE'RE ON A MODULE PAGE
+    const isModulePage = checkIfModulePage();
+    
+    // 3. HANDLE LOGIN/LOGOUT BUTTON
     updateAuthButton(isAuthenticated, authEmail, isTestMode);
     
-    // 3. HANDLE COURSE CONTENT ACCESS (if on a course page)
+    // 4. HANDLE COURSE CONTENT ACCESS (if on a course page)
     handleCourseAccess(isAuthenticated, isTestMode);
     
-    // 4. SPECIAL HANDLING FOR CHECKOUT AND THANK YOU PAGES
+    // 5. SPECIAL HANDLING FOR CHECKOUT AND THANK YOU PAGES
     handleSpecialPages(isTestMode);
     
-    // 5. CHANGE "ENROLL NOW" TO "LOG IN" ON MAIN SCREEN
-    changeEnrollToLogin();
+    // 6. CHANGE "ENROLL NOW" TO "LOG IN" ON MAIN SCREEN
+    if (!isModulePage) {
+        changeEnrollToLogin();
+    }
     
-    // 6. HIDE NAVIGATION IN COURSE MODULES
-    hideNavigationInCourseModules(isAuthenticated);
+    // 7. HIDE NAVIGATION IN COURSE MODULES
+    if (isModulePage && isAuthenticated) {
+        hideNavigationInModules();
+    }
 });
+
+/**
+ * Checks if the current page is a module page
+ */
+function checkIfModulePage() {
+    // Check URL pattern for module
+    const isModuleUrl = window.location.pathname.includes('/module') || 
+                       window.location.pathname.includes('module') && 
+                       !window.location.pathname.includes('index.html');
+    
+    // Also check for module page elements
+    const hasSidebar = document.querySelector('.sidebar') !== null;
+    const hasCourseContent = document.getElementById('course-content') !== null;
+    
+    return isModuleUrl || hasSidebar || hasCourseContent;
+}
 
 /**
  * Removes any existing Course tab from the navigation
@@ -79,9 +102,7 @@ function updateAuthButton(isAuthenticated, authEmail, isTestMode) {
                 localStorage.removeItem('appfoundry_auth');
                 
                 // Redirect to home page without test_mode
-                const path = window.location.pathname;
-                const isInSubdirectory = path.split('/').length > 2;
-                window.location.href = isInSubdirectory ? '../index.html' : 'index.html';
+                window.location.href = getHomeUrl();
             });
         } else {
             // USER IS NOT LOGGED IN - Show Login button
@@ -93,17 +114,7 @@ function updateAuthButton(isAuthenticated, authEmail, isTestMode) {
                 
                 newButton.addEventListener('click', function(e) {
                     e.preventDefault();
-                    
-                    // Determine correct login path
-                    const path = window.location.pathname;
-                    const isInSubdirectory = path.split('/').length > 2;
-                    const testParam = isTestMode ? '?test_mode=true' : '';
-                    
-                    if (isInSubdirectory) {
-                        window.location.href = `../direct-login.html${testParam}`;
-                    } else {
-                        window.location.href = `direct-login.html${testParam}`;
-                    }
+                    window.location.href = getLoginUrl(isTestMode);
                 });
             }
         }
@@ -257,38 +268,68 @@ function changeEnrollToLogin() {
 }
 
 /**
- * Hide navigation in course module views
+ * Completely hide the navigation menu in module pages
+ * Only leave the logo and logout button
  */
-function hideNavigationInCourseModules(isAuthenticated) {
-    // Check if we're in a module page
-    const isModulePage = window.location.pathname.includes('module') && 
-                         !window.location.pathname.includes('index.html');
+function hideNavigationInModules() {
+    // Find the navigation menu
+    const navElement = document.querySelector('header nav');
     
-    // Also check if the page has a sidebar which is a good indicator of a module page
-    const hasSidebar = document.querySelector('.sidebar') !== null;
-    
-    // Only apply to module pages with a sidebar or course content
-    if ((isModulePage || hasSidebar) && isAuthenticated) {
-        console.log('Module page detected, hiding navigation except Login/Logout button');
+    if (navElement) {
+        console.log('Found navigation element, hiding it in module view');
         
-        // Find the navigation menu
-        const navItems = document.querySelectorAll('header nav ul li');
+        // Hide the entire navigation element
+        navElement.style.display = 'none';
         
-        // Hide all navigation items
-        navItems.forEach(item => {
-            item.style.display = 'none';
-        });
-        
-        // Make sure the logo still works as a link to home
+        // Make sure the logo redirects to module1.html instead of index.html
         const logoLink = document.querySelector('header .logo a');
         if (logoLink) {
+            logoLink.removeAttribute('href');
+            logoLink.style.cursor = 'pointer';
+            
             logoLink.addEventListener('click', function(e) {
                 e.preventDefault();
-                
-                // Determine whether we need to go up a directory
+                // Redirect to module1 page instead of home
                 const isInSubdirectory = window.location.pathname.split('/').length > 2;
-                window.location.href = isInSubdirectory ? '../index.html' : 'index.html';
+                const testParam = getTestModeParam();
+                
+                if (isInSubdirectory) {
+                    window.location.href = `module1.html${testParam}`;
+                } else {
+                    window.location.href = `modules/module1.html${testParam}`;
+                }
             });
         }
     }
+}
+
+/**
+ * Gets the URL for the login page
+ */
+function getLoginUrl(isTestMode) {
+    const path = window.location.pathname;
+    const isInSubdirectory = path.split('/').length > 2;
+    const testParam = isTestMode ? '?test_mode=true' : '';
+    
+    return isInSubdirectory ? `../direct-login.html${testParam}` : `direct-login.html${testParam}`;
+}
+
+/**
+ * Gets the URL for the home page
+ */
+function getHomeUrl() {
+    const path = window.location.pathname;
+    const isInSubdirectory = path.split('/').length > 2;
+    
+    return isInSubdirectory ? '../index.html' : 'index.html';
+}
+
+/**
+ * Gets the test mode parameter if present
+ */
+function getTestModeParam() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isTestMode = urlParams.get('test_mode') === 'true';
+    
+    return isTestMode ? '?test_mode=true' : '';
 }
