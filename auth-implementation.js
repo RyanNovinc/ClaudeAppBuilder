@@ -1,4 +1,4 @@
-// auth-implementation.js - Unified authentication with red logout and no Course tab
+// auth-implementation.js - Unified authentication with additional customizations
 // This file can replace all your existing auth JS files
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -26,6 +26,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 4. SPECIAL HANDLING FOR CHECKOUT AND THANK YOU PAGES
     handleSpecialPages(isTestMode);
+    
+    // 5. CHANGE "ENROLL NOW" TO "LOG IN" ON MAIN SCREEN
+    changeEnrollToLogin();
+    
+    // 6. HIDE NAVIGATION IN COURSE MODULES
+    hideNavigationInCourseModules(isAuthenticated);
 });
 
 /**
@@ -216,6 +222,73 @@ function handleSpecialPages(isTestMode) {
             
             // Refresh the page to update UI
             window.location.reload();
+        }
+    }
+}
+
+/**
+ * Change "Enroll Now" to "Log In" on the main screen
+ */
+function changeEnrollToLogin() {
+    // This only applies to logged out users
+    const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
+                          localStorage.getItem('appfoundry_auth') === 'true';
+    
+    if (isAuthenticated) {
+        return;
+    }
+    
+    // On main page, check for header buttons with text "Enroll Now"
+    const headerButtons = document.querySelectorAll('header .cta-button');
+    
+    headerButtons.forEach(button => {
+        if (button.textContent.trim() === 'Enroll Now') {
+            // Change text to "Log In"
+            button.textContent = 'Log In';
+            
+            // Replace the click action
+            button.removeAttribute('onclick');
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'direct-login.html';
+            });
+        }
+    });
+}
+
+/**
+ * Hide navigation in course module views
+ */
+function hideNavigationInCourseModules(isAuthenticated) {
+    // Check if we're in a module page
+    const isModulePage = window.location.pathname.includes('module') && 
+                         !window.location.pathname.includes('index.html');
+    
+    // Also check if the page has a sidebar which is a good indicator of a module page
+    const hasSidebar = document.querySelector('.sidebar') !== null;
+    
+    // Only apply to module pages with a sidebar or course content
+    if ((isModulePage || hasSidebar) && isAuthenticated) {
+        console.log('Module page detected, hiding navigation except Login/Logout button');
+        
+        // Find the navigation menu
+        const navItems = document.querySelectorAll('header nav ul li');
+        
+        // Hide all navigation items
+        navItems.forEach(item => {
+            item.style.display = 'none';
+        });
+        
+        // Make sure the logo still works as a link to home
+        const logoLink = document.querySelector('header .logo a');
+        if (logoLink) {
+            logoLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Determine whether we need to go up a directory
+                const isInSubdirectory = window.location.pathname.split('/').length > 2;
+                window.location.href = isInSubdirectory ? '../index.html' : 'index.html';
+            });
         }
     }
 }
