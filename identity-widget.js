@@ -7,17 +7,16 @@ document.addEventListener('DOMContentLoaded', function() {
   const isTestMode = urlParams.get('test_mode') === 'true';
   
   if (isTestMode) {
-    console.log('Test mode detected');
-    // When in test mode, set a flag in sessionStorage to remember authentication across pages
-    sessionStorage.setItem('appfoundry_test_session', 'true');
+    console.log('Test mode detected - setting permanent auth flag');
+    // When in test mode, set a permanent flag in localStorage
+    localStorage.setItem('appfoundry_auth', 'true');
   }
   
-  // Check authentication status considering both localStorage and sessionStorage (for test mode)
-  const isLocalStorageAuth = localStorage.getItem('sleeptech_auth') === 'true';
-  const isTestSession = sessionStorage.getItem('appfoundry_test_session') === 'true';
-  const isAuthenticated = isLocalStorageAuth || isTestMode || isTestSession;
+  // Check authentication status from localStorage
+  const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
+                          localStorage.getItem('appfoundry_auth') === 'true';
   
-  console.log('Auth status check - localStorage:', isLocalStorageAuth, 'testMode:', isTestMode, 'testSession:', isTestSession);
+  console.log('Auth status check - authenticated:', isAuthenticated);
   
   // Initialize the login button if present
   const loginButton = document.getElementById('loginButton');
@@ -38,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
           localStorage.removeItem('sleeptech_auth');
           localStorage.removeItem('sleeptech_email');
           localStorage.removeItem('sleeptech_login_time');
-          sessionStorage.removeItem('appfoundry_test_session');
+          localStorage.removeItem('appfoundry_auth');
           
           // Refresh the page without test_mode parameter if present
           if (isTestMode) {
@@ -66,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Add Course navigation item for logged-in users or test mode
+  // Add Course navigation item for logged-in users
   if (isAuthenticated) {
     console.log('User is authenticated, adding Course tab');
     
@@ -83,8 +82,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const path = window.location.pathname;
       const isInSubdirectory = path.split('/').length > 2;
       
-      // Include test_mode parameter if in test mode
-      const testParam = (isTestMode || isTestSession) ? '?test_mode=true' : '';
+      // Include test_mode parameter if this was originally in test mode
+      const testParam = isTestMode ? '?test_mode=true' : '';
       courseNavLink.href = isInSubdirectory ? `../course.html${testParam}` : `course.html${testParam}`;
       courseNavLink.textContent = 'Course';
       
@@ -122,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
         courseNavLink.style.backgroundColor = '#d97706'; // Darker yellow/orange
       }
       
-      console.log('Course tab added to navigation - Test mode:', isTestMode);
+      console.log('Course tab added to navigation with permanent auth');
     } else {
       console.log('Course tab already exists in navigation');
     }
