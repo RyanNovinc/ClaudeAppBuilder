@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exporting Data - AppFoundry</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            background-color: #f9fafb;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0070f3;
+        }
+        button {
+            background-color: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #0055b3;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        pre {
+            text-align: left;
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Export Tool</h1>
+        <p>This tool helps transfer submissions from preview deployments to your main site.</p>
+        
+        <div id="data-info"></div>
+        
+        <button id="export-button">Export Data to Main Site</button>
+        
+        <div id="status-message" class="status" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dataInfo = document.getElementById('data-info');
+            const exportButton = document.getElementById('export-button');
+            const statusMessage = document.getElementById('status-message');
+            
+            // Get the target URL from the query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetUrl = urlParams.get('target');
+            
+            // Check if we have a target URL
+            if (!targetUrl) {
+                dataInfo.innerHTML = `
+                    <div class="error">No target URL specified. Please go back and try again.</div>
+                `;
+                exportButton.style.display = 'none';
+                return;
+            }
+            
+            // Show domain info
+            dataInfo.innerHTML = `
+                <p>Current domain: <strong>${window.location.hostname}</strong></p>
+                <p>Target domain: <strong>${new URL(targetUrl).hostname}</strong></p>
+            `;
+            
+            // Get submissions from localStorage
+            let submissions = [];
+            try {
+                const storedData = localStorage.getItem('appfoundry_submissions');
+                if (storedData) {
+                    submissions = JSON.parse(storedData);
+                    dataInfo.innerHTML += `
+                        <p>Found <strong>${submissions.length}</strong> submissions in localStorage</p>
+                        <pre>${JSON.stringify(submissions.map(s => ({
+                            id: s.id,
+                            name: s.name,
+                            appName: s.appName,
+                            status: s.status,
+                            date: s.date
+                        })), null, 2)}</pre>
+                    `;
+                } else {
+                    dataInfo.innerHTML += `
+                        <div class="error">No submissions found in localStorage</div>
+                    `;
+                    exportButton.style.display = 'none';
+                }
+            } catch (error) {
+                dataInfo.innerHTML += `
+                    <div class="error">Error reading localStorage: ${error.message}</div>
+                `;
+                exportButton.style.display = 'none';
+            }
+            
+            // Handle export button click
+            exportButton.addEventListener('click', function() {
+                if (submissions.length === 0) {
+                    statusMessage.textContent = 'No submissions to export';
+                    statusMessage.className = 'status error';
+                    statusMessage.style.display = 'block';
+                    return;
+                }
+                
+                try {
+                    // Encode the submissions data
+                    const encodedData = encodeURIComponent(JSON.stringify(submissions));
+                    
+                    // Create the target URL with the data
+                    const exportUrl = `${targetUrl}${targetUrl.includes('?') ? '&' : '?'}imported_data=${encodedData}`;
+                    
+                    // Redirect to the target URL
+                    window.location.href = exportUrl;
+                } catch (error) {
+                    statusMessage.textContent = `Error exporting data: ${error.message}`;
+                    statusMessage.className = 'status error';
+                    statusMessage.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
