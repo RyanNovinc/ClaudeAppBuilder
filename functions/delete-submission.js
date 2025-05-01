@@ -71,9 +71,9 @@ exports.handler = async function(event, context) {
     // First check if the submission exists
     try {
       const submissionKey = `submission-${data.id}`;
-      const submissionExists = await store.head(submissionKey);
+      const submissionData = await store.get(submissionKey);
       
-      if (!submissionExists) {
+      if (!submissionData) {
         return {
           statusCode: 404,
           headers,
