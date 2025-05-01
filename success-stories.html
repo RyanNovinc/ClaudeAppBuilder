@@ -316,7 +316,7 @@
         <div class="create-story-box">
             <h2>Ready to Share Your Success?</h2>
             <p>Have you built an app using the AppFoundry method? We'd love to feature your creation and inspire others to bring their ideas to life!</p>
-            <a href="submit-success-story.html" class="cta-button large">Share Your Success Story</a>
+            <a href="https://claudeappbuilder.netlify.app/submit-success-story.html" class="cta-button large">Share Your Success Story</a>
         </div>
     </div>
     
@@ -428,11 +428,8 @@
                     }
                 }
                 
-                // For demo purposes, add sample data if no approved stories found
-                if (approvedStories.length === 0) {
-                    console.log('No approved stories found, adding sample data');
-                    approvedStories = getSampleStories();
-                }
+                // No sample data - only show real approved stories
+                console.log('Found ' + approvedStories.length + ' approved stories');
                 
                 // Store for later use
                 allStories = approvedStories;
@@ -548,35 +545,7 @@
             document.body.style.overflow = 'auto';
         }
         
-        // Function to generate sample stories if none exist
-        function getSampleStories() {
-            return [
-                {
-                    id: 'sample_1',
-                    name: 'Sarah Johnson',
-                    email: 'sarah@example.com',
-                    appName: 'SleepTrack',
-                    appType: 'Health & Fitness',
-                    date: '2025-04-15T10:30:00Z',
-                    status: 'approved',
-                    testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
-                    story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
-                    images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App']
-                },
-                {
-                    id: 'sample_2',
-                    name: 'Michael Chen',
-                    email: 'michael@example.com',
-                    appName: 'RecipeKeeper',
-                    appType: 'Lifestyle',
-                    date: '2025-04-22T14:45:00Z',
-                    status: 'approved',
-                    testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
-                    story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
-                    images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App']
-                }
-            ];
-        }
+        // No sample stories function needed
     </script>
 
     <script src="identity-widget.js"></script>
