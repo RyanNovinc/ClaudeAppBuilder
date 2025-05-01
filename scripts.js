@@ -17,14 +17,55 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Enrollment button action
-    const enrollButtons = document.querySelectorAll('.cta-button');
+    // Handle header login/logout button
+    const loginButtons = document.querySelectorAll('header .cta-button');
     
-    enrollButtons.forEach(button => {
-        if (!button.hasAttribute('onclick') && !button.id && button.classList.contains('large')) {
-            button.addEventListener('click', function() {
-                window.location.href = 'checkout.html';
+    // Check if the user is authenticated
+    const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
+                           localStorage.getItem('appfoundry_auth') === 'true';
+    const authEmail = localStorage.getItem('sleeptech_email');
+    
+    loginButtons.forEach(button => {
+        // Skip buttons that already have event listeners
+        if (button.getAttribute('data-initialized') === 'true') {
+            return;
+        }
+        
+        // Remove any existing onclick attributes to prevent conflicts
+        button.removeAttribute('onclick');
+        
+        // Mark as initialized
+        button.setAttribute('data-initialized', 'true');
+        
+        if (isAuthenticated) {
+            // User is logged in - show Log Out button
+            button.textContent = 'Log Out';
+            button.style.backgroundColor = '#ef4444'; // Red color
+            
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Clear auth data
+                localStorage.removeItem('sleeptech_auth');
+                localStorage.removeItem('sleeptech_email');
+                localStorage.removeItem('sleeptech_login_time');
+                localStorage.removeItem('appfoundry_auth');
+                
+                // Redirect to home page
+                window.location.href = 'index.html';
             });
+        } else {
+            // User is not logged in
+            // If this is a small button (like in the header), change it to "Log In"
+            if (!button.classList.contains('large') || button.id === 'loginButton') {
+                button.textContent = 'Log In';
+                // Reset to default button style
+                button.style.backgroundColor = '';
+                
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = 'direct-login.html';
+                });
+            }
         }
     });
     
@@ -38,56 +79,6 @@ document.addEventListener('DOMContentLoaded', function() {
             header.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
         }
     });
-    
-    // Handle login/logout button in header
-    const loginButton = document.getElementById('loginButton');
-    if (loginButton) {
-        // Remove any existing onclick attribute to prevent conflicts
-        loginButton.removeAttribute('onclick');
-        
-        // Check if the user is authenticated with our simplified system
-        const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
-                               localStorage.getItem('appfoundry_auth') === 'true';
-        const authEmail = localStorage.getItem('sleeptech_email');
-        
-        if (isAuthenticated) {
-            // User is logged in - show Log Out button
-            loginButton.textContent = 'Log Out';
-            loginButton.style.backgroundColor = '#ef4444'; // Red color
-            
-            loginButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                // Clear auth data
-                localStorage.removeItem('sleeptech_auth');
-                localStorage.removeItem('sleeptech_email');
-                localStorage.removeItem('sleeptech_login_time');
-                localStorage.removeItem('appfoundry_auth');
-                
-                // Redirect to home page
-                const path = window.location.pathname;
-                const isInSubdirectory = path.split('/').length > 2;
-                window.location.href = isInSubdirectory ? '../index.html' : 'index.html';
-            });
-        } else {
-            // User is not logged in - show Login button
-            loginButton.textContent = 'Log In';
-            // Reset to default button style
-            loginButton.style.backgroundColor = '';
-            
-            loginButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                // Check if we're in the root directory or a subdirectory
-                const path = window.location.pathname;
-                const isInSubdirectory = path.split('/').length > 2;
-                
-                if (isInSubdirectory) {
-                    window.location.href = '../direct-login.html';
-                } else {
-                    window.location.href = 'direct-login.html';
-                }
-            });
-        }
-    }
     
     // Make sure there's NO Course tab in navigation
     removeCourseTab();
