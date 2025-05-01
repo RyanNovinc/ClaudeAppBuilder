@@ -190,18 +190,26 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Course tab added to navigation with permanent auth');
   }
   
+  // Special handling for thank-you.html page
+  if (window.location.pathname.includes('thank-you.html')) {
+    console.log('On thank-you page - handling auth separately');
+    // Don't automatically set or check auth on thank-you page
+    // Auth will be set by the thank-you.html page's own script
+    return; // Exit early to prevent conflicts
+  }
+  
   // If on the thank you page after purchase, we may need to handle login
   const sessionId = urlParams.get('session_id');
   const forceLogin = urlParams.get('login') === 'true';
   const emailParam = urlParams.get('email');
   const passwordParam = urlParams.get('password');
   
-  if (sessionId && emailParam && passwordParam) {
+  if (sessionId && emailParam && passwordParam && !window.location.pathname.includes('thank-you.html')) {
     // Store password for this email
     localStorage.setItem('sleeptech_password_' + emailParam, passwordParam);
     
     // If force login is true, log the user in
-    if (forceLogin || (isTestMode && window.location.pathname.includes('thank-you'))) {
+    if (forceLogin) {
       localStorage.setItem('sleeptech_auth', 'true');
       localStorage.setItem('sleeptech_email', emailParam);
       localStorage.setItem('sleeptech_login_time', new Date().getTime());
