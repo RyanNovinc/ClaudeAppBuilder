@@ -30,10 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 5. SPECIAL HANDLING FOR CHECKOUT AND THANK YOU PAGES
     handleSpecialPages(isTestMode);
     
-    // 6. CHANGE "ENROLL NOW" TO "LOG IN" ON MAIN SCREEN
-    if (!isModulePage) {
-        changeEnrollToLogin();
-    }
+    // 6. CHANGE "ENROLL NOW" TO "LOG IN" ON MAIN SCREEN - IMPROVED IMPLEMENTATION
+    changeAllEnrollButtonsToLogin(isAuthenticated);
     
     // 7. HIDE NAVIGATION IN COURSE MODULES
     if (isModulePage && isAuthenticated) {
@@ -238,31 +236,58 @@ function handleSpecialPages(isTestMode) {
 }
 
 /**
- * Change "Enroll Now" to "Log In" on the main screen
+ * Change "Enroll Now" to "Log In" on the main screen and other places
+ * Improved implementation that consistently handles all Enroll Now buttons
  */
-function changeEnrollToLogin() {
-    // This only applies to logged out users
-    const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
-                          localStorage.getItem('appfoundry_auth') === 'true';
-    
+function changeAllEnrollButtonsToLogin(isAuthenticated) {
+    // Skip if user is already logged in
     if (isAuthenticated) {
         return;
     }
     
-    // On main page, check for header buttons with text "Enroll Now"
-    const headerButtons = document.querySelectorAll('header .cta-button');
+    // Get all buttons on the page, both "Enroll Now" and large CTA buttons 
+    const allButtons = document.querySelectorAll('button, .cta-button');
     
-    headerButtons.forEach(button => {
-        if (button.textContent.trim() === 'Enroll Now') {
+    allButtons.forEach(button => {
+        // Check if this is an "Enroll Now" button or a general CTA in the header
+        if (button.textContent.trim() === 'Enroll Now' || 
+            (button.classList.contains('cta-button') && 
+             button.classList.contains('small') && 
+             !button.id && 
+             button.parentElement && 
+             button.parentElement.tagName === 'HEADER')) {
+            
+            console.log('Found "Enroll Now" button or header CTA button to update:', button);
+            
+            // Skip if this button was already processed
+            if (button.getAttribute('data-login-processed') === 'true') {
+                return;
+            }
+            
             // Change text to "Log In"
             button.textContent = 'Log In';
             
-            // Replace the click action
+            // Remove any existing onclick attributes
             button.removeAttribute('onclick');
+            
+            // Add event listener to navigate to login page
             button.addEventListener('click', function(e) {
                 e.preventDefault();
-                window.location.href = 'direct-login.html';
+                
+                // Check if we're in a subdirectory
+                const isInSubdirectory = window.location.pathname.split('/').length > 2;
+                const testMode = new URLSearchParams(window.location.search).get('test_mode') === 'true';
+                const testParam = testMode ? '?test_mode=true' : '';
+                
+                if (isInSubdirectory) {
+                    window.location.href = `../direct-login.html${testParam}`;
+                } else {
+                    window.location.href = `direct-login.html${testParam}`;
+                }
             });
+            
+            // Mark as processed to avoid duplicate event listeners
+            button.setAttribute('data-login-processed', 'true');
         }
     });
 }
