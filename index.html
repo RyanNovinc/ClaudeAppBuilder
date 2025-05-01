@@ -3,16 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AppFoundry - Build Apps Without Writing Code</title>
+    <title>AppFoundry - From Idea to App Store in Days (No Coding Required)</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .test-mode-link {
+            display: block;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #6b7280;
+            text-decoration: underline;
+        }
+        
+        .test-mode-link:hover {
+            color: #0070f3;
+        }
+    </style>
 </head>
 <body>
     <header>
         <div class="container">
-            <div class="logo"><a href="index.html">AppFoundry</a></div>
+            <div class="logo">AppFoundry</div>
             <nav>
                 <ul>
                     <li><a href="#overview">Overview</a></li>
@@ -22,26 +35,10 @@
                     <li><a href="about-creator.html">About</a></li>
                 </ul>
             </nav>
-            <button class="cta-button small" id="loginButton">Log in</button>
+            <button class="cta-button small" onclick="window.location.href='checkout.html'">Enroll Now</button>
         </div>
     </header>
-    
-    <div class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Build Real Mobile Apps Without Writing a Single Line of Code</h1>
-                <p>Learn the exact method to create professional-grade applications using AI, even if you have zero coding experience.</p>
-                <div class="hero-buttons">
-                    <button class="cta-button large" onclick="window.location.href='checkout.html'">Enroll Now</button>
-                    <a href="?test_mode=true" class="secondary-button">Test Drive the Course</a>
-                </div>
-            </div>
-            <div class="hero-image">
-                <img src="https://placehold.co/600x400/e0f2ff/0070f3?text=App+Building+Made+Simple" alt="AI App Building">
-            </div>
-        </div>
-    </div>
-    
+
     <div class="guarantee-banner">
         <div class="container">
             <span class="guarantee-icon">🔒</span>
@@ -49,328 +46,234 @@
             <a href="refund-policy.html" class="guarantee-link">Learn More</a>
         </div>
     </div>
-    
-    <section id="overview" class="overview-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Skip the Coding, Keep the Power</h2>
-                <p>Create professionally designed, fully functional apps for iOS and Android without writing code</p>
+
+    <section class="hero">
+        <div class="floating-element floating-circle element-1"></div>
+        <div class="floating-element floating-square element-2"></div>
+        <div class="floating-element floating-circle element-3"></div>
+        
+        <div class="container hero-container">
+            <div class="hero-content">
+                <div class="tag-container">
+                    <div class="ai-powered-tag">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a10 10 0 1 0 10 10 4 4 0 1 1-4-4"/>
+                            <path d="M18 2a4 4 0 0 0-4 4"/>
+                        </svg>
+                        AI-Powered
+                    </div>
+                    <div class="no-bs-tag">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"/>
+                            <path d="m12 5-7 7 7 7"/>
+                        </svg>
+                        No Bullshit
+                    </div>
+                </div>
+                <h1>Create Apps in Days, Not Months — Without Writing a Single Line of Code</h1>
+                <p class="subtitle">Why spend $10,000+ on developers when AI can do the heavy lifting? Learn how to leverage Claude AI to create professional apps that would traditionally cost thousands and take months to build.</p>
+                <button class="cta-button large" onclick="window.location.href='checkout.html'">Start Building Your App</button>
+                <div class="guarantee-badge">
+                    <div class="badge-icon">✓</div>
+                    <div class="badge-text">30-Day App Building Guarantee</div>
+                </div>
             </div>
-            
-            <div class="features-grid">
-                <div class="feature-card">
+            <div class="course-preview-card">
+                <p class="course-label">Course</p>
+                <h3>App Building with Claude</h3>
+                <div class="course-price">$199.00</div>
+                <button class="cta-button large" onclick="window.location.href='checkout.html'">Enroll Now</button>
+                <a href="checkout.html?test_mode=true" class="test-mode-link">Test drive the course</a>
+                <div class="course-meta">
+                    <div class="meta-item">
+                        <span class="meta-icon">📘</span>
+                        <span>7 Chapters</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">📝</span>
+                        <span>15 Lessons</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="overview" id="overview">
+        <div class="container">
+            <h2>The Fastest Way from Idea to App</h2>
+            <div class="features">
+                <div class="feature">
                     <div class="feature-icon">🤖</div>
-                    <h3>AI-Powered Development</h3>
-                    <p>Leverage the power of advanced AI to handle all the technical implementation while you focus on your vision.</p>
+                    <h3>0% Coding Required</h3>
+                    <p>No programming knowledge needed. We'll show you how to leverage Claude AI to create professional-grade code without understanding a single line of it.</p>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">💡</div>
-                    <h3>Your Vision, Realized</h3>
-                    <p>Create exactly what you imagined, not what a developer thinks you want. Maintain complete creative control.</p>
-                </div>
-                
-                <div class="feature-card">
+                <div class="feature">
                     <div class="feature-icon">⚡</div>
-                    <h3>Build 10x Faster</h3>
-                    <p>What takes traditional developers weeks or months can be accomplished in days with our revolutionary approach.</p>
+                    <h3>App Store in Days, Not Months</h3>
+                    <p>Skip months of learning and development. Create a fully functional app and submit it to app stores in just days, not months or years.</p>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">💰</div>
-                    <h3>Fraction of the Cost</h3>
-                    <p>Save thousands of dollars you'd spend on developers. Create unlimited apps for one low price.</p>
-                </div>
-                
-                <div class="feature-card">
+                <div class="feature">
                     <div class="feature-icon">🔄</div>
-                    <h3>Unlimited Revisions</h3>
-                    <p>Change any aspect of your app whenever you want, without waiting for developer availability or paying extra.</p>
+                    <h3>Any App Idea, Any Industry</h3>
+                    <p>Our system works for any type of app - health, fitness, productivity, entertainment, social - you dream it, you can build it.</p>
                 </div>
-                
-                <div class="feature-card">
+                <div class="feature">
                     <div class="feature-icon">🚀</div>
-                    <h3>Ready for App Stores</h3>
-                    <p>Learn how to publish your creation to the Apple App Store and Google Play Store like a professional.</p>
+                    <h3>Endless Possibilities</h3>
+                    <p>Once you master this process, you can create as many professional apps as you want - for yourself, clients, or to sell on app stores.</p>
                 </div>
             </div>
         </div>
     </section>
-    
-    <section class="testimonial-section">
+
+    <section class="value-section">
         <div class="container">
-            <div class="testimonial-card">
-                <div class="testimonial-content">
-                    <div class="quote-mark">"</div>
-                    <p>I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!</p>
-                    <div class="testimonial-author">
-                        <div class="author-image">
-                            <img src="https://placehold.co/100x100/e0f2ff/0070f3?text=SJ" alt="Sarah Johnson">
+            <h2>Why Pay Thousands When AI Can Do the Work?</h2>
+            <div class="value-content">
+                <div class="value-text">
+                    <p>Traditional app development costs $5,000 to $50,000+ and takes months of work by skilled developers. But when you know exactly how to leverage AI, creating professional apps becomes effortless.</p>
+                    
+                    <p>Many people don't yet understand the power of AI to create professional-looking apps that would take teams of developers months to build. You'll be ahead of the curve.</p>
+                    
+                    <h3>Use This Course To:</h3>
+                    <ul class="value-list">
+                        <li><strong>Create apps for personal use</strong> - bring your own ideas to life</li>
+                        <li><strong>Build tools for your business</strong> - without expensive development costs</li>
+                        <li><strong>Develop apps for clients</strong> - charge thousands while leveraging AI</li>
+                        <li><strong>Get ahead of the market</strong> - while everyone else is still playing catch-up</li>
+                    </ul>
+                    
+                    <p class="highlight-text">You're going to be stunned at how easy, how quick, and how professional everything will look with my guidance.</p>
+                </div>
+                <div class="value-image">
+                    <div class="price-comparison-visual">
+                        <div class="price-option traditional">
+                            <div class="price-label">Traditional Development</div>
+                            <div class="price-amount">$10,000+</div>
+                            <div class="price-timeline">3-6 months</div>
                         </div>
-                        <div class="author-details">
-                            <div class="author-name">Sarah Johnson</div>
-                            <div class="author-title">Health Coach & App Creator</div>
+                        <div class="vs">VS</div>
+                        <div class="price-option course">
+                            <div class="price-label">This Course</div>
+                            <div class="price-amount">$199</div>
+                            <div class="price-timeline">Build in days</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    
-    <section id="curriculum" class="curriculum-section">
+
+    <section class="curriculum" id="curriculum">
         <div class="container">
-            <div class="section-header">
-                <h2>Course Curriculum</h2>
-                <p>Step-by-step guidance to go from idea to published app</p>
-            </div>
-            
-            <div class="modules-container">
-                <div class="module-card">
-                    <div class="module-header">
-                        <div class="module-number">Module 1</div>
-                        <h3>Setting Up Your Environment</h3>
-                    </div>
+            <h2>No-Code App Building System</h2>
+            <div class="modules">
+                <div class="module">
+                    <div class="module-number">01</div>
                     <div class="module-content">
-                        <p>Learn how to configure everything you need to start building apps with Claude, without writing a single line of code yourself.</p>
-                        <ul class="module-points">
-                            <li>Setting up Claude for effective app development</li>
-                            <li>Installing the necessary tools to test your app</li>
-                            <li>Creating your first project foundation</li>
-                        </ul>
+                        <h3>Setting Up Your AI Development Environment</h3>
+                        <p>Configure Claude and the minimal tools you need to start building without coding</p>
                     </div>
                 </div>
-                
-                <div class="module-card">
-                    <div class="module-header">
-                        <div class="module-number">Module 2</div>
+                <div class="module">
+                    <div class="module-number">02</div>
+                    <div class="module-content">
                         <h3>Creating Your First AI Project</h3>
-                    </div>
-                    <div class="module-content">
-                        <p>Learn how to "speak" to Claude so it creates exactly what you want. Master the art of AI prompting for app development.</p>
-                        <ul class="module-points">
-                            <li>The exact prompt templates that get perfect results</li>
-                            <li>How to explain your app vision so AI understands</li>
-                            <li>Starting with a simple but functional prototype</li>
-                        </ul>
+                        <p>Learn how to "speak" to Claude so it creates exactly what you want</p>
                     </div>
                 </div>
-                
-                <div class="module-card">
-                    <div class="module-header">
-                        <div class="module-number">Module 3</div>
-                        <h3>Testing Your App</h3>
-                    </div>
+                <div class="module">
+                    <div class="module-number">03</div>
                     <div class="module-content">
-                        <p>See your app work on your actual device without writing a single line of code. This is where your idea becomes real.</p>
-                        <ul class="module-points">
-                            <li>Deploying your app to your phone with one click</li>
-                            <li>Testing your app's functionality in real-time</li>
-                            <li>Identifying and fixing issues efficiently</li>
-                        </ul>
+                        <h3>Testing Your App: From Concept to Phone</h3>
+                        <p>See your app work on your device without writing a single line of code</p>
                     </div>
                 </div>
-                
-                <div class="module-card">
-                    <div class="module-header">
-                        <div class="module-number">Module 4</div>
-                        <h3>Creating Professional UI</h3>
-                    </div>
+                <div class="module">
+                    <div class="module-number">04</div>
                     <div class="module-content">
-                        <p>Make your app look and feel professional with beautiful interfaces created by Claude, without design skills.</p>
-                        <ul class="module-points">
-                            <li>The secret to getting beautiful designs from AI</li>
-                            <li>Creating consistent styles across your app</li>
-                            <li>Implementing smooth animations and transitions</li>
-                        </ul>
+                        <h3>Directing Claude: Creating Professional UI</h3>
+                        <p>Learn the exact prompts to get beautiful interfaces from Claude</p>
                     </div>
                 </div>
-                
-                <div class="module-card">
-                    <div class="module-header">
-                        <div class="module-number">Module 5</div>
+                <div class="module">
+                    <div class="module-number">05</div>
+                    <div class="module-content">
                         <h3>Building Your App Structure</h3>
-                    </div>
-                    <div class="module-content">
-                        <p>Create a complete app blueprint that Claude can turn into reality, ensuring your app has solid foundations.</p>
-                        <ul class="module-points">
-                            <li>Designing your app navigation and flow</li>
-                            <li>Creating multiple screens and sections</li>
-                            <li>Implementing user management and authentication</li>
-                        </ul>
+                        <p>Create a complete app blueprint that Claude can turn into reality</p>
                     </div>
                 </div>
-                
-                <div class="module-card">
-                    <div class="module-header">
-                        <div class="module-number">Module 6</div>
+                <div class="module">
+                    <div class="module-number">06</div>
+                    <div class="module-content">
                         <h3>Building Out Your App</h3>
-                    </div>
-                    <div class="module-content">
-                        <p>Let Claude do all the technical work while you focus on design and features that matter to your users.</p>
-                        <ul class="module-points">
-                            <li>Adding advanced features like databases and APIs</li>
-                            <li>Implementing notifications and background tasks</li>
-                            <li>Making your app fast and responsive</li>
-                        </ul>
+                        <p>Let Claude do all the technical work while you focus on design and features</p>
                     </div>
                 </div>
-                
-                <div class="module-card">
-                    <div class="module-header">
-                        <div class="module-number">Module 7</div>
+                <div class="module">
+                    <div class="module-number">07</div>
+                    <div class="module-content">
                         <h3>Submitting to the App Store</h3>
-                    </div>
-                    <div class="module-content">
-                        <p>Get your AI-built app published quickly and professionally, making it available to users worldwide.</p>
-                        <ul class="module-points">
-                            <li>Preparing your app for submission</li>
-                            <li>Creating compelling app store listings</li>
-                            <li>Successfully navigating the review process</li>
-                        </ul>
+                        <p>Get your AI-built app published quickly and professionally</p>
                     </div>
                 </div>
             </div>
-            
-            <div class="curriculum-cta">
-                <button class="cta-button large" onclick="window.location.href='checkout.html'">Get Access to All Modules</button>
-            </div>
         </div>
     </section>
-    
-    <section class="how-it-works">
+
+    <section class="pricing" id="pricing">
         <div class="container">
-            <div class="section-header">
-                <h2>How It Works</h2>
-                <p>Our revolutionary approach makes app development accessible to everyone</p>
-            </div>
-            
-            <div class="steps-container">
-                <div class="step-card">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Define Your App Vision</h3>
-                        <p>Start with your idea and create a clear concept of what your app should do and how it should look.</p>
-                    </div>
+            <h2>Course Pricing</h2>
+            <div class="price-card">
+                <h3>Complete No-Code System</h3>
+                <div class="price">$199</div>
+                <div class="price-comparison">Traditional app development: $5,000 - $50,000+</div>
+                <ul class="benefits">
+                    <li>Full access to all 7 modules</li>
+                    <li>Step-by-step AI prompting guides</li>
+                    <li>Zero coding knowledge required</li>
+                    <li>App templates and blueprints</li>
+                    <li>Build unlimited apps for yourself or clients</li>
+                    <li>Lifetime access & updates</li>
+                </ul>
+                <div class="guarantee-highlight">
+                    <span class="guarantee-highlight-icon">🔒</span>
+                    <span>30-Day "Build Your First App" Guarantee</span>
                 </div>
-                
-                <div class="step-card">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>Guide Claude to Build It</h3>
-                        <p>Using our proven prompts, direct Claude to create the exact code needed for your app.</p>
-                    </div>
-                </div>
-                
-                <div class="step-card">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Test on Your Device</h3>
-                        <p>See your app in action on your actual phone, making adjustments in real-time.</p>
-                    </div>
-                </div>
-                
-                <div class="step-card">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3>Publish and Share</h3>
-                        <p>Launch your app to the world through the App Store and Google Play.</p>
-                    </div>
-                </div>
+                <button class="cta-button large" onclick="window.location.href='checkout.html'">Enroll Now</button>
+                <a href="checkout.html?test_mode=true" class="test-mode-link">Try course before buying</a>
             </div>
         </div>
     </section>
-    
-    <section id="pricing" class="pricing-section">
+
+    <section class="guarantee-section">
         <div class="container">
-            <div class="section-header">
-                <h2>Simple, Transparent Pricing</h2>
-                <p>No hidden fees, no monthly subscriptions</p>
-            </div>
-            
-            <div class="pricing-container">
-                <div class="pricing-card featured">
-                    <div class="pricing-header">
-                        <h3>AppFoundry Course</h3>
-                        <div class="pricing-price">
-                            <span class="currency">$</span>
-                            <span class="amount">199</span>
-                        </div>
-                        <p class="pricing-description">One-time payment, lifetime access</p>
+            <h2>Our Ironclad Guarantee</h2>
+            <div class="guarantee-content">
+                <div class="guarantee-image">
+                    <div class="guarantee-seal">
+                        <div class="seal-content">100%</div>
                     </div>
-                    
-                    <div class="pricing-features">
-                        <ul>
-                            <li>Complete Course Access (All 7 Modules)</li>
-                            <li>Build Unlimited Apps</li>
-                            <li>Step-by-Step Video Tutorials</li>
-                            <li>Prompt Library for Perfect Results</li>
-                            <li>Community Support</li>
-                            <li>30-Day Money-Back Guarantee</li>
-                            <li>Access to Future Updates</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="pricing-action">
-                        <button class="cta-button large" onclick="window.location.href='checkout.html'">Get Started</button>
-                    </div>
+                </div>
+                <div class="guarantee-text-content">
+                    <h3>The "Build Your First App" Guarantee</h3>
+                    <p>We're so confident in our system that we're taking ALL the risk. If you can't create an app within 30 days, we'll give you 100% of your money back.</p>
+                    <p>Just show us you've made a sincere effort by sharing your project files, and we'll process your refund - no questions asked.</p>
+                    <a href="refund-policy.html" class="cta-button">See Full Guarantee Details</a>
                 </div>
             </div>
         </div>
     </section>
-    
-    <section class="faq-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Frequently Asked Questions</h2>
-                <p>Everything you need to know about the course</p>
-            </div>
-            
-            <div class="faq-grid">
-                <div class="faq-item">
-                    <h3>Do I really need zero coding experience?</h3>
-                    <p>Absolutely! This course is specifically designed for non-technical creators. We handle all the coding complexity by guiding Claude to generate the right code for you.</p>
-                </div>
-                
-                <div class="faq-item">
-                    <h3>What kind of apps can I build?</h3>
-                    <p>You can build a wide range of apps including social networks, productivity tools, fitness trackers, e-commerce apps, and more. If you can imagine it, you can build it.</p>
-                </div>
-                
-                <div class="faq-item">
-                    <h3>Will my app work on both iPhone and Android?</h3>
-                    <p>Yes! The approach we teach creates cross-platform apps that work on both iOS and Android devices from a single codebase.</p>
-                </div>
-                
-                <div class="faq-item">
-                    <h3>How is this different from no-code platforms?</h3>
-                    <p>Unlike limited no-code platforms, our AI-driven approach gives you full flexibility to create custom features without being constrained by templates or drag-and-drop limitations.</p>
-                </div>
-                
-                <div class="faq-item">
-                    <h3>Do I need to pay for Claude or other AI tools?</h3>
-                    <p>You can use Claude's free tier for most projects, especially when starting out. For larger projects, a paid tier might be beneficial but is not required.</p>
-                </div>
-                
-                <div class="faq-item">
-                    <h3>How long does it take to build an app?</h3>
-                    <p>Most students build their first app within 2-4 weeks of starting the course. Your timeline may vary depending on the complexity of your app and how much time you dedicate.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    
+
     <section class="cta-section">
         <div class="container">
-            <h2>Ready to Create Apps Without Writing a Single Line of Code?</h2>
-            <p>Join hundreds of non-technical creators who are bringing their app ideas to life</p>
-            <button class="cta-button large" onclick="window.location.href='checkout.html'">Enroll in the Course</button>
-            <div class="guarantee-text-small">
-                <span class="guarantee-icon small">🔒</span>
-                30-day "Build Your First App" money-back guarantee
-            </div>
+            <h2>Ready to Build Your Dream App Without Coding?</h2>
+            <p>Join hundreds of non-technical creators who've built professional apps using our AI-powered system</p>
+            <button class="cta-button large" onclick="window.location.href='checkout.html'">Start Building Today</button>
+            <a href="checkout.html?test_mode=true" class="test-mode-link">Want to test the course first? Click here</a>
         </div>
     </section>
-    
+
     <footer>
         <div class="container">
             <div class="logo">AppFoundry</div>
@@ -406,66 +309,6 @@
         </div>
     </footer>
 
-    <script src="identity-widget.js"></script>
-    <script>
-    // Special handler for fragment navigation on index page
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('Index page fragment handler loaded');
-      
-      // Add click handlers to all navigation links in the header that have # fragments
-      const fragmentLinks = document.querySelectorAll('header nav ul li a[href*="#"]');
-      fragmentLinks.forEach(link => {
-        link.addEventListener('click', function() {
-          console.log('Fragment link clicked:', this.getAttribute('href'));
-          
-          // Short delay to ensure the Course tab is re-added after fragment navigation
-          setTimeout(function() {
-            const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
-                                    localStorage.getItem('appfoundry_auth') === 'true';
-            
-            if (isAuthenticated) {
-              // Check if Course tab exists
-              const existingCourseTab = document.querySelector('#course-nav-item');
-              if (!existingCourseTab) {
-                console.log('Re-adding Course tab after fragment navigation');
-                
-                // Get the navigation list
-                const navList = document.querySelector('header nav ul');
-                if (!navList) return;
-                
-                // Create course nav item
-                const courseNavItem = document.createElement('li');
-                courseNavItem.id = 'course-nav-item';
-                
-                const courseNavLink = document.createElement('a');
-                courseNavLink.href = 'course.html';
-                courseNavLink.textContent = 'Course';
-                courseNavLink.id = 'course-nav-link';
-                
-                // Add highlight styling
-                courseNavLink.style.backgroundColor = '#fbbf24';
-                courseNavLink.style.color = '#7c2d12';
-                courseNavLink.style.fontWeight = 'bold';
-                courseNavLink.style.borderRadius = '4px';
-                courseNavLink.style.padding = '6px 12px';
-                
-                courseNavItem.appendChild(courseNavLink);
-                
-                // Try to insert before Success Stories
-                const successStoriesItem = document.querySelector('header nav ul li a[href*="success-stories"]')?.parentNode;
-                if (successStoriesItem) {
-                  navList.insertBefore(courseNavItem, successStoriesItem);
-                } else {
-                  // If success stories item not found, add to the end
-                  navList.appendChild(courseNavItem);
-                }
-              }
-            }
-          }, 50);
-        });
-      });
-    });
-    </script>
-    <script src="access-control.js"></script>
+    <script src="scripts.js"></script>
 </body>
 </html>
