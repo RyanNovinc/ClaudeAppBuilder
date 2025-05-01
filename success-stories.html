@@ -8,10 +8,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Story Manager Script - should be loaded FIRST -->
+    
+    <!-- Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
     <script>
-    // Universal Story Manager - included on the page
-    // This script ensures stories are consistently available
+    // Universal Story Manager - ensures stories are consistently available
     (function() {
       // Run on all pages to ensure localStorage data consistency
       console.log("📊 Story Manager initializing");
@@ -49,6 +49,7 @@
       seedStoriesIfNeeded();
     })();
     </script>
+    
     <style>
         .success-stories-container {
             max-width: 1200px;
