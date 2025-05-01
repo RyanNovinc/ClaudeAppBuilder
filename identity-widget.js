@@ -1,5 +1,15 @@
 // identity-widget.js - Handles all login-related functionality with simplified approach
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('Identity widget loaded');
+  
+  // Check for test mode
+  const urlParams = new URLSearchParams(window.location.search);
+  const isTestMode = urlParams.get('test_mode') === 'true';
+  
+  if (isTestMode) {
+    console.log('Test mode detected');
+  }
+  
   // Initialize the login button if present
   const loginButton = document.getElementById('loginButton');
   
@@ -8,8 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
     loginButton.removeAttribute('onclick');
     
     // Check if the user is authenticated with our simplified system
-    const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
-    const authEmail = localStorage.getItem('sleeptech_email');
+    // For test mode, always consider authenticated
+    const isAuthenticated = isTestMode || localStorage.getItem('sleeptech_auth') === 'true';
+    const authEmail = localStorage.getItem('sleeptech_email') || 'test@example.com';
     
     if (isAuthenticated) {
       // User is logged in
@@ -22,8 +33,12 @@ document.addEventListener('DOMContentLoaded', function() {
           localStorage.removeItem('sleeptech_email');
           localStorage.removeItem('sleeptech_login_time');
           
-          // Refresh the page
-          window.location.reload();
+          // Refresh the page without test_mode parameter if present
+          if (isTestMode) {
+            window.location.href = window.location.pathname;
+          } else {
+            window.location.reload();
+          }
         }
       });
     } else {
@@ -44,46 +59,64 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Add Course navigation item for logged-in users
-  // Check if user is logged in
-  const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
+  // Add Course navigation item for logged-in users or test mode
+  // Check if user is logged in or in test mode
+  const isAuthenticated = isTestMode || localStorage.getItem('sleeptech_auth') === 'true';
   
   if (isAuthenticated) {
-    // Create course nav item
-    const courseNavItem = document.createElement('li');
-    const courseNavLink = document.createElement('a');
+    console.log('User is authenticated, adding Course tab');
     
-    // Determine correct course.html path based on current page location
-    const path = window.location.pathname;
-    const isInSubdirectory = path.split('/').length > 2;
-    courseNavLink.href = isInSubdirectory ? '../course.html' : 'course.html';
-    courseNavLink.textContent = 'Course';
-    courseNavItem.appendChild(courseNavLink);
-    
-    // Get the navigation list and insert before the Success Stories item
-    const navList = document.querySelector('header nav ul');
-    const successStoriesItem = document.querySelector('header nav ul li a[href*="success-stories"]')?.parentNode;
-    
-    if (navList && successStoriesItem) {
-      navList.insertBefore(courseNavItem, successStoriesItem);
-    } else if (navList) {
-      // If success stories item not found, add to the end
-      navList.appendChild(courseNavItem);
-    }
-    
-    // If we're on the course page or any module page, add active class
-    if (window.location.pathname.includes('course') || window.location.pathname.includes('module')) {
-      // Remove active class from other nav items
-      const allNavLinks = document.querySelectorAll('header nav ul li a');
-      allNavLinks.forEach(link => link.classList.remove('active'));
+    // First check if we've already added the Course tab (prevent duplicates on page refresh)
+    const existingCourseTab = document.querySelector('header nav ul li a[href*="course.html"]');
+    if (!existingCourseTab) {
+      // Create course nav item
+      const courseNavItem = document.createElement('li');
+      const courseNavLink = document.createElement('a');
       
-      // Add active class to course link
-      courseNavLink.classList.add('active');
+      // Determine correct course.html path based on current page location
+      const path = window.location.pathname;
+      const isInSubdirectory = path.split('/').length > 2;
+      
+      // Include test_mode parameter if in test mode
+      const testParam = isTestMode ? '?test_mode=true' : '';
+      courseNavLink.href = isInSubdirectory ? `../course.html${testParam}` : `course.html${testParam}`;
+      courseNavLink.textContent = 'Course';
+      courseNavItem.appendChild(courseNavLink);
+      
+      // Get the navigation list and insert before the Success Stories item
+      const navList = document.querySelector('header nav ul');
+      const successStoriesItem = document.querySelector('header nav ul li a[href*="success-stories"]')?.parentNode;
+      
+      if (navList && successStoriesItem) {
+        console.log('Inserting Course tab before Success Stories');
+        navList.insertBefore(courseNavItem, successStoriesItem);
+      } else if (navList) {
+        // If success stories item not found, add to the end
+        console.log('Success Stories item not found, adding Course tab to the end');
+        navList.appendChild(courseNavItem);
+      } else {
+        console.warn('Navigation list not found, cannot add Course tab');
+      }
+      
+      // If we're on the course page or any module page, add active class
+      if (window.location.pathname.includes('course') || window.location.pathname.includes('module')) {
+        // Remove active class from other nav items
+        const allNavLinks = document.querySelectorAll('header nav ul li a');
+        allNavLinks.forEach(link => link.classList.remove('active'));
+        
+        // Add active class to course link
+        courseNavLink.classList.add('active');
+      }
+      
+      console.log('Course tab added to navigation - Test mode:', isTestMode);
+    } else {
+      console.log('Course tab already exists in navigation');
     }
+  } else {
+    console.log('User is not authenticated, Course tab not added');
   }
   
   // If on the thank you page after purchase, we may need to handle login
-  const urlParams = new URLSearchParams(window.location.search);
   const sessionId = urlParams.get('session_id');
   const forceLogin = urlParams.get('login') === 'true';
   const emailParam = urlParams.get('email');
