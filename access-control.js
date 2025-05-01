@@ -1,12 +1,15 @@
 // access-control.js - Add this to your site for course content protection with simplified login
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Access control script loaded');
+    
     // Check if we're in test mode
     const urlParams = new URLSearchParams(window.location.search);
     const isTestMode = urlParams.get('test_mode') === 'true';
     
     // If in test mode, automatically grant access
     if (isTestMode) {
+        console.log('Test mode detected, granting access');
         showTestModeIndicator();
         showContent();
         return;
@@ -24,11 +27,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (isAuthenticated && isAuthValid) {
         // User is authenticated with our simplified system
+        console.log('User is authenticated, showing content');
         showContent();
         return;
     }
     
     // No valid authentication, show login prompt
+    console.log('No valid authentication, showing login prompt');
     showLoginPrompt();
     
     // Show a test mode indicator
@@ -56,7 +61,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show login prompt for non-logged-in users
     function showLoginPrompt() {
         const overlay = document.getElementById('access-overlay');
-        if (!overlay) return;
+        if (!overlay) {
+            console.warn('Access overlay element not found');
+            return;
+        }
         
         overlay.style.display = 'flex';
         overlay.innerHTML = `
@@ -93,7 +101,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const content = document.getElementById('course-content');
         
         if (overlay) overlay.style.display = 'none';
-        if (content) content.style.display = 'flex';
+        if (content) {
+            content.style.display = 'flex';
+            console.log('Course content is now visible');
+        } else {
+            console.warn('Course content element not found');
+        }
         
         // Update login button to say "My Account"
         const loginButton = document.getElementById('loginButton');
