@@ -44,91 +44,6 @@
       // Run the seed check immediately
       seedStoriesIfNeeded();
       
-      // For the admin page, we need to ensure that any status changes also update the seed
-      function hookApprovalButtons() {
-        // This needs to run after the DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-          console.log("🔍 Looking for approval/rejection buttons to hook");
-          
-          // We'll use a mutation observer to watch for changes to the DOM
-          // This way we can catch buttons that are added dynamically
-          const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-              if (mutation.type === 'childList') {
-                const addedNodes = Array.from(mutation.addedNodes);
-                addedNodes.forEach(function(node) {
-                  if (node.nodeType === 1) { // Element node
-                    // Look for approve/reject buttons in this node
-                    const buttons = node.querySelectorAll('button[onclick*="approve"], button[onclick*="reject"]');
-                    buttons.forEach(hookButton);
-                    
-                    // Also look for buttons directly added
-                    if (node.tagName === 'BUTTON') {
-                      if (node.getAttribute('onclick')?.includes('approve') || 
-                          node.getAttribute('onclick')?.includes('reject')) {
-                        hookButton(node);
-                      }
-                    }
-                  }
-                });
-              }
-            });
-          });
-          
-          // Start observing the entire document
-          observer.observe(document.body, { 
-            childList: true, 
-            subtree: true 
-          });
-          
-          // Also hook any buttons that are already on the page
-          const existingButtons = document.querySelectorAll('button[onclick*="approve"], button[onclick*="reject"]');
-          existingButtons.forEach(hookButton);
-          
-          console.log("👁️ Now watching for approval/rejection actions");
-        });
-      }
-      
-      // Hook a button to update the seed when clicked
-      function hookButton(button) {
-        // Don't hook buttons that are already hooked
-        if (button.dataset.hooked) return;
-        
-        // Mark this button as hooked so we don't hook it again
-        button.dataset.hooked = "true";
-        console.log("🔗 Hooking button:", button.textContent);
-        
-        // Get the original onclick handler
-        const originalOnclick = button.getAttribute('onclick');
-        
-        // Replace it with our own handler
-        button.setAttribute('onclick', '');
-        button.addEventListener('click', function(e) {
-          // Call the original handler
-          if (originalOnclick) {
-            eval(originalOnclick);
-          }
-          
-          // Then update the seed
-          console.log("🔄 Button clicked, updating seed after delay");
-          
-          // We need to wait a bit for the original handler to finish
-          setTimeout(function() {
-            try {
-              const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-              localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-              console.log("💾 Seed updated after approval/rejection with", submissions.length, "stories");
-              
-              // Count the approved stories
-              const approvedCount = submissions.filter(s => s.status === 'approved').length;
-              console.log("✓ There are now", approvedCount, "approved stories");
-            } catch (e) {
-              console.error("❌ Error updating seed after approval/rejection:", e);
-            }
-          }, 200);
-        });
-      }
-      
       // Hook the approval buttons on the admin page
       hookApprovalButtons();
     })();
@@ -531,6 +446,47 @@
         input:checked + .slider:before {
             transform: translateX(16px);
         }
+        
+        /* Export Button Styles */
+        .admin-actions {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .export-button {
+            background-color: #0070f3;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .export-button:hover {
+            background-color: #0055b3;
+        }
+        
+        #export-result {
+            margin-left: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .export-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        
+        .export-error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #ef4444;
+        }
     </style>
 </head>
 <body>
@@ -563,6 +519,14 @@
                     <span class="slider"></span>
                 </label>
             </div>
+        </div>
+        
+        <!-- ADD THIS NEW SECTION: Export Button -->
+        <div class="admin-actions">
+            <button class="export-button" onclick="exportApprovedStories()">
+                Export Approved Stories JSON
+            </button>
+            <span id="export-result"></span>
         </div>
         
         <div class="submissions-container">
@@ -1051,6 +1015,154 @@
                 closeImageViewer();
             }
         });
+
+        // NEW FUNCTION: Export Approved Stories to JSON
+        function exportApprovedStories() {
+            try {
+                // Get stories from localStorage
+                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                
+                if (storedSubmissions) {
+                    const allSubmissions = JSON.parse(storedSubmissions);
+                    
+                    // Filter to only get approved stories
+                    const approvedStories = allSubmissions.filter(story => story.status === 'approved');
+                    
+                    if (approvedStories.length === 0) {
+                        showExportResult('No approved stories found to export.', 'error');
+                        return;
+                    }
+                    
+                    // Create formatted JSON
+                    const jsonContent = JSON.stringify(approvedStories, null, 2);
+                    
+                    // Create a Blob with the JSON content
+                    const blob = new Blob([jsonContent], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Create a download link
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'approved-stories.json';
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Clean up
+                    URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    showExportResult(`Exported ${approvedStories.length} approved stories. Upload this JSON file to your website.`, 'success');
+                } else {
+                    showExportResult('No submissions found in localStorage.', 'error');
+                }
+            } catch (error) {
+                console.error('Error exporting approved stories:', error);
+                showExportResult(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Helper function to show export result
+        function showExportResult(message, type) {
+            const resultDiv = document.getElementById('export-result');
+            resultDiv.textContent = message;
+            resultDiv.style.display = 'inline-block';
+            
+            if (type === 'success') {
+                resultDiv.className = 'export-success';
+            } else {
+                resultDiv.className = 'export-error';
+            }
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 10000);
+        }
+        
+        // Hook approval buttons (for Story Manager)
+        function hookApprovalButtons() {
+            // This will be called by the Story Manager script
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log("🔍 Looking for approval/rejection buttons to hook");
+                
+                // We'll use a mutation observer to watch for changes to the DOM
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList') {
+                            const addedNodes = Array.from(mutation.addedNodes);
+                            addedNodes.forEach(function(node) {
+                                if (node.nodeType === 1) { // Element node
+                                    // Look for approve/reject buttons in this node
+                                    const buttons = node.querySelectorAll('button[onclick*="approve"], button[onclick*="reject"]');
+                                    buttons.forEach(hookButton);
+                                    
+                                    // Also look for buttons directly added
+                                    if (node.tagName === 'BUTTON') {
+                                        if (node.getAttribute('onclick')?.includes('approve') || 
+                                            node.getAttribute('onclick')?.includes('reject')) {
+                                            hookButton(node);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    });
+                });
+                
+                // Start observing the entire document
+                observer.observe(document.body, { 
+                    childList: true, 
+                    subtree: true 
+                });
+                
+                // Also hook any buttons that are already on the page
+                const existingButtons = document.querySelectorAll('button[onclick*="approve"], button[onclick*="reject"]');
+                existingButtons.forEach(hookButton);
+                
+                console.log("👁️ Now watching for approval/rejection actions");
+            });
+        }
+        
+        // Hook a button to update the seed when clicked
+        function hookButton(button) {
+            // Don't hook buttons that are already hooked
+            if (button.dataset.hooked) return;
+            
+            // Mark this button as hooked so we don't hook it again
+            button.dataset.hooked = "true";
+            console.log("🔗 Hooking button:", button.textContent);
+            
+            // Get the original onclick handler
+            const originalOnclick = button.getAttribute('onclick');
+            
+            // Replace it with our own handler
+            button.setAttribute('onclick', '');
+            button.addEventListener('click', function(e) {
+                // Call the original handler
+                if (originalOnclick) {
+                    eval(originalOnclick);
+                }
+                
+                // Then update the seed
+                console.log("🔄 Button clicked, updating seed after delay");
+                
+                // We need to wait a bit for the original handler to finish
+                setTimeout(function() {
+                    try {
+                        const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                        console.log("💾 Seed updated after approval/rejection with", submissions.length, "stories");
+                        
+                        // Count the approved stories
+                        const approvedCount = submissions.filter(s => s.status === 'approved').length;
+                        console.log("✓ There are now", approvedCount, "approved stories");
+                    } catch (e) {
+                        console.error("❌ Error updating seed after approval/rejection:", e);
+                    }
+                }, 200);
+            });
+        }
     </script>
 </body>
 </html>
