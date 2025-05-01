@@ -1,5 +1,5 @@
 // functions/get-all-submissions.js
-const { NetlifyBlobStore } = require('@netlify/blobs');
+const { NetlifyBlob } = require('@netlify/blobs');
 
 exports.handler = async function(event, context) {
   // Set CORS headers
@@ -46,9 +46,7 @@ exports.handler = async function(event, context) {
 
   try {
     // Initialize Netlify Blob Storage
-    const store = new NetlifyBlobStore({
-      namespace: 'success-stories'
-    });
+    const store = new NetlifyBlob({ name: 'success-stories' });
     
     // Try to get the submission index first
     try {
