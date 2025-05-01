@@ -8,42 +8,45 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- EARLY LOADING SCRIPT - Loads stories before DOM is ready -->
+    <!-- Story Manager Script - should be loaded FIRST -->
     <script>
-    // Immediate execution script to load stories BEFORE the DOM is ready
+    // Universal Story Manager - included on the page
+    // This script ensures stories are consistently available
     (function() {
-        console.log("🚀 Early story loader - running immediately");
-        
-        // Load stories directly and store in global variable
-        window.approvedStoriesList = [];
-        
-        function loadApprovedStoriesEarly() {
+      // Run on all pages to ensure localStorage data consistency
+      console.log("📊 Story Manager initializing");
+      
+      // Check if we need to seed the localStorage from our backup
+      function seedStoriesIfNeeded() {
+        // Only run if appfoundry_submissions doesn't exist or is empty
+        if (!localStorage.getItem('appfoundry_submissions')) {
+          console.log("🌱 No stories found in localStorage, checking for seed data");
+          
+          // Check if we have any stories in our seed
+          if (localStorage.getItem('appfoundry_approved_seed')) {
+            console.log("🔄 Restoring stories from seed");
             try {
-                // Direct localStorage access
-                var rawData = localStorage.getItem('appfoundry_submissions');
-                if (!rawData) {
-                    console.log("⚠️ No submissions found in localStorage");
-                    return [];
-                }
-                
-                var allSubmissions = JSON.parse(rawData);
-                console.log("📋 Found", allSubmissions.length, "total submissions");
-                
-                // Filter to only approved stories
-                var approved = allSubmissions.filter(function(story) { 
-                    return story.status === 'approved';
-                });
-                
-                console.log("✅ Found", approved.length, "approved stories");
-                return approved;
+              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+              console.log("✅ Successfully restored", seed.length, "stories from seed");
             } catch (e) {
-                console.error("❌ Error in early loader:", e);
-                return [];
+              console.error("❌ Error restoring from seed:", e);
             }
+          }
+        } else {
+          // If we have submissions, make sure we have an up-to-date seed
+          try {
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log("💾 Seed updated with", submissions.length, "stories");
+          } catch (e) {
+            console.error("❌ Error updating seed:", e);
+          }
         }
-        
-        // Execute immediately
-        window.approvedStoriesList = loadApprovedStoriesEarly();
+      }
+      
+      // Run the seed check immediately
+      seedStoriesIfNeeded();
     })();
     </script>
     <style>
@@ -433,38 +436,23 @@
     </footer>
 
     <script>
-        // Main script - displays the stories already loaded in window.approvedStoriesList
+        // Global variables
+        let allStories = [];
+        
+        // Load approved stories once the page is loaded
         document.addEventListener('DOMContentLoaded', function() {
             console.log("📄 DOM loaded, initializing stories display");
-            
-            // Try the preloaded stories first
-            if (window.approvedStoriesList && window.approvedStoriesList.length > 0) {
-                console.log("🎯 Using preloaded stories:", window.approvedStoriesList.length);
-                displayStories(window.approvedStoriesList);
-            } else {
-                // If no preloaded stories, try to load them again
-                console.log("🔄 No preloaded stories, trying to load them now");
-                loadApprovedStories();
-            }
-            
-            // Add a final delayed check as backup
-            setTimeout(function() {
-                const grid = document.getElementById('success-stories-grid');
-                // If grid is still hidden, try one last time
-                if (grid.style.display === 'none') {
-                    console.log("⏱️ Final attempt to load stories");
-                    loadApprovedStories();
-                }
-            }, 800);
+            loadApprovedStories();
         });
         
-        // Function to load approved stories (backup method)
+        // Function to load approved stories from all possible sources
         function loadApprovedStories() {
-            console.log("🔍 Loading approved stories (main method)");
+            console.log("🔍 Loading approved stories from all sources");
             let approvedStories = [];
             
             try {
-                // Direct localStorage access
+                // First try using the main localStorage
+                console.log("📁 Checking main localStorage");
                 const storedSubmissions = localStorage.getItem('appfoundry_submissions');
                 
                 if (storedSubmissions) {
@@ -479,15 +467,42 @@
                         console.error("⚠️ Error parsing localStorage data:", parseError);
                     }
                 } else {
-                    console.log("📭 No submissions found in localStorage");
+                    console.log("📭 No submissions found in main localStorage");
                 }
                 
-                // Store locally and globally
-                window.approvedStoriesList = approvedStories;
+                // If no approved stories, try the backup seed
+                if (approvedStories.length === 0) {
+                    console.log("🔍 Checking backup seed");
+                    const seedData = localStorage.getItem('appfoundry_approved_seed');
+                    
+                    if (seedData) {
+                        try {
+                            const allSeedSubmissions = JSON.parse(seedData);
+                            console.log("📊 All submissions from seed:", allSeedSubmissions.length);
+                            
+                            // Filter to only show approved stories
+                            approvedStories = allSeedSubmissions.filter(story => story.status === 'approved');
+                            console.log("✓ Approved stories from seed:", approvedStories.length);
+                            
+                            // Restore to main localStorage if we found stories in the seed
+                            if (approvedStories.length > 0) {
+                                localStorage.setItem('appfoundry_submissions', seedData);
+                                console.log("💾 Restored seed data to main localStorage");
+                            }
+                        } catch (seedError) {
+                            console.error("⚠️ Error parsing seed data:", seedError);
+                        }
+                    } else {
+                        console.log("📭 No seed data found");
+                    }
+                }
+                
+                // Store for later use
+                allStories = approvedStories;
                 
                 // Display stories or empty state
                 if (approvedStories.length > 0) {
-                    console.log("🖼️ Displaying approved stories:", approvedStories.length);
+                    console.log("🖼️ Displaying", approvedStories.length, "approved stories");
                     displayStories(approvedStories);
                 } else {
                     console.log("📭 No approved stories found, showing empty state");
@@ -559,9 +574,6 @@
         // Function to open the full story modal
         function openStoryModal(storyId) {
             console.log("🔍 Opening modal for story:", storyId);
-            
-            // Get all stories from global variable
-            const allStories = window.approvedStoriesList || [];
             
             // Find the story by ID
             const story = allStories.find(s => s.id === storyId);
