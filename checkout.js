@@ -133,6 +133,11 @@ document.addEventListener('DOMContentLoaded', function() {
               localStorage.setItem('sleeptech_password_' + customerData.email, result.tempPassword);
             }
             
+            // Set the auth flag - NOW is when the user should be considered "logged in" in test mode
+            localStorage.setItem('appfoundry_auth', 'true');
+            localStorage.setItem('sleeptech_email', customerData.email);
+            localStorage.setItem('sleeptech_login_time', new Date().getTime());
+            
             // Redirect to thank you page with password (if available)
             window.location.href = '/thank-you.html?session_id=' + testSessionId + 
                                   '&test_mode=true&email=' + 
@@ -141,6 +146,12 @@ document.addEventListener('DOMContentLoaded', function() {
           } else {
             // If server call fails, still redirect to thank you page but with an error flag
             console.error('Error in test mode account creation');
+            
+            // Even in case of error, we'll set auth in test mode to allow access
+            localStorage.setItem('appfoundry_auth', 'true');
+            localStorage.setItem('sleeptech_email', customerData.email);
+            localStorage.setItem('sleeptech_login_time', new Date().getTime());
+            
             window.location.href = '/thank-you.html?session_id=' + testSessionId + 
                                   '&test_mode=true&email=' + 
                                   encodeURIComponent(customerData.email) + 
@@ -150,6 +161,11 @@ document.addEventListener('DOMContentLoaded', function() {
           console.error('Error in test mode:', error);
           
           // Still redirect to thank you page even if there's an error
+          // And set auth to provide access in test mode
+          localStorage.setItem('appfoundry_auth', 'true');
+          localStorage.setItem('sleeptech_email', customerData.email);
+          localStorage.setItem('sleeptech_login_time', new Date().getTime());
+          
           window.location.href = '/thank-you.html?session_id=' + testSessionId + 
                                 '&test_mode=true&email=' + 
                                 encodeURIComponent(customerData.email) + 
@@ -210,6 +226,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (result.tempPassword) {
           localStorage.setItem('sleeptech_password_' + customerData.email, result.tempPassword);
         }
+        
+        // When payment succeeds, set authentication in localStorage for real users too
+        localStorage.setItem('sleeptech_auth', 'true');
+        localStorage.setItem('sleeptech_email', customerData.email);
+        localStorage.setItem('sleeptech_login_time', new Date().getTime());
         
         // Payment succeeded - redirect to success page
         window.location.href = '/thank-you.html?session_id=' + result.paymentIntentId + 
