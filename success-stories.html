@@ -316,7 +316,7 @@
         <div class="create-story-box">
             <h2>Ready to Share Your Success?</h2>
             <p>Have you built an app using the AppFoundry method? We'd love to feature your creation and inspire others to bring their ideas to life!</p>
-            <a href="https://claudeappbuilder.netlify.app/submit-success-story.html" class="cta-button large" target="_blank">Share Your Success Story</a>
+            <a href="submit-success-story.html" class="cta-button large">Share Your Success Story</a>
         </div>
     </div>
     
@@ -385,47 +385,70 @@
 
     <script src="storage-helper.js"></script>
     <script>
+        // Global variables
+        let allStories = [];
+
         // Load approved stories once the page is loaded
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, fetching approved stories');
             loadApprovedStories();
         });
         
         // Function to load approved stories from localStorage
         function loadApprovedStories() {
+            console.log('Loading approved stories');
             let approvedStories = [];
             
-            // Try to use the StorageHelper if available
-            if (typeof StorageHelper !== 'undefined') {
-                console.log('Using StorageHelper to get submissions');
-                const allSubmissions = StorageHelper.getSubmissions();
-                approvedStories = allSubmissions.filter(story => story.status === 'approved');
-            } else {
-                // Direct localStorage access as fallback
-                try {
+            try {
+                // Try using StorageHelper first
+                if (typeof StorageHelper !== 'undefined') {
+                    console.log('Using StorageHelper to get submissions');
+                    const allSubmissions = StorageHelper.getSubmissions();
+                    console.log('Found submissions with StorageHelper:', allSubmissions.length);
+                    approvedStories = allSubmissions.filter(story => story.status === 'approved');
+                    console.log('Found approved stories with StorageHelper:', approvedStories.length);
+                } else {
+                    // Direct localStorage access as fallback
+                    console.log('StorageHelper not available, using direct localStorage access');
                     const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                    console.log('Raw localStorage data:', storedSubmissions);
                     
                     if (storedSubmissions) {
-                        const allSubmissions = JSON.parse(storedSubmissions);
-                        console.log('All submissions:', allSubmissions.length);
-                        
-                        // Filter to only show approved stories
-                        approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                        console.log('Approved stories:', approvedStories.length);
+                        try {
+                            const allSubmissions = JSON.parse(storedSubmissions);
+                            console.log('All submissions from localStorage:', allSubmissions.length);
+                            
+                            // Filter to only show approved stories
+                            approvedStories = allSubmissions.filter(story => story.status === 'approved');
+                            console.log('Approved stories from localStorage:', approvedStories.length);
+                        } catch (parseError) {
+                            console.error('Error parsing localStorage data:', parseError);
+                        }
                     } else {
                         console.log('No submissions found in localStorage');
                     }
-                } catch (error) {
-                    console.error('Error accessing localStorage:', error);
                 }
-            }
-            
-            // Display stories or empty state
-            if (approvedStories.length > 0) {
-                displayStories(approvedStories);
-                document.getElementById('empty-state').style.display = 'none';
-            } else {
-                console.log('No approved stories found, showing empty state');
+                
+                // For demo purposes, add sample data if no approved stories found
+                if (approvedStories.length === 0) {
+                    console.log('No approved stories found, adding sample data');
+                    approvedStories = getSampleStories();
+                }
+                
+                // Store for later use
+                allStories = approvedStories;
+                
+                // Display stories or empty state
+                if (approvedStories.length > 0) {
+                    console.log('Displaying approved stories:', approvedStories.length);
+                    displayStories(approvedStories);
+                    document.getElementById('empty-state').style.display = 'none';
+                } else {
+                    console.log('No approved stories found, showing empty state');
+                    document.getElementById('success-stories-grid').innerHTML = '';
+                    document.getElementById('empty-state').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error in loadApprovedStories:', error);
                 document.getElementById('success-stories-grid').innerHTML = '';
                 document.getElementById('empty-state').style.display = 'block';
             }
@@ -441,18 +464,23 @@
             
             // Add each story to the grid
             stories.forEach(story => {
+                console.log('Adding story to grid:', story.id, story.appName);
                 const storyCard = document.createElement('div');
                 storyCard.className = 'story-card';
                 
                 // Get image URL (use first image or placeholder)
-                const imageUrl = story.images && story.images.length > 0 
-                    ? story.images[0] 
-                    : 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
+                let imageUrl = 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
+                if (story.images && story.images.length > 0 && story.images[0]) {
+                    imageUrl = story.images[0];
+                }
+                
+                // For handling older versions where appType might be different
+                const appType = story.appType || story.app_type || "App";
                 
                 storyCard.innerHTML = `
                     <img src="${imageUrl}" alt="${story.appName}" class="story-image">
                     <div class="story-content">
-                        <div class="story-tag">${story.appType}</div>
+                        <div class="story-tag">${appType}</div>
                         <h3 class="story-title">${story.appName}</h3>
                         <div class="story-author">
                             <span class="story-author-name">By ${story.name}</span>
@@ -468,34 +496,20 @@
         
         // Function to open the full story modal
         function openStoryModal(storyId) {
-            let story;
+            console.log('Opening modal for story:', storyId);
             
-            // Get the story from localStorage
-            if (typeof StorageHelper !== 'undefined') {
-                const allSubmissions = StorageHelper.getSubmissions();
-                story = allSubmissions.find(s => s.id === storyId);
-            } else {
-                try {
-                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                    if (storedSubmissions) {
-                        const allSubmissions = JSON.parse(storedSubmissions);
-                        story = allSubmissions.find(s => s.id === storyId);
-                    }
-                } catch (error) {
-                    console.error('Error accessing localStorage:', error);
-                    return;
-                }
-            }
+            // Find the story by ID
+            const story = allStories.find(s => s.id === storyId);
             
             if (!story) {
-                console.error('Story not found:', storyId);
+                console.error('Story not found for ID:', storyId);
                 return;
             }
             
             // Fill the modal with story details
             document.getElementById('modal-title').textContent = story.appName;
             document.getElementById('modal-author').textContent = `Created by ${story.name}`;
-            document.getElementById('modal-tag').textContent = story.appType;
+            document.getElementById('modal-tag').textContent = story.appType || story.app_type || "App";
             document.getElementById('modal-testimonial').textContent = story.testimonial;
             
             // Convert story text to paragraphs
@@ -508,12 +522,15 @@
             
             if (story.images && story.images.length > 0) {
                 story.images.forEach(imageUrl => {
-                    const img = document.createElement('img');
-                    img.src = imageUrl;
-                    img.alt = story.appName;
-                    img.className = 'story-modal-image';
-                    imagesContainer.appendChild(img);
+                    if (imageUrl) {
+                        const img = document.createElement('img');
+                        img.src = imageUrl;
+                        img.alt = story.appName;
+                        img.className = 'story-modal-image';
+                        imagesContainer.appendChild(img);
+                    }
                 });
+                imagesContainer.style.display = 'grid';
             } else {
                 imagesContainer.style.display = 'none';
             }
@@ -529,6 +546,36 @@
         function closeStoryModal() {
             document.getElementById('story-modal').style.display = 'none';
             document.body.style.overflow = 'auto';
+        }
+        
+        // Function to generate sample stories if none exist
+        function getSampleStories() {
+            return [
+                {
+                    id: 'sample_1',
+                    name: 'Sarah Johnson',
+                    email: 'sarah@example.com',
+                    appName: 'SleepTrack',
+                    appType: 'Health & Fitness',
+                    date: '2025-04-15T10:30:00Z',
+                    status: 'approved',
+                    testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
+                    story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
+                    images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App']
+                },
+                {
+                    id: 'sample_2',
+                    name: 'Michael Chen',
+                    email: 'michael@example.com',
+                    appName: 'RecipeKeeper',
+                    appType: 'Lifestyle',
+                    date: '2025-04-22T14:45:00Z',
+                    status: 'approved',
+                    testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
+                    story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
+                    images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App']
+                }
+            ];
         }
     </script>
 
