@@ -469,11 +469,9 @@
                         }
                     }
                     
-                    // Create submission object
+                    // Create submission object for localStorage
                     const newSubmission = {
                         id: 'story_' + Date.now(),
-                        date: new Date().toISOString(),
-                        status: 'pending',
                         name,
                         email,
                         appName,
@@ -481,15 +479,33 @@
                         experienceLevel,
                         testimonial,
                         story,
-                        images
+                        images,
+                        date: new Date().toISOString(),
+                        status: 'pending'
                     };
                     
-                    console.log('New submission created:', newSubmission);
+                    // Always save to localStorage first
+                    try {
+                        // Get existing submissions from localStorage
+                        let existingSubmissions = [];
+                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                        
+                        if (storedSubmissions) {
+                            existingSubmissions = JSON.parse(storedSubmissions);
+                            console.log('Found existing submissions:', existingSubmissions.length);
+                        }
+                        
+                        // Add new submission to the beginning
+                        existingSubmissions.unshift(newSubmission);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
+                        console.log('Successfully saved submission to localStorage with ID:', newSubmission.id);
+                    } catch (storageError) {
+                        console.error('Error saving to localStorage:', storageError);
+                    }
                     
-                    // Try to submit to API first
-                    let apiSubmissionSuccessful = false;
-                    let apiResponseData = null;
-                    
+                    // Then try to submit to API
                     try {
                         const response = await fetch('/.netlify/functions/submit-success-story', {
                             method: 'POST',
@@ -509,60 +525,32 @@
                         });
                         
                         if (response.ok) {
-                            apiResponseData = await response.json();
-                            console.log('API submission successful:', apiResponseData);
-                            apiSubmissionSuccessful = true;
+                            const result = await response.json();
+                            console.log('API submission successful:', result);
                             
-                            // If API provides a submission ID, use that instead
-                            if (apiResponseData.submissionId) {
-                                newSubmission.id = apiResponseData.submissionId;
-                            }
-                            
-                            // If API returns a complete submission object, use that
-                            if (apiResponseData.submission) {
-                                Object.assign(newSubmission, apiResponseData.submission);
+                            // If API returns an ID, update our localStorage submission ID
+                            if (result.submissionId) {
+                                try {
+                                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                                    
+                                    // Find the submission we just added and update its ID
+                                    const submissionIndex = submissions.findIndex(s => s.id === newSubmission.id);
+                                    if (submissionIndex !== -1) {
+                                        submissions[submissionIndex].id = result.submissionId;
+                                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                                        console.log('Updated submission ID in localStorage:', result.submissionId);
+                                    }
+                                } catch (updateError) {
+                                    console.error('Error updating submission ID:', updateError);
+                                }
                             }
                         } else {
                             console.error('API submission failed:', await response.text());
+                            // We already saved to localStorage so we don't need additional fallback
                         }
                     } catch (apiError) {
                         console.error('API submission error:', apiError);
-                    }
-                    
-                    // Always save to localStorage as a backup, even if API submission was successful
-                    try {
-                        // Get existing submissions from localStorage
-                        let existingSubmissions = [];
-                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                        
-                        if (storedSubmissions) {
-                            existingSubmissions = JSON.parse(storedSubmissions);
-                            console.log('Found existing submissions:', existingSubmissions.length);
-                        }
-                        
-                        // Check if this submission already exists (by ID)
-                        const existingIndex = existingSubmissions.findIndex(sub => sub.id === newSubmission.id);
-                        
-                        if (existingIndex >= 0) {
-                            // Update existing submission
-                            existingSubmissions[existingIndex] = newSubmission;
-                            console.log('Updated existing submission in localStorage');
-                        } else {
-                            // Add new submission to the beginning of the array
-                            existingSubmissions.unshift(newSubmission);
-                            console.log('Added new submission to localStorage');
-                        }
-                        
-                        // Save updated submissions back to localStorage
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
-                        console.log('Successfully saved submissions to localStorage');
-                    } catch (storageError) {
-                        console.error('Error saving to localStorage:', storageError);
-                        
-                        // If we couldn't save to localStorage AND API submission failed, show error
-                        if (!apiSubmissionSuccessful) {
-                            throw new Error('Failed to save submission both locally and to server');
-                        }
+                        // We already saved to localStorage so we don't need additional fallback
                     }
                     
                     // Display success message
