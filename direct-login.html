@@ -159,6 +159,7 @@
         </div>
     </footer>
 
+    <script src="identity-widget.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const loginButton = document.getElementById('login-button');
@@ -183,7 +184,8 @@
             }
             
             // Update header login button
-            const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
+            const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
+                                localStorage.getItem('appfoundry_auth') === 'true';
             const authEmail = localStorage.getItem('sleeptech_email');
             
             if (isAuthenticated && headerLoginButton) {
@@ -193,6 +195,7 @@
                         localStorage.removeItem('sleeptech_auth');
                         localStorage.removeItem('sleeptech_email');
                         localStorage.removeItem('sleeptech_login_time');
+                        localStorage.removeItem('appfoundry_auth');
                         window.location.reload();
                     }
                 };
@@ -233,8 +236,12 @@
                 }
                 
                 if (isValid) {
-                    // Set authentication in localStorage
-                    localStorage.setItem('sleeptech_auth', 'true');
+                    // Set authentication in localStorage - THIS is when the Course tab should appear
+                    if (isTestMode) {
+                        localStorage.setItem('appfoundry_auth', 'true');
+                    } else {
+                        localStorage.setItem('sleeptech_auth', 'true');
+                    }
                     localStorage.setItem('sleeptech_email', email);
                     localStorage.setItem('sleeptech_login_time', new Date().getTime());
                     
@@ -243,7 +250,9 @@
                     
                     // Redirect to course content after a brief delay
                     setTimeout(function() {
-                        window.location.href = 'modules/module1.html';
+                        // Include test_mode parameter if in test mode
+                        const testParam = isTestMode ? '?test_mode=true' : '';
+                        window.location.href = 'modules/module1.html' + testParam;
                     }, 1500);
                 } else {
                     showError('Invalid credentials. Please check your email and password.');
