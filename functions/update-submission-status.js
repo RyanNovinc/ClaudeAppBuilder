@@ -1,132 +1,234 @@
-// Load submissions from both API and localStorage
-async function loadSubmissions() {
-    const adminToken = localStorage.getItem('appfoundry_admin_token');
+// functions/update-submission-status.js
+const { NetlifyBlob } = require('@netlify/blobs');
+
+exports.handler = async function(event, context) {
+  // Set CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
+  };
+
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
+  // Only allow POST requests
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
+  }
+
+  // Basic authentication check
+  const adminToken = process.env.ADMIN_API_KEY || 'admin_token_secure';
+  
+  // Check Authorization header
+  if (!event.headers.authorization) {
+    return {
+      statusCode: 401,
+      headers,
+      body: JSON.stringify({ error: 'Missing authorization header' })
+    };
+  }
+  
+  // Simple token validation - in production use proper auth
+  if (event.headers.authorization !== `Bearer ${adminToken}`) {
+    // For testing, allow admin_token_ pattern to work
+    if (!event.headers.authorization.startsWith('Bearer admin_token_')) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'Invalid authorization token' })
+      };
+    }
+  }
+
+  try {
+    // Parse the request body
+    const data = JSON.parse(event.body);
     
-    if (!adminToken) {
-        checkAdminLogin();
-        return;
+    // Validate required fields
+    if (!data.id) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Missing required field: id' })
+      };
     }
     
-    // Get elements
-    const loadingIndicator = document.getElementById('loading-indicator');
-    const storiesTable = document.getElementById('stories-table');
-    const emptyState = document.getElementById('empty-state');
+    // Initialize Netlify Blob Storage
+    const store = new NetlifyBlob({ name: 'success-stories' });
     
-    // Show loading, hide others
-    loadingIndicator.style.display = 'flex';
-    storiesTable.style.display = 'none';
-    emptyState.style.display = 'none';
-    
-    try {
-        // Initialize all submissions array
-        let apiSubmissions = [];
-        let localSubmissions = [];
+    // Check if it's a simple status update or a full submission update
+    if (data.id && data.status && Object.keys(data).length === 2) {
+      // Simple status update
+      const { id, status } = data;
+      
+      // Validate status
+      if (!['pending', 'approved', 'rejected'].includes(status)) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Invalid status value' })
+        };
+      }
+      
+      // Get the current submission
+      try {
+        const submissionData = await store.get(`submission-${id}`);
         
-        // Try to fetch from the improved API endpoint
+        if (!submissionData) {
+          return {
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({ error: 'Submission not found' })
+          };
+        }
+        
+        // Parse and update the submission
+        const submission = JSON.parse(submissionData);
+        submission.status = status;
+        
+        // Save the updated submission
+        await store.set(`submission-${id}`, JSON.stringify(submission));
+        
+        // Also update the index
         try {
-            console.log('Fetching submissions from API...');
-            const response = await fetch('/.netlify/functions/get-all-submissions', {
-                headers: {
-                    'Authorization': `Bearer ${adminToken}`
-                }
-            });
+          const indexData = await store.get('submission-index');
+          
+          if (indexData) {
+            const index = JSON.parse(indexData);
+            const submissionIndex = index.findIndex(s => s.id === id);
             
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Received submissions from API:', data.length);
-                apiSubmissions = data;
-            } else {
-                console.warn('API returned non-OK response:', response.status);
+            if (submissionIndex !== -1) {
+              index[submissionIndex].status = status;
+              await store.set('submission-index', JSON.stringify(index));
+            }
+          }
+        } catch (indexError) {
+          console.error('Error updating index:', indexError);
+          // Continue even if index update fails
+        }
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            message: `Status updated to ${status}`,
+            submission: submission
+          })
+        };
+      } catch (submissionError) {
+        console.error('Error updating submission status:', submissionError);
+        
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({ error: 'Failed to update submission status' })
+        };
+      }
+    } else if (data.id) {
+      // Full submission update
+      try {
+        // First check if the submission exists
+        const submissionData = await store.get(`submission-${data.id}`);
+        
+        if (!submissionData) {
+          return {
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({ error: 'Submission not found' })
+          };
+        }
+        
+        // Parse the existing submission
+        const existingSubmission = JSON.parse(submissionData);
+        
+        // Create updated submission by merging
+        const updatedSubmission = {
+          ...existingSubmission,
+          ...data,
+          // Ensure these fields are not overwritten with undefined values
+          id: data.id || existingSubmission.id,
+          date: data.date || existingSubmission.date,
+          images: data.images || existingSubmission.images || []
+        };
+        
+        // Save the updated submission
+        await store.set(`submission-${data.id}`, JSON.stringify(updatedSubmission));
+        
+        // Update the index if status or name changed
+        if (data.status !== existingSubmission.status || 
+            data.name !== existingSubmission.name || 
+            data.appName !== existingSubmission.appName) {
+          
+          try {
+            const indexData = await store.get('submission-index');
+            
+            if (indexData) {
+              const index = JSON.parse(indexData);
+              const submissionIndex = index.findIndex(s => s.id === data.id);
+              
+              if (submissionIndex !== -1) {
+                index[submissionIndex] = {
+                  id: updatedSubmission.id,
+                  name: updatedSubmission.name,
+                  appName: updatedSubmission.appName,
+                  date: updatedSubmission.date,
+                  status: updatedSubmission.status
+                };
                 
-                // Try fallback API endpoint
-                const fallbackResponse = await fetch('/.netlify/functions/get-submissions', {
-                    headers: {
-                        'Authorization': `Bearer ${adminToken}`
-                    }
-                });
-                
-                if (fallbackResponse.ok) {
-                    const fallbackData = await fallbackResponse.json();
-                    console.log('Received submissions from fallback API:', fallbackData.length);
-                    apiSubmissions = fallbackData;
-                } else {
-                    console.warn('Fallback API also failed:', fallbackResponse.status);
-                }
+                await store.set('submission-index', JSON.stringify(index));
+              }
             }
-        } catch (apiError) {
-            console.warn('Error fetching from API:', apiError);
-            // Continue to try localStorage
+          } catch (indexError) {
+            console.error('Error updating index for full submission update:', indexError);
+            // Continue even if index update fails
+          }
         }
         
-        // Get submissions from localStorage as a backup
-        try {
-            const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-            if (storedSubmissions) {
-                localSubmissions = JSON.parse(storedSubmissions);
-                console.log('Found submissions in localStorage:', localSubmissions.length);
-            }
-        } catch (localError) {
-            console.warn('Error reading from localStorage:', localError);
-        }
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            message: 'Submission updated successfully',
+            submission: updatedSubmission
+          })
+        };
+      } catch (updateError) {
+        console.error('Error updating submission:', updateError);
         
-        // Combine submissions, prioritizing API results but including unique local submissions
-        const combinedSubmissions = [...apiSubmissions];
-        
-        // Add local submissions that don't exist in the API data
-        localSubmissions.forEach(localSub => {
-            const exists = combinedSubmissions.some(apiSub => apiSub.id === localSub.id);
-            if (!exists) {
-                combinedSubmissions.push(localSub);
-            }
-        });
-        
-        console.log('Combined submissions total:', combinedSubmissions.length);
-        
-        // If we still have no submissions, use sample data
-        if (combinedSubmissions.length === 0) {
-            console.log('No submissions found, using sample data');
-            allSubmissions = getSampleData();
-        } else {
-            allSubmissions = combinedSubmissions;
-        }
-        
-        // Sort by date (newest first)
-        allSubmissions.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        // Check if we have submissions
-        if (allSubmissions.length === 0) {
-            // Show empty state
-            loadingIndicator.style.display = 'none';
-            emptyState.style.display = 'block';
-            return;
-        }
-        
-        // Display submissions
-        loadingIndicator.style.display = 'none';
-        storiesTable.style.display = 'table';
-        
-        // Reset pagination
-        currentPage = 1;
-        
-        // Display submissions
-        displaySubmissions();
-    } catch (error) {
-        console.error('Error loading submissions:', error);
-        
-        // Show error
-        loadingIndicator.style.display = 'none';
-        
-        // Create error message
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'admin-empty-state';
-        errorDiv.innerHTML = `
-            <div class="admin-empty-state-icon">❌</div>
-            <div class="admin-empty-state-title">Error Loading Submissions</div>
-            <p>We encountered an issue loading the submissions. Please try again.</p>
-            <button class="admin-button" onclick="loadSubmissions()">Retry</button>
-        `;
-        
-        // Add to container
-        document.getElementById('table-container').appendChild(errorDiv);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({ error: 'Failed to update submission' })
+        };
+      }
+    } else {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Invalid request format' })
+      };
     }
-}
+  } catch (error) {
+    console.error('Error processing request:', error);
+    
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'An error occurred while processing your request' })
+    };
+  }
+};
