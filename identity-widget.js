@@ -1,6 +1,6 @@
 // identity-widget.js - Handles all login-related functionality with simplified approach
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Identity widget loaded');
+  console.log('Identity widget loaded - Page:', window.location.pathname);
   
   // Check for test mode
   const urlParams = new URLSearchParams(window.location.search);
@@ -65,68 +65,86 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Add Course navigation item for logged-in users
-  if (isAuthenticated) {
-    console.log('User is authenticated, adding Course tab');
-    
-    // First check if we've already added the Course tab (prevent duplicates on page refresh)
-    const existingCourseTab = document.querySelector('header nav ul li a[href*="course.html"]');
-    if (!existingCourseTab) {
-      // Create course nav item
-      const courseNavItem = document.createElement('li');
-      courseNavItem.className = 'highlight-nav-item'; // Add a class for styling
-      
-      const courseNavLink = document.createElement('a');
-      
-      // Determine correct course.html path based on current page location
-      const path = window.location.pathname;
-      const isInSubdirectory = path.split('/').length > 2;
-      
-      // Include test_mode parameter if this was originally in test mode
-      const testParam = isTestMode ? '?test_mode=true' : '';
-      courseNavLink.href = isInSubdirectory ? `../course.html${testParam}` : `course.html${testParam}`;
-      courseNavLink.textContent = 'Course';
-      
-      // Add highlight styling to make it stand out
-      courseNavLink.style.backgroundColor = '#fbbf24'; // Yellow background
-      courseNavLink.style.color = '#7c2d12'; // Dark brown text
-      courseNavLink.style.fontWeight = 'bold';
-      courseNavLink.style.borderRadius = '4px';
-      courseNavLink.style.padding = '6px 12px';
-      
-      courseNavItem.appendChild(courseNavLink);
-      
-      // Get the navigation list and insert before the Success Stories item
-      const navList = document.querySelector('header nav ul');
-      const successStoriesItem = document.querySelector('header nav ul li a[href*="success-stories"]')?.parentNode;
-      
-      if (navList && successStoriesItem) {
-        console.log('Inserting Course tab before Success Stories');
-        navList.insertBefore(courseNavItem, successStoriesItem);
-      } else if (navList) {
-        // If success stories item not found, add to the end
-        console.log('Success Stories item not found, adding Course tab to the end');
-        navList.appendChild(courseNavItem);
-      } else {
-        console.warn('Navigation list not found, cannot add Course tab');
-      }
-      
-      // If we're on the course page or any module page, add active class
-      if (window.location.pathname.includes('course') || window.location.pathname.includes('module')) {
-        // Remove active class from other nav items
-        const allNavLinks = document.querySelectorAll('header nav ul li a');
-        allNavLinks.forEach(link => link.classList.remove('active'));
-        
-        // Change style when active
-        courseNavLink.style.backgroundColor = '#d97706'; // Darker yellow/orange
-      }
-      
-      console.log('Course tab added to navigation with permanent auth');
-    } else {
-      console.log('Course tab already exists in navigation');
+  // Force immediate addition of Course tab for logged-in users
+  addCourseTab();
+  
+  // Also add a fragment navigation listener to ensure Course tab appears after hash changes
+  window.addEventListener('hashchange', function() {
+    console.log('Hash changed - checking for Course tab');
+    setTimeout(addCourseTab, 100); // Small delay to ensure DOM is updated
+  });
+  
+  // Function to add Course tab
+  function addCourseTab() {
+    if (!isAuthenticated) {
+      console.log('User is not authenticated, Course tab not added');
+      return;
     }
-  } else {
-    console.log('User is not authenticated, Course tab not added');
+    
+    console.log('Adding/checking Course tab...');
+    
+    // First check if we've already added the Course tab (prevent duplicates)
+    const existingCourseTab = document.querySelector('header nav ul li a[href*="course.html"]');
+    if (existingCourseTab) {
+      console.log('Course tab already exists in navigation');
+      return;
+    }
+    
+    // Create course nav item
+    const courseNavItem = document.createElement('li');
+    courseNavItem.className = 'highlight-nav-item'; // Add a class for styling
+    courseNavItem.id = 'course-nav-item'; // Add ID for easier reference
+    
+    const courseNavLink = document.createElement('a');
+    
+    // Determine correct course.html path based on current page location
+    const path = window.location.pathname;
+    const isInSubdirectory = path.split('/').length > 2;
+    
+    // Include test_mode parameter if this was originally in test mode
+    const testParam = isTestMode ? '?test_mode=true' : '';
+    courseNavLink.href = isInSubdirectory ? `../course.html${testParam}` : `course.html${testParam}`;
+    courseNavLink.textContent = 'Course';
+    courseNavLink.id = 'course-nav-link'; // Add ID for easier reference
+    
+    // Add highlight styling to make it stand out
+    courseNavLink.style.backgroundColor = '#fbbf24'; // Yellow background
+    courseNavLink.style.color = '#7c2d12'; // Dark brown text
+    courseNavLink.style.fontWeight = 'bold';
+    courseNavLink.style.borderRadius = '4px';
+    courseNavLink.style.padding = '6px 12px';
+    
+    courseNavItem.appendChild(courseNavLink);
+    
+    // Get the navigation list
+    const navList = document.querySelector('header nav ul');
+    if (!navList) {
+      console.warn('Navigation list not found, cannot add Course tab');
+      return;
+    }
+    
+    // Try to insert before Success Stories
+    const successStoriesItem = document.querySelector('header nav ul li a[href*="success-stories"]')?.parentNode;
+    if (successStoriesItem) {
+      console.log('Inserting Course tab before Success Stories');
+      navList.insertBefore(courseNavItem, successStoriesItem);
+    } else {
+      // If success stories item not found, add to the end
+      console.log('Success Stories item not found, adding Course tab to the end');
+      navList.appendChild(courseNavItem);
+    }
+    
+    // If we're on the course page or any module page, add active class
+    if (window.location.pathname.includes('course') || window.location.pathname.includes('module')) {
+      // Remove active class from other nav items
+      const allNavLinks = document.querySelectorAll('header nav ul li a');
+      allNavLinks.forEach(link => link.classList.remove('active'));
+      
+      // Change style when active
+      courseNavLink.style.backgroundColor = '#d97706'; // Darker yellow/orange
+    }
+    
+    console.log('Course tab added to navigation with permanent auth');
   }
   
   // If on the thank you page after purchase, we may need to handle login
@@ -144,6 +162,9 @@ document.addEventListener('DOMContentLoaded', function() {
       localStorage.setItem('sleeptech_auth', 'true');
       localStorage.setItem('sleeptech_email', emailParam);
       localStorage.setItem('sleeptech_login_time', new Date().getTime());
+      
+      // Refresh the page to show the course tab
+      window.location.reload();
     }
   }
 });
