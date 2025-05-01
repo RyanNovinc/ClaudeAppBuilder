@@ -1,5 +1,4 @@
-// access-control.js - Add this to your site for course content protection with simplified login
-
+// access-control.js - Modified to handle course access without adding Course tab
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Access control script loaded');
     
@@ -16,7 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Check if the user is authenticated with our simplified system
-    const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
+    const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
+                           localStorage.getItem('appfoundry_auth') === 'true';
     const authEmail = localStorage.getItem('sleeptech_email');
     const authTime = localStorage.getItem('sleeptech_login_time');
     
@@ -35,6 +35,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // No valid authentication, show login prompt
     console.log('No valid authentication, showing login prompt');
     showLoginPrompt();
+    
+    // Make sure there's NO Course tab in navigation
+    removeCourseTab();
     
     // Show a test mode indicator
     function showTestModeIndicator() {
@@ -108,24 +111,18 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('Course content element not found');
         }
         
-        // Update login button to say "My Account"
+        // Update login button to say "Log Out" with red styling
         const loginButton = document.getElementById('loginButton');
         if (loginButton) {
-            loginButton.textContent = 'My Account';
+            loginButton.textContent = 'Log Out';
+            loginButton.style.backgroundColor = '#ef4444'; // Red color
             loginButton.onclick = function() {
-                // If user is logged in with simple auth, show their info
-                if (isAuthenticated && authEmail) {
-                    if (confirm('You are logged in as ' + authEmail + '. Would you like to log out?')) {
-                        localStorage.removeItem('sleeptech_auth');
-                        localStorage.removeItem('sleeptech_email');
-                        localStorage.removeItem('sleeptech_login_time');
-                        window.location.reload();
-                    }
-                } else if (isTestMode) {
-                    alert('This is test mode. In a real account, this would open your user profile.');
-                } else {
-                    window.location.href = '../direct-login.html';
-                }
+                // Log out directly without confirmation
+                localStorage.removeItem('sleeptech_auth');
+                localStorage.removeItem('sleeptech_email');
+                localStorage.removeItem('sleeptech_login_time');
+                localStorage.removeItem('appfoundry_auth');
+                window.location.href = '../index.html';
             };
         }
     }
@@ -147,3 +144,17 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
 });
+
+// Function to remove Course tab if it exists
+function removeCourseTab() {
+    // Find and remove any existing Course tab
+    const courseTabs = document.querySelectorAll('#course-nav-item, li a[href*="course.html"]');
+    
+    courseTabs.forEach(tab => {
+        const parentLi = tab.tagName === 'LI' ? tab : tab.closest('li');
+        if (parentLi) {
+            parentLi.parentNode.removeChild(parentLi);
+            console.log('Course tab removed from navigation');
+        }
+    });
+}
