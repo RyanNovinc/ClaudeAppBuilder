@@ -1,5 +1,5 @@
 // functions/delete-submission.js
-const { NetlifyBlob } = require('@netlify/blobs');
+const { getStore } = require('@netlify/blobs');
 
 exports.handler = async function(event, context) {
   // Set CORS headers
@@ -65,8 +65,10 @@ exports.handler = async function(event, context) {
       };
     }
     
-    // Initialize Netlify Blob Storage
-    const store = new NetlifyBlob({ name: 'success-stories' });
+    // Initialize Netlify Blob Storage using getStore
+    const store = getStore({
+      name: 'success-stories'
+    });
     
     // First check if the submission exists
     try {
