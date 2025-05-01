@@ -44,6 +44,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // Add Course navigation item for logged-in users
+  // Check if user is logged in
+  const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true';
+  
+  if (isAuthenticated) {
+    // Create course nav item
+    const courseNavItem = document.createElement('li');
+    const courseNavLink = document.createElement('a');
+    
+    // Determine correct course.html path based on current page location
+    const path = window.location.pathname;
+    const isInSubdirectory = path.split('/').length > 2;
+    courseNavLink.href = isInSubdirectory ? '../course.html' : 'course.html';
+    courseNavLink.textContent = 'Course';
+    courseNavItem.appendChild(courseNavLink);
+    
+    // Get the navigation list and insert before the Success Stories item
+    const navList = document.querySelector('header nav ul');
+    const successStoriesItem = document.querySelector('header nav ul li a[href*="success-stories"]')?.parentNode;
+    
+    if (navList && successStoriesItem) {
+      navList.insertBefore(courseNavItem, successStoriesItem);
+    } else if (navList) {
+      // If success stories item not found, add to the end
+      navList.appendChild(courseNavItem);
+    }
+    
+    // If we're on the course page or any module page, add active class
+    if (window.location.pathname.includes('course') || window.location.pathname.includes('module')) {
+      // Remove active class from other nav items
+      const allNavLinks = document.querySelectorAll('header nav ul li a');
+      allNavLinks.forEach(link => link.classList.remove('active'));
+      
+      // Add active class to course link
+      courseNavLink.classList.add('active');
+    }
+  }
+  
   // If on the thank you page after purchase, we may need to handle login
   const urlParams = new URLSearchParams(window.location.search);
   const sessionId = urlParams.get('session_id');
