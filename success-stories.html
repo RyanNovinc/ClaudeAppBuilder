@@ -8,6 +8,44 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- EARLY LOADING SCRIPT - Loads stories before DOM is ready -->
+    <script>
+    // Immediate execution script to load stories BEFORE the DOM is ready
+    (function() {
+        console.log("🚀 Early story loader - running immediately");
+        
+        // Load stories directly and store in global variable
+        window.approvedStoriesList = [];
+        
+        function loadApprovedStoriesEarly() {
+            try {
+                // Direct localStorage access
+                var rawData = localStorage.getItem('appfoundry_submissions');
+                if (!rawData) {
+                    console.log("⚠️ No submissions found in localStorage");
+                    return [];
+                }
+                
+                var allSubmissions = JSON.parse(rawData);
+                console.log("📋 Found", allSubmissions.length, "total submissions");
+                
+                // Filter to only approved stories
+                var approved = allSubmissions.filter(function(story) { 
+                    return story.status === 'approved';
+                });
+                
+                console.log("✅ Found", approved.length, "approved stories");
+                return approved;
+            } catch (e) {
+                console.error("❌ Error in early loader:", e);
+                return [];
+            }
+        }
+        
+        // Execute immediately
+        window.approvedStoriesList = loadApprovedStoriesEarly();
+    })();
+    </script>
     <style>
         .success-stories-container {
             max-width: 1200px;
@@ -266,6 +304,12 @@
             margin: 0 auto 25px;
             color: #4b5563;
         }
+
+        #loading-indicator {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
         
         @media (max-width: 768px) {
             .success-stories-grid {
@@ -302,7 +346,12 @@
             <p>See what our students have built without writing a single line of code. These real-world apps were created using the exact same approach you'll learn in this course.</p>
         </div>
         
-        <div id="success-stories-grid" class="success-stories-grid">
+        <!-- Loading indicator - shown while stories are being loaded -->
+        <div id="loading-indicator">
+            Loading success stories...
+        </div>
+        
+        <div id="success-stories-grid" class="success-stories-grid" style="display: none;">
             <!-- Stories will be loaded dynamically here -->
         </div>
         
@@ -383,125 +432,94 @@
         </div>
     </footer>
 
-    <script src="storage-helper.js"></script>
     <script>
-        // Global variables
-        let allStories = [];
-        let loadAttempts = 0;
-        const MAX_LOAD_ATTEMPTS = 3;
-
-        // Load approved stories multiple ways to ensure they appear
+        // Main script - displays the stories already loaded in window.approvedStoriesList
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, fetching approved stories');
-            // Immediate attempt
-            loadApprovedStories();
+            console.log("📄 DOM loaded, initializing stories display");
             
-            // Delayed attempt as backup
+            // Try the preloaded stories first
+            if (window.approvedStoriesList && window.approvedStoriesList.length > 0) {
+                console.log("🎯 Using preloaded stories:", window.approvedStoriesList.length);
+                displayStories(window.approvedStoriesList);
+            } else {
+                // If no preloaded stories, try to load them again
+                console.log("🔄 No preloaded stories, trying to load them now");
+                loadApprovedStories();
+            }
+            
+            // Add a final delayed check as backup
             setTimeout(function() {
-                if (allStories.length === 0 && loadAttempts < MAX_LOAD_ATTEMPTS) {
-                    console.log('No stories loaded on first try, attempting delayed load');
+                const grid = document.getElementById('success-stories-grid');
+                // If grid is still hidden, try one last time
+                if (grid.style.display === 'none') {
+                    console.log("⏱️ Final attempt to load stories");
                     loadApprovedStories();
                 }
-            }, 500);
-            
-            // Add event listener for localStorage changes
-            window.addEventListener('storage', function(e) {
-                if (e.key === 'appfoundry_submissions') {
-                    console.log('localStorage changed, reloading stories');
-                    loadApprovedStories();
-                }
-            });
+            }, 800);
         });
         
-        // Function to load approved stories from localStorage
+        // Function to load approved stories (backup method)
         function loadApprovedStories() {
-            loadAttempts++;
-            console.log('Loading approved stories (attempt ' + loadAttempts + ')');
+            console.log("🔍 Loading approved stories (main method)");
             let approvedStories = [];
             
             try {
-                // Try using StorageHelper first
-                if (typeof StorageHelper !== 'undefined') {
-                    console.log('Using StorageHelper to get submissions');
-                    const allSubmissions = StorageHelper.getSubmissions();
-                    console.log('Found submissions with StorageHelper:', allSubmissions.length);
-                    approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                    console.log('Found approved stories with StorageHelper:', approvedStories.length);
-                } else {
-                    // Direct localStorage access as fallback
-                    console.log('StorageHelper not available, using direct localStorage access');
-                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                    console.log('Raw localStorage data length:', storedSubmissions ? storedSubmissions.length : 0);
-                    
-                    if (storedSubmissions) {
-                        try {
-                            const allSubmissions = JSON.parse(storedSubmissions);
-                            console.log('All submissions from localStorage:', allSubmissions.length);
-                            
-                            // Filter to only show approved stories
-                            approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                            console.log('Approved stories from localStorage:', approvedStories.length);
-                        } catch (parseError) {
-                            console.error('Error parsing localStorage data:', parseError);
-                        }
-                    } else {
-                        console.log('No submissions found in localStorage');
-                    }
-                }
+                // Direct localStorage access
+                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
                 
-                // No sample data - only show real approved stories
-                console.log('Found ' + approvedStories.length + ' approved stories');
-                
-                // Force a direct localStorage check as ultimate fallback
-                if (approvedStories.length === 0 && loadAttempts === MAX_LOAD_ATTEMPTS) {
-                    console.log('Last attempt - direct localStorage check with raw parsing');
+                if (storedSubmissions) {
                     try {
-                        // One last attempt with raw localStorage
-                        const rawData = window.localStorage.getItem('appfoundry_submissions');
-                        if (rawData) {
-                            const allItems = JSON.parse(rawData);
-                            approvedStories = allItems.filter(item => item.status === 'approved');
-                            console.log('Final attempt found', approvedStories.length, 'stories');
-                        }
-                    } catch (e) {
-                        console.error('Final attempt failed:', e);
+                        const allSubmissions = JSON.parse(storedSubmissions);
+                        console.log("📊 All submissions from localStorage:", allSubmissions.length);
+                        
+                        // Filter to only show approved stories
+                        approvedStories = allSubmissions.filter(story => story.status === 'approved');
+                        console.log("✓ Approved stories from localStorage:", approvedStories.length);
+                    } catch (parseError) {
+                        console.error("⚠️ Error parsing localStorage data:", parseError);
                     }
+                } else {
+                    console.log("📭 No submissions found in localStorage");
                 }
                 
-                // Store for later use
-                allStories = approvedStories;
+                // Store locally and globally
+                window.approvedStoriesList = approvedStories;
                 
                 // Display stories or empty state
                 if (approvedStories.length > 0) {
-                    console.log('Displaying approved stories:', approvedStories.length);
+                    console.log("🖼️ Displaying approved stories:", approvedStories.length);
                     displayStories(approvedStories);
-                    document.getElementById('empty-state').style.display = 'none';
                 } else {
-                    console.log('No approved stories found, showing empty state');
-                    document.getElementById('success-stories-grid').innerHTML = '';
-                    document.getElementById('empty-state').style.display = 'block';
+                    console.log("📭 No approved stories found, showing empty state");
+                    showEmptyState();
                 }
             } catch (error) {
-                console.error('Error in loadApprovedStories:', error);
-                // Don't show empty state yet unless we've tried multiple times
-                if (loadAttempts >= MAX_LOAD_ATTEMPTS) {
-                    document.getElementById('success-stories-grid').innerHTML = '';
-                    document.getElementById('empty-state').style.display = 'block';
-                }
+                console.error("❌ Error in loadApprovedStories:", error);
+                showEmptyState();
             }
         }
         
         // Function to display stories in the grid
         function displayStories(stories) {
+            // Get elements
             const grid = document.getElementById('success-stories-grid');
+            const loading = document.getElementById('loading-indicator');
+            const emptyState = document.getElementById('empty-state');
+            
+            // Hide loading and empty state
+            loading.style.display = 'none';
+            emptyState.style.display = 'none';
+            
+            // Set up grid
             grid.innerHTML = ''; // Clear existing content
+            grid.style.display = 'grid';
             
             // Sort by date (newest first)
             stories.sort((a, b) => new Date(b.date) - new Date(a.date));
             
             // Add each story to the grid
             stories.forEach(story => {
-                console.log('Adding story to grid:', story.id, story.appName);
+                console.log("📱 Adding story to grid:", story.id, story.appName);
                 const storyCard = document.createElement('div');
                 storyCard.className = 'story-card';
                 
@@ -531,15 +549,25 @@
             });
         }
         
+        // Function to show the empty state
+        function showEmptyState() {
+            document.getElementById('loading-indicator').style.display = 'none';
+            document.getElementById('success-stories-grid').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'block';
+        }
+        
         // Function to open the full story modal
         function openStoryModal(storyId) {
-            console.log('Opening modal for story:', storyId);
+            console.log("🔍 Opening modal for story:", storyId);
+            
+            // Get all stories from global variable
+            const allStories = window.approvedStoriesList || [];
             
             // Find the story by ID
             const story = allStories.find(s => s.id === storyId);
             
             if (!story) {
-                console.error('Story not found for ID:', storyId);
+                console.error("❌ Story not found for ID:", storyId);
                 return;
             }
             
@@ -584,8 +612,6 @@
             document.getElementById('story-modal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
-        
-        // No sample stories function needed
     </script>
 
     <script src="identity-widget.js"></script>
