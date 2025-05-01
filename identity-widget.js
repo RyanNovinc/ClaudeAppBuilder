@@ -6,11 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const urlParams = new URLSearchParams(window.location.search);
   const isTestMode = urlParams.get('test_mode') === 'true';
   
-  if (isTestMode) {
-    console.log('Test mode detected - setting permanent auth flag');
-    // When in test mode, set a permanent flag in localStorage
-    localStorage.setItem('appfoundry_auth', 'true');
-  }
+  // We no longer automatically set the auth flag just because test_mode is true
+  // Instead, we'll set it only when they complete the checkout or login process
   
   // Check authentication status from localStorage
   const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
@@ -57,9 +54,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const isInSubdirectory = path.split('/').length > 2;
         
         if (isInSubdirectory) {
-          window.location.href = '../direct-login.html';
+          window.location.href = '../direct-login.html' + (isTestMode ? '?test_mode=true' : '');
         } else {
-          window.location.href = 'direct-login.html';
+          window.location.href = 'direct-login.html' + (isTestMode ? '?test_mode=true' : '');
         }
       });
     }
@@ -94,22 +91,19 @@ document.addEventListener('DOMContentLoaded', function() {
       } 
       // If not authenticated but button doesn't have proper login behavior, change it
       else if (!button.id && (button.textContent.includes('Enroll') || button.textContent.includes('Sign'))) {
-        // Add ID for easier reference
-        button.id = 'headerLoginButton';
+        // If in test mode but not on index page or checkout page, change text to "Log In"
+        // This preserves "Enroll Now" on the main page and "Test drive the course" on that page
+        const isIndexPage = window.location.pathname.endsWith('index.html') || 
+                           window.location.pathname === '/' || 
+                           window.location.pathname.endsWith('/');
+        const isCheckoutPage = window.location.pathname.includes('checkout');
         
-        // Change to "Log In" if current page is not index.html (main sales page)
-        if (!window.location.pathname.endsWith('index.html') && 
-            window.location.pathname !== '/' && 
-            !window.location.pathname.endsWith('/')) {
+        if (isTestMode && !isIndexPage && !isCheckoutPage) {
           button.textContent = 'Log In';
         }
         
-        // Update the click behavior
-        button.removeAttribute('onclick');
-        button.addEventListener('click', function(e) {
-          e.preventDefault();
-          window.location.href = 'direct-login.html';
-        });
+        // We don't change the onclick for the test drive button on index page
+        // or the enrollment buttons, as they should follow their normal flow
       }
     });
   }
@@ -207,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
     localStorage.setItem('sleeptech_password_' + emailParam, passwordParam);
     
     // If force login is true, log the user in
-    if (forceLogin) {
+    if (forceLogin || (isTestMode && window.location.pathname.includes('thank-you'))) {
       localStorage.setItem('sleeptech_auth', 'true');
       localStorage.setItem('sleeptech_email', emailParam);
       localStorage.setItem('sleeptech_login_time', new Date().getTime());
@@ -215,5 +209,11 @@ document.addEventListener('DOMContentLoaded', function() {
       // Refresh the page to show the course tab
       window.location.reload();
     }
+  }
+  
+  // Special handling for checkout.js in test mode
+  if (isTestMode && window.location.pathname.includes('checkout')) {
+    console.log('Test mode on checkout page - auth will be set after completing checkout');
+    // Don't set auth yet - this will be handled by checkout.js when they complete the process
   }
 });
