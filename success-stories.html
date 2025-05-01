@@ -445,3 +445,93 @@
                 storyCard.className = 'story-card';
                 
                 // Get image URL (use first image or placeholder)
+                const imageUrl = story.images && story.images.length > 0 
+                    ? story.images[0] 
+                    : 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
+                
+                storyCard.innerHTML = `
+                    <img src="${imageUrl}" alt="${story.appName}" class="story-image">
+                    <div class="story-content">
+                        <div class="story-tag">${story.appType}</div>
+                        <h3 class="story-title">${story.appName}</h3>
+                        <div class="story-author">
+                            <span class="story-author-name">By ${story.name}</span>
+                        </div>
+                        <div class="story-quote">${story.testimonial}</div>
+                        <a href="#" class="story-button" onclick="openStoryModal('${story.id}'); return false;">Read Full Story</a>
+                    </div>
+                `;
+                
+                grid.appendChild(storyCard);
+            });
+        }
+        
+        // Function to open the full story modal
+        function openStoryModal(storyId) {
+            let story;
+            
+            // Get the story from localStorage
+            if (typeof StorageHelper !== 'undefined') {
+                const allSubmissions = StorageHelper.getSubmissions();
+                story = allSubmissions.find(s => s.id === storyId);
+            } else {
+                try {
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    if (storedSubmissions) {
+                        const allSubmissions = JSON.parse(storedSubmissions);
+                        story = allSubmissions.find(s => s.id === storyId);
+                    }
+                } catch (error) {
+                    console.error('Error accessing localStorage:', error);
+                    return;
+                }
+            }
+            
+            if (!story) {
+                console.error('Story not found:', storyId);
+                return;
+            }
+            
+            // Fill the modal with story details
+            document.getElementById('modal-title').textContent = story.appName;
+            document.getElementById('modal-author').textContent = `Created by ${story.name}`;
+            document.getElementById('modal-tag').textContent = story.appType;
+            document.getElementById('modal-testimonial').textContent = story.testimonial;
+            
+            // Convert story text to paragraphs
+            const storyContent = story.story.split('\n\n').map(para => `<p>${para}</p>`).join('');
+            document.getElementById('modal-content').innerHTML = storyContent;
+            
+            // Add images
+            const imagesContainer = document.getElementById('modal-images');
+            imagesContainer.innerHTML = '';
+            
+            if (story.images && story.images.length > 0) {
+                story.images.forEach(imageUrl => {
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.alt = story.appName;
+                    img.className = 'story-modal-image';
+                    imagesContainer.appendChild(img);
+                });
+            } else {
+                imagesContainer.style.display = 'none';
+            }
+            
+            // Show the modal
+            document.getElementById('story-modal').style.display = 'flex';
+            
+            // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Function to close the story modal
+        function closeStoryModal() {
+            document.getElementById('story-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+
+    <script src="identity-widget.js"></script>
+</body>
+</html>
