@@ -8,7 +8,16 @@ document.addEventListener('DOMContentLoaded', function() {
   
   if (isTestMode) {
     console.log('Test mode detected');
+    // When in test mode, set a flag in sessionStorage to remember authentication across pages
+    sessionStorage.setItem('appfoundry_test_session', 'true');
   }
+  
+  // Check authentication status considering both localStorage and sessionStorage (for test mode)
+  const isLocalStorageAuth = localStorage.getItem('sleeptech_auth') === 'true';
+  const isTestSession = sessionStorage.getItem('appfoundry_test_session') === 'true';
+  const isAuthenticated = isLocalStorageAuth || isTestMode || isTestSession;
+  
+  console.log('Auth status check - localStorage:', isLocalStorageAuth, 'testMode:', isTestMode, 'testSession:', isTestSession);
   
   // Initialize the login button if present
   const loginButton = document.getElementById('loginButton');
@@ -17,9 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Remove any existing onclick attribute
     loginButton.removeAttribute('onclick');
     
-    // Check if the user is authenticated with our simplified system
-    // For test mode, always consider authenticated
-    const isAuthenticated = isTestMode || localStorage.getItem('sleeptech_auth') === 'true';
     const authEmail = localStorage.getItem('sleeptech_email') || 'test@example.com';
     
     if (isAuthenticated) {
@@ -32,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
           localStorage.removeItem('sleeptech_auth');
           localStorage.removeItem('sleeptech_email');
           localStorage.removeItem('sleeptech_login_time');
+          sessionStorage.removeItem('appfoundry_test_session');
           
           // Refresh the page without test_mode parameter if present
           if (isTestMode) {
@@ -60,9 +67,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Add Course navigation item for logged-in users or test mode
-  // Check if user is logged in or in test mode
-  const isAuthenticated = isTestMode || localStorage.getItem('sleeptech_auth') === 'true';
-  
   if (isAuthenticated) {
     console.log('User is authenticated, adding Course tab');
     
@@ -71,6 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!existingCourseTab) {
       // Create course nav item
       const courseNavItem = document.createElement('li');
+      courseNavItem.className = 'highlight-nav-item'; // Add a class for styling
+      
       const courseNavLink = document.createElement('a');
       
       // Determine correct course.html path based on current page location
@@ -78,9 +84,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const isInSubdirectory = path.split('/').length > 2;
       
       // Include test_mode parameter if in test mode
-      const testParam = isTestMode ? '?test_mode=true' : '';
+      const testParam = (isTestMode || isTestSession) ? '?test_mode=true' : '';
       courseNavLink.href = isInSubdirectory ? `../course.html${testParam}` : `course.html${testParam}`;
       courseNavLink.textContent = 'Course';
+      
+      // Add highlight styling to make it stand out
+      courseNavLink.style.backgroundColor = '#fbbf24'; // Yellow background
+      courseNavLink.style.color = '#7c2d12'; // Dark brown text
+      courseNavLink.style.fontWeight = 'bold';
+      courseNavLink.style.borderRadius = '4px';
+      courseNavLink.style.padding = '6px 12px';
+      
       courseNavItem.appendChild(courseNavLink);
       
       // Get the navigation list and insert before the Success Stories item
@@ -104,8 +118,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const allNavLinks = document.querySelectorAll('header nav ul li a');
         allNavLinks.forEach(link => link.classList.remove('active'));
         
-        // Add active class to course link
-        courseNavLink.classList.add('active');
+        // Change style when active
+        courseNavLink.style.backgroundColor = '#d97706'; // Darker yellow/orange
       }
       
       console.log('Course tab added to navigation - Test mode:', isTestMode);
