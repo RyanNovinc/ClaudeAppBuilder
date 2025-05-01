@@ -1,4 +1,4 @@
-// identity-widget.js - Handles all login-related functionality with simplified approach
+// identity-widget.js - Modified to handle login/logout without Course tab
 document.addEventListener('DOMContentLoaded', function() {
   console.log('Identity widget loaded - Page:', window.location.pathname);
   
@@ -25,28 +25,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const authEmail = localStorage.getItem('sleeptech_email') || 'test@example.com';
     
     if (isAuthenticated) {
-      // User is logged in
-      loginButton.textContent = 'My Account';
+      // User is logged in - show Log Out button
+      loginButton.textContent = 'Log Out';
+      loginButton.style.backgroundColor = '#ef4444'; // Red color
+      
       loginButton.addEventListener('click', function(e) {
         e.preventDefault();
-        if (confirm('You are logged in as ' + authEmail + '. Would you like to log out?')) {
-          // Clear auth data
-          localStorage.removeItem('sleeptech_auth');
-          localStorage.removeItem('sleeptech_email');
-          localStorage.removeItem('sleeptech_login_time');
-          localStorage.removeItem('appfoundry_auth');
+        // Clear auth data immediately without confirmation
+        localStorage.removeItem('sleeptech_auth');
+        localStorage.removeItem('sleeptech_email');
+        localStorage.removeItem('sleeptech_login_time');
+        localStorage.removeItem('appfoundry_auth');
           
-          // Refresh the page without test_mode parameter if present
-          if (isTestMode) {
-            window.location.href = window.location.pathname;
-          } else {
-            window.location.reload();
-          }
-        }
+        // Redirect to home page
+        const isInSubdirectory = window.location.pathname.split('/').length > 2;
+        window.location.href = isInSubdirectory ? '../index.html' : 'index.html';
       });
     } else {
       // User is not logged in
       loginButton.textContent = 'Log In';
+      loginButton.style.backgroundColor = ''; // Reset to default style
+      
       loginButton.addEventListener('click', function(e) {
         e.preventDefault();
         // Check if we're in the root directory or a subdirectory
@@ -64,138 +63,51 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check for header button with "Enroll Now" text (for index.html)
     const headerButtons = document.querySelectorAll('header .cta-button');
     headerButtons.forEach(button => {
-      // If this is a header button and user is authenticated, change it to "My Account"
+      // If this is a header button and user is authenticated, change it to "Log Out"
       if (isAuthenticated) {
-        button.textContent = 'My Account';
-        button.removeAttribute('onclick');
-        
-        const authEmail = localStorage.getItem('sleeptech_email') || 'test@example.com';
-        
-        button.addEventListener('click', function(e) {
-          e.preventDefault();
-          if (confirm('You are logged in as ' + authEmail + '. Would you like to log out?')) {
+        // Only change small buttons or ones with id='loginButton'
+        if (!button.classList.contains('large') || button.id === 'loginButton') {
+          button.textContent = 'Log Out';
+          button.style.backgroundColor = '#ef4444'; // Red color
+          button.removeAttribute('onclick');
+          
+          button.addEventListener('click', function(e) {
+            e.preventDefault();
             // Clear auth data
             localStorage.removeItem('sleeptech_auth');
             localStorage.removeItem('sleeptech_email');
             localStorage.removeItem('sleeptech_login_time');
             localStorage.removeItem('appfoundry_auth');
             
-            // Refresh the page without test_mode parameter if present
-            if (isTestMode) {
-              window.location.href = window.location.pathname;
-            } else {
-              window.location.reload();
-            }
+            // Redirect to home page
+            window.location.href = 'index.html';
+          });
+        }
+      } 
+      // If not authenticated and button is the login button
+      else if (button.id === 'loginButton') {
+        button.textContent = 'Log In';
+        button.style.backgroundColor = ''; // Reset to default style
+        
+        button.removeAttribute('onclick');
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          // Check if we're in root or subdirectory
+          const path = window.location.pathname;
+          const isInSubdirectory = path.split('/').length > 2;
+          
+          if (isInSubdirectory) {
+            window.location.href = '../direct-login.html' + (isTestMode ? '?test_mode=true' : '');
+          } else {
+            window.location.href = 'direct-login.html' + (isTestMode ? '?test_mode=true' : '');
           }
         });
-      } 
-      // If not authenticated but button doesn't have proper login behavior, change it
-      else if (!button.id && (button.textContent.includes('Enroll') || button.textContent.includes('Sign'))) {
-        // If in test mode but not on index page or checkout page, change text to "Log In"
-        // This preserves "Enroll Now" on the main page and "Test drive the course" on that page
-        const isIndexPage = window.location.pathname.endsWith('index.html') || 
-                           window.location.pathname === '/' || 
-                           window.location.pathname.endsWith('/');
-        const isCheckoutPage = window.location.pathname.includes('checkout');
-        
-        if (isTestMode && !isIndexPage && !isCheckoutPage) {
-          button.textContent = 'Log In';
-        }
-        
-        // We don't change the onclick for the test drive button on index page
-        // or the enrollment buttons, as they should follow their normal flow
       }
     });
   }
   
-  // Force immediate addition of Course tab for logged-in users
-  addCourseTab();
-  
-  // Also add a fragment navigation listener to ensure Course tab appears after hash changes
-  window.addEventListener('hashchange', function() {
-    console.log('Hash changed - checking for Course tab');
-    setTimeout(addCourseTab, 100); // Small delay to ensure DOM is updated
-  });
-  
-  // Function to add Course tab
-  function addCourseTab() {
-    if (!isAuthenticated) {
-      console.log('User is not authenticated, Course tab not added');
-      
-      // Extra safety: REMOVE Course tab if it exists and user is not authenticated
-      const existingCourseTab = document.querySelector('#course-nav-item');
-      if (existingCourseTab) {
-        console.log('Found Course tab while user is NOT authenticated - removing it');
-        existingCourseTab.parentNode.removeChild(existingCourseTab);
-      }
-      return;
-    }
-    
-    console.log('Adding/checking Course tab...');
-    
-    // First check if we've already added the Course tab (prevent duplicates)
-    const existingCourseTab = document.querySelector('header nav ul li a[href*="course.html"]');
-    if (existingCourseTab) {
-      console.log('Course tab already exists in navigation');
-      return;
-    }
-    
-    // Create course nav item
-    const courseNavItem = document.createElement('li');
-    courseNavItem.className = 'highlight-nav-item'; // Add a class for styling
-    courseNavItem.id = 'course-nav-item'; // Add ID for easier reference
-    
-    const courseNavLink = document.createElement('a');
-    
-    // Determine correct course.html path based on current page location
-    const path = window.location.pathname;
-    const isInSubdirectory = path.split('/').length > 2;
-    
-    // Include test_mode parameter if this was originally in test mode
-    const testParam = isTestMode ? '?test_mode=true' : '';
-    courseNavLink.href = isInSubdirectory ? `../course.html${testParam}` : `course.html${testParam}`;
-    courseNavLink.textContent = 'Course';
-    courseNavLink.id = 'course-nav-link'; // Add ID for easier reference
-    
-    // Add highlight styling to make it stand out
-    courseNavLink.style.backgroundColor = '#fbbf24'; // Yellow background
-    courseNavLink.style.color = '#7c2d12'; // Dark brown text
-    courseNavLink.style.fontWeight = 'bold';
-    courseNavLink.style.borderRadius = '4px';
-    courseNavLink.style.padding = '6px 12px';
-    
-    courseNavItem.appendChild(courseNavLink);
-    
-    // Get the navigation list
-    const navList = document.querySelector('header nav ul');
-    if (!navList) {
-      console.warn('Navigation list not found, cannot add Course tab');
-      return;
-    }
-    
-    // Try to insert before Success Stories
-    const successStoriesItem = document.querySelector('header nav ul li a[href*="success-stories"]')?.parentNode;
-    if (successStoriesItem) {
-      console.log('Inserting Course tab before Success Stories');
-      navList.insertBefore(courseNavItem, successStoriesItem);
-    } else {
-      // If success stories item not found, add to the end
-      console.log('Success Stories item not found, adding Course tab to the end');
-      navList.appendChild(courseNavItem);
-    }
-    
-    // If we're on the course page or any module page, add active class
-    if (window.location.pathname.includes('course') || window.location.pathname.includes('module')) {
-      // Remove active class from other nav items
-      const allNavLinks = document.querySelectorAll('header nav ul li a');
-      allNavLinks.forEach(link => link.classList.remove('active'));
-      
-      // Change style when active
-      courseNavLink.style.backgroundColor = '#d97706'; // Darker yellow/orange
-    }
-    
-    console.log('Course tab added to navigation with permanent auth');
-  }
+  // Make sure there's NO Course tab in navigation
+  removeCourseTab();
   
   // Special handling for thank-you.html page
   if (window.location.pathname.includes('thank-you.html')) {
@@ -221,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
       localStorage.setItem('sleeptech_email', emailParam);
       localStorage.setItem('sleeptech_login_time', new Date().getTime());
       
-      // Refresh the page to show the course tab
+      // Refresh the page to show the updated login button
       window.location.reload();
     }
   }
@@ -232,3 +144,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Don't set auth yet - this will be handled by checkout.js when they complete the process
   }
 });
+
+// Function to remove Course tab if it exists
+function removeCourseTab() {
+  // Find and remove any existing Course tab
+  const courseTabs = document.querySelectorAll('#course-nav-item, li a[href*="course.html"]');
+  
+  courseTabs.forEach(tab => {
+    const parentLi = tab.tagName === 'LI' ? tab : tab.closest('li');
+    if (parentLi) {
+      parentLi.parentNode.removeChild(parentLi);
+      console.log('Course tab removed from navigation');
+    }
+  });
+}
