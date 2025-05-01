@@ -423,6 +423,16 @@
                 imagePreview.appendChild(infoText);
             }
             
+            // Helper function to convert file to base64
+            function convertFileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            }
+
             // Handle form submission
             const form = document.getElementById('success-story-form');
             const statusMessage = document.getElementById('status-message');
@@ -476,41 +486,12 @@
                     
                     console.log('New submission created:', newSubmission);
                     
-                    // Get existing submissions from localStorage
-                    let existingSubmissions = [];
-                    try {
-                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                        if (storedSubmissions) {
-                            existingSubmissions = JSON.parse(storedSubmissions);
-                            console.log('Found existing submissions:', existingSubmissions.length);
-                        }
-                    } catch (error) {
-                        console.error('Error parsing existing submissions:', error);
-                        // Continue with empty array if there's an error
-                    }
+                    // Try to submit to API first
+                    let apiSubmissionSuccessful = false;
+                    let apiResponseData = null;
                     
-                    // Add new submission to the beginning of the array
-                    existingSubmissions.unshift(newSubmission);
-                    
-                    // Save updated submissions back to localStorage
                     try {
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
-                        console.log('Successfully saved submissions to localStorage');
-                    } catch (error) {
-                        console.error('Error saving to localStorage:', error);
-                        // Show error to user
-                        alert('There was an error saving your submission. Please try again or contact support.');
-                        
-                        // Reset button state
-                        submitButton.disabled = false;
-                        submitButton.textContent = 'Submit Your Story';
-                        
-                        return; // Exit the function early
-                    }
-                    
-                    // Also attempt to submit to API but don't wait for response
-                    try {
-                        fetch('/.netlify/functions/submit-success-story', {
+                        const response = await fetch('/.netlify/functions/submit-success-story', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -526,9 +507,62 @@
                                 images
                             })
                         });
+                        
+                        if (response.ok) {
+                            apiResponseData = await response.json();
+                            console.log('API submission successful:', apiResponseData);
+                            apiSubmissionSuccessful = true;
+                            
+                            // If API provides a submission ID, use that instead
+                            if (apiResponseData.submissionId) {
+                                newSubmission.id = apiResponseData.submissionId;
+                            }
+                            
+                            // If API returns a complete submission object, use that
+                            if (apiResponseData.submission) {
+                                Object.assign(newSubmission, apiResponseData.submission);
+                            }
+                        } else {
+                            console.error('API submission failed:', await response.text());
+                        }
                     } catch (apiError) {
                         console.error('API submission error:', apiError);
-                        // Ignore API errors since we already saved to localStorage
+                    }
+                    
+                    // Always save to localStorage as a backup, even if API submission was successful
+                    try {
+                        // Get existing submissions from localStorage
+                        let existingSubmissions = [];
+                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                        
+                        if (storedSubmissions) {
+                            existingSubmissions = JSON.parse(storedSubmissions);
+                            console.log('Found existing submissions:', existingSubmissions.length);
+                        }
+                        
+                        // Check if this submission already exists (by ID)
+                        const existingIndex = existingSubmissions.findIndex(sub => sub.id === newSubmission.id);
+                        
+                        if (existingIndex >= 0) {
+                            // Update existing submission
+                            existingSubmissions[existingIndex] = newSubmission;
+                            console.log('Updated existing submission in localStorage');
+                        } else {
+                            // Add new submission to the beginning of the array
+                            existingSubmissions.unshift(newSubmission);
+                            console.log('Added new submission to localStorage');
+                        }
+                        
+                        // Save updated submissions back to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
+                        console.log('Successfully saved submissions to localStorage');
+                    } catch (storageError) {
+                        console.error('Error saving to localStorage:', storageError);
+                        
+                        // If we couldn't save to localStorage AND API submission failed, show error
+                        if (!apiSubmissionSuccessful) {
+                            throw new Error('Failed to save submission both locally and to server');
+                        }
                     }
                     
                     // Display success message
@@ -560,16 +594,6 @@
                     submitButton.textContent = 'Submit Your Story';
                 }
             });
-            
-            // Helper function to convert file to base64
-            function convertFileToBase64(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(file);
-                });
-            }
         });
     </script>
 </body>
