@@ -1,18 +1,16 @@
 // functions/submit-success-story.js
-const fs = require('fs');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
-const fetch = require('node-fetch');
+const { getStore } = require('@netlify/blobs');
 
 exports.handler = async function(event, context) {
   // Set CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
   };
 
-  // Handle preflight OPTIONS request
+  // Handle preflight requests
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -20,7 +18,7 @@ exports.handler = async function(event, context) {
       body: ''
     };
   }
-  
+
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
@@ -29,11 +27,9 @@ exports.handler = async function(event, context) {
       body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
-  
+
   try {
-    // Parse the multipart form data
-    // Note: In a real implementation, you would use a library to parse multipart form data
-    // For simplicity, we're assuming the data is sent as JSON
+    // Parse the request body
     const data = JSON.parse(event.body);
     
     // Validate required fields
@@ -48,76 +44,104 @@ exports.handler = async function(event, context) {
       }
     }
     
-    // Generate a unique ID for the submission
-    const submissionId = uuidv4();
-    
-    // Get the current date
-    const submissionDate = new Date().toISOString();
+    // Generate a unique ID using timestamp and random string
+    const uniqueId = `story_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
     
     // Create submission object
     const submission = {
-      id: submissionId,
-      date: submissionDate,
+      id: uniqueId,
+      date: new Date().toISOString(),
       status: 'pending', // pending, approved, rejected
       name: data.name,
       email: data.email,
       appType: data['app-type'],
       appName: data['app-name'],
+      experienceLevel: data['experience-level'] || 'No experience',
       story: data.story,
       testimonial: data.testimonial,
-      images: data.images || [] // Array of image URLs (would be stored separately in a real implementation)
+      images: data.images || [] // Array of image URLs
     };
     
-    // In a real implementation, you would:
-    // 1. Store the submission in a database
-    // 2. Upload images to a storage service like AWS S3
-    // 3. Send a notification email to the admin
-    // 4. Send a confirmation email to the user
+    console.log('New success story submission:', submission.id);
     
-    // For this example, we'll just store the submission in a JSON file
-    // Note: In a serverless environment, writing to the filesystem isn't persistent
-    // This is just for demonstration purposes
+    // Initialize Netlify Blob Storage - use getStore instead of new NetlifyBlob
+    const store = getStore({
+      name: 'success-stories'
+    });
     
-    // Send email notification to admin
-    // This is a placeholder for real email functionality
-    const emailContent = `
-      New Success Story Submission
+    // Store the submission in Netlify Blob Storage
+    try {
+      // Save the complete submission
+      await store.set(`submission-${submission.id}`, JSON.stringify(submission));
+      console.log(`Success story saved to Netlify Blob Storage with key: submission-${submission.id}`);
       
-      Name: ${data.name}
-      Email: ${data.email}
-      App Type: ${data['app-type']}
-      App Name: ${data['app-name']}
+      // Also maintain an index of all submissions
+      try {
+        // Get the current index (or create if it doesn't exist)
+        let submissionIndex = [];
+        try {
+          const existingIndex = await store.get('submission-index');
+          if (existingIndex) {
+            submissionIndex = JSON.parse(existingIndex);
+          }
+        } catch (indexError) {
+          console.log('No existing index found, creating new index');
+        }
+        
+        // Add this submission to the index (just store minimal info)
+        submissionIndex.unshift({
+          id: submission.id,
+          name: submission.name,
+          appName: submission.appName,
+          date: submission.date,
+          status: submission.status
+        });
+        
+        // Save the updated index
+        await store.set('submission-index', JSON.stringify(submissionIndex));
+        console.log('Submission index updated');
+      } catch (indexError) {
+        console.error('Error updating submission index:', indexError);
+        // Continue even if index update fails
+      }
       
-      Testimonial:
-      ${data.testimonial}
+      // Return success response
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Success story submitted successfully',
+          submissionId: submission.id,
+          submission: submission, // Include full submission data
+          useLocalStorage: true // Also signal to client to store in localStorage as backup
+        })
+      };
+    } catch (storageError) {
+      console.error('Error storing submission in Netlify Blob Storage:', storageError);
       
-      Full Story:
-      ${data.story}
-    `;
-    
-    // Log the submission (would go to your function logs)
-    console.log('New success story submission:', submissionId);
-    console.log(emailContent);
-    
-    // Return success response
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        message: 'Success story submitted successfully',
-        submissionId
-      })
-    };
+      // If Netlify Blob Storage fails, fall back to returning a response that will
+      // instruct the client to store in localStorage
+      return {
+        statusCode: 200, // Still return 200 to client
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Success story processed with localStorage fallback',
+          submissionId: submission.id,
+          submission: submission,
+          useLocalStorage: true,
+          storageFallback: true
+        })
+      };
+    }
   } catch (error) {
     console.error('Error processing success story submission:', error);
     
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({
-        error: 'An error occurred while processing your submission'
-      })
+      body: JSON.stringify({ error: 'An error occurred while processing your submission' })
     };
   }
 };
