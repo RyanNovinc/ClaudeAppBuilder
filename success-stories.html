@@ -350,7 +350,12 @@
             <p>See what our students have built without writing a single line of code. These real-world apps were created using the exact same approach you'll learn in this course.</p>
         </div>
         
-        <div id="success-stories-grid" class="success-stories-grid">
+        <!-- Loading indicator - shown while stories are being loaded -->
+        <div id="loading-indicator">
+            Loading success stories...
+        </div>
+        
+        <div id="success-stories-grid" class="success-stories-grid" style="display: none;">
             <!-- Stories will be loaded dynamically here -->
         </div>
         
@@ -361,11 +366,11 @@
             <p class="empty-state-description">Our students are busy building amazing apps! Check back soon to see what they've created with the AppFoundry method.</p>
         </div>
         
-        <!-- FIXED: Using the absolute URL that was working before -->
+        <!-- FIXED: Using the absolute URL that was working before with tracking -->
         <div class="create-story-box">
             <h2>Ready to Share Your Success?</h2>
             <p>Have you built an app using the AppFoundry method? We'd love to feature your creation and inspire others to bring their ideas to life!</p>
-            <a href="https://claudeappbuilder.netlify.app/submit-success-story.html" class="cta-button large" target="_blank">Share Your Success Story</a>
+            <a href="https://claudeappbuilder.netlify.app/submit-success-story.html" class="cta-button large" onclick="localStorage.setItem('appfoundry_navigation', 'from_success_stories');" target="_blank">Share Your Success Story</a>
         </div>
     </div>
     
@@ -434,86 +439,145 @@
 
     <script src="storage-helper.js"></script>
     <script>
-        // Load approved stories once the page is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            loadApprovedStories();
-        });
-        
-        // Function to load approved stories from localStorage
-        function loadApprovedStories() {
-            let approvedStories = [];
+        // Script to load approved stories
+        // Enhanced version with retry logic and better error handling
+        (function() {
+            console.log("🔄 Initializing success stories loader");
             
-            // Try to use the StorageHelper if available
-            if (typeof StorageHelper !== 'undefined') {
-                console.log('Using StorageHelper to get submissions');
-                const allSubmissions = StorageHelper.getSubmissions();
-                approvedStories = allSubmissions.filter(story => story.status === 'approved');
-            } else {
-                // Direct localStorage access as fallback
+            // Function to load stories with advanced error handling
+            function loadStoriesWithRetry(retryCount = 0) {
+                console.log(`🔍 Attempting to load stories (attempt ${retryCount + 1})`);
+                
+                // Try to get approved stories from StorageHelper first
+                let approvedStories = [];
+                
                 try {
-                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                    console.log('Raw localStorage data:', storedSubmissions);
-                    
-                    if (storedSubmissions) {
-                        const allSubmissions = JSON.parse(storedSubmissions);
-                        console.log('All submissions:', allSubmissions.length);
-                        
-                        // Filter to only show approved stories
-                        approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                        console.log('Approved stories:', approvedStories.length);
+                    if (typeof StorageHelper !== 'undefined' && StorageHelper.getApprovedSubmissions) {
+                        approvedStories = StorageHelper.getApprovedSubmissions();
+                        console.log(`✅ Successfully loaded ${approvedStories.length} approved stories using StorageHelper`);
                     } else {
-                        console.log('No submissions found in localStorage');
+                        // Direct localStorage access fallback
+                        try {
+                            const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                            console.log('📦 Raw localStorage data found:', !!storedSubmissions);
+                            
+                            if (storedSubmissions) {
+                                const allSubmissions = JSON.parse(storedSubmissions);
+                                console.log('📊 Total submissions found:', allSubmissions.length);
+                                
+                                // Filter to only show approved stories
+                                approvedStories = allSubmissions.filter(story => story.status === 'approved');
+                                console.log('✓ Approved stories found:', approvedStories.length);
+                            } else {
+                                console.log('⚠️ No submissions found in localStorage');
+                                
+                                // Try backup key as last resort
+                                const backupData = localStorage.getItem('appfoundry_approved_seed');
+                                if (backupData) {
+                                    console.log('🔄 Found backup data, restoring...');
+                                    try {
+                                        const backup = JSON.parse(backupData);
+                                        const approvedBackup = backup.filter(story => story.status === 'approved');
+                                        approvedStories = approvedBackup;
+                                        console.log('✅ Restored from backup:', approvedStories.length, 'stories');
+                                    } catch (e) {
+                                        console.error('❌ Error parsing backup data:', e);
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            console.error('❌ Error accessing localStorage:', error);
+                        }
                     }
                 } catch (error) {
-                    console.error('Error accessing localStorage:', error);
+                    console.error('❌ Error loading stories:', error);
+                }
+                
+                // Display stories if we found any
+                if (approvedStories.length > 0) {
+                    displayStories(approvedStories);
+                    document.getElementById('empty-state').style.display = 'none';
+                    document.getElementById('loading-indicator').style.display = 'none';
+                    console.log('✨ Successfully displayed stories');
+                    return true;
+                } else {
+                    console.log('⚠️ No approved stories found');
+                    
+                    // Retry logic - wait and try again if this is the first few attempts
+                    if (retryCount < 3) {
+                        console.log(`🔄 Will retry in ${(retryCount + 1) * 500}ms...`);
+                        setTimeout(() => {
+                            loadStoriesWithRetry(retryCount + 1);
+                        }, (retryCount + 1) * 500);
+                        return false;
+                    } else {
+                        // Give up after 3 retries and show empty state
+                        console.log('❌ Giving up after multiple attempts');
+                        document.getElementById('success-stories-grid').innerHTML = '';
+                        document.getElementById('empty-state').style.display = 'block';
+                        document.getElementById('loading-indicator').style.display = 'none';
+                        return false;
+                    }
                 }
             }
             
-            // Display stories or empty state
-            if (approvedStories.length > 0) {
-                displayStories(approvedStories);
-                document.getElementById('empty-state').style.display = 'none';
-            } else {
-                console.log('No approved stories found, showing empty state');
-                document.getElementById('success-stories-grid').innerHTML = '';
-                document.getElementById('empty-state').style.display = 'block';
-            }
-        }
-        
-        // Function to display stories in the grid
-        function displayStories(stories) {
-            const grid = document.getElementById('success-stories-grid');
-            grid.innerHTML = ''; // Clear existing content
-            
-            // Sort by date (newest first)
-            stories.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            // Add each story to the grid
-            stories.forEach(story => {
-                const storyCard = document.createElement('div');
-                storyCard.className = 'story-card';
+            // Function to display stories in the grid
+            function displayStories(stories) {
+                const grid = document.getElementById('success-stories-grid');
+                if (!grid) {
+                    console.error('❌ Could not find success-stories-grid element');
+                    return;
+                }
                 
-                // Get image URL (use first image or placeholder)
-                const imageUrl = story.images && story.images.length > 0 
-                    ? story.images[0] 
-                    : 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
+                grid.innerHTML = ''; // Clear existing content
                 
-                storyCard.innerHTML = `
-                    <img src="${imageUrl}" alt="${story.appName}" class="story-image">
-                    <div class="story-content">
-                        <div class="story-tag">${story.appType}</div>
-                        <h3 class="story-title">${story.appName}</h3>
-                        <div class="story-author">
-                            <span class="story-author-name">By ${story.name}</span>
+                // Sort by date (newest first)
+                stories.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                // Add each story to the grid
+                stories.forEach(story => {
+                    const storyCard = document.createElement('div');
+                    storyCard.className = 'story-card';
+                    
+                    // Get image URL (use first image or placeholder)
+                    const imageUrl = story.images && story.images.length > 0 && story.images[0]
+                        ? story.images[0] 
+                        : 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
+                    
+                    // For handling older versions where appType might be different
+                    const appType = story.appType || story.app_type || "App";
+                    
+                    storyCard.innerHTML = `
+                        <img src="${imageUrl}" alt="${story.appName}" class="story-image">
+                        <div class="story-content">
+                            <div class="story-tag">${appType}</div>
+                            <h3 class="story-title">${story.appName}</h3>
+                            <div class="story-author">
+                                <span class="story-author-name">By ${story.name}</span>
+                            </div>
+                            <div class="story-quote">${story.testimonial}</div>
+                            <a href="#" class="story-button" onclick="openStoryModal('${story.id}'); return false;">Read Full Story</a>
                         </div>
-                        <div class="story-quote">${story.testimonial}</div>
-                        <a href="#" class="story-button" onclick="openStoryModal('${story.id}'); return false;">Read Full Story</a>
-                    </div>
-                `;
+                    `;
+                    
+                    grid.appendChild(storyCard);
+                });
                 
-                grid.appendChild(storyCard);
-            });
-        }
+                // Show the grid
+                grid.style.display = 'grid';
+            }
+            
+            // Try to load stories immediately
+            const loaded = loadStoriesWithRetry();
+            
+            // Also attach to DOMContentLoaded for safety
+            if (!loaded) {
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('🔄 DOM loaded, ensuring stories are loaded');
+                    loadStoriesWithRetry();
+                });
+            }
+        })();
         
         // Function to open the full story modal
         function openStoryModal(storyId) {
@@ -544,7 +608,7 @@
             // Fill the modal with story details
             document.getElementById('modal-title').textContent = story.appName;
             document.getElementById('modal-author').textContent = `Created by ${story.name}`;
-            document.getElementById('modal-tag').textContent = story.appType;
+            document.getElementById('modal-tag').textContent = story.appType || story.app_type || "App";
             document.getElementById('modal-testimonial').textContent = story.testimonial;
             
             // Convert story text to paragraphs
@@ -557,12 +621,15 @@
             
             if (story.images && story.images.length > 0) {
                 story.images.forEach(imageUrl => {
-                    const img = document.createElement('img');
-                    img.src = imageUrl;
-                    img.alt = story.appName;
-                    img.className = 'story-modal-image';
-                    imagesContainer.appendChild(img);
+                    if (imageUrl) {
+                        const img = document.createElement('img');
+                        img.src = imageUrl;
+                        img.alt = story.appName;
+                        img.className = 'story-modal-image';
+                        imagesContainer.appendChild(img);
+                    }
                 });
+                imagesContainer.style.display = 'grid';
             } else {
                 imagesContainer.style.display = 'none';
             }
@@ -579,6 +646,22 @@
             document.getElementById('story-modal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeStoryModal();
+            }
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            const storyModal = document.getElementById('story-modal');
+            
+            if (e.target === storyModal) {
+                closeStoryModal();
+            }
+        });
     </script>
 
     <script src="identity-widget.js"></script>
