@@ -1,3 +1,7 @@
+# Force specific deploy preview URL to redirect to main domain - PUT THIS FIRST IN YOUR FILE
+https://6814284599ae6c000815d445--claudeappbuilder.netlify.app/success-stories https://claudeappbuilder.netlify.app/success-stories 301!
+https://6814284599ae6c000815d445--claudeappbuilder.netlify.app/success-stories.html https://claudeappbuilder.netlify.app/success-stories.html 301!
+
 # Global redirects for AppFoundry
 
 # Force all deploy previews to redirect to the main domain
