@@ -605,85 +605,128 @@
     <script src="storage-helper.js"></script>
     <script>
         // Script to load approved stories
-        // Enhanced version with retry logic and better error handling
+        // Updated version to fetch from GitHub via Netlify function
         (function() {
             console.log("🔄 Initializing success stories loader");
             
             // Function to load stories with advanced error handling
-            function loadStoriesWithRetry(retryCount = 0) {
-                console.log(`🔍 Attempting to load stories (attempt ${retryCount + 1})`);
+            async function loadApprovedStories() {
+                console.log("🔍 Loading approved stories");
                 
-                // Try to get approved stories from StorageHelper first
-                let approvedStories = [];
+                // Show loading indicator
+                document.getElementById('loading-indicator').style.display = 'block';
+                document.getElementById('success-stories-grid').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'none';
                 
                 try {
-                    if (typeof StorageHelper !== 'undefined' && StorageHelper.getApprovedSubmissions) {
-                        approvedStories = StorageHelper.getApprovedSubmissions();
-                        console.log(`✅ Successfully loaded ${approvedStories.length} approved stories using StorageHelper`);
+                    // First try to fetch from the API
+                    const response = await fetch('/.netlify/functions/get-submissions?status=approved');
+                    
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch from API");
+                    }
+                    
+                    const approvedStories = await response.json();
+                    
+                    if (approvedStories.length > 0) {
+                        displayStories(approvedStories);
+                        document.getElementById('empty-state').style.display = 'none';
                     } else {
-                        // Direct localStorage access fallback
-                        try {
-                            const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                            console.log('📦 Raw localStorage data found:', !!storedSubmissions);
-                            
-                            if (storedSubmissions) {
-                                const allSubmissions = JSON.parse(storedSubmissions);
-                                console.log('📊 Total submissions found:', allSubmissions.length);
-                                
-                                // Filter to only show approved stories
-                                approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                                console.log('✓ Approved stories found:', approvedStories.length);
-                            } else {
-                                console.log('⚠️ No submissions found in localStorage');
-                                
-                                // Try backup key as last resort
-                                const backupData = localStorage.getItem('appfoundry_approved_seed');
-                                if (backupData) {
-                                    console.log('🔄 Found backup data, restoring...');
-                                    try {
-                                        const backup = JSON.parse(backupData);
-                                        const approvedBackup = backup.filter(story => story.status === 'approved');
-                                        approvedStories = approvedBackup;
-                                        console.log('✅ Restored from backup:', approvedStories.length, 'stories');
-                                    } catch (e) {
-                                        console.error('❌ Error parsing backup data:', e);
-                                    }
-                                }
-                            }
-                        } catch (error) {
-                            console.error('❌ Error accessing localStorage:', error);
-                        }
+                        // Fall back to localStorage if API returned no stories
+                        fallbackToLocalStorage();
                     }
                 } catch (error) {
-                    console.error('❌ Error loading stories:', error);
-                }
-                
-                // Display stories if we found any
-                if (approvedStories.length > 0) {
-                    displayStories(approvedStories);
-                    document.getElementById('empty-state').style.display = 'none';
-                    document.getElementById('loading-indicator').style.display = 'none';
-                    console.log('✨ Successfully displayed stories');
-                    return true;
-                } else {
-                    console.log('⚠️ No approved stories found');
+                    console.error("Error fetching from API:", error);
                     
-                    // Retry logic - wait and try again if this is the first few attempts
-                    if (retryCount < 3) {
-                        console.log(`🔄 Will retry in ${(retryCount + 1) * 500}ms...`);
-                        setTimeout(() => {
-                            loadStoriesWithRetry(retryCount + 1);
-                        }, (retryCount + 1) * 500);
-                        return false;
-                    } else {
-                        // Give up after 3 retries and show empty state
-                        console.log('❌ Giving up after multiple attempts');
-                        document.getElementById('success-stories-grid').innerHTML = '';
-                        document.getElementById('empty-state').style.display = 'block';
-                        document.getElementById('loading-indicator').style.display = 'none';
-                        return false;
-                    }
+                    // Fall back to localStorage
+                    fallbackToLocalStorage();
+                } finally {
+                    document.getElementById('loading-indicator').style.display = 'none';
                 }
+            }
+            
+            // Fallback to localStorage
+            function fallbackToLocalStorage() {
+                try {
+                    if (typeof StorageHelper !== 'undefined' && StorageHelper.getApprovedSubmissions) {
+                        const approvedStories = StorageHelper.getApprovedSubmissions();
+                        console.log(`✅ Using StorageHelper, found ${approvedStories.length} approved stories`);
+                        
+                        if (approvedStories.length > 0) {
+                            displayStories(approvedStories);
+                            document.getElementById('empty-state').style.display = 'none';
+                            return;
+                        }
+                    }
+                    
+                    // Direct localStorage access
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    if (storedSubmissions) {
+                        const allSubmissions = JSON.parse(storedSubmissions);
+                        const approvedStories = allSubmissions.filter(story => story.status === 'approved');
+                        
+                        if (approvedStories.length > 0) {
+                            displayStories(approvedStories);
+                            document.getElementById('empty-state').style.display = 'none';
+                            return;
+                        }
+                    }
+                    
+                    // Check backup seed as last resort
+                    const backupData = localStorage.getItem('appfoundry_approved_seed');
+                    if (backupData) {
+                        const backup = JSON.parse(backupData);
+                        const approvedBackup = backup.filter(story => story.status === 'approved');
+                        
+                        if (approvedBackup.length > 0) {
+                            displayStories(approvedBackup);
+                            document.getElementById('empty-state').style.display = 'none';
+                            return;
+                        }
+                    }
+                    
+                    // If we got here, no stories were found, show sample stories
+                    const sampleStories = getSampleStories();
+                    if (sampleStories.length > 0) {
+                        displayStories(sampleStories);
+                        document.getElementById('empty-state').style.display = 'none';
+                    } else {
+                        document.getElementById('success-stories-grid').style.display = 'none';
+                        document.getElementById('empty-state').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error("Error accessing localStorage:", error);
+                    document.getElementById('success-stories-grid').style.display = 'none';
+                    document.getElementById('empty-state').style.display = 'block';
+                }
+            }
+            
+            // Function to get sample stories as fallback
+            function getSampleStories() {
+                return [
+                    {
+                        id: 'sample_1',
+                        name: 'Sarah Johnson',
+                        appName: 'SleepTrack',
+                        appType: 'Health & Fitness',
+                        testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
+                        story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
+                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App'],
+                        date: '2025-04-15T10:30:00Z',
+                        status: 'approved'
+                    },
+                    {
+                        id: 'sample_2',
+                        name: 'Michael Chen',
+                        appName: 'RecipeKeeper',
+                        appType: 'Lifestyle',
+                        testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
+                        story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
+                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App'],
+                        date: '2025-04-22T14:45:00Z',
+                        status: 'approved'
+                    }
+                ];
             }
             
             // Function to display stories in the grid
@@ -732,125 +775,156 @@
                 grid.style.display = 'grid';
             }
             
-            // Function to open the full story modal
-            window.openStoryModal = function(storyId) {
-                let story;
-                
-                // Get the story from localStorage
-                if (typeof StorageHelper !== 'undefined') {
-                    const allSubmissions = StorageHelper.getSubmissions();
-                    story = allSubmissions.find(s => s.id === storyId);
-                } else {
-                    try {
-                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                        if (storedSubmissions) {
-                            const allSubmissions = JSON.parse(storedSubmissions);
-                            story = allSubmissions.find(s => s.id === storyId);
-                        }
-                    } catch (error) {
-                        console.error('Error accessing localStorage:', error);
-                        return;
-                    }
-                }
-                
-                if (!story) {
-                    console.error('Story not found:', storyId);
-                    return;
-                }
-                
-                // Fill the modal with story details
-                document.getElementById('modal-title').textContent = story.appName;
-                document.getElementById('modal-author').textContent = `Created by ${story.name}`;
-                document.getElementById('modal-tag').textContent = story.appType || story.app_type || "App";
-                document.getElementById('modal-testimonial').textContent = story.testimonial;
-                
-                // Convert story text to paragraphs
-                const storyContent = story.story.split('\n\n').map(para => `<p>${para}</p>`).join('');
-                document.getElementById('modal-content').innerHTML = storyContent;
-                
-                // Add images
-                const imagesContainer = document.getElementById('modal-images');
-                imagesContainer.innerHTML = '';
-                
-                if (story.images && story.images.length > 0) {
-                    story.images.forEach(imageUrl => {
-                        if (imageUrl) {
-                            const img = document.createElement('img');
-                            img.src = imageUrl;
-                            img.alt = story.appName;
-                            img.className = 'story-modal-image';
-                            imagesContainer.appendChild(img);
-                        }
-                    });
-                    imagesContainer.style.display = 'grid';
-                } else {
-                    imagesContainer.style.display = 'none';
-                }
-                
-                // Show the modal
-                document.getElementById('story-modal').style.display = 'flex';
-                
-                // Prevent background scrolling
-                document.body.style.overflow = 'hidden';
-            }
-            
-            // Function to close the story modal
-            window.closeStoryModal = function() {
-                document.getElementById('story-modal').style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-            
-            // Close modal on escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeStoryModal();
-                }
+            // Load stories when the page loads
+            document.addEventListener('DOMContentLoaded', function() {
+                loadApprovedStories();
             });
             
-            // Close modal when clicking outside
-            window.addEventListener('click', function(e) {
-                const storyModal = document.getElementById('story-modal');
-                
-                if (e.target === storyModal) {
-                    closeStoryModal();
-                }
-            });
-            
-            // Try to load stories immediately
-            const loaded = loadStoriesWithRetry();
-            
-            // Also attach to DOMContentLoaded for safety
-            if (!loaded) {
-                document.addEventListener('DOMContentLoaded', function() {
-                    console.log('🔄 DOM loaded, ensuring stories are loaded');
-                    loadStoriesWithRetry();
-                });
-            }
+            // Make functions globally available
+            window.loadApprovedStories = loadApprovedStories;
+            window.displayStories = displayStories;
         })();
         
-        // Also check all links to make sure they use the absolute main domain URL
-        setTimeout(function() {
-            const currentHost = window.location.hostname;
-            const mainDomain = 'claudeappbuilder.netlify.app';
+        // Open story modal
+        function openStoryModal(storyId) {
+            let story;
             
-            // If we're on a deploy preview, ensure links point to main domain
-            if (currentHost.includes('--claudeappbuilder.netlify.app')) {
-                console.log('🔗 Checking all links to ensure they point to main domain');
-                
-                const allLinks = document.querySelectorAll('a[href]');
-                allLinks.forEach(link => {
-                    const href = link.getAttribute('href');
+            // Try to find the story by ID - first from API
+            fetch(`/.netlify/functions/get-submissions?status=approved`)
+                .then(response => response.json())
+                .then(approvedStories => {
+                    story = approvedStories.find(s => s.id === storyId);
                     
-                    // Skip links that already have the main domain or are external
-                    if (href && !href.includes('https://') && !href.startsWith('#') && !href.startsWith('mailto:')) {
-                        // Convert to absolute URL on main domain
-                        const absoluteUrl = 'https://' + mainDomain + (href.startsWith('/') ? href : '/' + href);
-                        link.setAttribute('href', absoluteUrl);
-                        console.log(`🔧 Updated link from ${href} to ${absoluteUrl}`);
+                    if (story) {
+                        populateAndShowModal(story);
+                    } else {
+                        // Fall back to localStorage
+                        fallbackModalLoad(storyId);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching story from API:", error);
+                    fallbackModalLoad(storyId);
+                });
+        }
+        
+        // Fallback to localStorage for modal
+        function fallbackModalLoad(storyId) {
+            let story;
+            
+            // Get the story from localStorage
+            if (typeof StorageHelper !== 'undefined') {
+                const allSubmissions = StorageHelper.getSubmissions();
+                story = allSubmissions.find(s => s.id === storyId);
+            } else {
+                try {
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    if (storedSubmissions) {
+                        const allSubmissions = JSON.parse(storedSubmissions);
+                        story = allSubmissions.find(s => s.id === storyId);
+                    }
+                } catch (error) {
+                    console.error('Error accessing localStorage:', error);
+                }
+            }
+            
+            if (story) {
+                populateAndShowModal(story);
+            } else {
+                console.error('Story not found:', storyId);
+                
+                // If story not found, try sample stories
+                const sampleStories = [
+                    {
+                        id: 'sample_1',
+                        name: 'Sarah Johnson',
+                        appName: 'SleepTrack',
+                        appType: 'Health & Fitness',
+                        testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
+                        story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
+                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App'],
+                        date: '2025-04-15T10:30:00Z',
+                        status: 'approved'
+                    },
+                    {
+                        id: 'sample_2',
+                        name: 'Michael Chen',
+                        appName: 'RecipeKeeper',
+                        appType: 'Lifestyle',
+                        testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
+                        story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
+                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App'],
+                        date: '2025-04-22T14:45:00Z',
+                        status: 'approved'
+                    }
+                ];
+                
+                const sampleStory = sampleStories.find(s => s.id === storyId);
+                if (sampleStory) {
+                    populateAndShowModal(sampleStory);
+                }
+            }
+        }
+        
+        // Populate and show the modal
+        function populateAndShowModal(story) {
+            // Fill the modal with story details
+            document.getElementById('modal-title').textContent = story.appName;
+            document.getElementById('modal-author').textContent = `Created by ${story.name}`;
+            document.getElementById('modal-tag').textContent = story.appType || story.app_type || "App";
+            document.getElementById('modal-testimonial').textContent = story.testimonial;
+            
+            // Convert story text to paragraphs
+            const storyContent = story.story.split('\n\n').map(para => `<p>${para}</p>`).join('');
+            document.getElementById('modal-content').innerHTML = storyContent;
+            
+            // Add images
+            const imagesContainer = document.getElementById('modal-images');
+            imagesContainer.innerHTML = '';
+            
+            if (story.images && story.images.length > 0) {
+                story.images.forEach(imageUrl => {
+                    if (imageUrl) {
+                        const img = document.createElement('img');
+                        img.src = imageUrl;
+                        img.alt = story.appName;
+                        img.className = 'story-modal-image';
+                        imagesContainer.appendChild(img);
                     }
                 });
+                imagesContainer.style.display = 'grid';
+            } else {
+                imagesContainer.style.display = 'none';
             }
-        }, 1000);
+            
+            // Show the modal
+            document.getElementById('story-modal').style.display = 'flex';
+            
+            // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Function to close the story modal
+        function closeStoryModal() {
+            document.getElementById('story-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeStoryModal();
+            }
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            const storyModal = document.getElementById('story-modal');
+            
+            if (e.target === storyModal) {
+                closeStoryModal();
+            }
+        });
     </script>
 </body>
 </html>
