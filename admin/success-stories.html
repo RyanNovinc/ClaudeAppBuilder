@@ -487,6 +487,29 @@
             color: #b91c1c;
             border: 1px solid #ef4444;
         }
+
+        /* Loading indicator */
+        #loading-indicator {
+            text-align: center;
+            padding: 30px;
+            font-size: 16px;
+            color: #6b7280;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(0, 112, 243, 0.3);
+            border-radius: 50%;
+            border-top-color: #0070f3;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -530,7 +553,12 @@
         </div>
         
         <div class="submissions-container">
-            <div id="submissions" class="submission-cards">
+            <div id="loading-indicator">
+                <div class="loading-spinner"></div>
+                Loading submissions...
+            </div>
+            
+            <div id="submissions" class="submission-cards" style="display: none;">
                 <!-- Submissions will be displayed here -->
             </div>
             
@@ -573,6 +601,9 @@
     </div>
     
     <script>
+        // Constants
+        const ADMIN_TOKEN = "admin_token_secure"; // Replace with your actual admin token
+        
         // Global variables
         let allSubmissions = [];
         let currentTab = 'all';
@@ -592,25 +623,80 @@
             });
         });
         
-        // Load submissions from localStorage
-        function loadSubmissions() {
+        // Load submissions from GitHub via Netlify function
+        async function loadSubmissions() {
             try {
-                // Get submissions from localStorage
-                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                // Show loading indicator
+                document.getElementById('loading-indicator').style.display = 'block';
+                document.getElementById('submissions').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'none';
                 
-                if (storedSubmissions) {
-                    allSubmissions = JSON.parse(storedSubmissions);
-                    console.log("Loaded", allSubmissions.length, "submissions from localStorage");
-                    
-                    // Display submissions
-                    displaySubmissions();
-                } else {
-                    console.log("No submissions found in localStorage");
-                    showEmptyState();
+                // Fetch submissions from API
+                const response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
+                    headers: {
+                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error("Failed to fetch submissions");
                 }
+                
+                const data = await response.json();
+                allSubmissions = data;
+                
+                console.log("Loaded", allSubmissions.length, "submissions");
+                
+                // Fall back to localStorage if no submissions from API
+                if (allSubmissions.length === 0) {
+                    try {
+                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                        
+                        if (storedSubmissions) {
+                            const localSubmissions = JSON.parse(storedSubmissions);
+                            
+                            // Filter by status if needed
+                            if (currentTab !== 'all') {
+                                allSubmissions = localSubmissions.filter(sub => sub.status === currentTab);
+                            } else {
+                                allSubmissions = localSubmissions;
+                            }
+                            
+                            console.log("Loaded", allSubmissions.length, "submissions from localStorage (fallback)");
+                        }
+                    } catch (localStorageError) {
+                        console.error("Error loading from localStorage:", localStorageError);
+                    }
+                }
+                
+                // Display submissions
+                displaySubmissions();
             } catch (error) {
                 console.error("Error loading submissions:", error);
-                showEmptyState();
+                
+                // Fall back to localStorage
+                try {
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    
+                    if (storedSubmissions) {
+                        allSubmissions = JSON.parse(storedSubmissions);
+                        
+                        // Filter by status if needed
+                        if (currentTab !== 'all') {
+                            allSubmissions = allSubmissions.filter(sub => sub.status === currentTab);
+                        }
+                        
+                        console.log("Loaded", allSubmissions.length, "submissions from localStorage (fallback)");
+                        displaySubmissions();
+                    } else {
+                        showEmptyState();
+                    }
+                } catch (localStorageError) {
+                    console.error("Error loading from localStorage:", localStorageError);
+                    showEmptyState();
+                }
+            } finally {
+                document.getElementById('loading-indicator').style.display = 'none';
             }
         }
         
@@ -619,7 +705,7 @@
             // Filter submissions based on current tab
             let filteredSubmissions = allSubmissions;
             
-            if (currentTab !== 'all') {
+            if (currentTab !== 'all' && filteredSubmissions.some(sub => sub.status)) {
                 filteredSubmissions = allSubmissions.filter(submission => submission.status === currentTab);
             }
             
@@ -659,7 +745,7 @@
             // Update pagination
             updatePagination(totalPages);
             
-            // Hide empty state
+            // Hide empty state and show submissions
             document.getElementById('empty-state').style.display = 'none';
             document.getElementById('submissions').style.display = 'grid';
         }
@@ -801,44 +887,166 @@
             return card;
         }
         
-        // Update submission status to approved
-        function approveSubmission(id) {
-            // Find the submission
-            const submission = allSubmissions.find(s => s.id === id);
-            if (!submission) return;
-            
-            // Update status
-            submission.status = 'approved';
-            
-            // Save to localStorage
-            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
-            
-            // Update seed immediately too
-            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(allSubmissions));
-            console.log("💾 Seed updated after approval with", allSubmissions.length, "stories");
-            
-            // Refresh display
-            displaySubmissions();
+        // Update submission status to approved - use GitHub API
+        async function approveSubmission(id) {
+            try {
+                document.getElementById('loading-indicator').style.display = 'block';
+                
+                // Call the Netlify function
+                const response = await fetch("/.netlify/functions/approve-submission", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                    },
+                    body: JSON.stringify({ id })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || "Failed to approve submission");
+                }
+                
+                // For backwards compatibility, also update localStorage
+                try {
+                    // Find the submission
+                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                    const submissionIndex = submissions.findIndex(s => s.id === id);
+                    
+                    if (submissionIndex !== -1) {
+                        // Update status
+                        submissions[submissionIndex].status = 'approved';
+                        
+                        // Save to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                        
+                        // Update seed immediately too
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                        console.log("💾 Seed updated after approval with", submissions.length, "stories");
+                    }
+                } catch (localStorageError) {
+                    console.warn("Error updating localStorage:", localStorageError);
+                }
+                
+                // Reload submissions
+                await loadSubmissions();
+                
+                alert("Submission approved successfully!");
+            } catch (error) {
+                console.error("Error approving submission:", error);
+                alert(`Error approving submission: ${error.message}`);
+                
+                // Try localStorage fallback
+                try {
+                    // Find the submission
+                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                    const submissionIndex = submissions.findIndex(s => s.id === id);
+                    
+                    if (submissionIndex !== -1) {
+                        // Update status
+                        submissions[submissionIndex].status = 'approved';
+                        
+                        // Save to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                        
+                        // Update seed immediately too
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                        console.log("💾 Seed updated after approval with", submissions.length, "stories");
+                        
+                        // Reload
+                        await loadSubmissions();
+                        
+                        alert("Submission approved successfully (localStorage fallback)!");
+                    }
+                } catch (localStorageError) {
+                    console.error("Error in localStorage fallback:", localStorageError);
+                    alert("Could not approve submission. Please try again later.");
+                }
+            } finally {
+                document.getElementById('loading-indicator').style.display = 'none';
+            }
         }
         
-        // Update submission status to rejected
-        function rejectSubmission(id) {
-            // Find the submission
-            const submission = allSubmissions.find(s => s.id === id);
-            if (!submission) return;
-            
-            // Update status
-            submission.status = 'rejected';
-            
-            // Save to localStorage
-            localStorage.setItem('appfoundry_submissions', JSON.stringify(allSubmissions));
-            
-            // Update seed immediately too
-            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(allSubmissions));
-            console.log("💾 Seed updated after rejection with", allSubmissions.length, "stories");
-            
-            // Refresh display
-            displaySubmissions();
+        // Update submission status to rejected - use GitHub API
+        async function rejectSubmission(id) {
+            try {
+                document.getElementById('loading-indicator').style.display = 'block';
+                
+                // Call the Netlify function
+                const response = await fetch("/.netlify/functions/reject-submission", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                    },
+                    body: JSON.stringify({ id })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || "Failed to reject submission");
+                }
+                
+                // For backwards compatibility, also update localStorage
+                try {
+                    // Find the submission
+                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                    const submissionIndex = submissions.findIndex(s => s.id === id);
+                    
+                    if (submissionIndex !== -1) {
+                        // Update status
+                        submissions[submissionIndex].status = 'rejected';
+                        
+                        // Save to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                        
+                        // Update seed immediately too
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                        console.log("💾 Seed updated after rejection with", submissions.length, "stories");
+                    }
+                } catch (localStorageError) {
+                    console.warn("Error updating localStorage:", localStorageError);
+                }
+                
+                // Reload submissions
+                await loadSubmissions();
+                
+                alert("Submission rejected successfully!");
+            } catch (error) {
+                console.error("Error rejecting submission:", error);
+                alert(`Error rejecting submission: ${error.message}`);
+                
+                // Try localStorage fallback
+                try {
+                    // Find the submission
+                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                    const submissionIndex = submissions.findIndex(s => s.id === id);
+                    
+                    if (submissionIndex !== -1) {
+                        // Update status
+                        submissions[submissionIndex].status = 'rejected';
+                        
+                        // Save to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                        
+                        // Update seed immediately too
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                        console.log("💾 Seed updated after rejection with", submissions.length, "stories");
+                        
+                        // Reload
+                        await loadSubmissions();
+                        
+                        alert("Submission rejected successfully (localStorage fallback)!");
+                    }
+                } catch (localStorageError) {
+                    console.error("Error in localStorage fallback:", localStorageError);
+                    alert("Could not reject submission. Please try again later.");
+                }
+            } finally {
+                document.getElementById('loading-indicator').style.display = 'none';
+            }
         }
         
         // Change tab
@@ -860,7 +1068,7 @@
             currentPage = 1;
             
             // Display submissions for the new tab
-            displaySubmissions();
+            loadSubmissions();
         }
         
         // Show full story in modal
@@ -1016,18 +1224,19 @@
             }
         });
 
-        // NEW FUNCTION: Export Approved Stories to JSON
+        // Export Approved Stories to JSON
         function exportApprovedStories() {
             try {
-                // Get stories from localStorage
-                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                document.getElementById('loading-indicator').style.display = 'block';
                 
-                if (storedSubmissions) {
-                    const allSubmissions = JSON.parse(storedSubmissions);
-                    
-                    // Filter to only get approved stories
-                    const approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                    
+                // Get approved stories
+                fetch('/.netlify/functions/get-submissions?status=approved', {
+                    headers: {
+                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                    }
+                })
+                .then(response => response.json())
+                .then(approvedStories => {
                     if (approvedStories.length === 0) {
                         showExportResult('No approved stories found to export.', 'error');
                         return;
@@ -1053,12 +1262,58 @@
                     document.body.removeChild(a);
                     
                     showExportResult(`Exported ${approvedStories.length} approved stories. Upload this JSON file to your website.`, 'success');
-                } else {
-                    showExportResult('No submissions found in localStorage.', 'error');
-                }
+                })
+                .catch(error => {
+                    console.error('Error exporting from API:', error);
+                    
+                    // Fall back to localStorage
+                    try {
+                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                        
+                        if (storedSubmissions) {
+                            const allSubmissions = JSON.parse(storedSubmissions);
+                            const approvedStories = allSubmissions.filter(story => story.status === 'approved');
+                            
+                            if (approvedStories.length === 0) {
+                                showExportResult('No approved stories found to export.', 'error');
+                                return;
+                            }
+                            
+                            // Create formatted JSON
+                            const jsonContent = JSON.stringify(approvedStories, null, 2);
+                            
+                            // Create a Blob with the JSON content
+                            const blob = new Blob([jsonContent], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            
+                            // Create a download link
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'approved-stories.json';
+                            a.style.display = 'none';
+                            document.body.appendChild(a);
+                            a.click();
+                            
+                            // Clean up
+                            URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                            
+                            showExportResult(`Exported ${approvedStories.length} approved stories from localStorage. Upload this JSON file to your website.`, 'success');
+                        } else {
+                            showExportResult('No submissions found to export.', 'error');
+                        }
+                    } catch (localStorageError) {
+                        console.error('Error exporting from localStorage:', localStorageError);
+                        showExportResult(`Error: ${localStorageError.message}`, 'error');
+                    }
+                })
+                .finally(() => {
+                    document.getElementById('loading-indicator').style.display = 'none';
+                });
             } catch (error) {
                 console.error('Error exporting approved stories:', error);
                 showExportResult(`Error: ${error.message}`, 'error');
+                document.getElementById('loading-indicator').style.display = 'none';
             }
         }
 
