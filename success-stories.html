@@ -4,6 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Success Stories - AppFoundry</title>
+    
+    <!-- Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
+    <script>
+    // Universal Story Manager - ensures stories are consistently available
+    (function() {
+      // Run on all pages to ensure localStorage data consistency
+      console.log("📊 Story Manager initializing on success stories page");
+      
+      // Check if we need to seed the localStorage from our backup
+      function seedStoriesIfNeeded() {
+        // Only run if appfoundry_submissions doesn't exist or is empty
+        if (!localStorage.getItem('appfoundry_submissions')) {
+          console.log("🌱 No stories found in localStorage, checking for seed data");
+          
+          // Check if we have any stories in our seed
+          if (localStorage.getItem('appfoundry_approved_seed')) {
+            console.log("🔄 Restoring stories from seed");
+            try {
+              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+              console.log("✅ Successfully restored", seed.length, "stories from seed");
+            } catch (e) {
+              console.error("❌ Error restoring from seed:", e);
+            }
+          }
+        } else {
+          // If we have submissions, make sure we have an up-to-date seed
+          try {
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log("💾 Seed updated with", submissions.length, "stories");
+          } catch (e) {
+            console.error("❌ Error updating seed:", e);
+          }
+        }
+      }
+      
+      // Run the seed check immediately
+      seedStoriesIfNeeded();
+    })();
+    </script>
+    
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -402,19 +444,55 @@
         // Load approved stories when the page loads
         document.addEventListener('DOMContentLoaded', function() {
             console.log("📄 DOM loaded, loading approved stories");
-            loadApprovedStoriesFromJSON();
+            loadApprovedStoriesFromLocalStorage();
         });
         
-        // Function to load approved stories from the JSON file
-        function loadApprovedStoriesFromJSON() {
-            console.log("🔍 Loading approved stories from JSON file");
+        // Function to load approved stories directly from localStorage first
+        function loadApprovedStoriesFromLocalStorage() {
+            console.log("🔍 Loading approved stories from localStorage first");
             
             // Show loading indicator
             document.getElementById('loading-indicator').style.display = 'block';
             document.getElementById('success-stories-grid').style.display = 'none';
             document.getElementById('empty-state').style.display = 'none';
             
-            // Fetch the approved-stories.json file
+            // First, try to get stories directly from localStorage
+            try {
+                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                if (storedSubmissions) {
+                    const allSubmissions = JSON.parse(storedSubmissions);
+                    const approvedStories = allSubmissions.filter(s => s.status === 'approved');
+                    
+                    if (approvedStories.length > 0) {
+                        console.log("✅ Successfully loaded", approvedStories.length, "approved stories from localStorage");
+                        
+                        // Store the approved stories
+                        allStories = approvedStories;
+                        
+                        // Display the stories
+                        displayStories(approvedStories);
+                        return; // Exit early, no need to fetch JSON
+                    } else {
+                        console.log("⚠️ No approved stories found in localStorage, trying JSON file");
+                    }
+                } else {
+                    console.log("⚠️ No submissions found in localStorage, trying JSON file");
+                }
+            } catch (error) {
+                console.error("❌ Error reading from localStorage:", error);
+                // Continue to try JSON file as fallback
+            }
+            
+            // If we get here, either there were no approved stories in localStorage
+            // or there was an error reading localStorage, so try the JSON file
+            loadApprovedStoriesFromJSON();
+        }
+        
+        // Function to load approved stories from the JSON file as fallback
+        function loadApprovedStoriesFromJSON() {
+            console.log("🔍 Trying to load approved stories from JSON file");
+            
+            // Try to fetch the approved-stories.json file
             fetch('approved-stories.json')
                 .then(response => {
                     if (!response.ok) {
@@ -436,12 +514,12 @@
                     }
                 })
                 .catch(error => {
-                    console.error("❌ Error loading approved stories:", error);
+                    console.error("❌ Error loading approved stories from JSON:", error);
                     showEmptyState();
                 });
         }
         
-        // Function to display stories in the grid
+        // Display stories in the grid
         function displayStories(stories) {
             // Get elements
             const grid = document.getElementById('success-stories-grid');
@@ -491,7 +569,7 @@
             });
         }
         
-        // Function to show the empty state
+        // Show the empty state
         function showEmptyState() {
             document.getElementById('loading-indicator').style.display = 'none';
             document.getElementById('success-stories-grid').style.display = 'none';
