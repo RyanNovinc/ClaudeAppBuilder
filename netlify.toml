@@ -1,18 +1,45 @@
+# Global build settings
 [build]
-  # Directory to publish (not needed if it's the root)
-  publish = "/"
-  # Directory with serverless functions
-  functions = "functions"
-  # Uncomment this if you need dependencies installed during build
-  # command = "cd functions && npm install"
+  publish = "/"  # Your publish directory (adjust if needed for your setup)
 
-# Configure Node bundler for functions
-[functions]
-  node_bundler = "esbuild"
-  # Include node modules in function deployment
-  included_files = ["functions/node_modules/**"]
+# Force all deploy previews to redirect to main domain
+[[redirects]]
+  from = "https://68140de25f88f40008bd6457--claudeappbuilder.netlify.app/*"
+  to = "https://claudeappbuilder.netlify.app/:splat"
+  status = 301
+  force = true
 
-# Set security headers
+# Handle any deploy previews (wildcard for all deployments)
+[[redirects]]
+  from = "https://*--claudeappbuilder.netlify.app/*"
+  to = "https://claudeappbuilder.netlify.app/:splat"
+  status = 301
+  force = true
+
+# Handle extension-less URLs
+[[redirects]]
+  from = "/success-stories"
+  to = "/success-stories.html"
+  status = 301
+
+[[redirects]]
+  from = "/submit-success-story"
+  to = "/submit-success-story.html"
+  status = 301
+
+[[redirects]]
+  from = "/admin/success-stories"
+  to = "/admin/success-stories.html"
+  status = 301
+
+# Force HTTPS
+[[redirects]]
+  from = "http://*"
+  to = "https://:splat"
+  status = 301
+  force = true
+
+# Set custom headers
 [[headers]]
   for = "/*"
   [headers.values]
@@ -20,8 +47,19 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = "default-src 'self' https://js.stripe.com https://identity.netlify.com; script-src 'self' https://js.stripe.com https://identity.netlify.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.stripe.com https://identity.netlify.com;"
-    # Add CORS headers to allow the functions to be called from your site
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Headers = "Content-Type, Authorization"
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    Content-Security-Policy = "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://identity.netlify.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://identity.netlify.com;"
+    
+# Post-processing settings
+[build.processing]
+  skip_processing = false
+  
+[build.processing.html]
+  pretty_urls = true
+
+# Context-specific settings
+[context.production]
+  command = ""  # Your build command if any
+  
+[context.deploy-preview]
+  command = ""  # Your build command for deploy previews if any
