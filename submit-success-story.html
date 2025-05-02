@@ -536,7 +536,7 @@
                 imagePreview.appendChild(infoText);
             }
             
-            // Handle form submission - UPDATED for better image handling
+            // FIXED: Handle form submission with better error management
             const form = document.getElementById('success-story-form');
             const statusMessage = document.getElementById('status-message');
             const formSection = document.getElementById('form-section');
@@ -551,28 +551,32 @@
                 submitButton.disabled = true;
                 submitButton.textContent = 'Submitting...';
                 
+                // Flag to track if the submission was successful
+                let submissionSuccessful = false;
+                
                 try {
                     // Process images first - convert all selected files to base64
                     let processedImages = [];
                     
                     if (selectedFiles.length > 0) {
-                        // Create an array of promises for image processing
-                        const imagePromises = selectedFiles.map(file => {
-                            return new Promise((resolve, reject) => {
-                                const reader = new FileReader();
-                                reader.onload = e => resolve(e.target.result);
-                                reader.onerror = reject;
-                                reader.readAsDataURL(file);
-                            });
-                        });
-                        
-                        // Wait for all images to be processed
                         try {
+                            // Create an array of promises for image processing
+                            const imagePromises = selectedFiles.map(file => {
+                                return new Promise((resolve, reject) => {
+                                    const reader = new FileReader();
+                                    reader.onload = e => resolve(e.target.result);
+                                    reader.onerror = reject;
+                                    reader.readAsDataURL(file);
+                                });
+                            });
+                            
+                            // Wait for all images to be processed
                             processedImages = await Promise.all(imagePromises);
                             console.log(`✅ Successfully processed ${processedImages.length} images`);
                         } catch (imgError) {
-                            console.error('❌ Error processing images:', imgError);
-                            // Continue with empty images array
+                            console.error('Warning: Issue processing images:', imgError);
+                            // Continue with empty images array - don't throw the error
+                            processedImages = [];
                         }
                     }
                     
@@ -603,52 +607,70 @@
                     console.log('📝 Created new submission with ID:', newSubmission.id);
                     console.log(`📸 Submission includes ${newSubmission.images.length} images`);
                     
-                    // Save to localStorage
-                    let existingSubmissions = [];
+                    // Save to localStorage - wrapped in try/catch but don't throw
                     try {
+                        let existingSubmissions = [];
                         const storedSubmissions = localStorage.getItem('appfoundry_submissions');
                         if (storedSubmissions) {
                             existingSubmissions = JSON.parse(storedSubmissions);
                         }
-                    } catch (parseError) {
-                        console.error('❌ Error parsing existing submissions:', parseError);
-                        // Continue with empty array if parsing fails
+                        
+                        // Add new submission to beginning of array
+                        existingSubmissions.unshift(newSubmission);
+                        
+                        // Save back to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
+                        
+                        // Also update backup seed
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(existingSubmissions));
+                        
+                        console.log('💾 Successfully saved submission to localStorage');
+                        
+                        // Mark submission as successful
+                        submissionSuccessful = true;
+                    } catch (storageError) {
+                        console.error('Error saving to localStorage:', storageError);
+                        // Don't rethrow - we'll check the success flag
                     }
                     
-                    // Add new submission to beginning of array
-                    existingSubmissions.unshift(newSubmission);
-                    
-                    // Save back to localStorage
-                    localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
-                    
-                    // Also update backup seed
-                    localStorage.setItem('appfoundry_approved_seed', JSON.stringify(existingSubmissions));
-                    
-                    console.log('💾 Successfully saved submission to localStorage');
-                    
-                    // Hide form and show success view
-                    formSection.style.display = 'none';
-                    successView.style.display = 'block';
-                    
-                    // Scroll to top of success view
-                    window.scrollTo({
-                        top: successView.offsetTop - 100,
-                        behavior: 'smooth'
-                    });
+                    // If submission was successful, show success view
+                    if (submissionSuccessful) {
+                        // Hide form and show success view
+                        formSection.style.display = 'none';
+                        successView.style.display = 'block';
+                        
+                        // Scroll to top of success view
+                        window.scrollTo({
+                            top: successView.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        // Show error message if storage failed
+                        statusMessage.textContent = 'An error occurred while saving your story. Please try again.';
+                        statusMessage.className = 'status-message error';
+                        statusMessage.style.display = 'block';
+                        
+                        // Scroll to top to show error message
+                        window.scrollTo({
+                            top: statusMessage.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
                     
                 } catch (error) {
-                    console.error('❌ Error submitting form:', error);
+                    console.error('Error in form submission process:', error);
                     
-                    // Show error message
-                    statusMessage.textContent = 'An error occurred while submitting your story. Please try again.';
-                    statusMessage.className = 'status-message error';
-                    statusMessage.style.display = 'block';
-                    
-                    // Scroll to top to show error message
-                    window.scrollTo({
-                        top: statusMessage.offsetTop - 100,
-                        behavior: 'smooth'
-                    });
+                    // Check if we managed to save data despite errors
+                    if (submissionSuccessful) {
+                        // Still show success view if data was saved
+                        formSection.style.display = 'none';
+                        successView.style.display = 'block';
+                    } else {
+                        // Only show error if we didn't save the data
+                        statusMessage.textContent = 'An error occurred while submitting your story. Please try again.';
+                        statusMessage.className = 'status-message error';
+                        statusMessage.style.display = 'block';
+                    }
                 } finally {
                     // Reset button regardless of outcome
                     submitButton.disabled = false;
