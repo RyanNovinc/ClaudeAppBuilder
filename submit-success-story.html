@@ -557,125 +557,88 @@
                     
                     console.log('Created new submission with ID:', newSubmission.id);
                     
-                    // Use StorageHelper if available, otherwise use direct localStorage
+                    // Always save to localStorage first as our primary storage
                     let saveSuccess = false;
                     
-                    if (typeof StorageHelper !== 'undefined' && StorageHelper.addSubmission) {
-                        // Use the storage helper
-                        saveSuccess = StorageHelper.addSubmission(newSubmission);
-                        console.log('Used StorageHelper to save submission:', saveSuccess);
+                    try {
+                        // Get existing submissions from localStorage
+                        let existingSubmissions = [];
+                        try {
+                            const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                            
+                            if (storedSubmissions) {
+                                existingSubmissions = JSON.parse(storedSubmissions);
+                            }
+                        } catch (parseError) {
+                            console.error('Error parsing existing submissions:', parseError);
+                            // If parsing fails, we'll use an empty array
+                            existingSubmissions = [];
+                        }
+                        
+                        // Add new submission to the beginning
+                        existingSubmissions.unshift(newSubmission);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
                         
                         // Make sure we have an up-to-date backup seed
-                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(StorageHelper.getSubmissions()));
-                    } else {
-                        // Direct localStorage fallback
-                        try {
-                            // Get existing submissions from localStorage
-                            let existingSubmissions = [];
-                            try {
-                                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                                
-                                if (storedSubmissions) {
-                                    existingSubmissions = JSON.parse(storedSubmissions);
-                                    console.log('Found existing submissions:', existingSubmissions.length);
-                                }
-                            } catch (parseError) {
-                                console.error('Error parsing existing submissions:', parseError);
-                                // If parsing fails, we'll use an empty array
-                            }
-                            
-                            // Add new submission to the beginning
-                            existingSubmissions.unshift(newSubmission);
-                            
-                            // Save to localStorage
-                            localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
-                            console.log('Successfully saved submission to localStorage with ID:', newSubmission.id);
-                            
-                            // Make sure we have an up-to-date backup seed
-                            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(existingSubmissions));
-                            
-                            // For debugging
-                            console.log('Current localStorage submissions:', existingSubmissions.length);
-                            saveSuccess = true;
-                        } catch (storageError) {
-                            console.error('Error saving to localStorage:', storageError);
-                            saveSuccess = false;
-                        }
-                    }
-                    
-                    // Then try to submit to API
-                    try {
-                        const response = await fetch('/.netlify/functions/submit-success-story', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                name,
-                                email,
-                                'app-type': appType,
-                                'app-name': appName,
-                                'experience-level': experienceLevel,
-                                story,
-                                testimonial,
-                                images
-                            })
-                        });
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(existingSubmissions));
                         
-                        if (response.ok) {
-                            const result = await response.json();
-                            console.log('API submission successful:', result);
-                            
-                            // If API returns an ID, update our localStorage submission ID
-                            if (result.submissionId && saveSuccess) {
-                                try {
-                                    if (typeof StorageHelper !== 'undefined' && StorageHelper.updateSubmission) {
-                                        // Use the helper to update the ID
-                                        StorageHelper.updateSubmission(newSubmission.id, { id: result.submissionId });
-                                    } else {
-                                        // Direct localStorage update
-                                        const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-                                        
-                                        // Find the submission we just added and update its ID
-                                        const submissionIndex = submissions.findIndex(s => s.id === newSubmission.id);
-                                        if (submissionIndex !== -1) {
-                                            submissions[submissionIndex].id = result.submissionId;
-                                            localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                                            console.log('Updated submission ID in localStorage:', result.submissionId);
-                                            
-                                            // Update backup seed
-                                            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-                                        }
-                                    }
-                                } catch (updateError) {
-                                    console.error('Error updating submission ID:', updateError);
-                                }
-                            }
-                        } else {
-                            console.error('API submission failed:', await response.text());
-                            // We already saved to localStorage so we don't need additional fallback
-                        }
-                    } catch (apiError) {
-                        console.error('API submission error:', apiError);
-                        // We already saved to localStorage so we don't need additional fallback
+                        console.log('Successfully saved submission to localStorage');
+                        saveSuccess = true;
+                    } catch (storageError) {
+                        console.error('Error saving to localStorage:', storageError);
+                        throw storageError; // Re-throw to show error message
                     }
                     
-                    // Display success message
-                    statusMessage.textContent = 'Your success story has been submitted! After review, it will be featured on our success stories page.';
-                    statusMessage.className = 'status-message success';
-                    statusMessage.style.display = 'block';
+                    // Only attempt API submission if localStorage save succeeded
+                    if (saveSuccess) {
+                        // Try to submit to API (but don't worry if it fails)
+                        try {
+                            const response = await fetch('/.netlify/functions/submit-success-story', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    name,
+                                    email,
+                                    'app-type': appType,
+                                    'app-name': appName,
+                                    'experience-level': experienceLevel,
+                                    story,
+                                    testimonial,
+                                    images
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                console.log('API submission successful');
+                            } else {
+                                console.warn('API submission returned non-OK response, but localStorage save succeeded');
+                            }
+                        } catch (apiError) {
+                            console.warn('API submission error, but localStorage save succeeded:', apiError);
+                            // Continue since we already saved to localStorage
+                        }
                     
-                    // Reset form and selected files
-                    form.reset();
-                    selectedFiles = [];
-                    imagePreview.style.display = 'none';
-                    imagePreview.innerHTML = '';
-                    
-                    // Scroll to top of form to show message
-                    window.scrollTo({
-                        top: statusMessage.offsetTop - 100,
-                        behavior: 'smooth'
-                    });
+                        // Display success message
+                        statusMessage.textContent = 'Your success story has been submitted! After review, it will be featured on our success stories page.';
+                        statusMessage.className = 'status-message success';
+                        statusMessage.style.display = 'block';
+                        
+                        // Reset form and selected files
+                        form.reset();
+                        selectedFiles = [];
+                        imagePreview.style.display = 'none';
+                        imagePreview.innerHTML = '';
+                        
+                        // Scroll to top of form to show message
+                        window.scrollTo({
+                            top: statusMessage.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
                 } catch (error) {
                     console.error('Error submitting story:', error);
                     
