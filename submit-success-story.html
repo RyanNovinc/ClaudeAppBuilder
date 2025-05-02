@@ -316,7 +316,10 @@
             
             <!-- Form will be hidden after successful submission -->
             <div id="form-section">
-                <form id="success-story-form">
+                <form id="success-story-form" name="success-story" method="POST">
+                    <!-- Hidden field for Netlify form handling -->
+                    <input type="hidden" name="form-name" value="success-story" />
+                    
                     <div class="form-group">
                         <label for="name">Your Name</label>
                         <input type="text" id="name" name="name" required>
@@ -533,7 +536,7 @@
                 imagePreview.appendChild(infoText);
             }
             
-            // Handle form submission - UPDATED for better functionality
+            // Handle form submission - UPDATED for better image handling
             const form = document.getElementById('success-story-form');
             const statusMessage = document.getElementById('status-message');
             const formSection = document.getElementById('form-section');
