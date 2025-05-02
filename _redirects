@@ -1,1 +1,13 @@
+# Ensure all deploy previews redirect to the main domain
+https://68140de25f88f40008bd6457--claudeappbuilder.netlify.app/* https://claudeappbuilder.netlify.app/:splat 301!
 
+# Ensure paths without .html extension work
+/success-stories /success-stories.html 301
+/submit-success-story /submit-success-story.html 301
+/admin/success-stories /admin/success-stories.html 301
+
+# Force all deploy preview URLs to redirect to main domain
+https://*--claudeappbuilder.netlify.app/* https://claudeappbuilder.netlify.app/:splat 301!
+
+# Always force HTTPS
+http://* https://:splat 301!
