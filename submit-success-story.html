@@ -5,40 +5,163 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit Your Success Story - AppFoundry</title>
     
-    <!-- Simplified script for reliable localStorage submission -->
+    <!-- Storage Management Script -->
     <script>
-    // Check if localStorage is working
-    function checkLocalStorage() {
-        try {
-            localStorage.setItem('test', 'test');
-            localStorage.removeItem('test');
-            return true;
-        } catch (e) {
-            return false;
+    // Storage management helper functions
+    const StorageManager = {
+        // Get size of localStorage in bytes
+        getLocalStorageSize: function() {
+            let total = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    total += (localStorage[key].length + key.length) * 2; // Approximate UTF-16 size
+                }
+            }
+            return total;
+        },
+        
+        // Get human-readable size
+        formatSize: function(bytes) {
+            if (bytes < 1024) return bytes + " bytes";
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + " KB";
+            else return (bytes / 1048576).toFixed(2) + " MB";
+        },
+        
+        // Check if localStorage is near full (80% of quota)
+        isNearFull: function() {
+            // Typical quota is 5MB, but can vary
+            const estimatedQuota = 5 * 1024 * 1024;
+            const size = this.getLocalStorageSize();
+            return size > (estimatedQuota * 0.8);
+        },
+        
+        // Clean up space by removing old submissions
+        cleanupStorage: function() {
+            try {
+                // Get current submissions
+                const submissionsKey = 'appfoundry_submissions';
+                const submissions = JSON.parse(localStorage.getItem(submissionsKey) || '[]');
+                
+                if (submissions.length > 10) {
+                    // Keep only the 10 most recent submissions
+                    const recent = submissions.slice(0, 10);
+                    localStorage.setItem(submissionsKey, JSON.stringify(recent));
+                    
+                    // Also update seed
+                    localStorage.setItem('appfoundry_approved_seed', JSON.stringify(recent));
+                    
+                    console.log("Storage cleaned up. Kept 10 most recent submissions.");
+                    return true;
+                }
+                
+                return false;
+            } catch (e) {
+                console.error("Error cleaning storage:", e);
+                return false;
+            }
+        },
+        
+        // Try to save with cleanup if needed
+        safeSave: function(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (e) {
+                // If quota exceeded, try cleanup
+                if (e.name === 'QuotaExceededError' || 
+                    e.code === 22 || // Chrome
+                    e.code === 1014 || // Firefox
+                    e.message.includes('quota')) {
+                    
+                    console.log("Storage quota exceeded. Attempting cleanup...");
+                    
+                    // Try to clean up space
+                    this.cleanupStorage();
+                    
+                    // Try again
+                    try {
+                        localStorage.setItem(key, value);
+                        return true;
+                    } catch (e2) {
+                        // If still failing, try more aggressive cleanup
+                        this.emergencyCleanup();
+                        
+                        try {
+                            localStorage.setItem(key, value);
+                            return true;
+                        } catch (e3) {
+                            console.error("Storage save failed even after cleanup:", e3);
+                            return false;
+                        }
+                    }
+                } else {
+                    console.error("Error saving to localStorage:", e);
+                    return false;
+                }
+            }
+        },
+        
+        // Emergency cleanup - more aggressive space saving
+        emergencyCleanup: function() {
+            try {
+                // Clear non-critical items
+                localStorage.removeItem('appfoundry_visited_submission');
+                localStorage.removeItem('appfoundry_navigation');
+                
+                // Keep only 5 most recent submissions as last resort
+                const submissionsKey = 'appfoundry_submissions';
+                const submissions = JSON.parse(localStorage.getItem(submissionsKey) || '[]');
+                
+                if (submissions.length > 5) {
+                    const recent = submissions.slice(0, 5);
+                    localStorage.setItem(submissionsKey, JSON.stringify(recent));
+                    localStorage.setItem('appfoundry_approved_seed', JSON.stringify(recent));
+                }
+                
+                console.log("Emergency cleanup performed");
+            } catch (e) {
+                console.error("Emergency cleanup failed:", e);
+            }
         }
-    }
+    };
     </script>
     
-    <!-- Include your existing CSS here -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Keep your existing styles */
-        /* ... */
+        /* Include your existing styles here */
         
-        /* Add debug panel for troubleshooting */
-        .debug-panel {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f3f4f6;
+        /* Add styles for storage warning */
+        .storage-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px 15px;
             border-radius: 6px;
-            font-family: monospace;
-            font-size: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
             display: none;
         }
     </style>
 </head>
 <body>
-    <!-- Keep your existing header -->
-    
+    <header>
+        <div class="container">
+            <div class="logo"><a href="index.html">AppFoundry</a></div>
+            <nav>
+                <ul>
+                    <li><a href="index.html#overview">Overview</a></li>
+                    <li><a href="index.html#curriculum">Curriculum</a></li>
+                    <li><a href="index.html#pricing">Pricing</a></li>
+                    <li><a href="success-stories.html">Success Stories</a></li>
+                    <li><a href="about-creator.html">About</a></li>
+                </ul>
+            </nav>
+            <button class="cta-button small" id="loginButton">Log in</button>
+        </div>
+    </header>
+
     <div class="form-container">
         <div class="form-header">
             <h1>Share Your Success Story</h1>
@@ -46,7 +169,7 @@
         </div>
         
         <div class="form-content">
-            <!-- Success view -->
+            <!-- Success view that appears after form submission -->
             <div id="success-view" class="success-view" style="display: none;">
                 <div class="success-icon">✓</div>
                 <h2 class="success-title">Your Story Has Been Submitted!</h2>
@@ -54,11 +177,18 @@
                 <a href="success-stories.html" class="cta-button">View Success Stories</a>
             </div>
             
+            <div id="storage-warning" class="storage-warning">
+                Note: Your browser storage is nearly full. Consider clearing your browser data if you experience issues.
+            </div>
+            
             <div id="status-message" class="status-message"></div>
             
-            <!-- Form section -->
+            <!-- Form will be hidden after successful submission -->
             <div id="form-section">
-                <form id="success-story-form">
+                <form id="success-story-form" name="success-story" method="POST">
+                    <!-- Hidden field for Netlify form handling -->
+                    <input type="hidden" name="form-name" value="success-story" />
+                    
                     <div class="form-group">
                         <label for="name">Your Name</label>
                         <input type="text" id="name" name="name" required>
@@ -113,19 +243,14 @@
                         <textarea id="testimonial" name="testimonial" required placeholder="Write a brief testimonial (1-2 sentences) that we can feature on our success stories page."></textarea>
                     </div>
                     
+                    <!-- NOTE: Image upload removed to save localStorage space -->
+                    
                     <button type="submit" class="submit-button">Submit Your Story</button>
                     
                     <div class="form-note">
-                        <p>By submitting this form, you agree to let us feature your story and app screenshots on our website.</p>
+                        <p>By submitting this form, you agree to let us feature your story on our website.</p>
                     </div>
                 </form>
-                
-                <!-- Debug panel to help with troubleshooting -->
-                <div id="debug-panel" class="debug-panel">
-                    <div>localStorage status: <span id="ls-status">Checking...</span></div>
-                    <div>Existing submissions: <span id="existing-count">Checking...</span></div>
-                    <button id="debug-button" style="margin-top: 10px; font-size: 12px; padding: 5px 10px;">Test localStorage</button>
-                </div>
             </div>
             
             <div class="return-link">
@@ -134,75 +259,49 @@
         </div>
     </div>
 
-    <!-- Keep your existing footer -->
+    <footer>
+        <div class="container">
+            <div class="logo">AppFoundry</div>
+            <div class="footer-links">
+                <div class="link-group">
+                    <h4>Course</h4>
+                    <ul>
+                        <li><a href="index.html#overview">Overview</a></li>
+                        <li><a href="index.html#curriculum">Curriculum</a></li>
+                        <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="success-stories.html">Success Stories</a></li>
+                        <li><a href="about-creator.html">About Creator</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="refund-policy.html">Our Guarantee</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 AppFoundry. All rights reserved.
+            </div>
+        </div>
+    </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Debug helpers - will be hidden in production
-            const debugPanel = document.getElementById('debug-panel');
-            const lsStatus = document.getElementById('ls-status');
-            const existingCount = document.getElementById('existing-count');
-            const debugButton = document.getElementById('debug-button');
+            // Check storage status on page load
+            if (StorageManager.isNearFull()) {
+                document.getElementById('storage-warning').style.display = 'block';
+            }
             
-            // Show debug panel with shift+D key combination
-            document.addEventListener('keydown', function(e) {
-                if (e.shiftKey && e.key === 'D') {
-                    debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
-                    
-                    // Update debug info
-                    lsStatus.textContent = checkLocalStorage() ? 'Working' : 'Not working';
-                    
-                    try {
-                        const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-                        existingCount.textContent = submissions.length;
-                    } catch (e) {
-                        existingCount.textContent = 'Error: ' + e.message;
-                    }
-                }
-            });
-            
-            // Test button
-            debugButton.addEventListener('click', function() {
-                try {
-                    // Try to write a test submission
-                    const testSubmission = {
-                        id: 'test_' + Date.now(),
-                        name: 'Test User',
-                        email: 'test@example.com',
-                        appName: 'Test App',
-                        appType: 'Test',
-                        testimonial: 'This is a test submission.',
-                        story: 'This is a test story for debugging purposes.',
-                        date: new Date().toISOString(),
-                        status: 'pending'
-                    };
-                    
-                    // Get existing or create new array
-                    let submissions = [];
-                    try {
-                        const existingData = localStorage.getItem('appfoundry_submissions');
-                        if (existingData) {
-                            submissions = JSON.parse(existingData);
-                        }
-                    } catch (e) {}
-                    
-                    // Add the test submission
-                    submissions.unshift(testSubmission);
-                    
-                    // Save back to localStorage
-                    localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                    localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-                    
-                    // Update counts
-                    existingCount.textContent = submissions.length;
-                    
-                    alert('Test submission added successfully!');
-                } catch (e) {
-                    alert('Error adding test submission: ' + e.message);
-                }
-            });
-            
-            // Form submission
+            // Handle form submission
             const form = document.getElementById('success-story-form');
             const statusMessage = document.getElementById('status-message');
             const formSection = document.getElementById('form-section');
@@ -217,7 +316,7 @@
                 submitButton.textContent = 'Submitting...';
                 
                 try {
-                    // Get form data - simplified version without image processing
+                    // Get form data
                     const name = document.getElementById('name').value;
                     const email = document.getElementById('email').value;
                     const appType = document.getElementById('app-type').value;
@@ -226,7 +325,7 @@
                     const testimonial = document.getElementById('testimonial').value;
                     const experienceLevel = document.getElementById('experience-level').value;
                     
-                    // Create submission object
+                    // Create submission object - NO IMAGES to save space
                     const newSubmission = {
                         id: 'story_' + Date.now(),
                         name,
@@ -236,36 +335,60 @@
                         experienceLevel,
                         testimonial,
                         story,
-                        images: [], // No images in simplified version
                         date: new Date().toISOString(),
                         status: 'pending'
                     };
                     
                     // Get existing submissions
-                    let submissions = [];
-                    const existingData = localStorage.getItem('appfoundry_submissions');
-                    if (existingData) {
-                        submissions = JSON.parse(existingData);
+                    let existingSubmissions = [];
+                    try {
+                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                        if (storedSubmissions) {
+                            existingSubmissions = JSON.parse(storedSubmissions);
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing existing submissions:', parseError);
                     }
                     
                     // Add new submission to beginning of array
-                    submissions.unshift(newSubmission);
+                    existingSubmissions.unshift(newSubmission);
                     
-                    // Save back to localStorage
-                    localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                    localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                    // If storage is near full, clean up first
+                    if (StorageManager.isNearFull()) {
+                        console.log("Storage is near full, cleaning up before saving");
+                        StorageManager.cleanupStorage();
+                    }
                     
-                    // Hide form and show success view
-                    formSection.style.display = 'none';
-                    successView.style.display = 'block';
+                    // Save back to localStorage with error handling
+                    const jsonData = JSON.stringify(existingSubmissions);
+                    const saveSuccess = StorageManager.safeSave('appfoundry_submissions', jsonData);
+                    
+                    // Also update seed only if main save succeeded
+                    if (saveSuccess) {
+                        StorageManager.safeSave('appfoundry_approved_seed', jsonData);
+                    }
+                    
+                    if (saveSuccess) {
+                        // Success! Hide form and show success view
+                        formSection.style.display = 'none';
+                        successView.style.display = 'block';
+                    } else {
+                        throw new Error("Unable to save submission due to storage limitations. Try clearing browser data.");
+                    }
                     
                 } catch (error) {
                     console.error('Error submitting form:', error);
                     
-                    // Show specific error message
-                    statusMessage.textContent = 'Error: ' + error.message;
+                    // Show error message
+                    statusMessage.textContent = error.message || 'An error occurred while submitting your story. Please try again.';
                     statusMessage.className = 'status-message error';
                     statusMessage.style.display = 'block';
+                    
+                    // Scroll to top to show error message
+                    window.scrollTo({
+                        top: statusMessage.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
                 } finally {
                     // Reset button regardless of outcome
                     submitButton.disabled = false;
