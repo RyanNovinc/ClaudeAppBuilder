@@ -46,6 +46,163 @@
     })();
     </script>
     
+    <!-- Enhanced Story Loading System -->
+    <script>
+    // Ensure stories load correctly regardless of domain or storage state
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("🚀 Enhanced success stories loader initialized");
+        
+        // Define main functions
+        const loadStoriesWithRetry = function(retryCount = 0) {
+            console.log(`🔍 Attempting to load stories (attempt ${retryCount + 1})`);
+            
+            // Try to get approved stories from StorageHelper first
+            let approvedStories = [];
+            
+            try {
+                if (typeof StorageHelper !== 'undefined' && StorageHelper.getApprovedSubmissions) {
+                    approvedStories = StorageHelper.getApprovedSubmissions();
+                    console.log(`✅ Successfully loaded ${approvedStories.length} approved stories using StorageHelper`);
+                } else {
+                    // Direct localStorage access fallback
+                    try {
+                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                        console.log('📦 Raw localStorage data found:', !!storedSubmissions);
+                        
+                        if (storedSubmissions) {
+                            const allSubmissions = JSON.parse(storedSubmissions);
+                            console.log('📊 Total submissions found:', allSubmissions.length);
+                            
+                            // Filter to only show approved stories
+                            approvedStories = allSubmissions.filter(story => story.status === 'approved');
+                            console.log('✓ Approved stories found:', approvedStories.length);
+                        } else {
+                            console.log('⚠️ No submissions found in localStorage');
+                            
+                            // Try backup key as last resort
+                            const backupData = localStorage.getItem('appfoundry_approved_seed');
+                            if (backupData) {
+                                console.log('🔄 Found backup data, restoring...');
+                                try {
+                                    const backup = JSON.parse(backupData);
+                                    // Store in main localStorage key to ensure future loads work
+                                    localStorage.setItem('appfoundry_submissions', JSON.stringify(backup));
+                                    console.log('✅ Copied backup data to main storage location');
+                                    
+                                    const approvedBackup = backup.filter(story => story.status === 'approved');
+                                    approvedStories = approvedBackup;
+                                    console.log('✅ Restored from backup:', approvedStories.length, 'stories');
+                                } catch (e) {
+                                    console.error('❌ Error parsing backup data:', e);
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('❌ Error accessing localStorage:', error);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error loading stories:', error);
+            }
+            
+            // Display stories if we found any
+            if (approvedStories.length > 0) {
+                displayStories(approvedStories);
+                document.getElementById('empty-state').style.display = 'none';
+                document.getElementById('loading-indicator').style.display = 'none';
+                console.log('✨ Successfully displayed stories');
+                return true;
+            } else {
+                console.log('⚠️ No approved stories found');
+                
+                // Retry logic - wait and try again if this is the first few attempts
+                if (retryCount < 3) {
+                    console.log(`🔄 Will retry in ${(retryCount + 1) * 500}ms...`);
+                    setTimeout(() => {
+                        loadStoriesWithRetry(retryCount + 1);
+                    }, (retryCount + 1) * 500);
+                    return false;
+                } else {
+                    // Give up after 3 retries and show sample stories as fallback
+                    console.log('❌ Giving up after multiple attempts');
+                    
+                    // Fallback to sample data as last resort
+                    const sampleStories = getSampleStories();
+                    console.log('📄 Using sample stories as fallback');
+                    
+                    // Store sample stories in localStorage for future use
+                    try {
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(sampleStories));
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(sampleStories));
+                        console.log('💾 Stored sample stories for future use');
+                    } catch (e) {
+                        console.error('❌ Error storing sample stories:', e);
+                    }
+                    
+                    displayStories(sampleStories);
+                    document.getElementById('empty-state').style.display = 'none';
+                    document.getElementById('loading-indicator').style.display = 'none';
+                    return true;
+                }
+            }
+        };
+        
+        // Function to get sample stories as fallback
+        const getSampleStories = function() {
+            return [
+                {
+                    id: 'sample_1',
+                    name: 'Sarah Johnson',
+                    appName: 'SleepTrack',
+                    appType: 'Health & Fitness',
+                    testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
+                    story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
+                    images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App'],
+                    date: '2025-04-15T10:30:00Z',
+                    status: 'approved'
+                },
+                {
+                    id: 'sample_2',
+                    name: 'Michael Chen',
+                    appName: 'RecipeKeeper',
+                    appType: 'Lifestyle',
+                    testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
+                    story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
+                    images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App'],
+                    date: '2025-04-22T14:45:00Z',
+                    status: 'approved'
+                }
+            ];
+        };
+        
+        // Start loading process
+        console.log("📄 Ready to load stories");
+        loadStoriesWithRetry();
+        
+        // Also check all links to make sure they use the main domain
+        setTimeout(() => {
+            const currentHost = window.location.hostname;
+            const mainDomain = 'claudeappbuilder.netlify.app';
+            
+            // If we're on a deploy preview, ensure links point to main domain
+            if (currentHost.includes('--claudeappbuilder.netlify.app')) {
+                console.log('🔗 Checking links to ensure they point to main domain');
+                
+                const storyLinks = document.querySelectorAll('a[href*="success-stories"], a[href*="submit-success-story"]');
+                storyLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && !href.includes('https://')) {
+                        // Convert to absolute URL
+                        const newHref = 'https://' + mainDomain + (href.startsWith('/') ? href : '/' + href);
+                        link.setAttribute('href', newHref);
+                        console.log(`🔧 Updated link from ${href} to ${newHref}`);
+                    }
+                });
+            }
+        }, 1000);
+    });
+    </script>
+    
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -513,52 +670,143 @@
                     } else {
                         // Give up after 3 retries and show empty state
                         console.log('❌ Giving up after multiple attempts');
-                        
-                        // Use default sample data as fallback
-                        console.log('🌱 Using sample data as fallback');
-                        const sampleStories = [
-                            {
-                                id: 'sample_1',
-                                name: 'Sarah Johnson',
-                                appName: 'SleepTrack',
-                                appType: 'Health & Fitness',
-                                testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
-                                images: ['https://placeholder.pics/svg/300x200'],
-                                date: '2025-04-15T10:30:00Z',
-                                status: 'approved'
-                            },
-                            {
-                                id: 'sample_2',
-                                name: 'Michael Chen',
-                                appName: 'RecipeKeeper',
-                                appType: 'Lifestyle',
-                                testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
-                                images: ['https://placeholder.pics/svg/300x200'],
-                                date: '2025-04-22T14:45:00Z',
-                                status: 'approved'
-                            }
-                        ];
-                        
-                        // Save sample stories to localStorage for future use
-                        try {
-                            if (!localStorage.getItem('appfoundry_submissions')) {
-                                localStorage.setItem('appfoundry_submissions', JSON.stringify(sampleStories));
-                                localStorage.setItem('appfoundry_approved_seed', JSON.stringify(sampleStories));
-                                console.log('💾 Saved sample stories to localStorage for future use');
-                            }
-                        } catch (error) {
-                            console.error('❌ Error saving sample stories:', error);
-                        }
-                        
-                        // Display the sample stories
-                        displayStories(sampleStories);
-                        document.getElementById('empty-state').style.display = 'none';
+                        document.getElementById('success-stories-grid').innerHTML = '';
+                        document.getElementById('empty-state').style.display = 'block';
                         document.getElementById('loading-indicator').style.display = 'none';
-                        
-                        return true;
+                        return false;
                     }
                 }
             }
+            
+            // Function to display stories in the grid
+            function displayStories(stories) {
+                const grid = document.getElementById('success-stories-grid');
+                if (!grid) {
+                    console.error('❌ Could not find success-stories-grid element');
+                    return;
+                }
+                
+                grid.innerHTML = ''; // Clear existing content
+                
+                // Sort by date (newest first)
+                stories.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                // Add each story to the grid
+                stories.forEach(story => {
+                    const storyCard = document.createElement('div');
+                    storyCard.className = 'story-card';
+                    
+                    // Get image URL (use first image or placeholder)
+                    const imageUrl = story.images && story.images.length > 0 && story.images[0]
+                        ? story.images[0] 
+                        : 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
+                    
+                    // For handling older versions where appType might be different
+                    const appType = story.appType || story.app_type || "App";
+                    
+                    storyCard.innerHTML = `
+                        <img src="${imageUrl}" alt="${story.appName}" class="story-image">
+                        <div class="story-content">
+                            <div class="story-tag">${appType}</div>
+                            <h3 class="story-title">${story.appName}</h3>
+                            <div class="story-author">
+                                <span class="story-author-name">By ${story.name}</span>
+                            </div>
+                            <div class="story-quote">${story.testimonial}</div>
+                            <a href="#" class="story-button" onclick="openStoryModal('${story.id}'); return false;">Read Full Story</a>
+                        </div>
+                    `;
+                    
+                    grid.appendChild(storyCard);
+                });
+                
+                // Show the grid
+                grid.style.display = 'grid';
+            }
+            
+            // Function to open the full story modal
+            window.openStoryModal = function(storyId) {
+                let story;
+                
+                // Get the story from localStorage
+                if (typeof StorageHelper !== 'undefined') {
+                    const allSubmissions = StorageHelper.getSubmissions();
+                    story = allSubmissions.find(s => s.id === storyId);
+                } else {
+                    try {
+                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                        if (storedSubmissions) {
+                            const allSubmissions = JSON.parse(storedSubmissions);
+                            story = allSubmissions.find(s => s.id === storyId);
+                        }
+                    } catch (error) {
+                        console.error('Error accessing localStorage:', error);
+                        return;
+                    }
+                }
+                
+                if (!story) {
+                    console.error('Story not found:', storyId);
+                    return;
+                }
+                
+                // Fill the modal with story details
+                document.getElementById('modal-title').textContent = story.appName;
+                document.getElementById('modal-author').textContent = `Created by ${story.name}`;
+                document.getElementById('modal-tag').textContent = story.appType || story.app_type || "App";
+                document.getElementById('modal-testimonial').textContent = story.testimonial;
+                
+                // Convert story text to paragraphs
+                const storyContent = story.story.split('\n\n').map(para => `<p>${para}</p>`).join('');
+                document.getElementById('modal-content').innerHTML = storyContent;
+                
+                // Add images
+                const imagesContainer = document.getElementById('modal-images');
+                imagesContainer.innerHTML = '';
+                
+                if (story.images && story.images.length > 0) {
+                    story.images.forEach(imageUrl => {
+                        if (imageUrl) {
+                            const img = document.createElement('img');
+                            img.src = imageUrl;
+                            img.alt = story.appName;
+                            img.className = 'story-modal-image';
+                            imagesContainer.appendChild(img);
+                        }
+                    });
+                    imagesContainer.style.display = 'grid';
+                } else {
+                    imagesContainer.style.display = 'none';
+                }
+                
+                // Show the modal
+                document.getElementById('story-modal').style.display = 'flex';
+                
+                // Prevent background scrolling
+                document.body.style.overflow = 'hidden';
+            }
+            
+            // Function to close the story modal
+            window.closeStoryModal = function() {
+                document.getElementById('story-modal').style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+            
+            // Close modal on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeStoryModal();
+                }
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                const storyModal = document.getElementById('story-modal');
+                
+                if (e.target === storyModal) {
+                    closeStoryModal();
+                }
+            });
             
             // Try to load stories immediately
             const loaded = loadStoriesWithRetry();
@@ -572,158 +820,29 @@
             }
         })();
         
-        // Function to open the full story modal
-        function openStoryModal(storyId) {
-            let story;
+        // Also check all links to make sure they use the absolute main domain URL
+        setTimeout(function() {
+            const currentHost = window.location.hostname;
+            const mainDomain = 'claudeappbuilder.netlify.app';
             
-            // Get the story from localStorage
-            if (typeof StorageHelper !== 'undefined') {
-                const allSubmissions = StorageHelper.getSubmissions();
-                story = allSubmissions.find(s => s.id === storyId);
-            } else {
-                try {
-                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                    if (storedSubmissions) {
-                        const allSubmissions = JSON.parse(storedSubmissions);
-                        story = allSubmissions.find(s => s.id === storyId);
-                    }
-                } catch (error) {
-                    console.error('Error accessing localStorage:', error);
-                    return;
-                }
-            }
-            
-            if (!story) {
-                console.error('Story not found:', storyId);
-                return;
-            }
-            
-            // Fill the modal with story details
-            document.getElementById('modal-title').textContent = story.appName;
-            document.getElementById('modal-author').textContent = `Created by ${story.name}`;
-            document.getElementById('modal-tag').textContent = story.appType || story.app_type || "App";
-            document.getElementById('modal-testimonial').textContent = story.testimonial;
-            
-            // Convert story text to paragraphs
-            const storyContent = story.story.split('\n\n').map(para => `<p>${para}</p>`).join('');
-            document.getElementById('modal-content').innerHTML = storyContent;
-            
-            // Add images
-            const imagesContainer = document.getElementById('modal-images');
-            imagesContainer.innerHTML = '';
-            
-            if (story.images && story.images.length > 0) {
-                story.images.forEach(imageUrl => {
-                    if (imageUrl) {
-                        const img = document.createElement('img');
-                        img.src = imageUrl;
-                        img.alt = story.appName;
-                        img.className = 'story-modal-image';
-                        imagesContainer.appendChild(img);
+            // If we're on a deploy preview, ensure links point to main domain
+            if (currentHost.includes('--claudeappbuilder.netlify.app')) {
+                console.log('🔗 Checking all links to ensure they point to main domain');
+                
+                const allLinks = document.querySelectorAll('a[href]');
+                allLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    
+                    // Skip links that already have the main domain or are external
+                    if (href && !href.includes('https://') && !href.startsWith('#') && !href.startsWith('mailto:')) {
+                        // Convert to absolute URL on main domain
+                        const absoluteUrl = 'https://' + mainDomain + (href.startsWith('/') ? href : '/' + href);
+                        link.setAttribute('href', absoluteUrl);
+                        console.log(`🔧 Updated link from ${href} to ${absoluteUrl}`);
                     }
                 });
-                imagesContainer.style.display = 'grid';
-            } else {
-                imagesContainer.style.display = 'none';
             }
-            
-            // Show the modal
-            document.getElementById('story-modal').style.display = 'flex';
-            
-            // Prevent background scrolling
-            document.body.style.overflow = 'hidden';
-        }
-        
-        // Function to close the story modal
-        function closeStoryModal() {
-            document.getElementById('story-modal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-        
-        // Close modal on escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeStoryModal();
-            }
-        });
-        
-        // Close modal when clicking outside
-        window.addEventListener('click', function(e) {
-            const storyModal = document.getElementById('story-modal');
-            
-            if (e.target === storyModal) {
-                closeStoryModal();
-            }
-        });
-        
-        // Function to display stories - exposed to global scope for access by storage-helper.js
-        function displayStories(stories) {
-            // Get elements
-            const storiesGrid = document.getElementById('success-stories-grid');
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const emptyState = document.getElementById('empty-state');
-            
-            // Hide loading indicator
-            if (loadingIndicator) {
-                loadingIndicator.style.display = 'none';
-            }
-            
-            // Sort by date (newest first)
-            stories.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            // Check if we have stories
-            if (stories.length === 0) {
-                // Show empty state
-                if (emptyState) {
-                    emptyState.style.display = 'block';
-                }
-                storiesGrid.style.display = 'none';
-                return;
-            }
-            
-            // Clear the grid
-            storiesGrid.innerHTML = '';
-            
-            // Add each story to the grid
-            stories.forEach(story => {
-                const storyCard = document.createElement('div');
-                storyCard.className = 'story-card';
-                
-                // Get image URL (use first image or placeholder)
-                const imageUrl = story.images && story.images.length > 0 && story.images[0]
-                    ? story.images[0] 
-                    : 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
-                
-                // For handling older versions where appType might be different
-                const appType = story.appType || story.app_type || "App";
-                
-                storyCard.innerHTML = `
-                    <img src="${imageUrl}" alt="${story.appName}" class="story-image">
-                    <div class="story-content">
-                        <div class="story-tag">${appType}</div>
-                        <h3 class="story-title">${story.appName}</h3>
-                        <div class="story-author">
-                            <span class="story-author-name">By ${story.name}</span>
-                        </div>
-                        <div class="story-quote">${story.testimonial}</div>
-                        <a href="#" class="story-button" onclick="openStoryModal('${story.id}'); return false;">Read Full Story</a>
-                    </div>
-                `;
-                
-                storiesGrid.appendChild(storyCard);
-            });
-            
-            // Show the grid
-            storiesGrid.style.display = 'grid';
-            
-            // Hide empty state
-            if (emptyState) {
-                emptyState.style.display = 'none';
-            }
-        }
-        
-        // Make displayStories function available globally
-        window.displayStories = displayStories;
+        }, 1000);
     </script>
 </body>
 </html>
