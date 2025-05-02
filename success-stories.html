@@ -50,7 +50,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
         .success-stories-container {
             max-width: 1200px;
@@ -351,12 +350,7 @@
             <p>See what our students have built without writing a single line of code. These real-world apps were created using the exact same approach you'll learn in this course.</p>
         </div>
         
-        <!-- Loading indicator - shown while stories are being loaded -->
-        <div id="loading-indicator">
-            Loading success stories...
-        </div>
-        
-        <div id="success-stories-grid" class="success-stories-grid" style="display: none;">
+        <div id="success-stories-grid" class="success-stories-grid">
             <!-- Stories will be loaded dynamically here -->
         </div>
         
@@ -367,11 +361,11 @@
             <p class="empty-state-description">Our students are busy building amazing apps! Check back soon to see what they've created with the AppFoundry method.</p>
         </div>
         
+        <!-- FIXED: Using the absolute URL that was working before -->
         <div class="create-story-box">
             <h2>Ready to Share Your Success?</h2>
             <p>Have you built an app using the AppFoundry method? We'd love to feature your creation and inspire others to bring their ideas to life!</p>
-            <!-- IMPORTANT: Fixed URL to use relative path -->
-            <a href="submit-success-story.html" class="cta-button large">Share Your Success Story</a>
+            <a href="https://claudeappbuilder.netlify.app/submit-success-story.html" class="cta-button large" target="_blank">Share Your Success Story</a>
         </div>
     </div>
     
@@ -438,125 +432,76 @@
         </div>
     </footer>
 
+    <script src="storage-helper.js"></script>
     <script>
-        // Global variables
-        let allStories = [];
-        
-        // Load approved stories when the page loads
+        // Load approved stories once the page is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("📄 DOM loaded, loading approved stories");
-            loadApprovedStoriesFromLocalStorage();
+            loadApprovedStories();
         });
         
-        // Function to load approved stories directly from localStorage first
-        function loadApprovedStoriesFromLocalStorage() {
-            console.log("🔍 Loading approved stories from localStorage first");
+        // Function to load approved stories from localStorage
+        function loadApprovedStories() {
+            let approvedStories = [];
             
-            // Show loading indicator
-            document.getElementById('loading-indicator').style.display = 'block';
-            document.getElementById('success-stories-grid').style.display = 'none';
-            document.getElementById('empty-state').style.display = 'none';
-            
-            // First, try to get stories directly from localStorage
-            try {
-                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                if (storedSubmissions) {
-                    const allSubmissions = JSON.parse(storedSubmissions);
-                    const approvedStories = allSubmissions.filter(s => s.status === 'approved');
+            // Try to use the StorageHelper if available
+            if (typeof StorageHelper !== 'undefined') {
+                console.log('Using StorageHelper to get submissions');
+                const allSubmissions = StorageHelper.getSubmissions();
+                approvedStories = allSubmissions.filter(story => story.status === 'approved');
+            } else {
+                // Direct localStorage access as fallback
+                try {
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    console.log('Raw localStorage data:', storedSubmissions);
                     
-                    if (approvedStories.length > 0) {
-                        console.log("✅ Successfully loaded", approvedStories.length, "approved stories from localStorage");
+                    if (storedSubmissions) {
+                        const allSubmissions = JSON.parse(storedSubmissions);
+                        console.log('All submissions:', allSubmissions.length);
                         
-                        // Store the approved stories
-                        allStories = approvedStories;
-                        
-                        // Display the stories
-                        displayStories(approvedStories);
-                        return; // Exit early, no need to fetch JSON
+                        // Filter to only show approved stories
+                        approvedStories = allSubmissions.filter(story => story.status === 'approved');
+                        console.log('Approved stories:', approvedStories.length);
                     } else {
-                        console.log("⚠️ No approved stories found in localStorage, trying JSON file");
+                        console.log('No submissions found in localStorage');
                     }
-                } else {
-                    console.log("⚠️ No submissions found in localStorage, trying JSON file");
+                } catch (error) {
+                    console.error('Error accessing localStorage:', error);
                 }
-            } catch (error) {
-                console.error("❌ Error reading from localStorage:", error);
-                // Continue to try JSON file as fallback
             }
             
-            // If we get here, either there were no approved stories in localStorage
-            // or there was an error reading localStorage, so try the JSON file
-            loadApprovedStoriesFromJSON();
+            // Display stories or empty state
+            if (approvedStories.length > 0) {
+                displayStories(approvedStories);
+                document.getElementById('empty-state').style.display = 'none';
+            } else {
+                console.log('No approved stories found, showing empty state');
+                document.getElementById('success-stories-grid').innerHTML = '';
+                document.getElementById('empty-state').style.display = 'block';
+            }
         }
         
-        // Function to load approved stories from the JSON file as fallback
-        function loadApprovedStoriesFromJSON() {
-            console.log("🔍 Trying to load approved stories from JSON file");
-            
-            // Try to fetch the approved-stories.json file
-            fetch('approved-stories.json')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(stories => {
-                    console.log("✅ Successfully loaded", stories.length, "approved stories from JSON");
-                    
-                    // Store the approved stories
-                    allStories = stories;
-                    
-                    // Display the stories
-                    if (stories.length > 0) {
-                        displayStories(stories);
-                    } else {
-                        showEmptyState();
-                    }
-                })
-                .catch(error => {
-                    console.error("❌ Error loading approved stories from JSON:", error);
-                    showEmptyState();
-                });
-        }
-        
-        // Display stories in the grid
+        // Function to display stories in the grid
         function displayStories(stories) {
-            // Get elements
             const grid = document.getElementById('success-stories-grid');
-            const loading = document.getElementById('loading-indicator');
-            const emptyState = document.getElementById('empty-state');
-            
-            // Hide loading and empty state
-            loading.style.display = 'none';
-            emptyState.style.display = 'none';
-            
-            // Clear grid and make it visible
-            grid.innerHTML = '';
-            grid.style.display = 'grid';
+            grid.innerHTML = ''; // Clear existing content
             
             // Sort by date (newest first)
             stories.sort((a, b) => new Date(b.date) - new Date(a.date));
             
             // Add each story to the grid
             stories.forEach(story => {
-                console.log("📱 Adding story to grid:", story.id, story.appName);
                 const storyCard = document.createElement('div');
                 storyCard.className = 'story-card';
                 
                 // Get image URL (use first image or placeholder)
-                let imageUrl = 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
-                if (story.images && story.images.length > 0 && story.images[0]) {
-                    imageUrl = story.images[0];
-                }
-                
-                // For handling older versions where appType might be different
-                const appType = story.appType || story.app_type || "App";
+                const imageUrl = story.images && story.images.length > 0 
+                    ? story.images[0] 
+                    : 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
                 
                 storyCard.innerHTML = `
                     <img src="${imageUrl}" alt="${story.appName}" class="story-image">
                     <div class="story-content">
-                        <div class="story-tag">${appType}</div>
+                        <div class="story-tag">${story.appType}</div>
                         <h3 class="story-title">${story.appName}</h3>
                         <div class="story-author">
                             <span class="story-author-name">By ${story.name}</span>
@@ -570,29 +515,36 @@
             });
         }
         
-        // Show the empty state
-        function showEmptyState() {
-            document.getElementById('loading-indicator').style.display = 'none';
-            document.getElementById('success-stories-grid').style.display = 'none';
-            document.getElementById('empty-state').style.display = 'block';
-        }
-        
         // Function to open the full story modal
         function openStoryModal(storyId) {
-            console.log("🔍 Opening modal for story:", storyId);
+            let story;
             
-            // Find the story by ID
-            const story = allStories.find(s => s.id === storyId);
+            // Get the story from localStorage
+            if (typeof StorageHelper !== 'undefined') {
+                const allSubmissions = StorageHelper.getSubmissions();
+                story = allSubmissions.find(s => s.id === storyId);
+            } else {
+                try {
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    if (storedSubmissions) {
+                        const allSubmissions = JSON.parse(storedSubmissions);
+                        story = allSubmissions.find(s => s.id === storyId);
+                    }
+                } catch (error) {
+                    console.error('Error accessing localStorage:', error);
+                    return;
+                }
+            }
             
             if (!story) {
-                console.error("❌ Story not found for ID:", storyId);
+                console.error('Story not found:', storyId);
                 return;
             }
             
             // Fill the modal with story details
             document.getElementById('modal-title').textContent = story.appName;
             document.getElementById('modal-author').textContent = `Created by ${story.name}`;
-            document.getElementById('modal-tag').textContent = story.appType || story.app_type || "App";
+            document.getElementById('modal-tag').textContent = story.appType;
             document.getElementById('modal-testimonial').textContent = story.testimonial;
             
             // Convert story text to paragraphs
@@ -605,15 +557,12 @@
             
             if (story.images && story.images.length > 0) {
                 story.images.forEach(imageUrl => {
-                    if (imageUrl) {
-                        const img = document.createElement('img');
-                        img.src = imageUrl;
-                        img.alt = story.appName;
-                        img.className = 'story-modal-image';
-                        imagesContainer.appendChild(img);
-                    }
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.alt = story.appName;
+                    img.className = 'story-modal-image';
+                    imagesContainer.appendChild(img);
                 });
-                imagesContainer.style.display = 'grid';
             } else {
                 imagesContainer.style.display = 'none';
             }
@@ -630,22 +579,6 @@
             document.getElementById('story-modal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
-        
-        // Close modal on escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeStoryModal();
-            }
-        });
-        
-        // Close modal when clicking outside
-        window.addEventListener('click', function(e) {
-            const storyModal = document.getElementById('story-modal');
-            
-            if (e.target === storyModal) {
-                closeStoryModal();
-            }
-        });
     </script>
 
     <script src="identity-widget.js"></script>
