@@ -536,24 +536,14 @@
                 imagePreview.appendChild(infoText);
             }
             
-            // Helper function to convert file to base64
-            function convertFileToBase64(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            // FIX: Handle form submission with AJAX and in-page success view
+            // Handle form submission - UPDATED for better image handling
             const form = document.getElementById('success-story-form');
             const statusMessage = document.getElementById('status-message');
             const formSection = document.getElementById('form-section');
             const successView = document.getElementById('success-view');
             
-            form.addEventListener('submit', function(e) {
-                // Prevent form from submitting normally
+            form.addEventListener('submit', async function(e) {
+                // Prevent default form submission
                 e.preventDefault();
                 
                 // Show loading state
@@ -561,33 +551,59 @@
                 submitButton.disabled = true;
                 submitButton.textContent = 'Submitting...';
                 
-                // Get form data
-                const name = document.getElementById('name').value;
-                const email = document.getElementById('email').value;
-                const appType = document.getElementById('app-type').value;
-                const appName = document.getElementById('app-name').value;
-                const story = document.getElementById('story').value;
-                const testimonial = document.getElementById('testimonial').value;
-                const experienceLevel = document.getElementById('experience-level').value;
-                
-                // Create submission object for localStorage
-                const newSubmission = {
-                    id: 'story_' + Date.now(),
-                    name,
-                    email,
-                    appName,
-                    appType,
-                    experienceLevel,
-                    testimonial,
-                    story,
-                    images: [], // Skip images for better localStorage compatibility
-                    date: new Date().toISOString(),
-                    status: 'pending'
-                };
-                
-                // First save to localStorage
                 try {
-                    // Get existing submissions
+                    // Process images first - convert all selected files to base64
+                    let processedImages = [];
+                    
+                    if (selectedFiles.length > 0) {
+                        // Create an array of promises for image processing
+                        const imagePromises = selectedFiles.map(file => {
+                            return new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onload = e => resolve(e.target.result);
+                                reader.onerror = reject;
+                                reader.readAsDataURL(file);
+                            });
+                        });
+                        
+                        // Wait for all images to be processed
+                        try {
+                            processedImages = await Promise.all(imagePromises);
+                            console.log(`✅ Successfully processed ${processedImages.length} images`);
+                        } catch (imgError) {
+                            console.error('❌ Error processing images:', imgError);
+                            // Continue with empty images array
+                        }
+                    }
+                    
+                    // Get form data
+                    const name = document.getElementById('name').value;
+                    const email = document.getElementById('email').value;
+                    const appType = document.getElementById('app-type').value;
+                    const appName = document.getElementById('app-name').value;
+                    const story = document.getElementById('story').value;
+                    const testimonial = document.getElementById('testimonial').value;
+                    const experienceLevel = document.getElementById('experience-level').value;
+                    
+                    // Create submission object
+                    const newSubmission = {
+                        id: 'story_' + Date.now(),
+                        name,
+                        email,
+                        appName,
+                        appType,
+                        experienceLevel,
+                        testimonial,
+                        story,
+                        images: processedImages, // Use the processed base64 images
+                        date: new Date().toISOString(),
+                        status: 'pending'
+                    };
+                    
+                    console.log('📝 Created new submission with ID:', newSubmission.id);
+                    console.log(`📸 Submission includes ${newSubmission.images.length} images`);
+                    
+                    // Save to localStorage
                     let existingSubmissions = [];
                     try {
                         const storedSubmissions = localStorage.getItem('appfoundry_submissions');
@@ -595,33 +611,20 @@
                             existingSubmissions = JSON.parse(storedSubmissions);
                         }
                     } catch (parseError) {
-                        console.error('Error parsing existing submissions:', parseError);
+                        console.error('❌ Error parsing existing submissions:', parseError);
+                        // Continue with empty array if parsing fails
                     }
                     
-                    // Add new submission
+                    // Add new submission to beginning of array
                     existingSubmissions.unshift(newSubmission);
                     
-                    // Save to localStorage
+                    // Save back to localStorage
                     localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
                     
                     // Also update backup seed
                     localStorage.setItem('appfoundry_approved_seed', JSON.stringify(existingSubmissions));
                     
-                    console.log('Saved submission to localStorage');
-                } catch (error) {
-                    console.error('Error saving to localStorage:', error);
-                }
-                
-                // Now try to submit to Netlify via AJAX
-                const formData = new FormData(form);
-                
-                fetch('/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams(formData).toString()
-                })
-                .then(() => {
-                    console.log('Form successfully submitted to Netlify');
+                    console.log('💾 Successfully saved submission to localStorage');
                     
                     // Hide form and show success view
                     formSection.style.display = 'none';
@@ -632,21 +635,25 @@
                         top: successView.offsetTop - 100,
                         behavior: 'smooth'
                     });
-                })
-                .catch(error => {
-                    console.warn('Netlify form submission error:', error);
                     
-                    // Even with Netlify error, we've saved to localStorage
-                    // So we can still show success message
-                    formSection.style.display = 'none';
-                    successView.style.display = 'block';
+                } catch (error) {
+                    console.error('❌ Error submitting form:', error);
                     
-                    // Scroll to top of success view
+                    // Show error message
+                    statusMessage.textContent = 'An error occurred while submitting your story. Please try again.';
+                    statusMessage.className = 'status-message error';
+                    statusMessage.style.display = 'block';
+                    
+                    // Scroll to top to show error message
                     window.scrollTo({
-                        top: successView.offsetTop - 100,
+                        top: statusMessage.offsetTop - 100,
                         behavior: 'smooth'
                     });
-                });
+                } finally {
+                    // Reset button regardless of outcome
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Submit Your Story';
+                }
             });
             
             // Check for success parameter in URL (for redirects from Netlify)
