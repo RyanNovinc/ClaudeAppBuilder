@@ -1,54 +1,31 @@
 # Global build settings
 [build]
   publish = "/"  # Your publish directory (adjust if needed for your setup)
+  command = "npm install"  # Install dependencies for Netlify Functions
 
-# Handle any deploy previews - Force all redirects to the main domain
-[[redirects]]
-  from = "https://*--claudeappbuilder.netlify.app/*"
-  to = "https://claudeappbuilder.netlify.app/:splat"
-  status = 301
-  force = true
+# Functions directory
+[functions]
+  directory = "functions"
+  node_bundler = "esbuild"
+
+# Environment variables (for dev only - set these in Netlify dashboard for production)
+[build.environment]
+  # These are placeholders - set actual values in Netlify dashboard
+  GITHUB_TOKEN = "placeholder"
+  ADMIN_TOKEN = "admin_token_secure"
 
 # Handle specific redirection for success stories
 [[redirects]]
-  from = "https://*--claudeappbuilder.netlify.app/success-stories"
-  to = "https://claudeappbuilder.netlify.app/success-stories"
-  status = 301
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
   force = true
 
+# Redirect all function calls
 [[redirects]]
-  from = "https://*--claudeappbuilder.netlify.app/success-stories.html"
-  to = "https://claudeappbuilder.netlify.app/success-stories.html"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "https://*--claudeappbuilder.netlify.app/submit-success-story"
-  to = "https://claudeappbuilder.netlify.app/submit-success-story"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "https://*--claudeappbuilder.netlify.app/submit-success-story.html"
-  to = "https://claudeappbuilder.netlify.app/submit-success-story.html"
-  status = 301
-  force = true
-
-# Handle extension-less URLs
-[[redirects]]
-  from = "/success-stories"
-  to = "/success-stories.html"
-  status = 301
-
-[[redirects]]
-  from = "/submit-success-story"
-  to = "/submit-success-story.html"
-  status = 301
-
-[[redirects]]
-  from = "/admin/success-stories"
-  to = "/admin/success-stories.html"
-  status = 301
+  from = "/submit-story"
+  to = "/.netlify/functions/submit-testimonial"
+  status = 200
 
 # Force HTTPS
 [[redirects]]
@@ -65,8 +42,6 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    Content-Security-Policy = "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://identity.netlify.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://identity.netlify.com;"
     
 # Post-processing settings
 [build.processing]
@@ -74,10 +49,3 @@
   
 [build.processing.html]
   pretty_urls = true
-
-# Context-specific settings
-[context.production]
-  command = ""  # Your build command if any
-  
-[context.deploy-preview]
-  command = ""  # Your build command for deploy previews if any
