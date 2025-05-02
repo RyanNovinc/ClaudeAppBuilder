@@ -2,17 +2,35 @@
 [build]
   publish = "/"  # Your publish directory (adjust if needed for your setup)
 
-# Force all deploy previews to redirect to main domain
+# Handle any deploy previews - Force all redirects to the main domain
 [[redirects]]
-  from = "https://68140de25f88f40008bd6457--claudeappbuilder.netlify.app/*"
+  from = "https://*--claudeappbuilder.netlify.app/*"
   to = "https://claudeappbuilder.netlify.app/:splat"
   status = 301
   force = true
 
-# Handle any deploy previews (wildcard for all deployments)
+# Handle specific redirection for success stories
 [[redirects]]
-  from = "https://*--claudeappbuilder.netlify.app/*"
-  to = "https://claudeappbuilder.netlify.app/:splat"
+  from = "https://*--claudeappbuilder.netlify.app/success-stories"
+  to = "https://claudeappbuilder.netlify.app/success-stories"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://*--claudeappbuilder.netlify.app/success-stories.html"
+  to = "https://claudeappbuilder.netlify.app/success-stories.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://*--claudeappbuilder.netlify.app/submit-success-story"
+  to = "https://claudeappbuilder.netlify.app/submit-success-story"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://*--claudeappbuilder.netlify.app/submit-success-story.html"
+  to = "https://claudeappbuilder.netlify.app/submit-success-story.html"
   status = 301
   force = true
 
