@@ -2,8 +2,8 @@ const { Octokit } = require("@octokit/rest");
 const { Base64 } = require("js-base64");
 
 // GitHub repository information
-const GITHUB_OWNER = "YOUR_GITHUB_USERNAME"; // Change this to your GitHub username
-const GITHUB_REPO = "YOUR_REPO_NAME"; // Change this to your repository name
+const GITHUB_OWNER = "RyanNovinc"; // Your actual GitHub username
+const GITHUB_REPO = "ClaudeAppBuilder"; // Your actual repository name
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Set this in Netlify environment variables
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN; // Simple admin token for basic auth
 
