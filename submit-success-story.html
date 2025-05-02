@@ -349,7 +349,7 @@
                 </div>
             </form>
             
-            <!-- Fixed link to not open in a new window and just use localStorage for navigation tracking -->
+            <!-- Fixed link to not open in a new window -->
             <div class="return-link">
                 <a href="success-stories.html" class="link-button" onclick="localStorage.setItem('appfoundry_navigation', 'from_submission');">Back to Success Stories</a>
             </div>
@@ -507,7 +507,7 @@
             const form = document.getElementById('success-story-form');
             const statusMessage = document.getElementById('status-message');
             
-            form.addEventListener('submit', async function(e) {
+            form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
                 // Show loading state
@@ -525,51 +525,29 @@
                     const testimonial = document.getElementById('testimonial').value;
                     const experienceLevel = document.getElementById('experience-level').value;
                     
-                    // Process images - simplified to avoid potential errors
-                    let images = [];
-                    
-                    if (selectedFiles.length > 0) {
-                        for (let file of selectedFiles) {
-                            try {
-                                const base64String = await convertFileToBase64(file);
-                                images.push(base64String);
-                            } catch (error) {
-                                console.error('Error converting image to base64:', error);
-                            }
-                        }
-                    }
-                    
-                    // Create submission object
+                    // Create submission object - without images for simplicity
                     const newSubmission = {
                         id: 'story_' + Date.now(),
-                        name,
-                        email,
-                        appName,
-                        appType,
-                        experienceLevel,
-                        testimonial,
-                        story,
-                        images,
+                        name: name,
+                        email: email,
+                        appName: appName,
+                        appType: appType,
+                        experienceLevel: experienceLevel,
+                        testimonial: testimonial,
+                        story: story,
+                        images: [], // Skip images for now to simplify
                         date: new Date().toISOString(),
                         status: 'pending'
                     };
                     
-                    console.log('Created new submission with ID:', newSubmission.id);
-                    
-                    // SIMPLIFIED APPROACH: Just save directly to localStorage
-                    // Get existing submissions from localStorage
+                    // Get existing submissions
                     let existingSubmissions = [];
-                    try {
-                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                        if (storedSubmissions) {
-                            existingSubmissions = JSON.parse(storedSubmissions);
-                        }
-                    } catch (error) {
-                        console.error('Error parsing existing submissions:', error);
-                        // Continue with empty array
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    if (storedSubmissions) {
+                        existingSubmissions = JSON.parse(storedSubmissions);
                     }
                     
-                    // Add new submission
+                    // Add new submission at the beginning
                     existingSubmissions.unshift(newSubmission);
                     
                     // Save to localStorage
@@ -578,17 +556,15 @@
                     // Also update backup seed
                     localStorage.setItem('appfoundry_approved_seed', JSON.stringify(existingSubmissions));
                     
-                    console.log('Saved submission successfully to localStorage');
-                    
-                    // Skip API submission entirely - it's causing problems and localStorage is sufficient
-                    
-                    // Display success message
+                    // Show success message
                     statusMessage.textContent = 'Your success story has been submitted! After review, it will be featured on our success stories page.';
                     statusMessage.className = 'status-message success';
                     statusMessage.style.display = 'block';
                     
-                    // Reset form and selected files
+                    // Reset form
                     form.reset();
+                    
+                    // Reset selected files and preview
                     selectedFiles = [];
                     imagePreview.style.display = 'none';
                     imagePreview.innerHTML = '';
