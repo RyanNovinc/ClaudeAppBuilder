@@ -473,11 +473,11 @@
                     </ul>
                 </div>
                 
-                <!-- Success Story Submission Box - UPDATED WITH ABSOLUTE URL -->
+                <!-- Success Story Submission Box - UPDATED WITH TRACKING -->
                 <div class="share-success-box">
                     <h3>Built Something Amazing?</h3>
                     <p>We'd love to feature your app in our Success Stories! Share your experience and inspire others.</p>
-                    <a href="https://claudeappbuilder.netlify.app/submit-success-story.html" class="cta-button" target="_blank">Share Your Success Story</a>
+                    <a href="https://claudeappbuilder.netlify.app/submit-success-story.html" class="cta-button" onclick="localStorage.setItem('appfoundry_navigation', 'from_module1');" target="_blank">Share Your Success Story</a>
                 </div>
                 
                 <div class="course-navigation">
@@ -523,6 +523,7 @@
         </div>
     </footer>
 
+    <script src="../storage-helper.js"></script>
     <script src="../identity-widget.js"></script>
     <script src="../access-control.js"></script>
 </body>
