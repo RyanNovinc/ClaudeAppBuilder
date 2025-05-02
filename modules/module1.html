@@ -4,10 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 1: Setting Up Your Environment - AppFoundry</title>
+    
+    <!-- Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
+    <script>
+    // Universal Story Manager - ensures stories are consistently available
+    (function() {
+      // Run on all pages to ensure localStorage data consistency
+      console.log("📊 Story Manager initializing on module page");
+      
+      // Check if we need to seed the localStorage from our backup
+      function seedStoriesIfNeeded() {
+        // Only run if appfoundry_submissions doesn't exist or is empty
+        if (!localStorage.getItem('appfoundry_submissions')) {
+          console.log("🌱 No stories found in localStorage, checking for seed data");
+          
+          // Check if we have any stories in our seed
+          if (localStorage.getItem('appfoundry_approved_seed')) {
+            console.log("🔄 Restoring stories from seed");
+            try {
+              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+              console.log("✅ Successfully restored", seed.length, "stories from seed");
+            } catch (e) {
+              console.error("❌ Error restoring from seed:", e);
+            }
+          }
+        } else {
+          // If we have submissions, make sure we have an up-to-date seed
+          try {
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log("💾 Seed updated with", submissions.length, "stories");
+          } catch (e) {
+            console.error("❌ Error updating seed:", e);
+          }
+        }
+      }
+      
+      // Run the seed check immediately
+      seedStoriesIfNeeded();
+    })();
+    </script>
+    
     <link rel="stylesheet" href="../styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     <style>
         /* Course page specific styles */
         .course-container {
@@ -271,34 +314,21 @@
     </style>
 </head>
 <body>
-    <!-- MODIFIED HEADER - Navigation removed and logo not clickable -->
     <header>
         <div class="container">
-            <!-- AppFoundry logo is present but not a clickable link -->
-            <div class="logo">AppFoundry</div>
-            <!-- Navigation removed intentionally -->
-            <button class="cta-button small" id="loginButton" style="background-color: #ef4444;">Log Out</button>
+            <div class="logo"><a href="../index.html">AppFoundry</a></div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html#overview">Overview</a></li>
+                    <li><a href="../index.html#curriculum">Curriculum</a></li>
+                    <li><a href="../index.html#pricing">Pricing</a></li>
+                    <li><a href="../success-stories.html">Success Stories</a></li>
+                    <li><a href="../about-creator.html">About</a></li>
+                </ul>
+            </nav>
+            <button class="cta-button small" id="loginButton">My Account</button>
         </div>
     </header>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Setup logout button
-        const logoutButton = document.getElementById('loginButton');
-        if (logoutButton) {
-            logoutButton.addEventListener('click', function() {
-                // Clear auth data
-                localStorage.removeItem('sleeptech_auth');
-                localStorage.removeItem('sleeptech_email');
-                localStorage.removeItem('sleeptech_login_time');
-                localStorage.removeItem('appfoundry_auth');
-                
-                // Redirect to home page
-                window.location.href = '../index.html';
-            });
-        }
-    });
-    </script>
 
     <!-- Access overlay will be shown for unauthorized users -->
     <div id="access-overlay" class="access-overlay">
@@ -443,16 +473,15 @@
                     </ul>
                 </div>
                 
-                
-<!-- Success Story Submission Box - PROPERLY FIXED -->
-<div class="share-success-box">
-    <h3>Built Something Amazing?</h3>
-    <p>We'd love to feature your app in our Success Stories! Share your experience and inspire others.</p>
-    <a href="../submit-success-story.html" class="cta-button" target="_blank">Share Your Success Story</a>
-</div>
+                <!-- Success Story Submission Box - UPDATED WITH ABSOLUTE URL -->
+                <div class="share-success-box">
+                    <h3>Built Something Amazing?</h3>
+                    <p>We'd love to feature your app in our Success Stories! Share your experience and inspire others.</p>
+                    <a href="https://claudeappbuilder.netlify.app/submit-success-story.html" class="cta-button" target="_blank">Share Your Success Story</a>
+                </div>
                 
                 <div class="course-navigation">
-                    <a href="../course.html" class="nav-button prev">← Back to Course Overview</a>
+                    <a href="../index.html" class="nav-button prev">← Back to Course Overview</a>
                     <a href="module2.html" class="nav-button next">Next Module: Creating Your First AI Project →</a>
                 </div>
             </main>
@@ -494,7 +523,7 @@
         </div>
     </footer>
 
-    <!-- Modified script includes - Use only access-control.js -->
+    <script src="../identity-widget.js"></script>
     <script src="../access-control.js"></script>
 </body>
 </html>
