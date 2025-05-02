@@ -62,6 +62,17 @@ const DEFAULT_SEED_DATA = [
         console.log("🔄 Calling refreshStoriesDisplay function");
         setTimeout(refreshStoriesDisplay, 100);
       }
+      
+      // If displayStories exists, try to call it with approved submissions
+      if (typeof displayStories === 'function') {
+        console.log("🔄 Found displayStories function, calling it with approved submissions");
+        setTimeout(function() {
+          const approvedStories = StorageHelper.getApprovedSubmissions();
+          if (approvedStories && approvedStories.length > 0) {
+            displayStories(approvedStories);
+          }
+        }, 200);
+      }
     }
   });
 })();
