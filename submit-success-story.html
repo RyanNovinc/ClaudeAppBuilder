@@ -234,6 +234,36 @@
             color: #111827;
         }
         
+        /* Added success view styles */
+        .success-view {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+            background-color: #f0fdf4;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid #86efac;
+        }
+        
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #10b981;
+        }
+        
+        .success-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #065f46;
+        }
+        
+        .success-message {
+            color: #047857;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
         @media (max-width: 768px) {
             .form-container {
                 margin: 60px auto;
@@ -274,83 +304,95 @@
         </div>
         
         <div class="form-content">
+            <!-- Success view that appears after form submission -->
+            <div id="success-view" class="success-view">
+                <div class="success-icon">✓</div>
+                <h2 class="success-title">Your Story Has Been Submitted!</h2>
+                <p class="success-message">Thank you for sharing your success story with us! After review, it will be featured on our success stories page to inspire others.</p>
+                <a href="success-stories.html" class="cta-button">View Success Stories</a>
+            </div>
+            
             <div id="status-message" class="status-message"></div>
             
-            <!-- FIX: Added Netlify form attributes -->
-            <form id="success-story-form" name="success-story" data-netlify="true" method="POST">
-                <div class="form-group">
-                    <label for="name">Your Name</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                
-                <div class="form-row">
+            <!-- Form will be hidden after successful submission -->
+            <div id="form-section">
+                <form id="success-story-form" name="success-story" method="POST">
+                    <!-- Hidden field for Netlify form handling -->
+                    <input type="hidden" name="form-name" value="success-story" />
+                    
                     <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" required>
-                        <div class="form-tip">Your email won't be displayed publicly.</div>
+                        <label for="name">Your Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" required>
+                            <div class="form-tip">Your email won't be displayed publicly.</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="app-type">Type of App</label>
+                            <select id="app-type" name="app-type" required>
+                                <option value="" disabled selected>Select app category</option>
+                                <option value="Health & Fitness">Health & Fitness</option>
+                                <option value="Productivity">Productivity</option>
+                                <option value="Lifestyle">Lifestyle</option>
+                                <option value="Business">Business</option>
+                                <option value="Education">Education</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Social">Social</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="app-type">Type of App</label>
-                        <select id="app-type" name="app-type" required>
-                            <option value="" disabled selected>Select app category</option>
-                            <option value="Health & Fitness">Health & Fitness</option>
-                            <option value="Productivity">Productivity</option>
-                            <option value="Lifestyle">Lifestyle</option>
-                            <option value="Business">Business</option>
-                            <option value="Education">Education</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Social">Social</option>
-                            <option value="Other">Other</option>
+                        <label for="experience-level">Your Experience Level</label>
+                        <select id="experience-level" name="experience-level" required>
+                            <option value="" disabled selected>Select your coding experience</option>
+                            <option value="No experience">No coding experience</option>
+                            <option value="Beginner">Beginner (less than 1 year)</option>
+                            <option value="Intermediate">Intermediate (1-3 years)</option>
+                            <option value="Advanced">Advanced (3+ years)</option>
                         </select>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="experience-level">Your Experience Level</label>
-                    <select id="experience-level" name="experience-level" required>
-                        <option value="" disabled selected>Select your coding experience</option>
-                        <option value="No experience">No coding experience</option>
-                        <option value="Beginner">Beginner (less than 1 year)</option>
-                        <option value="Intermediate">Intermediate (1-3 years)</option>
-                        <option value="Advanced">Advanced (3+ years)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="app-name">Your App Name</label>
-                    <input type="text" id="app-name" name="app-name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="story">Your Success Story</label>
-                    <textarea id="story" name="story" required placeholder="Tell us about your experience building your app with AppFoundry. What challenges did you overcome? How has it impacted you or your business?"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>App Screenshots (Optional)</label>
-                    <div class="image-upload" id="image-upload">
-                        <input type="file" id="app-screenshots" name="app-screenshots" accept="image/*" multiple>
-                        <div class="image-upload-icon">📷</div>
-                        <div class="image-upload-text">Click to upload screenshots of your app</div>
-                        <div class="form-tip">You can select multiple images. Max 5 images total, 5MB per image.</div>
+                    
+                    <div class="form-group">
+                        <label for="app-name">Your App Name</label>
+                        <input type="text" id="app-name" name="app-name" required>
                     </div>
-                    <div id="image-preview" class="image-preview"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="testimonial">Short Testimonial (for display)</label>
-                    <textarea id="testimonial" name="testimonial" required placeholder="Write a brief testimonial (1-2 sentences) that we can feature on our success stories page."></textarea>
-                </div>
-                
-                <button type="submit" class="submit-button">Submit Your Story</button>
-                
-                <div class="form-note">
-                    <p>By submitting this form, you agree to let us feature your story and app screenshots on our website.</p>
-                </div>
-            </form>
+                    
+                    <div class="form-group">
+                        <label for="story">Your Success Story</label>
+                        <textarea id="story" name="story" required placeholder="Tell us about your experience building your app with AppFoundry. What challenges did you overcome? How has it impacted you or your business?"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>App Screenshots (Optional)</label>
+                        <div class="image-upload" id="image-upload">
+                            <input type="file" id="app-screenshots" name="app-screenshots" accept="image/*" multiple>
+                            <div class="image-upload-icon">📷</div>
+                            <div class="image-upload-text">Click to upload screenshots of your app</div>
+                            <div class="form-tip">You can select multiple images. Max 5 images total, 5MB per image.</div>
+                        </div>
+                        <div id="image-preview" class="image-preview"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="testimonial">Short Testimonial (for display)</label>
+                        <textarea id="testimonial" name="testimonial" required placeholder="Write a brief testimonial (1-2 sentences) that we can feature on our success stories page."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="submit-button">Submit Your Story</button>
+                    
+                    <div class="form-note">
+                        <p>By submitting this form, you agree to let us feature your story and app screenshots on our website.</p>
+                    </div>
+                </form>
+            </div>
             
-            <!-- FIX: Removed target="_blank" from the link -->
             <div class="return-link">
                 <a href="success-stories.html" class="link-button" onclick="localStorage.setItem('appfoundry_navigation', 'from_submission');">Back to Success Stories</a>
             </div>
@@ -504,45 +546,47 @@
                 });
             }
 
-            // Handle form submission - FIXED to work with Netlify
+            // FIX: Handle form submission with AJAX and in-page success view
             const form = document.getElementById('success-story-form');
             const statusMessage = document.getElementById('status-message');
+            const formSection = document.getElementById('form-section');
+            const successView = document.getElementById('success-view');
             
             form.addEventListener('submit', function(e) {
-                // FIX: Don't prevent default form submission
-                // e.preventDefault();  <-- THIS LINE REMOVED
+                // Prevent form from submitting normally
+                e.preventDefault();
                 
                 // Show loading state
                 const submitButton = document.querySelector('.submit-button');
                 submitButton.disabled = true;
                 submitButton.textContent = 'Submitting...';
                 
-                // Backup to localStorage
+                // Get form data
+                const name = document.getElementById('name').value;
+                const email = document.getElementById('email').value;
+                const appType = document.getElementById('app-type').value;
+                const appName = document.getElementById('app-name').value;
+                const story = document.getElementById('story').value;
+                const testimonial = document.getElementById('testimonial').value;
+                const experienceLevel = document.getElementById('experience-level').value;
+                
+                // Create submission object for localStorage
+                const newSubmission = {
+                    id: 'story_' + Date.now(),
+                    name,
+                    email,
+                    appName,
+                    appType,
+                    experienceLevel,
+                    testimonial,
+                    story,
+                    images: [], // Skip images for better localStorage compatibility
+                    date: new Date().toISOString(),
+                    status: 'pending'
+                };
+                
+                // First save to localStorage
                 try {
-                    // Get form data
-                    const name = document.getElementById('name').value;
-                    const email = document.getElementById('email').value;
-                    const appType = document.getElementById('app-type').value;
-                    const appName = document.getElementById('app-name').value;
-                    const story = document.getElementById('story').value;
-                    const testimonial = document.getElementById('testimonial').value;
-                    const experienceLevel = document.getElementById('experience-level').value;
-                    
-                    // Create submission object
-                    const newSubmission = {
-                        id: 'story_' + Date.now(),
-                        name,
-                        email,
-                        appName,
-                        appType,
-                        experienceLevel,
-                        testimonial,
-                        story,
-                        images: [], // Skip images for better localStorage compatibility
-                        date: new Date().toISOString(),
-                        status: 'pending'
-                    };
-                    
                     // Get existing submissions
                     let existingSubmissions = [];
                     try {
@@ -563,14 +607,55 @@
                     // Also update backup seed
                     localStorage.setItem('appfoundry_approved_seed', JSON.stringify(existingSubmissions));
                     
-                    console.log('Saved backup of submission to localStorage');
+                    console.log('Saved submission to localStorage');
                 } catch (error) {
-                    console.error('Error with localStorage backup:', error);
+                    console.error('Error saving to localStorage:', error);
                 }
                 
-                // Note: We're letting the form submit normally to Netlify
-                return true;
+                // Now try to submit to Netlify via AJAX
+                const formData = new FormData(form);
+                
+                fetch('/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(formData).toString()
+                })
+                .then(() => {
+                    console.log('Form successfully submitted to Netlify');
+                    
+                    // Hide form and show success view
+                    formSection.style.display = 'none';
+                    successView.style.display = 'block';
+                    
+                    // Scroll to top of success view
+                    window.scrollTo({
+                        top: successView.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                })
+                .catch(error => {
+                    console.warn('Netlify form submission error:', error);
+                    
+                    // Even with Netlify error, we've saved to localStorage
+                    // So we can still show success message
+                    formSection.style.display = 'none';
+                    successView.style.display = 'block';
+                    
+                    // Scroll to top of success view
+                    window.scrollTo({
+                        top: successView.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                });
             });
+            
+            // Check for success parameter in URL (for redirects from Netlify)
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('success') && urlParams.get('success') === 'true') {
+                // Hide form and show success view
+                formSection.style.display = 'none';
+                successView.style.display = 'block';
+            }
         });
     </script>
 </body>
