@@ -4,6 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit Your Success Story - AppFoundry</title>
+    
+    <!-- Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
+    <script>
+    // Universal Story Manager - ensures stories are consistently available
+    (function() {
+      // Run on all pages to ensure localStorage data consistency
+      console.log("📊 Story Manager initializing on submission page");
+      
+      // Check if we need to seed the localStorage from our backup
+      function seedStoriesIfNeeded() {
+        // Only run if appfoundry_submissions doesn't exist or is empty
+        if (!localStorage.getItem('appfoundry_submissions')) {
+          console.log("🌱 No stories found in localStorage, checking for seed data");
+          
+          // Check if we have any stories in our seed
+          if (localStorage.getItem('appfoundry_approved_seed')) {
+            console.log("🔄 Restoring stories from seed");
+            try {
+              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+              console.log("✅ Successfully restored", seed.length, "stories from seed");
+            } catch (e) {
+              console.error("❌ Error restoring from seed:", e);
+            }
+          }
+        } else {
+          // If we have submissions, make sure we have an up-to-date seed
+          try {
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log("💾 Seed updated with", submissions.length, "stories");
+          } catch (e) {
+            console.error("❌ Error updating seed:", e);
+          }
+        }
+      }
+      
+      // Run the seed check immediately
+      seedStoriesIfNeeded();
+    })();
+    </script>
+    
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,6 +60,13 @@
         .form-header {
             text-align: center;
             margin-bottom: 40px;
+        }
+        
+        .form-header p {
+            max-width: 700px;
+            margin: 0 auto;
+            color: #6b7280;
+            font-size: 18px;
         }
         
         .form-content {
@@ -35,6 +84,7 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
+            color: #111827;
         }
         
         .form-group input,
@@ -48,10 +98,69 @@
             font-family: 'Inter', sans-serif;
         }
         
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0070f3;
+            box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
+        }
+        
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+        }
+        
+        .form-tip {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        
+        .image-upload {
+            border: 2px dashed #d1d5db;
+            border-radius: 6px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .image-upload:hover {
+            border-color: #0070f3;
+            background-color: rgba(0, 112, 243, 0.05);
+        }
+        
+        .image-upload input {
+            display: none;
+        }
+        
+        .image-upload-icon {
+            font-size: 36px;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+        
+        .image-upload-text {
+            font-size: 16px;
+            color: #6b7280;
+        }
+        
+        .image-preview {
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 6px;
         }
         
         .submit-button {
@@ -63,8 +172,20 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
+            transition: background-color 0.2s ease;
             display: block;
             margin: 30px auto 0;
+        }
+        
+        .submit-button:hover {
+            background-color: #0055b3;
+        }
+        
+        .form-note {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #6b7280;
         }
         
         .status-message {
@@ -86,6 +207,12 @@
             border: 1px solid #dc2626;
         }
         
+        .image-preview-item {
+            display: inline-block;
+            position: relative;
+            margin: 5px;
+        }
+        
         .return-link {
             text-align: center;
             margin-top: 30px;
@@ -99,6 +226,27 @@
             border-radius: 6px;
             text-decoration: none;
             font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .link-button:hover {
+            background-color: #e5e7eb;
+            color: #111827;
+        }
+        
+        @media (max-width: 768px) {
+            .form-container {
+                margin: 60px auto;
+            }
+            
+            .form-content {
+                padding: 25px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
         }
     </style>
 </head>
@@ -128,7 +276,8 @@
         <div class="form-content">
             <div id="status-message" class="status-message"></div>
             
-            <form id="success-story-form">
+            <!-- FIX: Added Netlify form attributes -->
+            <form id="success-story-form" name="success-story" data-netlify="true" method="POST">
                 <div class="form-group">
                     <label for="name">Your Name</label>
                     <input type="text" id="name" name="name" required>
@@ -138,6 +287,7 @@
                     <div class="form-group">
                         <label for="email">Email Address</label>
                         <input type="email" id="email" name="email" required>
+                        <div class="form-tip">Your email won't be displayed publicly.</div>
                     </div>
                     
                     <div class="form-group">
@@ -174,20 +324,35 @@
                 
                 <div class="form-group">
                     <label for="story">Your Success Story</label>
-                    <textarea id="story" name="story" required></textarea>
+                    <textarea id="story" name="story" required placeholder="Tell us about your experience building your app with AppFoundry. What challenges did you overcome? How has it impacted you or your business?"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>App Screenshots (Optional)</label>
+                    <div class="image-upload" id="image-upload">
+                        <input type="file" id="app-screenshots" name="app-screenshots" accept="image/*" multiple>
+                        <div class="image-upload-icon">📷</div>
+                        <div class="image-upload-text">Click to upload screenshots of your app</div>
+                        <div class="form-tip">You can select multiple images. Max 5 images total, 5MB per image.</div>
+                    </div>
+                    <div id="image-preview" class="image-preview"></div>
                 </div>
                 
                 <div class="form-group">
                     <label for="testimonial">Short Testimonial (for display)</label>
-                    <textarea id="testimonial" name="testimonial" required></textarea>
+                    <textarea id="testimonial" name="testimonial" required placeholder="Write a brief testimonial (1-2 sentences) that we can feature on our success stories page."></textarea>
                 </div>
                 
                 <button type="submit" class="submit-button">Submit Your Story</button>
+                
+                <div class="form-note">
+                    <p>By submitting this form, you agree to let us feature your story and app screenshots on our website.</p>
+                </div>
             </form>
             
-            <!-- Link to Success Stories without target="_blank" -->
+            <!-- FIX: Removed target="_blank" from the link -->
             <div class="return-link">
-                <a href="success-stories.html" class="link-button">Back to Success Stories</a>
+                <a href="success-stories.html" class="link-button" onclick="localStorage.setItem('appfoundry_navigation', 'from_submission');">Back to Success Stories</a>
             </div>
         </div>
     </div>
@@ -229,72 +394,182 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Simple form submission that just saves to localStorage
+            // Track that this page was visited
+            localStorage.setItem('appfoundry_visited_submission', 'true');
+            
+            // Handle image upload preview
+            const imageUpload = document.getElementById('image-upload');
+            const fileInput = document.getElementById('app-screenshots');
+            const imagePreview = document.getElementById('image-preview');
+            let selectedFiles = []; // Track selected files
+            const MAX_IMAGES = 5;
+            
+            imageUpload.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    // Add new files to the existing selection, up to the maximum
+                    const newFiles = Array.from(this.files);
+                    
+                    // Add new files up to the maximum
+                    for (let i = 0; i < newFiles.length && selectedFiles.length < MAX_IMAGES; i++) {
+                        if (newFiles[i].type.startsWith('image/')) {
+                            selectedFiles.push(newFiles[i]);
+                        }
+                    }
+                    
+                    // Reset the file input to allow selecting more files later
+                    this.value = '';
+                    
+                    // Update preview
+                    updateImagePreview();
+                }
+            });
+            
+            // Function to update image preview
+            function updateImagePreview() {
+                // Show preview container if we have files
+                imagePreview.style.display = selectedFiles.length > 0 ? 'block' : 'none';
+                
+                // Clear existing preview
+                imagePreview.innerHTML = '';
+                
+                // Create preview for each file
+                selectedFiles.forEach((file, index) => {
+                    const previewContainer = document.createElement('div');
+                    previewContainer.className = 'image-preview-item';
+                    previewContainer.style.display = 'inline-block';
+                    previewContainer.style.position = 'relative';
+                    previewContainer.style.margin = '5px';
+                    
+                    // Create image preview
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.maxHeight = '100px';
+                        img.style.maxWidth = '100px';
+                        img.style.borderRadius = '4px';
+                        previewContainer.appendChild(img);
+                    };
+                    
+                    reader.readAsDataURL(file);
+                    
+                    // Create remove button
+                    const removeBtn = document.createElement('button');
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.style.position = 'absolute';
+                    removeBtn.style.top = '-8px';
+                    removeBtn.style.right = '-8px';
+                    removeBtn.style.borderRadius = '50%';
+                    removeBtn.style.background = '#ef4444';
+                    removeBtn.style.color = 'white';
+                    removeBtn.style.width = '20px';
+                    removeBtn.style.height = '20px';
+                    removeBtn.style.border = 'none';
+                    removeBtn.style.cursor = 'pointer';
+                    removeBtn.style.display = 'flex';
+                    removeBtn.style.alignItems = 'center';
+                    removeBtn.style.justifyContent = 'center';
+                    
+                    removeBtn.addEventListener('click', function(e) {
+                        e.stopPropagation(); // Prevent triggering imageUpload click
+                        selectedFiles.splice(index, 1);
+                        updateImagePreview();
+                    });
+                    
+                    previewContainer.appendChild(removeBtn);
+                    imagePreview.appendChild(previewContainer);
+                });
+                
+                // Add information about remaining slots
+                const infoText = document.createElement('p');
+                infoText.style.margin = '10px 0 0 0';
+                infoText.style.fontSize = '0.8rem';
+                infoText.style.color = '#6b7280';
+                infoText.textContent = `${selectedFiles.length}/${MAX_IMAGES} images selected`;
+                imagePreview.appendChild(infoText);
+            }
+            
+            // Helper function to convert file to base64
+            function convertFileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // Handle form submission - FIXED to work with Netlify
             const form = document.getElementById('success-story-form');
             const statusMessage = document.getElementById('status-message');
             
             form.addEventListener('submit', function(e) {
-                e.preventDefault();
+                // FIX: Don't prevent default form submission
+                // e.preventDefault();  <-- THIS LINE REMOVED
                 
-                // Basic form submission
-                const name = document.getElementById('name').value;
-                const email = document.getElementById('email').value;
-                const appType = document.getElementById('app-type').value;
-                const appName = document.getElementById('app-name').value;
-                const story = document.getElementById('story').value;
-                const testimonial = document.getElementById('testimonial').value;
-                const experienceLevel = document.getElementById('experience-level').value;
+                // Show loading state
+                const submitButton = document.querySelector('.submit-button');
+                submitButton.disabled = true;
+                submitButton.textContent = 'Submitting...';
                 
-                // Create submission object
-                const newSubmission = {
-                    id: 'story_' + Date.now(),
-                    name: name,
-                    email: email,
-                    appName: appName,
-                    appType: appType,
-                    experienceLevel: experienceLevel,
-                    testimonial: testimonial,
-                    story: story,
-                    images: [],
-                    date: new Date().toISOString(),
-                    status: 'pending'
-                };
-                
+                // Backup to localStorage
                 try {
-                    // Get existing submissions from localStorage
+                    // Get form data
+                    const name = document.getElementById('name').value;
+                    const email = document.getElementById('email').value;
+                    const appType = document.getElementById('app-type').value;
+                    const appName = document.getElementById('app-name').value;
+                    const story = document.getElementById('story').value;
+                    const testimonial = document.getElementById('testimonial').value;
+                    const experienceLevel = document.getElementById('experience-level').value;
+                    
+                    // Create submission object
+                    const newSubmission = {
+                        id: 'story_' + Date.now(),
+                        name,
+                        email,
+                        appName,
+                        appType,
+                        experienceLevel,
+                        testimonial,
+                        story,
+                        images: [], // Skip images for better localStorage compatibility
+                        date: new Date().toISOString(),
+                        status: 'pending'
+                    };
+                    
+                    // Get existing submissions
                     let existingSubmissions = [];
                     try {
-                        const storedData = localStorage.getItem('appfoundry_submissions');
-                        if (storedData) {
-                            existingSubmissions = JSON.parse(storedData);
+                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                        if (storedSubmissions) {
+                            existingSubmissions = JSON.parse(storedSubmissions);
                         }
-                    } catch (e) {
-                        console.error('Error parsing submissions:', e);
+                    } catch (parseError) {
+                        console.error('Error parsing existing submissions:', parseError);
                     }
                     
                     // Add new submission
                     existingSubmissions.unshift(newSubmission);
                     
-                    // Save back to localStorage
+                    // Save to localStorage
                     localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
                     
-                    // Also update seed
+                    // Also update backup seed
                     localStorage.setItem('appfoundry_approved_seed', JSON.stringify(existingSubmissions));
                     
-                    // Show success message
-                    statusMessage.textContent = 'Your success story has been submitted! After review, it will be featured on our success stories page.';
-                    statusMessage.className = 'status-message success';
-                    statusMessage.style.display = 'block';
-                    
-                    // Reset form
-                    form.reset();
+                    console.log('Saved backup of submission to localStorage');
                 } catch (error) {
-                    console.error('Error saving submission:', error);
-                    
-                    statusMessage.textContent = 'An error occurred while saving your story. Please try again.';
-                    statusMessage.className = 'status-message error';
-                    statusMessage.style.display = 'block';
+                    console.error('Error with localStorage backup:', error);
                 }
+                
+                // Note: We're letting the form submit normally to Netlify
+                return true;
             });
         });
     </script>
