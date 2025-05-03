@@ -521,7 +521,7 @@
             </div>
             <div class="header-actions">
                 <a href="../index.html">View Site</a>
-                <a href="../success-stories.html">Success Stories</a>
+                <a href="../success-stories.html">Public Success Stories</a>
             </div>
         </div>
     </header>
@@ -942,16 +942,13 @@
                 
                 // Call the Netlify function with proper authentication
                 console.log("Sending approval request with token:", ADMIN_TOKEN ? "Token exists" : "No token");
-                const response = await fetch("/.netlify/functions/update-submission-status", {
+                const response = await fetch("/.netlify/functions/approve-submission", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${ADMIN_TOKEN}`
                     },
-                    body: JSON.stringify({
-                        id,
-                        status: 'approved'
-                    })
+                    body: JSON.stringify({ id })
                 });
                 
                 // Log the full response for debugging
@@ -1030,16 +1027,13 @@
                 
                 // Call the Netlify function with proper authentication
                 console.log("Sending rejection request with token:", ADMIN_TOKEN ? "Token exists" : "No token");
-                const response = await fetch("/.netlify/functions/update-submission-status", {
+                const response = await fetch("/.netlify/functions/reject-submission", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${ADMIN_TOKEN}`
                     },
-                    body: JSON.stringify({
-                        id,
-                        status: 'rejected'
-                    })
+                    body: JSON.stringify({ id })
                 });
                 
                 // Log the full response for debugging
