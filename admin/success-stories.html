@@ -1470,6 +1470,10 @@
                 <button onclick="importSubmissions()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center">
                     <i class="fas fa-file-import mr-2"></i> Import Submissions
                 </button>
+                <!-- Added Cloudinary Migration Button -->
+                <button onclick="migrateImagesToCloudinary()" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i> Migrate Images to Cloudinary
+                </button>
             </div>
         </div>
         
@@ -1662,3 +1666,59 @@
         </button>
         <img id="full-image" src="" alt="Full size image" class="max-w-[90%] max-h-[90vh] object-contain">
     </div>
+    
+    <!-- Cloudinary Migration Function -->
+    <script>
+        // Migration function for Cloudinary
+        async function migrateImagesToCloudinary() {
+            if (!confirm('This will migrate all base64 images to Cloudinary. Continue?')) {
+                return;
+            }
+            
+            try {
+                // Show loading indicator
+                document.getElementById('loading-indicator').style.display = 'flex';
+                document.getElementById('submissions').style.display = 'none';
+                
+                // Call the migrate-images function with admin token
+                logActivity('info', 'Starting image migration to Cloudinary...');
+                
+                const response = await fetch('/.netlify/functions/migrate-images', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${AdminAuth.token}`
+                    },
+                    body: JSON.stringify({ forceAll: false })
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server returned ${response.status}: ${errorText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    logActivity('success', `Migration completed: ${result.results?.updated || 0} of ${result.results?.total || 0} submissions updated`);
+                    showToast('Success', `Migration completed: ${result.results?.updated || 0} of ${result.results?.total || 0} submissions updated`, 'success');
+                    
+                    // Force sync local storage with GitHub
+                    await AdminAuth.forceSync();
+                    
+                    // Reload submissions to display updated data
+                    await loadSubmissions();
+                } else {
+                    throw new Error(result.message || 'Unknown error during migration');
+                }
+            } catch (error) {
+                logActivity('error', `Migration failed: ${error.message}`);
+                showToast('Error', `Migration failed: ${error.message}`, 'error');
+            } finally {
+                // Hide loading indicator
+                document.getElementById('loading-indicator').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
