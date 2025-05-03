@@ -145,25 +145,30 @@ StorageHelper.updateSubmission = function(id, updates) {
 StorageHelper.getImageSrc = function(image, options = {}) {
     // If it's a Cloudinary object
     if (image && typeof image === 'object' && image.url) {
+        console.log("Using Cloudinary object URL:", image.url);
         return image.url;
     }
     
     // If it's a Cloudinary URL string
     if (typeof image === 'string' && image.includes('res.cloudinary.com')) {
+        console.log("Using Cloudinary string URL:", image);
         return image;
     }
     
     // If it's a base64 string
     if (typeof image === 'string' && image.startsWith('data:')) {
+        console.log("Using base64 image (should be migrated)");
         return image;
     }
     
     // If it's a regular URL
     if (typeof image === 'string' && (image.startsWith('http://') || image.startsWith('https://'))) {
+        console.log("Using standard image URL:", image);
         return image;
     }
     
     // Fallback to placeholder
+    console.log("No valid image found, using placeholder");
     return 'https://placeholder.pics/svg/300x200/DEDEDE/555555/Image%20Not%20Available';
 };
 
@@ -254,6 +259,89 @@ StorageHelper.checkLegacyImages = function(submission) {
     
     return submission;
 };
+
+/**
+ * Sync submissions from the server to localStorage
+ * @returns {Promise<boolean>} Success status
+ */
+StorageHelper.syncFromServer = async function() {
+    try {
+        console.log("🔄 Starting server sync...");
+        
+        // Try to fetch all submissions from the server
+        const response = await fetch('/.netlify/functions/get-submissions?status=all');
+        
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+        }
+        
+        const submissions = await response.json();
+        
+        if (Array.isArray(submissions) && submissions.length > 0) {
+            console.log(`📦 Received ${submissions.length} submissions from server`);
+            
+            // Save to localStorage
+            localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(submissions));
+            
+            // Update the backup as well
+            localStorage.setItem(BACKUP_KEY, JSON.stringify(submissions));
+            
+            console.log(`✅ Successfully synced ${submissions.length} submissions from server`);
+            return true;
+        } else {
+            console.warn("⚠️ Server returned empty or invalid submissions array");
+            return false;
+        }
+    } catch (error) {
+        console.error("❌ Error syncing from server:", error);
+        return false;
+    }
+};
+
+// Periodic check for server updates
+(async function checkForUpdates() {
+    // Only run on success stories page
+    if (window.location.pathname.includes('success-stories')) {
+        try {
+            const lastLocalSync = localStorage.getItem(LAST_SYNC_KEY);
+            
+            // Check server timestamp
+            try {
+                const response = await fetch('/.netlify/functions/get-sync-timestamp');
+                
+                if (response.ok) {
+                    const { lastSync } = await response.json();
+                    
+                    if (!lastLocalSync || lastSync > lastLocalSync) {
+                        console.log("🔄 Server has newer data, syncing...");
+                        
+                        // Sync and update local timestamp
+                        const success = await StorageHelper.syncFromServer();
+                        
+                        if (success) {
+                            localStorage.setItem(LAST_SYNC_KEY, lastSync);
+                            console.log("✅ Sync complete");
+                            
+                            // Reload approved stories if we're on the success stories page
+                            if (typeof loadApprovedStories === 'function') {
+                                setTimeout(() => {
+                                    loadApprovedStories();
+                                }, 500);
+                            }
+                        }
+                    } else {
+                        console.log("✓ Local data is up to date");
+                    }
+                }
+            } catch (error) {
+                console.warn("⚠️ Error checking sync timestamp:", error);
+                // Continue with normal loading
+            }
+        } catch (error) {
+            console.warn("⚠️ Error during update check:", error);
+        }
+    }
+})();
 
 // Make sure we load stories as soon as possible for maximum compatibility
 document.addEventListener('DOMContentLoaded', function() {
