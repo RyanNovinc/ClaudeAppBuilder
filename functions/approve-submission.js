@@ -80,90 +80,143 @@ exports.handler = async function(event, context) {
       auth: GITHUB_TOKEN
     });
     
-    // Get pending submissions
-    let pendingSubmissions = [];
-    let pendingSha = "";
-    try {
-      const { data: fileData } = await octokit.repos.getContent({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        path: "data/pending-submissions.json",
-      });
+    // Function to handle moving a submission with retry logic for SHA conflicts
+    async function moveSubmission(id, sourceStatus, targetStatus) {
+      // Maximum number of retries
+      const MAX_RETRIES = 3;
       
-      pendingSubmissions = JSON.parse(Base64.decode(fileData.content));
-      pendingSha = fileData.sha;
-    } catch (error) {
-      if (error.status === 404) {
-        return {
-          statusCode: 404,
-          headers,
-          body: JSON.stringify({ error: "No pending submissions found" })
-        };
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        try {
+          console.log(`Attempt ${attempt + 1}/${MAX_RETRIES} to move submission ${id} from ${sourceStatus} to ${targetStatus}`);
+          
+          // Step 1: Get the source file
+          let sourceFile;
+          let sourcePath = `data/${sourceStatus}-submissions.json`;
+          
+          try {
+            const { data: fileData } = await octokit.repos.getContent({
+              owner: GITHUB_OWNER,
+              repo: GITHUB_REPO,
+              path: sourcePath,
+            });
+            
+            sourceFile = {
+              content: JSON.parse(Base64.decode(fileData.content)),
+              sha: fileData.sha
+            };
+          } catch (error) {
+            if (error.status === 404) {
+              console.log(`Source file ${sourcePath} not found`);
+              return {
+                success: false,
+                error: `No ${sourceStatus} submissions found`
+              };
+            }
+            throw error;
+          }
+          
+          // Step 2: Find the submission to move
+          const submissionIndex = sourceFile.content.findIndex(s => s.id === id);
+          if (submissionIndex === -1) {
+            console.log(`Submission ${id} not found in ${sourcePath}`);
+            return {
+              success: false,
+              error: `Submission not found in ${sourceStatus} submissions`
+            };
+          }
+          
+          // Step 3: Get the submission and remove it from source
+          const submission = sourceFile.content[submissionIndex];
+          sourceFile.content.splice(submissionIndex, 1);
+          
+          // Step 4: Update submission status
+          submission.status = targetStatus;
+          
+          // Step 5: Get target file
+          let targetFile;
+          let targetPath = `data/${targetStatus}-submissions.json`;
+          
+          try {
+            const { data: fileData } = await octokit.repos.getContent({
+              owner: GITHUB_OWNER,
+              repo: GITHUB_REPO,
+              path: targetPath,
+            });
+            
+            targetFile = {
+              content: JSON.parse(Base64.decode(fileData.content)),
+              sha: fileData.sha
+            };
+          } catch (error) {
+            if (error.status === 404) {
+              console.log(`Target file ${targetPath} not found, will create it`);
+              targetFile = {
+                content: [],
+                sha: null
+              };
+            } else {
+              throw error;
+            }
+          }
+          
+          // Step 6: Add the submission to target
+          targetFile.content.unshift(submission);
+          
+          // Step 7: Update both files in GitHub
+          const results = await Promise.all([
+            // Update source file
+            octokit.repos.createOrUpdateFileContents({
+              owner: GITHUB_OWNER,
+              repo: GITHUB_REPO,
+              path: sourcePath,
+              message: `Remove submission ${id} from ${sourceStatus}`,
+              content: Base64.encode(JSON.stringify(sourceFile.content, null, 2)),
+              sha: sourceFile.sha,
+            }),
+            
+            // Update target file
+            octokit.repos.createOrUpdateFileContents({
+              owner: GITHUB_OWNER,
+              repo: GITHUB_REPO,
+              path: targetPath,
+              message: `Add submission ${id} to ${targetStatus}`,
+              content: Base64.encode(JSON.stringify(targetFile.content, null, 2)),
+              sha: targetFile.sha || undefined, // If file doesn't exist, don't include sha
+            })
+          ]);
+          
+          console.log(`Successfully moved submission ${id} from ${sourceStatus} to ${targetStatus}`);
+          
+          return {
+            success: true,
+            submission
+          };
+        } catch (error) {
+          // If it's a SHA conflict and we haven't exceeded retries, try again
+          if (error.status === 409 && attempt < MAX_RETRIES - 1) {
+            console.log(`SHA conflict detected, retrying (${attempt + 1}/${MAX_RETRIES})...`);
+            continue;
+          }
+          
+          // Otherwise, rethrow the error
+          throw error;
+        }
       }
-      throw error;
+      
+      // If we get here, we've exceeded our retry attempts
+      throw new Error(`Failed to move submission after ${MAX_RETRIES} attempts due to SHA conflicts`);
     }
     
-    // Find the submission to approve
-    const submissionIndex = pendingSubmissions.findIndex(s => s.id === id);
-    if (submissionIndex === -1) {
+    // Move the submission from pending to approved
+    const result = await moveSubmission(id, "pending", "approved");
+    
+    if (!result.success) {
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ error: "Submission not found" })
+        body: JSON.stringify({ error: result.error })
       };
     }
-    
-    // Get the submission and remove it from pending
-    const submission = pendingSubmissions[submissionIndex];
-    pendingSubmissions.splice(submissionIndex, 1);
-    
-    // Update submission status
-    submission.status = "approved";
-    
-    // Get current approved submissions
-    let approvedSubmissions = [];
-    let approvedSha = "";
-    try {
-      const { data: fileData } = await octokit.repos.getContent({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        path: "data/approved-submissions.json",
-      });
-      
-      approvedSubmissions = JSON.parse(Base64.decode(fileData.content));
-      approvedSha = fileData.sha;
-    } catch (error) {
-      // If approved file doesn't exist, it will be created
-      if (error.status !== 404) {
-        throw error;
-      }
-    }
-    
-    // Add the submission to approved
-    approvedSubmissions.unshift(submission);
-    
-    // Update both files in GitHub
-    await Promise.all([
-      // Update pending submissions
-      octokit.repos.createOrUpdateFileContents({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        path: "data/pending-submissions.json",
-        message: `Remove submission ${id} from pending`,
-        content: Base64.encode(JSON.stringify(pendingSubmissions, null, 2)),
-        sha: pendingSha,
-      }),
-      
-      // Update approved submissions
-      octokit.repos.createOrUpdateFileContents({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        path: "data/approved-submissions.json",
-        message: `Add submission ${id} to approved`,
-        content: Base64.encode(JSON.stringify(approvedSubmissions, null, 2)),
-        sha: approvedSha || undefined, // If file doesn't exist, don't include sha
-      })
-    ]);
     
     return {
       statusCode: 200,
@@ -171,7 +224,7 @@ exports.handler = async function(event, context) {
       body: JSON.stringify({
         success: true,
         message: "Submission approved successfully",
-        submission
+        submission: result.submission
       })
     };
   } catch (error) {
