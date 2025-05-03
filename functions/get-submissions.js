@@ -2,10 +2,10 @@ const { Octokit } = require("@octokit/rest");
 const { Base64 } = require("js-base64");
 
 // GitHub repository information
-const GITHUB_OWNER = "RyanNovinc"; // Your actual GitHub username
-const GITHUB_REPO = "ClaudeAppBuilder"; // Your actual repository name
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Set this in Netlify environment variables
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN; // Simple admin token for basic auth
+const GITHUB_OWNER = "RyanNovinc"; 
+const GITHUB_REPO = "ClaudeAppBuilder"; 
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
 exports.handler = async function(event, context) {
   // Set CORS headers
@@ -34,22 +34,31 @@ exports.handler = async function(event, context) {
     };
   }
   
-  // Basic authentication check
+  // IMPROVED AUTHENTICATION HANDLING
+  // Get the token from either Authorization header or query parameter
+  let token = null;
+  
+  // Check Authorization header
   const authHeader = event.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return {
-      statusCode: 401,
-      headers,
-      body: JSON.stringify({ error: "Unauthorized" })
-    };
+  if (authHeader) {
+    // Allow both "Bearer TOKEN" and just "TOKEN"
+    token = authHeader.startsWith("Bearer ") 
+      ? authHeader.split(" ")[1]
+      : authHeader;
   }
   
-  const token = authHeader.split(" ")[1];
-  if (token !== ADMIN_TOKEN) {
+  // If no token in header, check query parameters
+  if (!token && event.queryStringParameters && event.queryStringParameters.token) {
+    token = event.queryStringParameters.token;
+  }
+  
+  // Check if token is valid
+  if (!token || token !== ADMIN_TOKEN) {
+    console.log("Authentication failed. Provided token:", token ? "***" : "none");
     return {
       statusCode: 401,
       headers,
-      body: JSON.stringify({ error: "Invalid token" })
+      body: JSON.stringify({ error: "Unauthorized - Invalid or missing token" })
     };
   }
 
