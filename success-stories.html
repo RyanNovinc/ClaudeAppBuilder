@@ -323,6 +323,45 @@
             color: #6b7280;
         }
         
+        /* Admin Tools Styles */
+        #admin-tools {
+            background-color: #f0f9ff;
+            border: 1px solid #e0f2ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0 40px;
+            text-align: center;
+        }
+        
+        #admin-tools h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #0070f3;
+        }
+        
+        .admin-button {
+            padding: 10px 16px;
+            background: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .admin-button:hover {
+            background-color: #0055b3;
+        }
+        
+        .admin-button.purple {
+            background-color: #8b5cf6;
+        }
+        
+        .admin-button.purple:hover {
+            background-color: #7c3aed;
+        }
+        
         @media (max-width: 768px) {
             .success-stories-grid {
                 grid-template-columns: 1fr;
@@ -372,6 +411,17 @@
             <div class="empty-state-icon">📱</div>
             <div class="empty-state-title">Success Stories Coming Soon</div>
             <p class="empty-state-description">Our students are busy building amazing apps! Check back soon to see what they've created with the AppFoundry method.</p>
+        </div>
+        
+        <!-- Admin Tools (hidden by default) -->
+        <div id="admin-tools" style="display: none;">
+            <h3>Admin Tools</h3>
+            <button id="force-sync-button" class="admin-button">
+                Force Sync from Server
+            </button>
+            <button id="migrate-images-button" class="admin-button purple">
+                Migrate All Images to Cloudinary
+            </button>
         </div>
         
         <div class="create-story-box">
@@ -604,6 +654,123 @@
             window.displayStories = displayStories;
             window.loadApprovedStories = loadApprovedStories;
             
+            // Sync from server function
+            async function syncFromServer() {
+                try {
+                    console.log("🔄 Starting server sync...");
+                    
+                    // Try to fetch all submissions from the server
+                    const response = await fetch('/.netlify/functions/get-submissions?status=all');
+                    
+                    if (!response.ok) {
+                        throw new Error(`Server returned ${response.status}`);
+                    }
+                    
+                    const submissions = await response.json();
+                    
+                    if (Array.isArray(submissions) && submissions.length > 0) {
+                        console.log(`📦 Received ${submissions.length} submissions from server`);
+                        
+                        // Save to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                        
+                        // Update the backup as well
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                        
+                        console.log(`✅ Successfully synced ${submissions.length} submissions from server`);
+                        return true;
+                    } else {
+                        console.warn("⚠️ Server returned empty or invalid submissions array");
+                        return false;
+                    }
+                } catch (error) {
+                    console.error("❌ Error syncing from server:", error);
+                    return false;
+                }
+            }
+            
+            // Check if user is admin
+            function isAdmin() {
+                return localStorage.getItem('appfoundry_admin_mode') === 'true';
+            }
+            
+            // Show admin tools if appropriate
+            if (isAdmin()) {
+                document.getElementById('admin-tools').style.display = 'block';
+            }
+            
+            // Add event listener for sync button
+            document.getElementById('force-sync-button').addEventListener('click', async function() {
+                this.disabled = true;
+                this.textContent = 'Syncing...';
+                
+                try {
+                    const success = await syncFromServer();
+                    
+                    if (success) {
+                        alert('Successfully synced submissions from server!');
+                        location.reload(); // Reload the page to show updated data
+                    } else {
+                        alert('Sync completed but returned no data. Check server logs.');
+                    }
+                } catch (error) {
+                    console.error('Error during sync:', error);
+                    alert(`Sync failed: ${error.message}`);
+                } finally {
+                    this.disabled = false;
+                    this.textContent = 'Force Sync from Server';
+                }
+            });
+            
+            // Add event listener for migrate images button
+            document.getElementById('migrate-images-button').addEventListener('click', async function() {
+                if (!confirm('This will migrate all base64 images to Cloudinary. Continue?')) {
+                    return;
+                }
+                
+                this.disabled = true;
+                this.textContent = 'Migrating...';
+                
+                try {
+                    // Get admin token
+                    const adminToken = localStorage.getItem('appfoundry_admin_token') || 'xP8q#Rb7!DtEv3mK9$Lz';
+                    
+                    // Call the migrate-images function
+                    const response = await fetch('/.netlify/functions/migrate-images', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${adminToken}`
+                        },
+                        body: JSON.stringify({ forceAll: false })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Server returned ${response.status}: ${await response.text()}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert(`Migration completed successfully!\n\nProcessed: ${result.results.total} submissions\nUpdated: ${result.results.updated} submissions`);
+                        
+                        // Force sync from server to get the updates
+                        const syncSuccess = await syncFromServer();
+                        if (syncSuccess) {
+                            location.reload(); // Reload to show new images
+                        }
+                    } else {
+                        alert('Migration completed but returned an error. Check server logs.');
+                    }
+                } catch (error) {
+                    console.error('Error during migration:', error);
+                    alert(`Migration failed: ${error.message}`);
+                } finally {
+                    this.disabled = false;
+                    this.textContent = 'Migrate All Images to Cloudinary';
+                }
+            });
+            
             // Load stories when the page loads
             loadApprovedStories();
         });
@@ -765,6 +932,19 @@
                 closeStoryModal();
             }
         });
+        
+        // Set admin mode for development/testing
+        function setAdminMode(enable) {
+            if (enable) {
+                localStorage.setItem('appfoundry_admin_mode', 'true');
+                localStorage.setItem('appfoundry_admin_token', 'xP8q#Rb7!DtEv3mK9$Lz'); // Replace with your actual token
+                location.reload();
+            } else {
+                localStorage.removeItem('appfoundry_admin_mode');
+                localStorage.removeItem('appfoundry_admin_token');
+                location.reload();
+            }
+        }
     </script>
 </body>
 </html>
