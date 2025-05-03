@@ -3,22 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Success Stories - AppFoundry</title>
-    
-    <!-- Immediate redirect script for deploy preview URLs -->
-    <script>
-    // Simple redirect to main domain if on a deploy preview
-    if (window.location.hostname.includes('--claudeappbuilder.netlify.app')) {
-        window.location.href = 'https://claudeappbuilder.netlify.app/success-stories.html';
-    }
-    </script>
+    <title>Admin: Success Stories - AppFoundry</title>
     
     <!-- Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
     <script>
     // Universal Story Manager - ensures stories are consistently available
     (function() {
       // Run on all pages to ensure localStorage data consistency
-      console.log("📊 Story Manager initializing on success stories page");
+      console.log("📊 Story Manager initializing on admin page");
       
       // Check if we need to seed the localStorage from our backup
       function seedStoriesIfNeeded() {
@@ -51,304 +43,232 @@
       
       // Run the seed check immediately
       seedStoriesIfNeeded();
+      
+      // Hook the approval buttons on the admin page
+      hookApprovalButtons();
     })();
     </script>
     
-    <!-- Enhanced Story Loading System -->
-    <script>
-    // Ensure stories load correctly regardless of domain or storage state
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("🚀 Enhanced success stories loader initialized");
-        
-        // Define main functions
-        const loadStoriesWithRetry = function(retryCount = 0) {
-            console.log(`🔍 Attempting to load stories (attempt ${retryCount + 1})`);
-            
-            // Try to get approved stories from StorageHelper first
-            let approvedStories = [];
-            
-            try {
-                if (typeof StorageHelper !== 'undefined' && StorageHelper.getApprovedSubmissions) {
-                    approvedStories = StorageHelper.getApprovedSubmissions();
-                    console.log(`✅ Successfully loaded ${approvedStories.length} approved stories using StorageHelper`);
-                } else {
-                    // Direct localStorage access fallback
-                    try {
-                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                        console.log('📦 Raw localStorage data found:', !!storedSubmissions);
-                        
-                        if (storedSubmissions) {
-                            const allSubmissions = JSON.parse(storedSubmissions);
-                            console.log('📊 Total submissions found:', allSubmissions.length);
-                            
-                            // Filter to only show approved stories
-                            approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                            console.log('✓ Approved stories found:', approvedStories.length);
-                        } else {
-                            console.log('⚠️ No submissions found in localStorage');
-                            
-                            // Try backup key as last resort
-                            const backupData = localStorage.getItem('appfoundry_approved_seed');
-                            if (backupData) {
-                                console.log('🔄 Found backup data, restoring...');
-                                try {
-                                    const backup = JSON.parse(backupData);
-                                    // Store in main localStorage key to ensure future loads work
-                                    localStorage.setItem('appfoundry_submissions', JSON.stringify(backup));
-                                    console.log('✅ Copied backup data to main storage location');
-                                    
-                                    const approvedBackup = backup.filter(story => story.status === 'approved');
-                                    approvedStories = approvedBackup;
-                                    console.log('✅ Restored from backup:', approvedStories.length, 'stories');
-                                } catch (e) {
-                                    console.error('❌ Error parsing backup data:', e);
-                                }
-                            }
-                        }
-                    } catch (error) {
-                        console.error('❌ Error accessing localStorage:', error);
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Error loading stories:', error);
-            }
-            
-            // Display stories if we found any
-            if (approvedStories.length > 0) {
-                displayStories(approvedStories);
-                document.getElementById('empty-state').style.display = 'none';
-                document.getElementById('loading-indicator').style.display = 'none';
-                console.log('✨ Successfully displayed stories');
-                return true;
-            } else {
-                console.log('⚠️ No approved stories found');
-                
-                // Retry logic - wait and try again if this is the first few attempts
-                if (retryCount < 3) {
-                    console.log(`🔄 Will retry in ${(retryCount + 1) * 500}ms...`);
-                    setTimeout(() => {
-                        loadStoriesWithRetry(retryCount + 1);
-                    }, (retryCount + 1) * 500);
-                    return false;
-                } else {
-                    // Give up after 3 retries and show sample stories as fallback
-                    console.log('❌ Giving up after multiple attempts');
-                    
-                    // Fallback to sample data as last resort
-                    const sampleStories = getSampleStories();
-                    console.log('📄 Using sample stories as fallback');
-                    
-                    // Store sample stories in localStorage for future use
-                    try {
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(sampleStories));
-                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(sampleStories));
-                        console.log('💾 Stored sample stories for future use');
-                    } catch (e) {
-                        console.error('❌ Error storing sample stories:', e);
-                    }
-                    
-                    displayStories(sampleStories);
-                    document.getElementById('empty-state').style.display = 'none';
-                    document.getElementById('loading-indicator').style.display = 'none';
-                    return true;
-                }
-            }
-        };
-        
-        // Function to get sample stories as fallback
-        const getSampleStories = function() {
-            return [
-                {
-                    id: 'sample_1',
-                    name: 'Sarah Johnson',
-                    appName: 'SleepTrack',
-                    appType: 'Health & Fitness',
-                    testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
-                    story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
-                    images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App'],
-                    date: '2025-04-15T10:30:00Z',
-                    status: 'approved'
-                },
-                {
-                    id: 'sample_2',
-                    name: 'Michael Chen',
-                    appName: 'RecipeKeeper',
-                    appType: 'Lifestyle',
-                    testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
-                    story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
-                    images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App'],
-                    date: '2025-04-22T14:45:00Z',
-                    status: 'approved'
-                }
-            ];
-        };
-        
-        // Start loading process
-        console.log("📄 Ready to load stories");
-        loadStoriesWithRetry();
-        
-        // Also check all links to make sure they use the main domain
-        setTimeout(() => {
-            const currentHost = window.location.hostname;
-            const mainDomain = 'claudeappbuilder.netlify.app';
-            
-            // If we're on a deploy preview, ensure links point to main domain
-            if (currentHost.includes('--claudeappbuilder.netlify.app')) {
-                console.log('🔗 Checking links to ensure they point to main domain');
-                
-                const storyLinks = document.querySelectorAll('a[href*="success-stories"], a[href*="submit-success-story"]');
-                storyLinks.forEach(link => {
-                    const href = link.getAttribute('href');
-                    if (href && !href.includes('https://')) {
-                        // Convert to absolute URL
-                        const newHref = 'https://' + mainDomain + (href.startsWith('/') ? href : '/' + href);
-                        link.setAttribute('href', newHref);
-                        console.log(`🔧 Updated link from ${href} to ${newHref}`);
-                    }
-                });
-            }
-        }, 1000);
-    });
-    </script>
-    
-    <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .success-stories-container {
-            max-width: 1200px;
-            margin: 60px auto;
-            padding: 0 20px;
-        }
-        
-        .success-stories-header {
-            text-align: center;
-            margin-bottom: 60px;
-        }
-        
-        .success-stories-header h1 {
-            font-size: 32px;
-            margin-bottom: 15px;
-        }
-        
-        .success-stories-header p {
-            max-width: 700px;
-            margin: 0 auto;
-            color: #6b7280;
-            font-size: 18px;
-            line-height: 1.5;
-        }
-        
-        .success-stories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
-        }
-        
-        .story-card {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .story-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-        }
-        
-        .story-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-        
-        .story-content {
-            padding: 25px;
-        }
-        
-        .story-tag {
-            display: inline-block;
-            background-color: #e0f2ff;
-            color: #0070f3;
-            font-size: 12px;
-            font-weight: 500;
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-        
-        .story-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #111827;
-        }
-        
-        .story-author {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .story-author-name {
-            font-size: 14px;
-            color: #4b5563;
-        }
-        
-        .story-quote {
-            font-style: italic;
-            color: #4b5563;
-            border-left: 3px solid #e5e7eb;
-            padding-left: 15px;
-            margin-bottom: 15px;
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
             line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f9fafb;
         }
-        
-        .story-button {
-            display: inline-block;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 15px 0;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0070f3;
+        }
+        .admin-badge {
+            background-color: #0070f3;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .header-actions a {
             color: #0070f3;
             text-decoration: none;
+            margin-left: 20px;
             font-weight: 500;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #111827;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 12px 20px;
+            font-weight: 500;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            color: #0070f3;
+            border-bottom-color: #0070f3;
+        }
+        .tab:hover {
+            color: #0070f3;
+        }
+        .submissions-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .submission-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .submission-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: box-shadow 0.3s;
+        }
+        .submission-card:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #f3f4f6;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .status-approved {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-rejected {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        .card-body {
+            padding: 15px;
+        }
+        .card-field {
+            margin-bottom: 12px;
+        }
+        .card-field:last-child {
+            margin-bottom: 0;
+        }
+        .field-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 3px;
+        }
+        .field-value {
             font-size: 14px;
-            transition: color 0.2s;
+            color: #111827;
         }
-        
-        .story-button:hover {
-            color: #0055b3;
+        .testimonial {
+            font-style: italic;
+            background-color: #f9fafb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
         }
-        
+        .card-images {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .card-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 4px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .card-image:hover {
+            transform: scale(1.05);
+        }
+        .card-actions {
+            padding: 12px 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-approve {
+            background-color: #10b981;
+            color: white;
+        }
+        .btn-approve:hover {
+            background-color: #059669;
+        }
+        .btn-reject {
+            background-color: #ef4444;
+            color: white;
+        }
+        .btn-reject:hover {
+            background-color: #dc2626;
+        }
+        .btn-view {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .btn-view:hover {
+            background-color: #e5e7eb;
+        }
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
-            background-color: #f9fafb;
-            border-radius: 12px;
-            margin-bottom: 40px;
+            padding: 40px 20px;
         }
-        
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            opacity: 0.5;
+        .empty-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: #9ca3af;
         }
-        
-        .empty-state-title {
-            font-size: 24px;
+        .empty-title {
+            font-size: 18px;
             font-weight: 600;
             margin-bottom: 10px;
             color: #111827;
         }
-        
-        .empty-state-description {
-            max-width: 500px;
-            margin: 0 auto 20px;
+        .empty-description {
             color: #6b7280;
+            max-width: 400px;
+            margin: 0 auto;
         }
         
-        .story-modal-backdrop {
+        /* Modal Styles */
+        .modal-backdrop {
             position: fixed;
             top: 0;
             left: 0;
@@ -361,534 +281,906 @@
             z-index: 1000;
             display: none;
         }
-        
-        .story-modal {
+        .modal {
             background-color: white;
-            border-radius: 12px;
+            border-radius: 8px;
             width: 90%;
             max-width: 800px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
-        .story-modal-header {
-            padding: 20px;
+        .modal-header {
+            padding: 15px 20px;
             border-bottom: 1px solid #e5e7eb;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
-        .story-modal-title {
-            font-size: 24px;
+        .modal-title {
+            font-size: 18px;
             font-weight: 600;
         }
-        
-        .story-modal-close {
+        .modal-close {
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 20px;
             cursor: pointer;
             color: #6b7280;
         }
-        
-        .story-modal-body {
-            padding: 30px;
+        .modal-body {
+            padding: 20px;
         }
-        
-        .story-modal-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .story-content {
+            white-space: pre-line;
             margin-bottom: 20px;
+            line-height: 1.7;
         }
-        
-        .story-modal-author {
-            font-weight: 500;
-        }
-        
-        .story-modal-tag {
-            background-color: #e0f2ff;
-            color: #0070f3;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        
-        .story-modal-images {
+        .modal-images {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 15px;
-            margin: 20px 0;
         }
-        
-        .story-modal-image {
+        .modal-image {
             width: 100%;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: transform 0.2s;
         }
-        
-        .story-modal-image:hover {
+        .modal-image:hover {
             transform: scale(1.02);
         }
         
-        .story-modal-testimonial {
-            font-style: italic;
-            color: #4b5563;
-            font-size: 18px;
-            line-height: 1.6;
+        /* Image Viewer */
+        .image-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            display: none;
+        }
+        .viewer-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90vh;
+        }
+        .viewer-image {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+        .viewer-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
             padding: 20px;
-            background-color: #f9fafb;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            gap: 10px;
+        }
+        .page-button {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            background-color: white;
+            color: #374151;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .page-button:hover {
+            border-color: #0070f3;
+            color: #0070f3;
+        }
+        .page-button.active {
+            background-color: #0070f3;
+            border-color: #0070f3;
+            color: white;
+        }
+        .page-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
-        .story-modal-content {
-            line-height: 1.7;
-            color: #4b5563;
+        .switch-container {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+            margin-right: 20px;
+        }
+        .switch-container label {
+            margin-right: 10px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #0070f3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(16px);
         }
         
-        .story-modal-content p {
-            margin-bottom: 15px;
+        /* Export Button Styles */
+        .admin-actions {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
         }
         
-        .create-story-box {
-            text-align: center;
-            padding: 40px;
-            background-color: #f0f9ff;
-            border-radius: 12px;
-            margin-bottom: 60px;
+        .export-button {
+            background-color: #0070f3;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
         }
         
-        .create-story-box h2 {
-            font-size: 24px;
-            margin-bottom: 15px;
+        .export-button:hover {
+            background-color: #0055b3;
         }
         
-        .create-story-box p {
-            max-width: 600px;
-            margin: 0 auto 25px;
-            color: #4b5563;
+        #export-result {
+            margin-left: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .export-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        
+        .export-error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #ef4444;
         }
 
+        /* Loading indicator */
         #loading-indicator {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
+            font-size: 16px;
             color: #6b7280;
         }
         
-        @media (max-width: 768px) {
-            .success-stories-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .story-card {
-                max-width: 500px;
-                margin: 0 auto;
-            }
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(0, 112, 243, 0.3);
+            border-radius: 50%;
+            border-top-color: #0070f3;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <header>
-        <div class="container">
-            <div class="logo"><a href="https://claudeappbuilder.netlify.app/index.html">AppFoundry</a></div>
-            <nav>
-                <ul>
-                    <li><a href="https://claudeappbuilder.netlify.app/index.html#overview">Overview</a></li>
-                    <li><a href="https://claudeappbuilder.netlify.app/index.html#curriculum">Curriculum</a></li>
-                    <li><a href="https://claudeappbuilder.netlify.app/index.html#pricing">Pricing</a></li>
-                    <li><a href="https://claudeappbuilder.netlify.app/success-stories.html" class="active">Success Stories</a></li>
-                    <li><a href="https://claudeappbuilder.netlify.app/about-creator.html">About</a></li>
-                </ul>
-            </nav>
-            <button class="cta-button small" id="loginButton">Log in</button>
+        <div class="container header-container">
+            <div>
+                <span class="logo">AppFoundry</span>
+                <span class="admin-badge">Admin</span>
+            </div>
+            <div class="header-actions">
+                <a href="../index.html">View Site</a>
+                <a href="../success-stories.html">Success Stories</a>
+            </div>
         </div>
     </header>
-
-    <div class="success-stories-container">
-        <div class="success-stories-header">
-            <h1>Success Stories</h1>
-            <p>See what our students have built without writing a single line of code. These real-world apps were created using the exact same approach you'll learn in this course.</p>
+    
+    <div class="container">
+        <h1>Success Story Submissions</h1>
+        
+        <div class="tabs">
+            <div class="tab active" data-status="all" onclick="changeTab('all')">All Submissions</div>
+            <div class="tab" data-status="pending" onclick="changeTab('pending')">Pending</div>
+            <div class="tab" data-status="approved" onclick="changeTab('approved')">Approved</div>
+            <div class="tab" data-status="rejected" onclick="changeTab('rejected')">Rejected</div>
+            
+            <div class="switch-container">
+                <label for="sort-switch">Newest First</label>
+                <label class="switch">
+                    <input type="checkbox" id="sort-switch" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
         
-        <!-- Loading indicator - shown while stories are being loaded -->
-        <div id="loading-indicator">
-            Loading success stories...
+        <!-- ADD THIS NEW SECTION: Export Button -->
+        <div class="admin-actions">
+            <button class="export-button" onclick="exportApprovedStories()">
+                Export Approved Stories JSON
+            </button>
+            <span id="export-result"></span>
         </div>
         
-        <div id="success-stories-grid" class="success-stories-grid" style="display: none;">
-            <!-- Stories will be loaded dynamically here -->
-        </div>
-        
-        <!-- Empty state - will show if no approved stories are found -->
-        <div id="empty-state" class="empty-state" style="display: none;">
-            <div class="empty-state-icon">📱</div>
-            <div class="empty-state-title">Success Stories Coming Soon</div>
-            <p class="empty-state-description">Our students are busy building amazing apps! Check back soon to see what they've created with the AppFoundry method.</p>
-        </div>
-        
-        <!-- FIXED: Removed target="_blank" and changed to relative URL -->
-        <div class="create-story-box">
-            <h2>Ready to Share Your Success?</h2>
-            <p>Have you built an app using the AppFoundry method? We'd love to feature your creation and inspire others to bring their ideas to life!</p>
-            <a href="submit-success-story.html" class="cta-button large" onclick="localStorage.setItem('appfoundry_navigation', 'from_success_stories');">Share Your Success Story</a>
+        <div class="submissions-container">
+            <div id="loading-indicator">
+                <div class="loading-spinner"></div>
+                Loading submissions...
+            </div>
+            
+            <div id="submissions" class="submission-cards" style="display: none;">
+                <!-- Submissions will be displayed here -->
+            </div>
+            
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <div class="empty-icon">📪</div>
+                <div class="empty-state-title">No submissions found</div>
+                <div class="empty-state-description">There are no success story submissions in this category yet.</div>
+            </div>
+            
+            <div class="pagination" id="pagination">
+                <!-- Pagination will be added here -->
+            </div>
         </div>
     </div>
     
-    <!-- Story Modal for showing full story -->
-    <div class="story-modal-backdrop" id="story-modal">
-        <div class="story-modal">
-            <div class="story-modal-header">
-                <div class="story-modal-title" id="modal-title">App Name</div>
-                <button class="story-modal-close" onclick="closeStoryModal()">&times;</button>
+    <!-- Full Story Modal -->
+    <div class="modal-backdrop" id="story-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">App Name</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
-            <div class="story-modal-body">
-                <div class="story-modal-meta">
-                    <div class="story-modal-author" id="modal-author">Creator Name</div>
-                    <div class="story-modal-tag" id="modal-tag">App Type</div>
+            <div class="modal-body">
+                <div id="modal-content">
+                    <!-- Story content will be loaded here -->
                 </div>
-                
-                <div class="story-modal-testimonial" id="modal-testimonial">
-                    "Testimonial will appear here"
-                </div>
-                
-                <div class="story-modal-content" id="modal-content">
-                    <!-- Full story content will be loaded here -->
-                </div>
-                
-                <div class="story-modal-images" id="modal-images">
+                <div class="modal-images" id="modal-images">
                     <!-- Images will be loaded here -->
                 </div>
             </div>
         </div>
     </div>
-
-    <footer>
-        <div class="container">
-            <div class="logo">AppFoundry</div>
-            <div class="footer-links">
-                <div class="link-group">
-                    <h4>Course</h4>
-                    <ul>
-                        <li><a href="https://claudeappbuilder.netlify.app/index.html#overview">Overview</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/index.html#curriculum">Curriculum</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/index.html#pricing">Pricing</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/success-stories.html">Success Stories</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/about-creator.html">About Creator</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="https://claudeappbuilder.netlify.app/terms-of-service.html">Terms of Service</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/privacy-policy.html">Privacy Policy</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/refund-policy.html">Our Guarantee</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                © 2025 AppFoundry. All rights reserved.
-            </div>
+    
+    <!-- Image Viewer -->
+    <div class="image-viewer" id="image-viewer">
+        <div class="viewer-content">
+            <button class="viewer-close" onclick="closeImageViewer()">&times;</button>
+            <img src="" id="full-image" class="viewer-image">
         </div>
-    </footer>
-
-    <script src="storage-helper.js"></script>
+    </div>
+    
     <script>
-        // Script to load approved stories
-        // Updated version to fetch from GitHub via Netlify function
-        (function() {
-            console.log("🔄 Initializing success stories loader");
+        // Constants - This will use the Netlify environment variable if available, or prompt for it
+        let ADMIN_TOKEN = "";
+
+        // Function to get admin token - either from localStorage or prompt user
+        function getAdminToken() {
+            // Try to get from localStorage first
+            let storedToken = localStorage.getItem('appfoundry_admin_token');
             
-            // Function to load stories with advanced error handling
-            async function loadApprovedStories() {
-                console.log("🔍 Loading approved stories");
+            if (storedToken) {
+                console.log("Using stored admin token");
+                return storedToken;
+            }
+            
+            // Prompt user for token if not found
+            const inputToken = prompt("Please enter admin token to continue:", "");
+            
+            if (inputToken) {
+                // Save token to localStorage for future use
+                localStorage.setItem('appfoundry_admin_token', inputToken);
+                console.log("Admin token saved");
+                return inputToken;
+            }
+            
+            // Return empty string if user cancels
+            return "";
+        }
+        
+        // Global variables
+        let allSubmissions = [];
+        let currentTab = 'all';
+        let currentPage = 1;
+        let itemsPerPage = 6;
+        let sortNewestFirst = true;
+        let currentStoryId = null;
+        
+        // Load submissions when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            ADMIN_TOKEN = getAdminToken();
+            
+            // Only proceed with loading submissions if we have a token
+            if (ADMIN_TOKEN) {
+                console.log("Admin page loaded, loading submissions");
+                loadSubmissions();
                 
+                // Set up sort switch
+                document.getElementById('sort-switch').addEventListener('change', function() {
+                    sortNewestFirst = this.checked;
+                    displaySubmissions();
+                });
+            } else {
+                alert("Admin token required to access this page.");
+                // Show a login form instead of submissions
+                document.getElementById('loading-indicator').style.display = 'none';
+                document.getElementById('submissions').innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <h2>Admin Authentication Required</h2>
+                        <p>Please refresh the page and enter your admin token to continue.</p>
+                        <button onclick="location.reload()">Refresh Page</button>
+                    </div>
+                `;
+                document.getElementById('submissions').style.display = 'block';
+            }
+        });
+        
+        // Load submissions from GitHub via Netlify function
+        async function loadSubmissions() {
+            try {
                 // Show loading indicator
                 document.getElementById('loading-indicator').style.display = 'block';
-                document.getElementById('success-stories-grid').style.display = 'none';
+                document.getElementById('submissions').style.display = 'none';
                 document.getElementById('empty-state').style.display = 'none';
                 
-                try {
-                    // First try to fetch from the API
-                    const response = await fetch('/.netlify/functions/get-submissions?status=approved');
-                    
-                    if (!response.ok) {
-                        throw new Error("Failed to fetch from API");
+                // Fetch submissions from API
+                console.log("Fetching submissions with auth token...");
+                const response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
+                    headers: {
+                        "Authorization": `Bearer ${ADMIN_TOKEN}`
                     }
-                    
-                    const approvedStories = await response.json();
-                    
-                    if (approvedStories.length > 0) {
-                        displayStories(approvedStories);
-                        document.getElementById('empty-state').style.display = 'none';
-                    } else {
-                        // Fall back to localStorage if API returned no stories
-                        fallbackToLocalStorage();
-                    }
-                } catch (error) {
-                    console.error("Error fetching from API:", error);
-                    
-                    // Fall back to localStorage
-                    fallbackToLocalStorage();
-                } finally {
-                    document.getElementById('loading-indicator').style.display = 'none';
-                }
-            }
-            
-            // Fallback to localStorage
-            function fallbackToLocalStorage() {
-                try {
-                    if (typeof StorageHelper !== 'undefined' && StorageHelper.getApprovedSubmissions) {
-                        const approvedStories = StorageHelper.getApprovedSubmissions();
-                        console.log(`✅ Using StorageHelper, found ${approvedStories.length} approved stories`);
-                        
-                        if (approvedStories.length > 0) {
-                            displayStories(approvedStories);
-                            document.getElementById('empty-state').style.display = 'none';
-                            return;
-                        }
-                    }
-                    
-                    // Direct localStorage access
-                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                    if (storedSubmissions) {
-                        const allSubmissions = JSON.parse(storedSubmissions);
-                        const approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                        
-                        if (approvedStories.length > 0) {
-                            displayStories(approvedStories);
-                            document.getElementById('empty-state').style.display = 'none';
-                            return;
-                        }
-                    }
-                    
-                    // Check backup seed as last resort
-                    const backupData = localStorage.getItem('appfoundry_approved_seed');
-                    if (backupData) {
-                        const backup = JSON.parse(backupData);
-                        const approvedBackup = backup.filter(story => story.status === 'approved');
-                        
-                        if (approvedBackup.length > 0) {
-                            displayStories(approvedBackup);
-                            document.getElementById('empty-state').style.display = 'none';
-                            return;
-                        }
-                    }
-                    
-                    // If we got here, no stories were found, show sample stories
-                    const sampleStories = getSampleStories();
-                    if (sampleStories.length > 0) {
-                        displayStories(sampleStories);
-                        document.getElementById('empty-state').style.display = 'none';
-                    } else {
-                        document.getElementById('success-stories-grid').style.display = 'none';
-                        document.getElementById('empty-state').style.display = 'block';
-                    }
-                } catch (error) {
-                    console.error("Error accessing localStorage:", error);
-                    document.getElementById('success-stories-grid').style.display = 'none';
-                    document.getElementById('empty-state').style.display = 'block';
-                }
-            }
-            
-            // Function to get sample stories as fallback
-            function getSampleStories() {
-                return [
-                    {
-                        id: 'sample_1',
-                        name: 'Sarah Johnson',
-                        appName: 'SleepTrack',
-                        appType: 'Health & Fitness',
-                        testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
-                        story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
-                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App'],
-                        date: '2025-04-15T10:30:00Z',
-                        status: 'approved'
-                    },
-                    {
-                        id: 'sample_2',
-                        name: 'Michael Chen',
-                        appName: 'RecipeKeeper',
-                        appType: 'Lifestyle',
-                        testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
-                        story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
-                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App'],
-                        date: '2025-04-22T14:45:00Z',
-                        status: 'approved'
-                    }
-                ];
-            }
-            
-            // Function to display stories in the grid
-            function displayStories(stories) {
-                const grid = document.getElementById('success-stories-grid');
-                if (!grid) {
-                    console.error('❌ Could not find success-stories-grid element');
-                    return;
-                }
-                
-                grid.innerHTML = ''; // Clear existing content
-                
-                // Sort by date (newest first)
-                stories.sort((a, b) => new Date(b.date) - new Date(a.date));
-                
-                // Add each story to the grid
-                stories.forEach(story => {
-                    const storyCard = document.createElement('div');
-                    storyCard.className = 'story-card';
-                    
-                    // Get image URL (use first image or placeholder)
-                    const imageUrl = story.images && story.images.length > 0 && story.images[0]
-                        ? story.images[0] 
-                        : 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
-                    
-                    // For handling older versions where appType might be different
-                    const appType = story.appType || story.app_type || "App";
-                    
-                    storyCard.innerHTML = `
-                        <img src="${imageUrl}" alt="${story.appName}" class="story-image">
-                        <div class="story-content">
-                            <div class="story-tag">${appType}</div>
-                            <h3 class="story-title">${story.appName}</h3>
-                            <div class="story-author">
-                                <span class="story-author-name">By ${story.name}</span>
-                            </div>
-                            <div class="story-quote">${story.testimonial}</div>
-                            <a href="#" class="story-button" onclick="openStoryModal('${story.id}'); return false;">Read Full Story</a>
-                        </div>
-                    `;
-                    
-                    grid.appendChild(storyCard);
                 });
                 
-                // Show the grid
-                grid.style.display = 'grid';
+                // Log response status for debugging
+                console.log("API Response status:", response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("API error response:", errorText);
+                    throw new Error("Failed to fetch submissions: " + errorText);
+                }
+                
+                const data = await response.json();
+                allSubmissions = data;
+                
+                console.log("Loaded", allSubmissions.length, "submissions");
+                
+                // Fall back to localStorage if no submissions from API
+                if (allSubmissions.length === 0) {
+                    try {
+                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                        
+                        if (storedSubmissions) {
+                            const localSubmissions = JSON.parse(storedSubmissions);
+                            
+                            // Filter by status if needed
+                            if (currentTab !== 'all') {
+                                allSubmissions = localSubmissions.filter(sub => sub.status === currentTab);
+                            } else {
+                                allSubmissions = localSubmissions;
+                            }
+                            
+                            console.log("Loaded", allSubmissions.length, "submissions from localStorage (fallback)");
+                        }
+                    } catch (localStorageError) {
+                        console.error("Error loading from localStorage:", localStorageError);
+                    }
+                }
+                
+                // Display submissions
+                displaySubmissions();
+            } catch (error) {
+                console.error("Error loading submissions:", error);
+                
+                // Fall back to localStorage
+                try {
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    
+                    if (storedSubmissions) {
+                        allSubmissions = JSON.parse(storedSubmissions);
+                        
+                        // Filter by status if needed
+                        if (currentTab !== 'all') {
+                            allSubmissions = allSubmissions.filter(sub => sub.status === currentTab);
+                        }
+                        
+                        console.log("Loaded", allSubmissions.length, "submissions from localStorage (fallback)");
+                        displaySubmissions();
+                    } else {
+                        showEmptyState();
+                    }
+                } catch (localStorageError) {
+                    console.error("Error loading from localStorage:", localStorageError);
+                    showEmptyState();
+                }
+            } finally {
+                document.getElementById('loading-indicator').style.display = 'none';
+            }
+        }
+        
+        // Display submissions based on current filter
+        function displaySubmissions() {
+            // Filter submissions based on current tab
+            let filteredSubmissions = allSubmissions;
+            
+            if (currentTab !== 'all' && filteredSubmissions.some(sub => sub.status)) {
+                filteredSubmissions = allSubmissions.filter(submission => submission.status === currentTab);
             }
             
-            // Load stories when the page loads
-            document.addEventListener('DOMContentLoaded', function() {
-                loadApprovedStories();
+            // Sort submissions
+            filteredSubmissions.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return sortNewestFirst ? dateB - dateA : dateA - dateB;
             });
             
-            // Make functions globally available
-            window.loadApprovedStories = loadApprovedStories;
-            window.displayStories = displayStories;
-        })();
-        
-        // Open story modal
-        function openStoryModal(storyId) {
-            let story;
+            // Show empty state if no submissions
+            if (filteredSubmissions.length === 0) {
+                showEmptyState();
+                return;
+            }
             
-            // Try to find the story by ID - first from API
-            fetch(`/.netlify/functions/get-submissions?status=approved`)
-                .then(response => response.json())
-                .then(approvedStories => {
-                    story = approvedStories.find(s => s.id === storyId);
-                    
-                    if (story) {
-                        populateAndShowModal(story);
-                    } else {
-                        // Fall back to localStorage
-                        fallbackModalLoad(storyId);
+            // Calculate pagination
+            const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
+            if (currentPage > totalPages) {
+                currentPage = 1;
+            }
+            
+            // Get current page items
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredSubmissions.length);
+            const currentItems = filteredSubmissions.slice(startIndex, endIndex);
+            
+            // Display current items
+            const submissionsContainer = document.getElementById('submissions');
+            submissionsContainer.innerHTML = '';
+            
+            currentItems.forEach(submission => {
+                const submissionCard = createSubmissionCard(submission);
+                submissionsContainer.appendChild(submissionCard);
+            });
+            
+            // Update pagination
+            updatePagination(totalPages);
+            
+            // Hide empty state and show submissions
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('submissions').style.display = 'grid';
+        }
+        
+        // Create a submission card
+        function createSubmissionCard(submission) {
+            const card = document.createElement('div');
+            card.className = 'submission-card';
+            
+            // Get status label and class
+            let statusLabel = 'Pending';
+            let statusClass = 'status-pending';
+            
+            if (submission.status === 'approved') {
+                statusLabel = 'Approved';
+                statusClass = 'status-approved';
+            } else if (submission.status === 'rejected') {
+                statusLabel = 'Rejected';
+                statusClass = 'status-rejected';
+            }
+            
+            // Format date
+            const date = new Date(submission.date);
+            const formattedDate = date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="card-title">${submission.appName}</div>
+                    <div class="status-badge ${statusClass}">${statusLabel}</div>
+                </div>
+                <div class="card-body">
+                    <div class="card-field">
+                        <div class="field-label">Submitted By</div>
+                        <div class="field-value">${submission.name}</div>
+                    </div>
+                    <div class="card-field">
+                        <div class="field-label">Email</div>
+                        <div class="field-value">${submission.email}</div>
+                    </div>
+                    <div class="card-field">
+                        <div class="field-label">App Type</div>
+                        <div class="field-value">${submission.appType || submission.app_type || 'Not specified'}</div>
+                    </div>
+                    <div class="card-field">
+                        <div class="field-label">Experience Level</div>
+                        <div class="field-value">${submission.experienceLevel || 'Not specified'}</div>
+                    </div>
+                    <div class="card-field">
+                        <div class="field-label">Testimonial</div>
+                        <div class="testimonial">${submission.testimonial}</div>
+                    </div>
+                    <div class="card-field">
+                        <div class="field-label">Submitted On</div>
+                        <div class="field-value">${formattedDate}</div>
+                    </div>
+                </div>
+            `;
+            
+            // Add images if available
+            if (submission.images && submission.images.length > 0) {
+                const cardBody = card.querySelector('.card-body');
+                const imagesDiv = document.createElement('div');
+                imagesDiv.className = 'card-images';
+                
+                submission.images.forEach((imageUrl, index) => {
+                    if (imageUrl) {
+                        const img = document.createElement('img');
+                        img.src = imageUrl;
+                        img.alt = `${submission.appName} Screenshot ${index + 1}`;
+                        img.className = 'card-image';
+                        img.onclick = function() {
+                            showImage(imageUrl);
+                        };
+                        imagesDiv.appendChild(img);
                     }
-                })
-                .catch(error => {
-                    console.error("Error fetching story from API:", error);
-                    fallbackModalLoad(storyId);
                 });
-        }
-        
-        // Fallback to localStorage for modal
-        function fallbackModalLoad(storyId) {
-            let story;
-            
-            // Get the story from localStorage
-            if (typeof StorageHelper !== 'undefined') {
-                const allSubmissions = StorageHelper.getSubmissions();
-                story = allSubmissions.find(s => s.id === storyId);
-            } else {
-                try {
-                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                    if (storedSubmissions) {
-                        const allSubmissions = JSON.parse(storedSubmissions);
-                        story = allSubmissions.find(s => s.id === storyId);
-                    }
-                } catch (error) {
-                    console.error('Error accessing localStorage:', error);
-                }
+                
+                cardBody.appendChild(imagesDiv);
             }
             
-            if (story) {
-                populateAndShowModal(story);
-            } else {
-                console.error('Story not found:', storyId);
+            // Add action buttons
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'card-actions';
+            
+            // View Full Story button
+            const viewButton = document.createElement('button');
+            viewButton.className = 'btn btn-view';
+            viewButton.textContent = 'View Full Story';
+            viewButton.onclick = function() {
+                showStory(submission);
+            };
+            actionsDiv.appendChild(viewButton);
+            
+            // Add approve/reject buttons based on current status
+            if (submission.status === 'pending') {
+                // Approve button
+                const approveButton = document.createElement('button');
+                approveButton.className = 'btn btn-approve';
+                approveButton.textContent = 'Approve';
+                approveButton.onclick = function() {
+                    approveSubmission(submission.id);
+                };
+                actionsDiv.appendChild(approveButton);
                 
-                // If story not found, try sample stories
-                const sampleStories = [
-                    {
-                        id: 'sample_1',
-                        name: 'Sarah Johnson',
-                        appName: 'SleepTrack',
-                        appType: 'Health & Fitness',
-                        testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
-                        story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
-                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App'],
-                        date: '2025-04-15T10:30:00Z',
-                        status: 'approved'
+                // Reject button
+                const rejectButton = document.createElement('button');
+                rejectButton.className = 'btn btn-reject';
+                rejectButton.textContent = 'Reject';
+                rejectButton.onclick = function() {
+                    rejectSubmission(submission.id);
+                };
+                actionsDiv.appendChild(rejectButton);
+            } else if (submission.status === 'approved') {
+                // Reject button (can change from approved to rejected)
+                const rejectButton = document.createElement('button');
+                rejectButton.className = 'btn btn-reject';
+                rejectButton.textContent = 'Reject';
+                rejectButton.onclick = function() {
+                    rejectSubmission(submission.id);
+                };
+                actionsDiv.appendChild(rejectButton);
+            } else if (submission.status === 'rejected') {
+                // Approve button (can change from rejected to approved)
+                const approveButton = document.createElement('button');
+                approveButton.className = 'btn btn-approve';
+                approveButton.textContent = 'Approve';
+                approveButton.onclick = function() {
+                    approveSubmission(submission.id);
+                };
+                actionsDiv.appendChild(approveButton);
+            }
+            
+            card.appendChild(actionsDiv);
+            
+            return card;
+        }
+        
+        // Update submission status to approved - use GitHub API
+        async function approveSubmission(id) {
+            try {
+                document.getElementById('loading-indicator').style.display = 'block';
+                
+                // Call the Netlify function with proper authentication
+                console.log("Sending approval request with token:", ADMIN_TOKEN ? "Token exists" : "No token");
+                const response = await fetch("/.netlify/functions/update-submission-status", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${ADMIN_TOKEN}`
                     },
-                    {
-                        id: 'sample_2',
-                        name: 'Michael Chen',
-                        appName: 'RecipeKeeper',
-                        appType: 'Lifestyle',
-                        testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
-                        story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
-                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App'],
-                        date: '2025-04-22T14:45:00Z',
+                    body: JSON.stringify({
+                        id,
                         status: 'approved'
-                    }
-                ];
+                    })
+                });
                 
-                const sampleStory = sampleStories.find(s => s.id === storyId);
-                if (sampleStory) {
-                    populateAndShowModal(sampleStory);
+                // Log the full response for debugging
+                console.log("API Response status:", response.status);
+                const result = await response.json();
+                console.log("API Response data:", result);
+                
+                if (!response.ok) {
+                    throw new Error(result.error || "Failed to approve submission");
                 }
+                
+                // For backwards compatibility, also update localStorage
+                try {
+                    // Find the submission
+                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                    const submissionIndex = submissions.findIndex(s => s.id === id);
+                    
+                    if (submissionIndex !== -1) {
+                        // Update status
+                        submissions[submissionIndex].status = 'approved';
+                        
+                        // Save to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                        
+                        // Update seed immediately too
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                        console.log("💾 Seed updated after approval with", submissions.length, "stories");
+                    }
+                } catch (localStorageError) {
+                    console.warn("Error updating localStorage:", localStorageError);
+                }
+                
+                // Reload submissions
+                await loadSubmissions();
+                
+                alert("Submission approved successfully!");
+            } catch (error) {
+                console.error("Error approving submission:", error);
+                alert(`Error approving submission: ${error.message}`);
+                
+                // Try localStorage fallback
+                try {
+                    // Find the submission
+                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                    const submissionIndex = submissions.findIndex(s => s.id === id);
+                    
+                    if (submissionIndex !== -1) {
+                        // Update status
+                        submissions[submissionIndex].status = 'approved';
+                        
+                        // Save to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                        
+                        // Update seed immediately too
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                        console.log("💾 Seed updated after approval with", submissions.length, "stories");
+                        
+                        // Reload
+                        await loadSubmissions();
+                        
+                        alert("Submission approved successfully (localStorage fallback)!");
+                    }
+                } catch (localStorageError) {
+                    console.error("Error in localStorage fallback:", localStorageError);
+                    alert("Could not approve submission. Please try again later.");
+                }
+            } finally {
+                document.getElementById('loading-indicator').style.display = 'none';
             }
         }
         
-        // Populate and show the modal
-        function populateAndShowModal(story) {
-            // Fill the modal with story details
-            document.getElementById('modal-title').textContent = story.appName;
-            document.getElementById('modal-author').textContent = `Created by ${story.name}`;
-            document.getElementById('modal-tag').textContent = story.appType || story.app_type || "App";
-            document.getElementById('modal-testimonial').textContent = story.testimonial;
+        // Update submission status to rejected - use GitHub API
+        async function rejectSubmission(id) {
+            try {
+                document.getElementById('loading-indicator').style.display = 'block';
+                
+                // Call the Netlify function with proper authentication
+                console.log("Sending rejection request with token:", ADMIN_TOKEN ? "Token exists" : "No token");
+                const response = await fetch("/.netlify/functions/update-submission-status", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        id,
+                        status: 'rejected'
+                    })
+                });
+                
+                // Log the full response for debugging
+                console.log("API Response status:", response.status);
+                const result = await response.json();
+                console.log("API Response data:", result);
+                
+                if (!response.ok) {
+                    throw new Error(result.error || "Failed to reject submission");
+                }
+                
+                // For backwards compatibility, also update localStorage
+                try {
+                    // Find the submission
+                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                    const submissionIndex = submissions.findIndex(s => s.id === id);
+                    
+                    if (submissionIndex !== -1) {
+                        // Update status
+                        submissions[submissionIndex].status = 'rejected';
+                        
+                        // Save to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                        
+                        // Update seed immediately too
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                        console.log("💾 Seed updated after rejection with", submissions.length, "stories");
+                    }
+                } catch (localStorageError) {
+                    console.warn("Error updating localStorage:", localStorageError);
+                }
+                
+                // Reload submissions
+                await loadSubmissions();
+                
+                alert("Submission rejected successfully!");
+            } catch (error) {
+                console.error("Error rejecting submission:", error);
+                alert(`Error rejecting submission: ${error.message}`);
+                
+                // Try localStorage fallback
+                try {
+                    // Find the submission
+                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                    const submissionIndex = submissions.findIndex(s => s.id === id);
+                    
+                    if (submissionIndex !== -1) {
+                        // Update status
+                        submissions[submissionIndex].status = 'rejected';
+                        
+                        // Save to localStorage
+                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                        
+                        // Update seed immediately too
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                        console.log("💾 Seed updated after rejection with", submissions.length, "stories");
+                        
+                        // Reload
+                        await loadSubmissions();
+                        
+                        alert("Submission rejected successfully (localStorage fallback)!");
+                    }
+                } catch (localStorageError) {
+                    console.error("Error in localStorage fallback:", localStorageError);
+                    alert("Could not reject submission. Please try again later.");
+                }
+            } finally {
+                document.getElementById('loading-indicator').style.display = 'none';
+            }
+        }
+        
+        // Change tab
+        function changeTab(status) {
+            // Update current tab
+            currentTab = status;
             
-            // Convert story text to paragraphs
-            const storyContent = story.story.split('\n\n').map(para => `<p>${para}</p>`).join('');
-            document.getElementById('modal-content').innerHTML = storyContent;
+            // Update UI
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                if (tab.dataset.status === status) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Reset to first page
+            currentPage = 1;
+            
+            // Display submissions for the new tab
+            loadSubmissions();
+        }
+        
+        // Show full story in modal
+        function showStory(submission) {
+            // Set current story ID
+            currentStoryId = submission.id;
+            
+            // Set modal title
+            document.getElementById('modal-title').textContent = submission.appName;
+            
+            // Create modal content
+            let modalContent = `
+                <div class="card-field">
+                    <div class="field-label">Submitted By</div>
+                    <div class="field-value">${submission.name} (${submission.email})</div>
+                </div>
+                <div class="card-field">
+                    <div class="field-label">App Type</div>
+                    <div class="field-value">${submission.appType || submission.app_type || 'Not specified'}</div>
+                </div>
+                <div class="card-field">
+                    <div class="field-label">Experience Level</div>
+                    <div class="field-value">${submission.experienceLevel || 'Not specified'}</div>
+                </div>
+                <div class="card-field">
+                    <div class="field-label">Testimonial</div>
+                    <div class="testimonial">${submission.testimonial}</div>
+                </div>
+                <div class="card-field">
+                    <div class="field-label">Full Story</div>
+                    <div class="story-content">${submission.story}</div>
+                </div>
+            `;
+            
+            document.getElementById('modal-content').innerHTML = modalContent;
             
             // Add images
             const imagesContainer = document.getElementById('modal-images');
             imagesContainer.innerHTML = '';
             
-            if (story.images && story.images.length > 0) {
-                story.images.forEach(imageUrl => {
+            if (submission.images && submission.images.length > 0) {
+                submission.images.forEach((imageUrl, index) => {
                     if (imageUrl) {
                         const img = document.createElement('img');
                         img.src = imageUrl;
-                        img.alt = story.appName;
-                        img.className = 'story-modal-image';
+                        img.alt = `${submission.appName} Screenshot ${index + 1}`;
+                        img.className = 'modal-image';
+                        img.onclick = function() {
+                            showImage(imageUrl);
+                        };
                         imagesContainer.appendChild(img);
                     }
                 });
@@ -897,34 +1189,301 @@
                 imagesContainer.style.display = 'none';
             }
             
-            // Show the modal
+            // Show modal
             document.getElementById('story-modal').style.display = 'flex';
-            
-            // Prevent background scrolling
             document.body.style.overflow = 'hidden';
         }
         
-        // Function to close the story modal
-        function closeStoryModal() {
+        // Close the modal
+        function closeModal() {
             document.getElementById('story-modal').style.display = 'none';
             document.body.style.overflow = 'auto';
+            currentStoryId = null;
+        }
+        
+        // Show image in viewer
+        function showImage(imageUrl) {
+            document.getElementById('full-image').src = imageUrl;
+            document.getElementById('image-viewer').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Close image viewer
+        function closeImageViewer() {
+            document.getElementById('image-viewer').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Show empty state
+        function showEmptyState() {
+            document.getElementById('submissions').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'block';
+            document.getElementById('pagination').innerHTML = '';
+        }
+        
+        // Update pagination UI
+        function updatePagination(totalPages) {
+            const paginationContainer = document.getElementById('pagination');
+            paginationContainer.innerHTML = '';
+            
+            // Only show pagination if more than one page
+            if (totalPages <= 1) {
+                return;
+            }
+            
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.className = 'page-button' + (currentPage === 1 ? ' disabled' : '');
+            prevButton.textContent = 'Previous';
+            prevButton.onclick = function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displaySubmissions();
+                }
+            };
+            paginationContainer.appendChild(prevButton);
+            
+            // Page buttons
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = 'page-button' + (i === currentPage ? ' active' : '');
+                pageButton.textContent = i;
+                pageButton.onclick = function() {
+                    currentPage = i;
+                    displaySubmissions();
+                };
+                paginationContainer.appendChild(pageButton);
+            }
+            
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.className = 'page-button' + (currentPage === totalPages ? ' disabled' : '');
+            nextButton.textContent = 'Next';
+            nextButton.onclick = function() {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displaySubmissions();
+                }
+            };
+            paginationContainer.appendChild(nextButton);
         }
         
         // Close modal on escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeStoryModal();
+                closeModal();
+                closeImageViewer();
             }
         });
         
-        // Close modal when clicking outside
+        // Close modals when clicking outside
         window.addEventListener('click', function(e) {
             const storyModal = document.getElementById('story-modal');
+            const imageViewer = document.getElementById('image-viewer');
             
             if (e.target === storyModal) {
-                closeStoryModal();
+                closeModal();
+            }
+            
+            if (e.target === imageViewer) {
+                closeImageViewer();
             }
         });
+
+        // Export Approved Stories to JSON
+        function exportApprovedStories() {
+            try {
+                document.getElementById('loading-indicator').style.display = 'block';
+                
+                // Get approved stories
+                fetch('/.netlify/functions/get-submissions?status=approved', {
+                    headers: {
+                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                    }
+                })
+                .then(response => response.json())
+                .then(approvedStories => {
+                    if (approvedStories.length === 0) {
+                        showExportResult('No approved stories found to export.', 'error');
+                        return;
+                    }
+                    
+                    // Create formatted JSON
+                    const jsonContent = JSON.stringify(approvedStories, null, 2);
+                    
+                    // Create a Blob with the JSON content
+                    const blob = new Blob([jsonContent], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Create a download link
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'approved-stories.json';
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Clean up
+                    URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    showExportResult(`Exported ${approvedStories.length} approved stories. Upload this JSON file to your website.`, 'success');
+                })
+                .catch(error => {
+                    console.error('Error exporting from API:', error);
+                    
+                    // Fall back to localStorage
+                    try {
+                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                        
+                        if (storedSubmissions) {
+                            const allSubmissions = JSON.parse(storedSubmissions);
+                            const approvedStories = allSubmissions.filter(story => story.status === 'approved');
+                            
+                            if (approvedStories.length === 0) {
+                                showExportResult('No approved stories found to export.', 'error');
+                                return;
+                            }
+                            
+                            // Create formatted JSON
+                            const jsonContent = JSON.stringify(approvedStories, null, 2);
+                            
+                            // Create a Blob with the JSON content
+                            const blob = new Blob([jsonContent], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            
+                            // Create a download link
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'approved-stories.json';
+                            a.style.display = 'none';
+                            document.body.appendChild(a);
+                            a.click();
+                            
+                            // Clean up
+                            URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                            
+                            showExportResult(`Exported ${approvedStories.length} approved stories from localStorage. Upload this JSON file to your website.`, 'success');
+                        } else {
+                            showExportResult('No submissions found to export.', 'error');
+                        }
+                    } catch (localStorageError) {
+                        console.error('Error exporting from localStorage:', localStorageError);
+                        showExportResult(`Error: ${localStorageError.message}`, 'error');
+                    }
+                })
+                .finally(() => {
+                    document.getElementById('loading-indicator').style.display = 'none';
+                });
+            } catch (error) {
+                console.error('Error exporting approved stories:', error);
+                showExportResult(`Error: ${error.message}`, 'error');
+                document.getElementById('loading-indicator').style.display = 'none';
+            }
+        }
+
+        // Helper function to show export result
+        function showExportResult(message, type) {
+            const resultDiv = document.getElementById('export-result');
+            resultDiv.textContent = message;
+            resultDiv.style.display = 'inline-block';
+            
+            if (type === 'success') {
+                resultDiv.className = 'export-success';
+            } else {
+                resultDiv.className = 'export-error';
+            }
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 10000);
+        }
+        
+        // Hook approval buttons (for Story Manager)
+        function hookApprovalButtons() {
+            // This will be called by the Story Manager script
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log("🔍 Looking for approval/rejection buttons to hook");
+                
+                // We'll use a mutation observer to watch for changes to the DOM
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList') {
+                            const addedNodes = Array.from(mutation.addedNodes);
+                            addedNodes.forEach(function(node) {
+                                if (node.nodeType === 1) { // Element node
+                                    // Look for approve/reject buttons in this node
+                                    const buttons = node.querySelectorAll('button[onclick*="approve"], button[onclick*="reject"]');
+                                    buttons.forEach(hookButton);
+                                    
+                                    // Also look for buttons directly added
+                                    if (node.tagName === 'BUTTON') {
+                                        if (node.getAttribute('onclick')?.includes('approve') || 
+                                            node.getAttribute('onclick')?.includes('reject')) {
+                                            hookButton(node);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    });
+                });
+                
+                // Start observing the entire document
+                observer.observe(document.body, { 
+                    childList: true, 
+                    subtree: true 
+                });
+                
+                // Also hook any buttons that are already on the page
+                const existingButtons = document.querySelectorAll('button[onclick*="approve"], button[onclick*="reject"]');
+                existingButtons.forEach(hookButton);
+                
+                console.log("👁️ Now watching for approval/rejection actions");
+            });
+        }
+        
+        // Hook a button to update the seed when clicked
+        function hookButton(button) {
+            // Don't hook buttons that are already hooked
+            if (button.dataset.hooked) return;
+            
+            // Mark this button as hooked so we don't hook it again
+            button.dataset.hooked = "true";
+            console.log("🔗 Hooking button:", button.textContent);
+            
+            // Get the original onclick handler
+            const originalOnclick = button.getAttribute('onclick');
+            
+            // Replace it with our own handler
+            button.setAttribute('onclick', '');
+            button.addEventListener('click', function(e) {
+                // Call the original handler
+                if (originalOnclick) {
+                    eval(originalOnclick);
+                }
+                
+                // Then update the seed
+                console.log("🔄 Button clicked, updating seed after delay");
+                
+                // We need to wait a bit for the original handler to finish
+                setTimeout(function() {
+                    try {
+                        const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                        console.log("💾 Seed updated after approval/rejection with", submissions.length, "stories");
+                        
+                        // Count the approved stories
+                        const approvedCount = submissions.filter(s => s.status === 'approved').length;
+                        console.log("✓ There are now", approvedCount, "approved stories");
+                    } catch (e) {
+                        console.error("❌ Error updating seed after approval/rejection:", e);
+                    }
+                }, 200);
+            });
+        }
     </script>
 </body>
 </html>
