@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin: Success Stories - AppFoundry</title>
+    <title>Admin: Success Stories - AppFoundry (Fixed)</title>
     
     <!-- Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
     <script>
@@ -510,6 +510,89 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Admin panel controls - NEW! */
+        .admin-panel {
+            background-color: #f0f4ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .admin-panel h3 {
+            margin-top: 0;
+            color: #4338ca;
+        }
+        
+        .admin-token-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .admin-token-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .small-button {
+            background-color: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .small-button:hover {
+            background-color: #4f46e5;
+        }
+        
+        .token-status {
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .token-status.error {
+            color: #dc2626;
+        }
+        
+        .token-status.success {
+            color: #16a34a;
+        }
+
+        .direct-operation-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .direct-operation-buttons button {
+            padding: 8px 12px;
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .direct-operation-buttons .danger {
+            background-color: #fee2e2;
+            border-color: #fecaca;
+            color: #b91c1c;
+        }
+        
+        .update-status {
+            font-size: 14px;
+            margin-top: 10px;
+            color: #6b7280;
+        }
     </style>
 </head>
 <body>
@@ -527,7 +610,23 @@
     </header>
     
     <div class="container">
-        <h1>Success Story Submissions</h1>
+        <h1>Success Story Submissions - Fixed Version</h1>
+        
+        <!-- NEW ADMIN PANEL -->
+        <div class="admin-panel">
+            <h3>Admin Settings</h3>
+            <div class="admin-token-input">
+                <input type="password" id="admin-token" placeholder="Enter admin token" value="xP8q#Rb7!DtEv3mK9$Lz">
+                <button class="small-button" onclick="validateToken()">Validate Token</button>
+            </div>
+            <div id="token-status" class="token-status"></div>
+            
+            <div class="direct-operation-buttons">
+                <button onclick="openDirectUpdate()">Direct Update Options</button>
+                <button class="danger" onclick="clearLocalStorage()">Clear Local Storage</button>
+            </div>
+            <div id="update-status" class="update-status"></div>
+        </div>
         
         <div class="tabs">
             <div class="tab active" data-status="all" onclick="changeTab('all')">All Submissions</div>
@@ -544,7 +643,7 @@
             </div>
         </div>
         
-        <!-- ADD THIS NEW SECTION: Export Button -->
+        <!-- Export Button -->
         <div class="admin-actions">
             <button class="export-button" onclick="exportApprovedStories()">
                 Export Approved Stories JSON
@@ -579,7 +678,7 @@
         <div class="modal">
             <div class="modal-header">
                 <div class="modal-title" id="modal-title">App Name</div>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <button class="modal-close" onclick="closeModal('story-modal')">&times;</button>
             </div>
             <div class="modal-body">
                 <div id="modal-content">
@@ -588,6 +687,40 @@
                 <div class="modal-images" id="modal-images">
                     <!-- Images will be loaded here -->
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Direct Update Modal -->
+    <div class="modal-backdrop" id="direct-update-modal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <div class="modal-title">Direct Story Update</div>
+                <button class="modal-close" onclick="closeModal('direct-update-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Use these options to handle submissions when the normal approval flow fails.</p>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Story ID:</label>
+                    <input type="text" id="direct-story-id" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Status:</label>
+                    <select id="direct-status" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-approve" style="flex: 1;" onclick="updateLocalStorage()">Update in Local Storage</button>
+                    <button class="btn btn-view" style="flex: 1;" onclick="attemptDirectApiUpdate()">Attempt API Update</button>
+                </div>
+                
+                <div id="direct-update-status" style="margin-top: 15px; font-size: 14px;"></div>
             </div>
         </div>
     </div>
@@ -601,8 +734,8 @@
     </div>
     
     <script>
-        // Constants - hardcoded admin token
-        const ADMIN_TOKEN = "xP8q#Rb7!DtEv3mK9$Lz";
+        // Constants - getting token from input now
+        let ADMIN_TOKEN = "xP8q#Rb7!DtEv3mK9$Lz";
         
         // Global variables
         let allSubmissions = [];
@@ -611,10 +744,20 @@
         let itemsPerPage = 6;
         let sortNewestFirst = true;
         let currentStoryId = null;
+        let tokenValidated = false;
+        let approvalAttempts = {};
         
         // Load submissions when page loads
         document.addEventListener('DOMContentLoaded', function() {
             console.log("Admin page loaded, loading submissions");
+            
+            // Get token from local storage if available
+            const savedToken = localStorage.getItem('appfoundry_admin_token');
+            if (savedToken) {
+                document.getElementById('admin-token').value = savedToken;
+                ADMIN_TOKEN = savedToken;
+            }
+            
             loadSubmissions();
             
             // Set up sort switch
@@ -623,8 +766,187 @@
                 displaySubmissions();
             });
         });
+
+        // Validate admin token
+        function validateToken() {
+            const tokenInput = document.getElementById('admin-token');
+            const tokenStatus = document.getElementById('token-status');
+            
+            ADMIN_TOKEN = tokenInput.value.trim();
+            
+            if (!ADMIN_TOKEN) {
+                tokenStatus.textContent = "Please enter a token";
+                tokenStatus.className = "token-status error";
+                tokenStatus.style.display = "block";
+                return;
+            }
+            
+            // Save token to localStorage
+            localStorage.setItem('appfoundry_admin_token', ADMIN_TOKEN);
+            
+            // Test token with a simple API call
+            fetch('/.netlify/functions/get-submissions?status=all', {
+                headers: {
+                    "Authorization": `Bearer ${ADMIN_TOKEN}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    tokenStatus.textContent = "Token validated successfully!";
+                    tokenStatus.className = "token-status success";
+                    tokenValidated = true;
+                } else {
+                    tokenStatus.textContent = "Invalid token or API error";
+                    tokenStatus.className = "token-status error";
+                }
+                tokenStatus.style.display = "block";
+            })
+            .catch(error => {
+                tokenStatus.textContent = "Error testing token: " + error.message;
+                tokenStatus.className = "token-status error";
+                tokenStatus.style.display = "block";
+            });
+        }
         
-        // Load submissions from GitHub via Netlify function
+        // Open direct update modal
+        function openDirectUpdate() {
+            document.getElementById('direct-update-status').textContent = '';
+            document.getElementById('direct-update-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Update story status in localStorage only
+        function updateLocalStorage() {
+            const storyId = document.getElementById('direct-story-id').value.trim();
+            const status = document.getElementById('direct-status').value;
+            const statusDiv = document.getElementById('direct-update-status');
+            
+            if (!storyId) {
+                statusDiv.textContent = "Please enter a Story ID";
+                statusDiv.style.color = "#dc2626";
+                return;
+            }
+            
+            try {
+                // Get submissions from localStorage
+                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                if (!storedSubmissions) {
+                    statusDiv.textContent = "No submissions found in localStorage";
+                    statusDiv.style.color = "#dc2626";
+                    return;
+                }
+                
+                const submissions = JSON.parse(storedSubmissions);
+                const submissionIndex = submissions.findIndex(s => s.id === storyId);
+                
+                if (submissionIndex === -1) {
+                    statusDiv.textContent = `Story with ID ${storyId} not found`;
+                    statusDiv.style.color = "#dc2626";
+                    return;
+                }
+                
+                // Update status
+                submissions[submissionIndex].status = status;
+                
+                // Save back to localStorage
+                localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                
+                statusDiv.textContent = `Story status updated to ${status} in localStorage. Refresh to see changes.`;
+                statusDiv.style.color = "#16a34a";
+                
+                // Update global variable if loaded
+                if (allSubmissions.length > 0) {
+                    const globalIndex = allSubmissions.findIndex(s => s.id === storyId);
+                    if (globalIndex !== -1) {
+                        allSubmissions[globalIndex].status = status;
+                    }
+                }
+                
+                // Refresh display after short delay
+                setTimeout(() => {
+                    displaySubmissions();
+                }, 1000);
+                
+            } catch (error) {
+                statusDiv.textContent = "Error updating localStorage: " + error.message;
+                statusDiv.style.color = "#dc2626";
+            }
+        }
+        
+        // Attempt direct API update with retry logic
+        function attemptDirectApiUpdate() {
+            const storyId = document.getElementById('direct-story-id').value.trim();
+            const status = document.getElementById('direct-status').value;
+            const statusDiv = document.getElementById('direct-update-status');
+            
+            if (!storyId) {
+                statusDiv.textContent = "Please enter a Story ID";
+                statusDiv.style.color = "#dc2626";
+                return;
+            }
+            
+            statusDiv.textContent = "Attempting API update...";
+            statusDiv.style.color = "#6b7280";
+            
+            // Use appropriate endpoint based on status
+            let endpoint = '/.netlify/functions/approve-submission';
+            if (status === 'rejected') {
+                endpoint = '/.netlify/functions/reject-submission';
+            } else if (status === 'pending') {
+                statusDiv.textContent = "Cannot set to pending via API directly";
+                statusDiv.style.color = "#dc2626";
+                return;
+            }
+            
+            // Make API call with token
+            fetch(endpoint, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${ADMIN_TOKEN}`
+                },
+                body: JSON.stringify({ id: storyId })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json().then(data => {
+                        statusDiv.textContent = `API update successful! Story now ${status}.`;
+                        statusDiv.style.color = "#16a34a";
+                        
+                        // Also update localStorage for consistency
+                        updateLocalStorage();
+                        
+                        return true;
+                    });
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(`API responded with error: ${text}`);
+                    });
+                }
+            })
+            .catch(error => {
+                statusDiv.textContent = `API update failed: ${error.message}. Using localStorage as fallback.`;
+                statusDiv.style.color = "#dc2626";
+                
+                // Update localStorage as fallback
+                updateLocalStorage();
+            });
+        }
+        
+        // Clear localStorage
+        function clearLocalStorage() {
+            if (confirm("Are you sure you want to clear all localStorage data? This will remove all locally stored submissions.")) {
+                localStorage.removeItem('appfoundry_submissions');
+                localStorage.removeItem('appfoundry_approved_seed');
+                
+                const updateStatus = document.getElementById('update-status');
+                updateStatus.textContent = "localStorage cleared. Refresh the page to load from API.";
+                updateStatus.style.color = "#dc2626";
+            }
+        }
+        
+        // Load submissions with improved error handling
         async function loadSubmissions() {
             try {
                 // Show loading indicator
@@ -632,22 +954,25 @@
                 document.getElementById('submissions').style.display = 'none';
                 document.getElementById('empty-state').style.display = 'none';
                 
+                // Get token from input
+                ADMIN_TOKEN = document.getElementById('admin-token').value.trim();
+                
                 // Fetch submissions from API - try all three auth methods
                 console.log("Fetching submissions with auth token...");
                 
-                // First try with the token in the Authorization header
+                // First try with the token in Authorization header with Bearer prefix
                 let response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
                     headers: {
-                        "Authorization": ADMIN_TOKEN
+                        "Authorization": `Bearer ${ADMIN_TOKEN}`
                     }
                 });
                 
-                // If that fails, try with Bearer prefix
+                // If that fails, try with just the token
                 if (!response.ok) {
-                    console.log("First auth attempt failed, trying with Bearer prefix...");
+                    console.log("First auth attempt failed, trying with plain token...");
                     response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
                         headers: {
-                            "Authorization": `Bearer ${ADMIN_TOKEN}`
+                            "Authorization": ADMIN_TOKEN
                         }
                     });
                 }
@@ -674,6 +999,7 @@
                 
                 // Fall back to localStorage if no submissions from API
                 if (allSubmissions.length === 0) {
+                    console.log("No submissions from API, checking localStorage...");
                     try {
                         const storedSubmissions = localStorage.getItem('appfoundry_submissions');
                         
@@ -807,6 +1133,10 @@
                 </div>
                 <div class="card-body">
                     <div class="card-field">
+                        <div class="field-label">Story ID</div>
+                        <div class="field-value">${submission.id}</div>
+                    </div>
+                    <div class="card-field">
                         <div class="field-label">Submitted By</div>
                         <div class="field-value">${submission.name}</div>
                     </div>
@@ -868,6 +1198,17 @@
             };
             actionsDiv.appendChild(viewButton);
             
+            // Direct Update button - NEW!
+            const directUpdateButton = document.createElement('button');
+            directUpdateButton.className = 'btn btn-view';
+            directUpdateButton.textContent = 'Direct Update';
+            directUpdateButton.onclick = function() {
+                document.getElementById('direct-story-id').value = submission.id;
+                document.getElementById('direct-status').value = submission.status || 'pending';
+                openDirectUpdate();
+            };
+            actionsDiv.appendChild(directUpdateButton);
+            
             // Add approve/reject buttons based on current status
             if (submission.status === 'pending') {
                 // Approve button
@@ -912,10 +1253,42 @@
             return card;
         }
         
-        // Update submission status to approved - use GitHub API
+        // Update submission status to approved with improved error handling and retry logic
         async function approveSubmission(id) {
             try {
                 document.getElementById('loading-indicator').style.display = 'block';
+                
+                // Get token from input
+                ADMIN_TOKEN = document.getElementById('admin-token').value.trim();
+                
+                // Initialize tracking for this submission if not exists
+                if (!approvalAttempts[id]) {
+                    approvalAttempts[id] = {
+                        count: 0,
+                        lastAttempt: null
+                    };
+                }
+                
+                // Check if we've tried too many times recently
+                const now = Date.now();
+                if (approvalAttempts[id].count >= 3 && 
+                    approvalAttempts[id].lastAttempt && 
+                    (now - approvalAttempts[id].lastAttempt) < 60000) { // 1 minute cooldown
+                    
+                    const remainingTime = Math.ceil((60000 - (now - approvalAttempts[id].lastAttempt)) / 1000);
+                    
+                    if (confirm(`Multiple approval attempts have failed. Would you like to use the Direct Update method instead? (Or wait ${remainingTime} seconds to try again)`)) {
+                        document.getElementById('direct-story-id').value = id;
+                        document.getElementById('direct-status').value = 'approved';
+                        openDirectUpdate();
+                        document.getElementById('loading-indicator').style.display = 'none';
+                        return;
+                    }
+                }
+                
+                // Update attempt tracking
+                approvalAttempts[id].count++;
+                approvalAttempts[id].lastAttempt = now;
                 
                 // Try all three authentication methods
                 let response;
@@ -926,7 +1299,20 @@
                 while (attempts < 3) {
                     try {
                         if (attempts === 0) {
-                            // First try with the token in the Authorization header
+                            console.log("Trying approval with Bearer token...");
+                            response = await fetch("/.netlify/functions/approve-submission", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${ADMIN_TOKEN}`
+                                },
+                                body: JSON.stringify({ 
+                                    id,
+                                    // Add retry flag to signal the backend this is a retry attempt
+                                    retry: approvalAttempts[id].count > 1
+                                })
+                            });
+                        } else if (attempts === 1) {
                             console.log("Trying approval with plain token...");
                             response = await fetch("/.netlify/functions/approve-submission", {
                                 method: "POST",
@@ -934,28 +1320,22 @@
                                     "Content-Type": "application/json",
                                     "Authorization": ADMIN_TOKEN
                                 },
-                                body: JSON.stringify({ id })
-                            });
-                        } else if (attempts === 1) {
-                            // If that fails, try with Bearer prefix
-                            console.log("Trying approval with Bearer prefix...");
-                            response = await fetch("/.netlify/functions/approve-submission", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "Authorization": `Bearer ${ADMIN_TOKEN}`
-                                },
-                                body: JSON.stringify({ id })
+                                body: JSON.stringify({ 
+                                    id,
+                                    retry: approvalAttempts[id].count > 1
+                                })
                             });
                         } else {
-                            // If that still fails, try with token as query parameter
                             console.log("Trying approval with token as query parameter...");
                             response = await fetch(`/.netlify/functions/approve-submission?token=${encodeURIComponent(ADMIN_TOKEN)}`, {
                                 method: "POST",
                                 headers: {
                                     "Content-Type": "application/json"
                                 },
-                                body: JSON.stringify({ id })
+                                body: JSON.stringify({ 
+                                    id,
+                                    retry: approvalAttempts[id].count > 1
+                                })
                             });
                         }
                         
@@ -976,13 +1356,19 @@
                     attempts++;
                 }
                 
-                // If we've tried all methods and none worked, throw an error
+                // If we've tried all methods and none worked
                 if (!response || !response.ok) {
                     throw new Error(lastError || "Failed to approve submission after trying multiple auth methods");
                 }
                 
                 const result = await response.json();
                 console.log("API Response data:", result);
+                
+                // Reset the attempt counter on success
+                approvalAttempts[id] = {
+                    count: 0,
+                    lastAttempt: null
+                };
                 
                 // For backwards compatibility, also update localStorage
                 try {
@@ -996,8 +1382,6 @@
                         
                         // Save to localStorage
                         localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                        
-                        // Update seed immediately too
                         localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
                         console.log("💾 Seed updated after approval with", submissions.length, "stories");
                     }
@@ -1011,6 +1395,23 @@
                 alert("Submission approved successfully!");
             } catch (error) {
                 console.error("Error approving submission:", error);
+                
+                // Check if it's a conflict error
+                if (error.message && error.message.includes("409") || 
+                    error.message && error.message.includes("is at") && error.message.includes("but expected")) {
+                    
+                    // This is a GitHub conflict error (SHA mismatch)
+                    const useDirectMethod = confirm("A conflict was detected when trying to approve this submission. Would you like to use the Direct Update method to avoid conflicts?");
+                    
+                    if (useDirectMethod) {
+                        document.getElementById('direct-story-id').value = id;
+                        document.getElementById('direct-status').value = 'approved';
+                        openDirectUpdate();
+                        document.getElementById('loading-indicator').style.display = 'none';
+                        return;
+                    }
+                }
+                
                 alert(`Error approving submission: ${error.message}`);
                 
                 // Try localStorage fallback
@@ -1025,29 +1426,30 @@
                         
                         // Save to localStorage
                         localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                        
-                        // Update seed immediately too
                         localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
                         console.log("💾 Seed updated after approval with", submissions.length, "stories");
                         
                         // Reload
                         await loadSubmissions();
                         
-                        alert("Submission approved successfully (localStorage fallback)!");
+                        alert("Submission approved in localStorage only (API update failed). Your changes will be visible locally but won't sync to the server.");
                     }
                 } catch (localStorageError) {
                     console.error("Error in localStorage fallback:", localStorageError);
-                    alert("Could not approve submission. Please try again later.");
+                    alert("Could not approve submission. Please try again later or use the Direct Update option.");
                 }
             } finally {
                 document.getElementById('loading-indicator').style.display = 'none';
             }
         }
         
-        // Update submission status to rejected - use GitHub API
+        // Update submission status to rejected with improved error handling
         async function rejectSubmission(id) {
             try {
                 document.getElementById('loading-indicator').style.display = 'block';
+                
+                // Get token from input
+                ADMIN_TOKEN = document.getElementById('admin-token').value.trim();
                 
                 // Try all three authentication methods
                 let response;
@@ -1058,7 +1460,16 @@
                 while (attempts < 3) {
                     try {
                         if (attempts === 0) {
-                            // First try with the token in the Authorization header
+                            console.log("Trying rejection with Bearer token...");
+                            response = await fetch("/.netlify/functions/reject-submission", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${ADMIN_TOKEN}`
+                                },
+                                body: JSON.stringify({ id, retry: true })
+                            });
+                        } else if (attempts === 1) {
                             console.log("Trying rejection with plain token...");
                             response = await fetch("/.netlify/functions/reject-submission", {
                                 method: "POST",
@@ -1066,28 +1477,16 @@
                                     "Content-Type": "application/json",
                                     "Authorization": ADMIN_TOKEN
                                 },
-                                body: JSON.stringify({ id })
-                            });
-                        } else if (attempts === 1) {
-                            // If that fails, try with Bearer prefix
-                            console.log("Trying rejection with Bearer prefix...");
-                            response = await fetch("/.netlify/functions/reject-submission", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "Authorization": `Bearer ${ADMIN_TOKEN}`
-                                },
-                                body: JSON.stringify({ id })
+                                body: JSON.stringify({ id, retry: true })
                             });
                         } else {
-                            // If that still fails, try with token as query parameter
                             console.log("Trying rejection with token as query parameter...");
                             response = await fetch(`/.netlify/functions/reject-submission?token=${encodeURIComponent(ADMIN_TOKEN)}`, {
                                 method: "POST",
                                 headers: {
                                     "Content-Type": "application/json"
                                 },
-                                body: JSON.stringify({ id })
+                                body: JSON.stringify({ id, retry: true })
                             });
                         }
                         
@@ -1108,7 +1507,7 @@
                     attempts++;
                 }
                 
-                // If we've tried all methods and none worked, throw an error
+                // If we've tried all methods and none worked
                 if (!response || !response.ok) {
                     throw new Error(lastError || "Failed to reject submission after trying multiple auth methods");
                 }
@@ -1128,8 +1527,6 @@
                         
                         // Save to localStorage
                         localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                        
-                        // Update seed immediately too
                         localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
                         console.log("💾 Seed updated after rejection with", submissions.length, "stories");
                     }
@@ -1143,6 +1540,23 @@
                 alert("Submission rejected successfully!");
             } catch (error) {
                 console.error("Error rejecting submission:", error);
+                
+                // Check if it's a conflict error
+                if (error.message && error.message.includes("409") || 
+                    error.message && error.message.includes("is at") && error.message.includes("but expected")) {
+                    
+                    // This is a GitHub conflict error (SHA mismatch)
+                    const useDirectMethod = confirm("A conflict was detected when trying to reject this submission. Would you like to use the Direct Update method to avoid conflicts?");
+                    
+                    if (useDirectMethod) {
+                        document.getElementById('direct-story-id').value = id;
+                        document.getElementById('direct-status').value = 'rejected';
+                        openDirectUpdate();
+                        document.getElementById('loading-indicator').style.display = 'none';
+                        return;
+                    }
+                }
+                
                 alert(`Error rejecting submission: ${error.message}`);
                 
                 // Try localStorage fallback
@@ -1157,19 +1571,17 @@
                         
                         // Save to localStorage
                         localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                        
-                        // Update seed immediately too
                         localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
                         console.log("💾 Seed updated after rejection with", submissions.length, "stories");
                         
                         // Reload
                         await loadSubmissions();
                         
-                        alert("Submission rejected successfully (localStorage fallback)!");
+                        alert("Submission rejected in localStorage only (API update failed). Your changes will be visible locally but won't sync to the server.");
                     }
                 } catch (localStorageError) {
                     console.error("Error in localStorage fallback:", localStorageError);
-                    alert("Could not reject submission. Please try again later.");
+                    alert("Could not reject submission. Please try again later or use the Direct Update option.");
                 }
             } finally {
                 document.getElementById('loading-indicator').style.display = 'none';
@@ -1208,6 +1620,10 @@
             
             // Create modal content
             let modalContent = `
+                <div class="card-field">
+                    <div class="field-label">Story ID</div>
+                    <div class="field-value">${submission.id}</div>
+                </div>
                 <div class="card-field">
                     <div class="field-label">Submitted By</div>
                     <div class="field-value">${submission.name} (${submission.email})</div>
@@ -1260,10 +1676,12 @@
         }
         
         // Close the modal
-        function closeModal() {
-            document.getElementById('story-modal').style.display = 'none';
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
             document.body.style.overflow = 'auto';
-            currentStoryId = null;
+            if (modalId === 'story-modal') {
+                currentStoryId = null;
+            }
         }
         
         // Show image in viewer
@@ -1336,7 +1754,8 @@
         // Close modal on escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeModal();
+                closeModal('story-modal');
+                closeModal('direct-update-modal');
                 closeImageViewer();
             }
         });
@@ -1344,10 +1763,15 @@
         // Close modals when clicking outside
         window.addEventListener('click', function(e) {
             const storyModal = document.getElementById('story-modal');
+            const directUpdateModal = document.getElementById('direct-update-modal');
             const imageViewer = document.getElementById('image-viewer');
             
             if (e.target === storyModal) {
-                closeModal();
+                closeModal('story-modal');
+            }
+            
+            if (e.target === directUpdateModal) {
+                closeModal('direct-update-modal');
             }
             
             if (e.target === imageViewer) {
@@ -1360,10 +1784,13 @@
             try {
                 document.getElementById('loading-indicator').style.display = 'block';
                 
+                // Get token from input
+                ADMIN_TOKEN = document.getElementById('admin-token').value.trim();
+                
                 // Get approved stories
                 fetch('/.netlify/functions/get-submissions?status=approved', {
                     headers: {
-                        "Authorization": ADMIN_TOKEN
+                        "Authorization": `Bearer ${ADMIN_TOKEN}`
                     }
                 })
                 .then(response => response.json())
