@@ -1473,4 +1473,123 @@
                     </button>
                 </div>
             </div>
-            <div id="activity-log-content" class="flex-1 overflow-y-auto p-4 space-
+            <div id="activity-log-content" class="flex-1 overflow-y-auto p-4 space-y-2">
+                <!-- Activity log entries will be inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Story Modal -->
+    <div id="story-modal" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden">
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+                <div class="flex items-center justify-between px-6 py-4 border-b">
+                    <h2 id="story-modal-title" class="text-xl font-semibold text-gray-900">Story Details</h2>
+                    <button onclick="closeStoryModal()" class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div id="story-modal-content">
+                        <!-- Story content will be loaded here -->
+                    </div>
+                    <div id="story-modal-images" class="mt-6">
+                        <!-- Images will be loaded here -->
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t flex justify-end">
+                    <button onclick="closeStoryModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden">
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+                <div class="flex items-center justify-between px-6 py-4 border-b">
+                    <h2 class="text-xl font-semibold text-gray-900">Edit Submission</h2>
+                    <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-6">
+                    <form id="edit-form" class="space-y-4">
+                        <input type="hidden" id="edit-id">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="edit-name" class="block text-sm font-medium text-gray-700">Name</label>
+                                <input type="text" id="edit-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="edit-email" class="block text-sm font-medium text-gray-700">Email</label>
+                                <input type="email" id="edit-email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="edit-app-name" class="block text-sm font-medium text-gray-700">App Name</label>
+                                <input type="text" id="edit-app-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="edit-app-type" class="block text-sm font-medium text-gray-700">App Type</label>
+                                <select id="edit-app-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="">Select Type</option>
+                                    <option value="Business">Business</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Health & Fitness">Health & Fitness</option>
+                                    <option value="Productivity">Productivity</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="edit-experience-level" class="block text-sm font-medium text-gray-700">Experience Level</label>
+                                <select id="edit-experience-level" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="">Select Level</option>
+                                    <option value="Beginner">Beginner</option>
+                                    <option value="Intermediate">Intermediate</option>
+                                    <option value="Advanced">Advanced</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="edit-testimonial" class="block text-sm font-medium text-gray-700">Testimonial</label>
+                            <textarea id="edit-testimonial" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label for="edit-story" class="block text-sm font-medium text-gray-700">Full Story</label>
+                            <textarea id="edit-story" rows="6" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Images</label>
+                            <div id="edit-image-previews" class="mt-2 flex flex-wrap gap-2"></div>
+                            <p class="mt-2 text-sm text-gray-500">To remove an image, click the X button above it. To add new images, use the submission form on the main site.</p>
+                        </div>
+                    </form>
+                </div>
+                <div class="px-6 py-4 border-t flex justify-end space-x-3">
+                    <button onclick="closeEditModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="edit-save-button" onclick="saveSubmissionChanges()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Viewer -->
+    <div id="image-viewer" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center">
+        <button onclick="closeImageViewer()" class="absolute top-4 right-4 text-white text-xl">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="full-image" src="" alt="Full size image" class="max-w-[90%] max-h-[90vh] object-contain">
+    </div>
