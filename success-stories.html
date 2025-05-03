@@ -1,162 +1,203 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Success Stories - AppFoundry</title>
+/**
+ * Enhanced Storage Helper with Cloudinary Support
+ * This script provides robust cross-domain storage management for the AppFoundry success stories
+ * and includes support for Cloudinary image URLs
+ */
+
+// Create the StorageHelper namespace if it doesn't exist
+window.StorageHelper = window.StorageHelper || {};
+
+// The primary domain to use for storage
+const PRIMARY_DOMAIN = 'claudeappbuilder.netlify.app';
+
+// Check if we're on the primary domain
+const isOnPrimaryDomain = window.location.hostname === PRIMARY_DOMAIN;
+const isDeployPreview = window.location.hostname.includes('--claudeappbuilder.netlify.app');
+
+// Storage keys
+const SUBMISSIONS_KEY = 'appfoundry_submissions';
+const BACKUP_KEY = 'appfoundry_approved_seed';
+const LAST_SYNC_KEY = 'appfoundry_last_sync';
+
+// Initialize storage system - run this immediately
+(function initStorage() {
+    console.log("📊 Enhanced StorageHelper initializing");
+    console.log("📍 Current hostname:", window.location.hostname);
+    console.log("📍 Is primary domain:", isOnPrimaryDomain);
+    console.log("📍 Is deploy preview:", isDeployPreview);
     
-    <!-- Immediate redirect script for deploy preview URLs -->
-    <script>
-    // Simple redirect to main domain if on a deploy preview
-    if (window.location.hostname.includes('--claudeappbuilder.netlify.app')) {
-        window.location.href = 'https://claudeappbuilder.netlify.app/success-stories.html';
-    }
-    </script>
-    
-    <!-- Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
-    <script>
-    // Universal Story Manager - ensures stories are consistently available
-    (function() {
-      // Run on all pages to ensure localStorage data consistency
-      console.log("📊 Story Manager initializing on success stories page");
-      
-      // Check if we need to seed the localStorage from our backup
-      function seedStoriesIfNeeded() {
-        // Only run if appfoundry_submissions doesn't exist or is empty
-        if (!localStorage.getItem('appfoundry_submissions')) {
-          console.log("🌱 No stories found in localStorage, checking for seed data");
-          
-          // Check if we have any stories in our seed
-          if (localStorage.getItem('appfoundry_approved_seed')) {
-            console.log("🔄 Restoring stories from seed");
-            try {
-              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
-              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
-              console.log("✅ Successfully restored", seed.length, "stories from seed");
-            } catch (e) {
-              console.error("❌ Error restoring from seed:", e);
-            }
-          }
-        } else {
-          // If we have submissions, make sure we have an up-to-date seed
-          try {
-            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
-            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-            console.log("💾 Seed updated with", submissions.length, "stories");
-          } catch (e) {
-            console.error("❌ Error updating seed:", e);
-          }
-        }
-      }
-      
-      // Run the seed check immediately
-      seedStoriesIfNeeded();
-    })();
-    </script>
-    
-    <!-- Enhanced Story Loading System -->
-    <script>
-    // Ensure stories load correctly regardless of domain or storage state
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("🚀 Enhanced success stories loader initialized");
+    // Try to seed from backup if main storage is empty
+    if (!localStorage.getItem(SUBMISSIONS_KEY)) {
+        console.log("🔍 No submissions found in localStorage, checking for backup data");
         
-        // Define main functions
-        const loadStoriesWithRetry = function(retryCount = 0) {
-            console.log(`🔍 Attempting to load stories (attempt ${retryCount + 1})`);
-            
-            // Try to get approved stories from StorageHelper first
-            let approvedStories = [];
-            
+        const backupData = localStorage.getItem(BACKUP_KEY);
+        if (backupData) {
             try {
-                if (typeof StorageHelper !== 'undefined' && StorageHelper.getApprovedSubmissions) {
-                    approvedStories = StorageHelper.getApprovedSubmissions();
-                    console.log(`✅ Successfully loaded ${approvedStories.length} approved stories using StorageHelper`);
-                } else {
-                    // Direct localStorage access fallback
-                    try {
-                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                        console.log('📦 Raw localStorage data found:', !!storedSubmissions);
-                        
-                        if (storedSubmissions) {
-                            const allSubmissions = JSON.parse(storedSubmissions);
-                            console.log('📊 Total submissions found:', allSubmissions.length);
-                            
-                            // Filter to only show approved stories
-                            approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                            console.log('✓ Approved stories found:', approvedStories.length);
-                        } else {
-                            console.log('⚠️ No submissions found in localStorage');
-                            
-                            // Try backup key as last resort
-                            const backupData = localStorage.getItem('appfoundry_approved_seed');
-                            if (backupData) {
-                                console.log('🔄 Found backup data, restoring...');
-                                try {
-                                    const backup = JSON.parse(backupData);
-                                    // Store in main localStorage key to ensure future loads work
-                                    localStorage.setItem('appfoundry_submissions', JSON.stringify(backup));
-                                    console.log('✅ Copied backup data to main storage location');
-                                    
-                                    const approvedBackup = backup.filter(story => story.status === 'approved');
-                                    approvedStories = approvedBackup;
-                                    console.log('✅ Restored from backup:', approvedStories.length, 'stories');
-                                } catch (e) {
-                                    console.error('❌ Error parsing backup data:', e);
-                                }
-                            }
-                        }
-                    } catch (error) {
-                        console.error('❌ Error accessing localStorage:', error);
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Error loading stories:', error);
+                const seed = JSON.parse(backupData);
+                localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(seed));
+                console.log("✅ Successfully restored from backup seed:", seed.length, "stories");
+            } catch (e) {
+                console.error("❌ Error restoring from backup:", e);
             }
-            
-            // Display stories if we found any
-            if (approvedStories.length > 0) {
-                displayStories(approvedStories);
-                document.getElementById('empty-state').style.display = 'none';
-                document.getElementById('loading-indicator').style.display = 'none';
-                console.log('✨ Successfully displayed stories');
-                return true;
-            } else {
-                console.log('⚠️ No approved stories found');
-                
-                // Retry logic - wait and try again if this is the first few attempts
-                if (retryCount < 3) {
-                    console.log(`🔄 Will retry in ${(retryCount + 1) * 500}ms...`);
-                    setTimeout(() => {
-                        loadStoriesWithRetry(retryCount + 1);
-                    }, (retryCount + 1) * 500);
-                    return false;
-                } else {
-                    // Give up after 3 retries and show sample stories as fallback
-                    console.log('❌ Giving up after multiple attempts');
-                    
-                    // Fallback to sample data as last resort
-                    const sampleStories = getSampleStories();
-                    console.log('📄 Using sample stories as fallback');
-                    
-                    // Store sample stories in localStorage for future use
-                    try {
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(sampleStories));
-                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(sampleStories));
-                        console.log('💾 Stored sample stories for future use');
-                    } catch (e) {
-                        console.error('❌ Error storing sample stories:', e);
-                    }
-                    
-                    displayStories(sampleStories);
-                    document.getElementById('empty-state').style.display = 'none';
-                    document.getElementById('loading-indicator').style.display = 'none';
-                    return true;
-                }
-            }
+        }
+    }
+    
+    // If we have submissions, always update the backup
+    try {
+        const storedSubmissions = localStorage.getItem(SUBMISSIONS_KEY);
+        if (storedSubmissions) {
+            localStorage.setItem(BACKUP_KEY, storedSubmissions);
+            console.log("💾 Backup updated with current submissions data");
+        }
+    } catch (e) {
+        console.error("❌ Error updating backup:", e);
+    }
+})();
+
+/**
+ * Get all submissions from localStorage
+ * @returns {Array} Array of submissions or empty array if none found
+ */
+StorageHelper.getSubmissions = function() {
+    try {
+        const storedSubmissions = localStorage.getItem(SUBMISSIONS_KEY);
+        if (storedSubmissions) {
+            return JSON.parse(storedSubmissions);
+        }
+    } catch (error) {
+        console.error('Error getting submissions from localStorage:', error);
+    }
+    return [];
+};
+
+/**
+ * Add a new submission to localStorage
+ * @param {Object} submission The submission object to add
+ * @returns {boolean} Success status
+ */
+StorageHelper.addSubmission = function(submission) {
+    try {
+        // Get existing submissions
+        const existingSubmissions = this.getSubmissions();
+        
+        // Add new submission to the beginning
+        existingSubmissions.unshift(submission);
+        
+        // Save back to localStorage
+        localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(existingSubmissions));
+        
+        // Update the backup
+        localStorage.setItem(BACKUP_KEY, JSON.stringify(existingSubmissions));
+        
+        console.log('Successfully added submission:', submission.id);
+        return true;
+    } catch (error) {
+        console.error('Error adding submission to localStorage:', error);
+        return false;
+    }
+};
+
+/**
+ * Update an existing submission
+ * @param {string} id The ID of the submission to update
+ * @param {Object} updates The properties to update
+ * @returns {boolean} Success status
+ */
+StorageHelper.updateSubmission = function(id, updates) {
+    try {
+        // Get existing submissions
+        const existingSubmissions = this.getSubmissions();
+        
+        // Find the index of the submission to update
+        const submissionIndex = existingSubmissions.findIndex(s => s.id === id);
+        
+        if (submissionIndex === -1) {
+            console.error('Submission not found:', id);
+            return false;
+        }
+        
+        // Update the submission with the new properties
+        existingSubmissions[submissionIndex] = {
+            ...existingSubmissions[submissionIndex],
+            ...updates
         };
         
-        // Function to get sample stories as fallback
-        const getSampleStories = function() {
+        // Save back to localStorage
+        localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(existingSubmissions));
+        
+        // Update the backup
+        localStorage.setItem(BACKUP_KEY, JSON.stringify(existingSubmissions));
+        
+        console.log('Successfully updated submission:', id);
+        return true;
+    } catch (error) {
+        console.error('Error updating submission in localStorage:', error);
+        return false;
+    }
+};
+
+/**
+ * Helper function to get image URL - handles both Cloudinary and base64 images
+ * @param {string|Object} image - The image (either base64 string or Cloudinary object)
+ * @param {Object} options - Optional sizing parameters
+ * @returns {string} - URL to display the image
+ */
+StorageHelper.getImageSrc = function(image, options = {}) {
+    // If it's a Cloudinary object
+    if (image && typeof image === 'object' && image.url) {
+        return image.url;
+    }
+    
+    // If it's a Cloudinary URL string
+    if (typeof image === 'string' && image.includes('res.cloudinary.com')) {
+        return image;
+    }
+    
+    // If it's a base64 string
+    if (typeof image === 'string' && image.startsWith('data:')) {
+        return image;
+    }
+    
+    // If it's a regular URL
+    if (typeof image === 'string' && (image.startsWith('http://') || image.startsWith('https://'))) {
+        return image;
+    }
+    
+    // Fallback to placeholder
+    return 'https://placeholder.pics/svg/300x200/DEDEDE/555555/Image%20Not%20Available';
+};
+
+/**
+ * Get all approved submissions
+ * @returns {Array} Array of approved submissions
+ */
+StorageHelper.getApprovedSubmissions = function() {
+    const allSubmissions = this.getSubmissions();
+    const approved = allSubmissions.filter(submission => submission.status === 'approved');
+    
+    // If no approved submissions found, check if we can populate with sample data
+    if (approved.length === 0) {
+        console.log("⚠️ No approved submissions found, checking if we need sample data");
+        
+        // Try the backup key directly
+        try {
+            const backupData = localStorage.getItem(BACKUP_KEY);
+            if (backupData) {
+                const backup = JSON.parse(backupData);
+                const approvedBackup = backup.filter(sub => sub.status === 'approved');
+                
+                if (approvedBackup.length > 0) {
+                    console.log("✅ Found approved stories in backup:", approvedBackup.length);
+                    return approvedBackup;
+                }
+            }
+        } catch (e) {
+            console.error("❌ Error checking backup for approved stories:", e);
+        }
+        
+        // If needed and we're in the right context, provide sample data
+        if (window.location.pathname.includes('success-stories')) {
+            console.log("📝 Providing sample data for success stories page");
             return [
                 {
                     id: 'sample_1',
@@ -181,763 +222,50 @@
                     status: 'approved'
                 }
             ];
-        };
-        
-        // Run the seed check immediately
-        seedStoriesIfNeeded();
-    })();
-    </script>
+        }
+    }
     
-    <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        .success-stories-container {
-            max-width: 1200px;
-            margin: 60px auto;
-            padding: 0 20px;
-        }
-        
-        .success-stories-header {
-            text-align: center;
-            margin-bottom: 60px;
-        }
-        
-        .success-stories-header h1 {
-            font-size: 32px;
-            margin-bottom: 15px;
-        }
-        
-        .success-stories-header p {
-            max-width: 700px;
-            margin: 0 auto;
-            color: #6b7280;
-            font-size: 18px;
-            line-height: 1.5;
-        }
-        
-        .success-stories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
-        }
-        
-        .story-card {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .story-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-        }
-        
-        .story-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-        
-        .story-content {
-            padding: 25px;
-        }
-        
-        .story-tag {
-            display: inline-block;
-            background-color: #e0f2ff;
-            color: #0070f3;
-            font-size: 12px;
-            font-weight: 500;
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-        
-        .story-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #111827;
-        }
-        
-        .story-author {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .story-author-name {
-            font-size: 14px;
-            color: #4b5563;
-        }
-        
-        .story-quote {
-            font-style: italic;
-            color: #4b5563;
-            border-left: 3px solid #e5e7eb;
-            padding-left: 15px;
-            margin-bottom: 15px;
-            line-height: 1.6;
-        }
-        
-        .story-button {
-            display: inline-block;
-            color: #0070f3;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 14px;
-            transition: color 0.2s;
-        }
-        
-        .story-button:hover {
-            color: #0055b3;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background-color: #f9fafb;
-            border-radius: 12px;
-            margin-bottom: 40px;
-        }
-        
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-        
-        .empty-state-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #111827;
-        }
-        
-        .empty-state-description {
-            max-width: 500px;
-            margin: 0 auto 20px;
-            color: #6b7280;
-        }
-        
-        .story-modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .story-modal {
-            background-color: white;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        
-        .story-modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .story-modal-title {
-            font-size: 24px;
-            font-weight: 600;
-        }
-        
-        .story-modal-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #6b7280;
-        }
-        
-        .story-modal-body {
-            padding: 30px;
-        }
-        
-        .story-modal-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .story-modal-author {
-            font-weight: 500;
-        }
-        
-        .story-modal-tag {
-            background-color: #e0f2ff;
-            color: #0070f3;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        
-        .story-modal-images {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        
-        .story-modal-image {
-            width: 100%;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .story-modal-image:hover {
-            transform: scale(1.02);
-        }
-        
-        .story-modal-testimonial {
-            font-style: italic;
-            color: #4b5563;
-            font-size: 18px;
-            line-height: 1.6;
-            padding: 20px;
-            background-color: #f9fafb;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .story-modal-content {
-            line-height: 1.7;
-            color: #4b5563;
-        }
-        
-        .story-modal-content p {
-            margin-bottom: 15px;
-        }
-        
-        .create-story-box {
-            text-align: center;
-            padding: 40px;
-            background-color: #f0f9ff;
-            border-radius: 12px;
-            margin-bottom: 60px;
-        }
-        
-        .create-story-box h2 {
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-        
-        .create-story-box p {
-            max-width: 600px;
-            margin: 0 auto 25px;
-            color: #4b5563;
-        }
+    return approved;
+};
 
-        #loading-indicator {
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-        }
-        
-        @media (max-width: 768px) {
-            .success-stories-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .story-card {
-                max-width: 500px;
-                margin: 0 auto;
-            }
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <div class="container">
-            <div class="logo"><a href="https://claudeappbuilder.netlify.app/index.html">AppFoundry</a></div>
-            <nav>
-                <ul>
-                    <li><a href="https://claudeappbuilder.netlify.app/index.html#overview">Overview</a></li>
-                    <li><a href="https://claudeappbuilder.netlify.app/index.html#curriculum">Curriculum</a></li>
-                    <li><a href="https://claudeappbuilder.netlify.app/index.html#pricing">Pricing</a></li>
-                    <li><a href="https://claudeappbuilder.netlify.app/success-stories.html" class="active">Success Stories</a></li>
-                    <li><a href="https://claudeappbuilder.netlify.app/about-creator.html">About</a></li>
-                </ul>
-            </nav>
-            <button class="cta-button small" id="loginButton">Log in</button>
-        </div>
-    </header>
-
-    <div class="success-stories-container">
-        <div class="success-stories-header">
-            <h1>Success Stories</h1>
-            <p>See what our students have built without writing a single line of code. These real-world apps were created using the exact same approach you'll learn in this course.</p>
-        </div>
-        
-        <!-- Loading indicator - shown while stories are being loaded -->
-        <div id="loading-indicator">
-            Loading success stories...
-        </div>
-        
-        <div id="success-stories-grid" class="success-stories-grid" style="display: none;">
-            <!-- Stories will be loaded dynamically here -->
-        </div>
-        
-        <!-- Empty state - will show if no approved stories are found -->
-        <div id="empty-state" class="empty-state" style="display: none;">
-            <div class="empty-state-icon">📱</div>
-            <div class="empty-state-title">Success Stories Coming Soon</div>
-            <p class="empty-state-description">Our students are busy building amazing apps! Check back soon to see what they've created with the AppFoundry method.</p>
-        </div>
-        
-        <!-- FIXED: Removed target="_blank" and changed to relative URL -->
-        <div class="create-story-box">
-            <h2>Ready to Share Your Success?</h2>
-            <p>Have you built an app using the AppFoundry method? We'd love to feature your creation and inspire others to bring their ideas to life!</p>
-            <a href="submit-success-story.html" class="cta-button large" onclick="localStorage.setItem('appfoundry_navigation', 'from_success_stories');">Share Your Success Story</a>
-        </div>
-    </div>
+/**
+ * Helper function to convert legacy base64 images to Cloudinary URLs
+ * For use in future migration, doesn't actually upload to Cloudinary (that must be done server-side)
+ * @param {Object} submission - The submission object to check
+ * @returns {Object} - Same submission with base64 image indicator if needed
+ */
+StorageHelper.checkLegacyImages = function(submission) {
+    if (!submission || !submission.images || !Array.isArray(submission.images)) {
+        return submission;
+    }
     
-    <!-- Story Modal for showing full story -->
-    <div class="story-modal-backdrop" id="story-modal">
-        <div class="story-modal">
-            <div class="story-modal-header">
-                <div class="story-modal-title" id="modal-title">App Name</div>
-                <button class="story-modal-close" onclick="closeStoryModal()">&times;</button>
-            </div>
-            <div class="story-modal-body">
-                <div class="story-modal-meta">
-                    <div class="story-modal-author" id="modal-author">Creator Name</div>
-                    <div class="story-modal-tag" id="modal-tag">App Type</div>
-                </div>
-                
-                <div class="story-modal-testimonial" id="modal-testimonial">
-                    "Testimonial will appear here"
-                </div>
-                
-                <div class="story-modal-content" id="modal-content">
-                    <!-- Full story content will be loaded here -->
-                </div>
-                
-                <div class="story-modal-images" id="modal-images">
-                    <!-- Images will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
+    // Check if any images are base64 and flag them for migration
+    let hasBase64Images = false;
+    submission.images.forEach(image => {
+        if (typeof image === 'string' && image.startsWith('data:')) {
+            hasBase64Images = true;
+        }
+    });
+    
+    // Add a flag if needed
+    if (hasBase64Images) {
+        submission._needsMigration = true;
+    }
+    
+    return submission;
+};
 
-    <footer>
-        <div class="container">
-            <div class="logo">AppFoundry</div>
-            <div class="footer-links">
-                <div class="link-group">
-                    <h4>Course</h4>
-                    <ul>
-                        <li><a href="https://claudeappbuilder.netlify.app/index.html#overview">Overview</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/index.html#curriculum">Curriculum</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/index.html#pricing">Pricing</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/success-stories.html">Success Stories</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/about-creator.html">About Creator</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="https://claudeappbuilder.netlify.app/terms-of-service.html">Terms of Service</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/privacy-policy.html">Privacy Policy</a></li>
-                        <li><a href="https://claudeappbuilder.netlify.app/refund-policy.html">Our Guarantee</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                © 2025 AppFoundry. All rights reserved.
-            </div>
-        </div>
-    </footer>
+// Make sure we load stories as soon as possible for maximum compatibility
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("📄 DOM loaded, making sure storage is initialized");
+    
+    // Try to pre-load approved stories if we're on the success stories page
+    if (window.location.pathname.includes('success-stories')) {
+        console.log("🔍 Success stories page detected, pre-loading approved stories");
+        const approvedStories = StorageHelper.getApprovedSubmissions();
+        console.log("📊 Found", approvedStories.length, "approved stories");
+    }
+});
 
-    <script src="storage-helper.js"></script>
-    <script>
-        // Script to load approved stories
-        // Updated version to fetch from GitHub via Netlify function
-        (function() {
-            console.log("🔄 Initializing success stories loader");
-            
-            // Function to load stories with advanced error handling
-            async function loadApprovedStories() {
-                console.log("🔍 Loading approved stories");
-                
-                // Show loading indicator
-                document.getElementById('loading-indicator').style.display = 'block';
-                document.getElementById('success-stories-grid').style.display = 'none';
-                document.getElementById('empty-state').style.display = 'none';
-                
-                try {
-                    // First try to fetch from the API
-                    const response = await fetch('/.netlify/functions/get-submissions?status=approved');
-                    
-                    if (!response.ok) {
-                        throw new Error("Failed to fetch from API");
-                    }
-                    
-                    const approvedStories = await response.json();
-                    
-                    if (approvedStories.length > 0) {
-                        displayStories(approvedStories);
-                        document.getElementById('empty-state').style.display = 'none';
-                    } else {
-                        // Fall back to localStorage if API returned no stories
-                        fallbackToLocalStorage();
-                    }
-                } catch (error) {
-                    console.error("Error fetching from API:", error);
-                    
-                    // Fall back to localStorage
-                    fallbackToLocalStorage();
-                } finally {
-                    document.getElementById('loading-indicator').style.display = 'none';
-                }
-            }
-            
-            // Fallback to localStorage
-            function fallbackToLocalStorage() {
-                try {
-                    if (typeof StorageHelper !== 'undefined' && StorageHelper.getApprovedSubmissions) {
-                        const approvedStories = StorageHelper.getApprovedSubmissions();
-                        console.log(`✅ Using StorageHelper, found ${approvedStories.length} approved stories`);
-                        
-                        if (approvedStories.length > 0) {
-                            displayStories(approvedStories);
-                            document.getElementById('empty-state').style.display = 'none';
-                            return;
-                        }
-                    }
-                    
-                    // Direct localStorage access
-                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                    if (storedSubmissions) {
-                        const allSubmissions = JSON.parse(storedSubmissions);
-                        const approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                        
-                        if (approvedStories.length > 0) {
-                            displayStories(approvedStories);
-                            document.getElementById('empty-state').style.display = 'none';
-                            return;
-                        }
-                    }
-                    
-                    // Check backup seed as last resort
-                    const backupData = localStorage.getItem('appfoundry_approved_seed');
-                    if (backupData) {
-                        const backup = JSON.parse(backupData);
-                        const approvedBackup = backup.filter(story => story.status === 'approved');
-                        
-                        if (approvedBackup.length > 0) {
-                            displayStories(approvedBackup);
-                            document.getElementById('empty-state').style.display = 'none';
-                            return;
-                        }
-                    }
-                    
-                    // If we got here, no stories were found, show sample stories
-                    const sampleStories = getSampleStories();
-                    if (sampleStories.length > 0) {
-                        displayStories(sampleStories);
-                        document.getElementById('empty-state').style.display = 'none';
-                    } else {
-                        document.getElementById('success-stories-grid').style.display = 'none';
-                        document.getElementById('empty-state').style.display = 'block';
-                    }
-                } catch (error) {
-                    console.error("Error accessing localStorage:", error);
-                    document.getElementById('success-stories-grid').style.display = 'none';
-                    document.getElementById('empty-state').style.display = 'block';
-                }
-            }
-            
-            // Function to get sample stories as fallback
-            function getSampleStories() {
-                return [
-                    {
-                        id: 'sample_1',
-                        name: 'Sarah Johnson',
-                        appName: 'SleepTrack',
-                        appType: 'Health & Fitness',
-                        testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
-                        story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
-                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App'],
-                        date: '2025-04-15T10:30:00Z',
-                        status: 'approved'
-                    },
-                    {
-                        id: 'sample_2',
-                        name: 'Michael Chen',
-                        appName: 'RecipeKeeper',
-                        appType: 'Lifestyle',
-                        testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
-                        story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
-                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App'],
-                        date: '2025-04-22T14:45:00Z',
-                        status: 'approved'
-                    }
-                ];
-            }
-            
-            // Function to display stories in the grid
-            function displayStories(stories) {
-                const grid = document.getElementById('success-stories-grid');
-                if (!grid) {
-                    console.error('❌ Could not find success-stories-grid element');
-                    return;
-                }
-                
-                grid.innerHTML = ''; // Clear existing content
-                
-                // Sort by date (newest first)
-                stories.sort((a, b) => new Date(b.date) - new Date(a.date));
-                
-                // Add each story to the grid
-                stories.forEach(story => {
-                    const storyCard = document.createElement('div');
-                    storyCard.className = 'story-card';
-                    
-                    // Get image URL (use first image or placeholder)
-                    // Handle both Cloudinary objects and base64 strings
-                    let imageUrl = 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
-                    
-                    if (story.images && story.images.length > 0) {
-                        const firstImage = story.images[0];
-                        
-                        if (firstImage) {
-                            // If it's a Cloudinary object
-                            if (typeof firstImage === 'object' && firstImage.url) {
-                                imageUrl = firstImage.url;
-                            } 
-                            // If it's a string URL or base64
-                            else if (typeof firstImage === 'string') {
-                                imageUrl = firstImage;
-                            }
-                        }
-                    }
-                    
-                    // For handling older versions where appType might be different
-                    const appType = story.appType || story.app_type || "App";
-                    
-                    storyCard.innerHTML = `
-                        <img src="${imageUrl}" alt="${story.appName}" class="story-image">
-                        <div class="story-content">
-                            <div class="story-tag">${appType}</div>
-                            <h3 class="story-title">${story.appName}</h3>
-                            <div class="story-author">
-                                <span class="story-author-name">By ${story.name}</span>
-                            </div>
-                            <div class="story-quote">${story.testimonial}</div>
-                            <a href="#" class="story-button" onclick="openStoryModal('${story.id}'); return false;">Read Full Story</a>
-                        </div>
-                    `;
-                    
-                    grid.appendChild(storyCard);
-                });
-                
-                // Show the grid
-                grid.style.display = 'grid';
-            }
-            
-            // Load stories when the page loads
-            document.addEventListener('DOMContentLoaded', function() {
-                loadApprovedStories();
-            });
-            
-            // Make functions globally available
-            window.loadApprovedStories = loadApprovedStories;
-            window.displayStories = displayStories;
-        })();
-        
-        // Open story modal
-        function openStoryModal(storyId) {
-            let story;
-            
-            // Try to find the story by ID - first from API
-            fetch(`/.netlify/functions/get-submissions?status=approved`)
-                .then(response => response.json())
-                .then(approvedStories => {
-                    story = approvedStories.find(s => s.id === storyId);
-                    
-                    if (story) {
-                        populateAndShowModal(story);
-                    } else {
-                        // Fall back to localStorage
-                        fallbackModalLoad(storyId);
-                    }
-                })
-                .catch(error => {
-                    console.error("Error fetching story from API:", error);
-                    fallbackModalLoad(storyId);
-                });
-        }
-        
-        // Fallback to localStorage for modal
-        function fallbackModalLoad(storyId) {
-            let story;
-            
-            // Get the story from localStorage
-            if (typeof StorageHelper !== 'undefined') {
-                const allSubmissions = StorageHelper.getSubmissions();
-                story = allSubmissions.find(s => s.id === storyId);
-            } else {
-                try {
-                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                    if (storedSubmissions) {
-                        const allSubmissions = JSON.parse(storedSubmissions);
-                        story = allSubmissions.find(s => s.id === storyId);
-                    }
-                } catch (error) {
-                    console.error('Error accessing localStorage:', error);
-                }
-            }
-            
-            if (story) {
-                populateAndShowModal(story);
-            } else {
-                console.error('Story not found:', storyId);
-                
-                // If story not found, try sample stories
-                const sampleStories = [
-                    {
-                        id: 'sample_1',
-                        name: 'Sarah Johnson',
-                        appName: 'SleepTrack',
-                        appType: 'Health & Fitness',
-                        testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
-                        story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
-                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App'],
-                        date: '2025-04-15T10:30:00Z',
-                        status: 'approved'
-                    },
-                    {
-                        id: 'sample_2',
-                        name: 'Michael Chen',
-                        appName: 'RecipeKeeper',
-                        appType: 'Lifestyle',
-                        testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
-                        story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
-                        images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App'],
-                        date: '2025-04-22T14:45:00Z',
-                        status: 'approved'
-                    }
-                ];
-                
-                const sampleStory = sampleStories.find(s => s.id === storyId);
-                if (sampleStory) {
-                    populateAndShowModal(sampleStory);
-                }
-            }
-        }
-        
-        // Populate and show the modal
-        function populateAndShowModal(story) {
-            // Fill the modal with story details
-            document.getElementById('modal-title').textContent = story.appName;
-            document.getElementById('modal-author').textContent = `Created by ${story.name}`;
-            document.getElementById('modal-tag').textContent = story.appType || story.app_type || "App";
-            document.getElementById('modal-testimonial').textContent = story.testimonial;
-            
-            // Convert story text to paragraphs
-            const storyContent = story.story.split('\n\n').map(para => `<p>${para}</p>`).join('');
-            document.getElementById('modal-content').innerHTML = storyContent;
-            
-            // Add images
-            const imagesContainer = document.getElementById('modal-images');
-            imagesContainer.innerHTML = '';
-            
-            if (story.images && story.images.length > 0) {
-                // Check if we have actual images
-                const hasValidImages = story.images.some(img => img !== null && img !== '');
-                
-                if (hasValidImages) {
-                    story.images.forEach(image => {
-                        if (image) {
-                            // Get proper image URL based on type
-                            let imageUrl;
-                            
-                            // If it's a Cloudinary object
-                            if (typeof image === 'object' && image.url) {
-                                imageUrl = image.url;
-                            } 
-                            // If it's a string URL or base64
-                            else if (typeof image === 'string') {
-                                imageUrl = image;
-                            } else {
-                                // Skip invalid image
-                                return;
-                            }
-                            
-                            const img = document.createElement('img');
-                            img.src = imageUrl;
-                            img.alt = story.appName;
-                            img.className = 'story-modal-image';
-                            imagesContainer.appendChild(img);
-                        }
-                    });
-                    imagesContainer.style.display = 'grid';
-                } else {
-                    imagesContainer.style.display = 'none';
-                }
-            } else {
-                imagesContainer.style.display = 'none';
-            }
-            
-            // Show the modal
-            document.getElementById('story-modal').style.display = 'flex';
-            
-            // Prevent background scrolling
-            document.body.style.overflow = 'hidden';
-        }
-        
-        // Function to close the story modal
-        function closeStoryModal() {
-            document.getElementById('story-modal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-        
-        // Close modal on escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeStoryModal();
-            }
-        });
-        
-        // Close modal when clicking outside
-        window.addEventListener('click', function(e) {
-            const storyModal = document.getElementById('story-modal');
-            
-            if (e.target === storyModal) {
-                closeStoryModal();
-            }
-        });
-    </script>
-</body>
-</html>
+// Force initialization right away
+console.log("🚀 StorageHelper initialized and ready to use");
