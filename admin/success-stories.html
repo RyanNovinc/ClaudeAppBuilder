@@ -91,6 +91,19 @@
         }
       },
       
+      // Clear all rejected submissions
+      async clearRejectedSubmissions() {
+        try {
+          const result = await this.callApi('clear-rejected-submissions', 'POST');
+          logActivity('info', `Cleared rejected submissions: ${result.message}`);
+          return result;
+        } catch (error) {
+          console.error(`Failed to clear rejected submissions:`, error);
+          logActivity('error', `Failed to clear rejected submissions: ${error.message}`);
+          throw error;
+        }
+      },
+      
       // Update submission (for editing)
       async updateSubmission(submission) {
         try {
@@ -1109,11 +1122,62 @@
           }
         });
         
+        // Show/hide Clear Rejected button based on tab
+        const clearRejectedButton = document.getElementById('clear-rejected-button');
+        if (status === 'rejected') {
+          clearRejectedButton.classList.remove('hidden');
+        } else {
+          clearRejectedButton.classList.add('hidden');
+        }
+        
         // Reset to first page
         currentPage = 1;
         
         // Display submissions for the new tab
         loadSubmissions();
+      }
+      
+      // Clear all rejected submissions
+      async function clearRejectedSubmissions() {
+        if (!confirm('Are you sure you want to clear ALL rejected submissions? This action cannot be undone.')) {
+          return;
+        }
+        
+        try {
+          document.getElementById('loading-indicator').style.display = 'flex';
+          document.getElementById('submissions').style.display = 'none';
+          document.getElementById('clear-rejected-button').disabled = true;
+          document.getElementById('clear-rejected-button').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Clearing...';
+          
+          logActivity('info', 'Clearing all rejected submissions');
+          
+          // Call the API to clear rejected submissions
+          const result = await AdminAuth.callApi('clear-rejected-submissions', 'POST');
+          
+          logActivity('success', `Successfully cleared rejected submissions: ${result.message}`);
+          
+          // Update local storage to reflect the changes
+          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+          const updatedSubmissions = submissions.filter(sub => sub.status !== 'rejected');
+          localStorage.setItem('appfoundry_submissions', JSON.stringify(updatedSubmissions));
+          
+          // Update seed immediately too
+          localStorage.setItem('appfoundry_approved_seed', JSON.stringify(
+            updatedSubmissions.filter(s => s.status === 'approved')
+          ));
+          
+          // Reload submissions
+          await loadSubmissions();
+          
+          showToast('Success', 'All rejected submissions have been cleared', 'success');
+        } catch (error) {
+          logActivity('error', `Error clearing rejected submissions: ${error.message}`);
+          showToast('Error', `Failed to clear rejected submissions: ${error.message}`, 'error');
+        } finally {
+          document.getElementById('loading-indicator').style.display = 'none';
+          document.getElementById('clear-rejected-button').disabled = false;
+          document.getElementById('clear-rejected-button').innerHTML = '<i class="fas fa-trash-alt mr-2"></i> Clear All Rejected';
+        }
       }
       
       // Show full story in modal
@@ -1424,7 +1488,12 @@
                 Rejected
             </button>
             
-            <div class="ml-auto flex items-center">
+            <div class="ml-auto flex items-center gap-4">
+                <!-- Clear Rejected Button - Only visible in rejected tab -->
+                <button id="clear-rejected-button" onclick="clearRejectedSubmissions()" class="px-3 py-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors hidden">
+                    <i class="fas fa-trash-alt mr-2"></i> Clear All Rejected
+                </button>
+                
                 <label for="sort-switch" class="mr-2 text-sm text-gray-600">Newest First</label>
                 <div class="relative inline-block w-10 align-middle select-none">
                     <input type="checkbox" id="sort-switch" checked class="sr-only peer">
