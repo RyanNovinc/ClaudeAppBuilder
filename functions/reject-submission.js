@@ -2,10 +2,10 @@ const { Octokit } = require("@octokit/rest");
 const { Base64 } = require("js-base64");
 
 // GitHub repository information
-const GITHUB_OWNER = "RyanNovinc"; // Your actual GitHub username
-const GITHUB_REPO = "ClaudeAppBuilder"; // Your actual repository name
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Set this in Netlify environment variables
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN; // Simple admin token for basic auth
+const GITHUB_OWNER = "RyanNovinc";
+const GITHUB_REPO = "ClaudeAppBuilder";
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
 exports.handler = async function(event, context) {
   // Set CORS headers
@@ -34,22 +34,31 @@ exports.handler = async function(event, context) {
     };
   }
   
-  // Basic authentication check
+  // IMPROVED AUTHENTICATION HANDLING
+  // Get the token from either Authorization header or query parameter
+  let token = null;
+  
+  // Check Authorization header
   const authHeader = event.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return {
-      statusCode: 401,
-      headers,
-      body: JSON.stringify({ error: "Unauthorized" })
-    };
+  if (authHeader) {
+    // Allow both "Bearer TOKEN" and just "TOKEN"
+    token = authHeader.startsWith("Bearer ") 
+      ? authHeader.split(" ")[1]
+      : authHeader;
   }
   
-  const token = authHeader.split(" ")[1];
-  if (token !== ADMIN_TOKEN) {
+  // If no token in header, check query parameters
+  if (!token && event.queryStringParameters && event.queryStringParameters.token) {
+    token = event.queryStringParameters.token;
+  }
+  
+  // Check if token is valid
+  if (!token || token !== ADMIN_TOKEN) {
+    console.log("Authentication failed. Provided token:", token ? "***" : "none");
     return {
       statusCode: 401,
       headers,
-      body: JSON.stringify({ error: "Invalid token" })
+      body: JSON.stringify({ error: "Unauthorized - Invalid or missing token" })
     };
   }
 
@@ -71,9 +80,13 @@ exports.handler = async function(event, context) {
       auth: GITHUB_TOKEN
     });
     
-    // Get pending submissions
-    let pendingSubmissions = [];
-    let pendingSha = "";
+    // First check if submission is in pending
+    let submissionSource = "pending";
+    let submission = null;
+    let sourceSubmissions = [];
+    let sourceSha = "";
+    
+    // Try to find in pending submissions
     try {
       const { data: fileData } = await octokit.repos.getContent({
         owner: GITHUB_OWNER,
@@ -81,32 +94,53 @@ exports.handler = async function(event, context) {
         path: "data/pending-submissions.json",
       });
       
-      pendingSubmissions = JSON.parse(Base64.decode(fileData.content));
-      pendingSha = fileData.sha;
-    } catch (error) {
-      if (error.status === 404) {
-        return {
-          statusCode: 404,
-          headers,
-          body: JSON.stringify({ error: "No pending submissions found" })
-        };
+      sourceSubmissions = JSON.parse(Base64.decode(fileData.content));
+      sourceSha = fileData.sha;
+      
+      const submissionIndex = sourceSubmissions.findIndex(s => s.id === id);
+      if (submissionIndex !== -1) {
+        submission = sourceSubmissions[submissionIndex];
+        sourceSubmissions.splice(submissionIndex, 1);
       }
-      throw error;
+    } catch (error) {
+      if (error.status !== 404) {
+        throw error;
+      }
     }
     
-    // Find the submission to reject
-    const submissionIndex = pendingSubmissions.findIndex(s => s.id === id);
-    if (submissionIndex === -1) {
+    // If not found in pending, check approved
+    if (!submission) {
+      submissionSource = "approved";
+      try {
+        const { data: fileData } = await octokit.repos.getContent({
+          owner: GITHUB_OWNER,
+          repo: GITHUB_REPO,
+          path: "data/approved-submissions.json",
+        });
+        
+        sourceSubmissions = JSON.parse(Base64.decode(fileData.content));
+        sourceSha = fileData.sha;
+        
+        const submissionIndex = sourceSubmissions.findIndex(s => s.id === id);
+        if (submissionIndex !== -1) {
+          submission = sourceSubmissions[submissionIndex];
+          sourceSubmissions.splice(submissionIndex, 1);
+        }
+      } catch (error) {
+        if (error.status !== 404) {
+          throw error;
+        }
+      }
+    }
+    
+    // If not found in either, return error
+    if (!submission) {
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ error: "Submission not found" })
+        body: JSON.stringify({ error: "Submission not found in pending or approved" })
       };
     }
-    
-    // Get the submission and remove it from pending
-    const submission = pendingSubmissions[submissionIndex];
-    pendingSubmissions.splice(submissionIndex, 1);
     
     // Update submission status
     submission.status = "rejected";
@@ -135,14 +169,14 @@ exports.handler = async function(event, context) {
     
     // Update both files in GitHub
     await Promise.all([
-      // Update pending submissions
+      // Update source submissions file
       octokit.repos.createOrUpdateFileContents({
         owner: GITHUB_OWNER,
         repo: GITHUB_REPO,
-        path: "data/pending-submissions.json",
-        message: `Remove submission ${id} from pending`,
-        content: Base64.encode(JSON.stringify(pendingSubmissions, null, 2)),
-        sha: pendingSha,
+        path: `data/${submissionSource}-submissions.json`,
+        message: `Remove submission ${id} from ${submissionSource}`,
+        content: Base64.encode(JSON.stringify(sourceSubmissions, null, 2)),
+        sha: sourceSha,
       }),
       
       // Update rejected submissions
