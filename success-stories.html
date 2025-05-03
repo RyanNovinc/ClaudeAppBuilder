@@ -183,32 +183,9 @@
             ];
         };
         
-        // Start loading process
-        console.log("📄 Ready to load stories");
-        loadStoriesWithRetry();
-        
-        // Also check all links to make sure they use the main domain
-        setTimeout(() => {
-            const currentHost = window.location.hostname;
-            const mainDomain = 'claudeappbuilder.netlify.app';
-            
-            // If we're on a deploy preview, ensure links point to main domain
-            if (currentHost.includes('--claudeappbuilder.netlify.app')) {
-                console.log('🔗 Checking links to ensure they point to main domain');
-                
-                const storyLinks = document.querySelectorAll('a[href*="success-stories"], a[href*="submit-success-story"]');
-                storyLinks.forEach(link => {
-                    const href = link.getAttribute('href');
-                    if (href && !href.includes('https://')) {
-                        // Convert to absolute URL
-                        const newHref = 'https://' + mainDomain + (href.startsWith('/') ? href : '/' + href);
-                        link.setAttribute('href', newHref);
-                        console.log(`🔧 Updated link from ${href} to ${newHref}`);
-                    }
-                });
-            }
-        }, 1000);
-    });
+        // Run the seed check immediately
+        seedStoriesIfNeeded();
+    })();
     </script>
     
     <link rel="stylesheet" href="styles.css">
@@ -748,9 +725,23 @@
                     storyCard.className = 'story-card';
                     
                     // Get image URL (use first image or placeholder)
-                    const imageUrl = story.images && story.images.length > 0 && story.images[0]
-                        ? story.images[0] 
-                        : 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
+                    // Handle both Cloudinary objects and base64 strings
+                    let imageUrl = 'https://placeholder.pics/svg/350x200/DEDEDE/555555/App%20Screenshot';
+                    
+                    if (story.images && story.images.length > 0) {
+                        const firstImage = story.images[0];
+                        
+                        if (firstImage) {
+                            // If it's a Cloudinary object
+                            if (typeof firstImage === 'object' && firstImage.url) {
+                                imageUrl = firstImage.url;
+                            } 
+                            // If it's a string URL or base64
+                            else if (typeof firstImage === 'string') {
+                                imageUrl = firstImage;
+                            }
+                        }
+                    }
                     
                     // For handling older versions where appType might be different
                     const appType = story.appType || story.app_type || "App";
@@ -883,16 +874,38 @@
             imagesContainer.innerHTML = '';
             
             if (story.images && story.images.length > 0) {
-                story.images.forEach(imageUrl => {
-                    if (imageUrl) {
-                        const img = document.createElement('img');
-                        img.src = imageUrl;
-                        img.alt = story.appName;
-                        img.className = 'story-modal-image';
-                        imagesContainer.appendChild(img);
-                    }
-                });
-                imagesContainer.style.display = 'grid';
+                // Check if we have actual images
+                const hasValidImages = story.images.some(img => img !== null && img !== '');
+                
+                if (hasValidImages) {
+                    story.images.forEach(image => {
+                        if (image) {
+                            // Get proper image URL based on type
+                            let imageUrl;
+                            
+                            // If it's a Cloudinary object
+                            if (typeof image === 'object' && image.url) {
+                                imageUrl = image.url;
+                            } 
+                            // If it's a string URL or base64
+                            else if (typeof image === 'string') {
+                                imageUrl = image;
+                            } else {
+                                // Skip invalid image
+                                return;
+                            }
+                            
+                            const img = document.createElement('img');
+                            img.src = imageUrl;
+                            img.alt = story.appName;
+                            img.className = 'story-modal-image';
+                            imagesContainer.appendChild(img);
+                        }
+                    });
+                    imagesContainer.style.display = 'grid';
+                } else {
+                    imagesContainer.style.display = 'none';
+                }
             } else {
                 imagesContainer.style.display = 'none';
             }
