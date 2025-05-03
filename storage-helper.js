@@ -1,6 +1,7 @@
 /**
- * Enhanced Storage Helper
+ * Enhanced Storage Helper with Cloudinary Support
  * This script provides robust cross-domain storage management for the AppFoundry success stories
+ * and includes support for Cloudinary image URLs
  */
 
 // Create the StorageHelper namespace if it doesn't exist
@@ -136,6 +137,37 @@ StorageHelper.updateSubmission = function(id, updates) {
 };
 
 /**
+ * Helper function to get image URL - handles both Cloudinary and base64 images
+ * @param {string|Object} image - The image (either base64 string or Cloudinary object)
+ * @param {Object} options - Optional sizing parameters
+ * @returns {string} - URL to display the image
+ */
+StorageHelper.getImageSrc = function(image, options = {}) {
+    // If it's a Cloudinary object
+    if (image && typeof image === 'object' && image.url) {
+        return image.url;
+    }
+    
+    // If it's a Cloudinary URL string
+    if (typeof image === 'string' && image.includes('res.cloudinary.com')) {
+        return image;
+    }
+    
+    // If it's a base64 string
+    if (typeof image === 'string' && image.startsWith('data:')) {
+        return image;
+    }
+    
+    // If it's a regular URL
+    if (typeof image === 'string' && (image.startsWith('http://') || image.startsWith('https://'))) {
+        return image;
+    }
+    
+    // Fallback to placeholder
+    return 'https://placeholder.pics/svg/300x200/DEDEDE/555555/Image%20Not%20Available';
+};
+
+/**
  * Get all approved submissions
  * @returns {Array} Array of approved submissions
  */
@@ -194,6 +226,33 @@ StorageHelper.getApprovedSubmissions = function() {
     }
     
     return approved;
+};
+
+/**
+ * Helper function to convert legacy base64 images to Cloudinary URLs
+ * For use in future migration, doesn't actually upload to Cloudinary (that must be done server-side)
+ * @param {Object} submission - The submission object to check
+ * @returns {Object} - Same submission with base64 image indicator if needed
+ */
+StorageHelper.checkLegacyImages = function(submission) {
+    if (!submission || !submission.images || !Array.isArray(submission.images)) {
+        return submission;
+    }
+    
+    // Check if any images are base64 and flag them for migration
+    let hasBase64Images = false;
+    submission.images.forEach(image => {
+        if (typeof image === 'string' && image.startsWith('data:')) {
+            hasBase64Images = true;
+        }
+    });
+    
+    // Add a flag if needed
+    if (hasBase64Images) {
+        submission._needsMigration = true;
+    }
+    
+    return submission;
 };
 
 // Make sure we load stories as soon as possible for maximum compatibility
