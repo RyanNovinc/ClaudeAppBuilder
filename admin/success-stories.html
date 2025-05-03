@@ -601,35 +601,8 @@
     </div>
     
     <script>
-        // Clear any previously stored token
-        localStorage.removeItem('appfoundry_admin_token');
-        
-        // Constants - This will use the Netlify environment variable if available, or prompt for it
-        let ADMIN_TOKEN = "";
-
-        // Function to get admin token - either from localStorage or prompt user
-        function getAdminToken() {
-            // Try to get from localStorage first
-            let storedToken = localStorage.getItem('appfoundry_admin_token');
-            
-            if (storedToken) {
-                console.log("Using stored admin token");
-                return storedToken;
-            }
-            
-            // Prompt user for token if not found
-            const inputToken = prompt("Please enter admin token to continue:", "");
-            
-            if (inputToken) {
-                // Save token to localStorage for future use
-                localStorage.setItem('appfoundry_admin_token', inputToken);
-                console.log("Admin token saved");
-                return inputToken;
-            }
-            
-            // Return empty string if user cancels
-            return "";
-        }
+        // Constants - hardcoded admin token
+        const ADMIN_TOKEN = "xP8q#Rb7!DtEv3mK9$Lz";
         
         // Global variables
         let allSubmissions = [];
@@ -641,31 +614,14 @@
         
         // Load submissions when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            ADMIN_TOKEN = getAdminToken();
+            console.log("Admin page loaded, loading submissions");
+            loadSubmissions();
             
-            // Only proceed with loading submissions if we have a token
-            if (ADMIN_TOKEN) {
-                console.log("Admin page loaded, loading submissions");
-                loadSubmissions();
-                
-                // Set up sort switch
-                document.getElementById('sort-switch').addEventListener('change', function() {
-                    sortNewestFirst = this.checked;
-                    displaySubmissions();
-                });
-            } else {
-                alert("Admin token required to access this page.");
-                // Show a login form instead of submissions
-                document.getElementById('loading-indicator').style.display = 'none';
-                document.getElementById('submissions').innerHTML = `
-                    <div style="text-align: center; padding: 40px;">
-                        <h2>Admin Authentication Required</h2>
-                        <p>Please refresh the page and enter your admin token to continue.</p>
-                        <button onclick="location.reload()">Refresh Page</button>
-                    </div>
-                `;
-                document.getElementById('submissions').style.display = 'block';
-            }
+            // Set up sort switch
+            document.getElementById('sort-switch').addEventListener('change', function() {
+                sortNewestFirst = this.checked;
+                displaySubmissions();
+            });
         });
         
         // Load submissions from GitHub via Netlify function
@@ -676,17 +632,31 @@
                 document.getElementById('submissions').style.display = 'none';
                 document.getElementById('empty-state').style.display = 'none';
                 
-                // Debug logging
-                console.log("Token being used for loading:", ADMIN_TOKEN);
-                console.log("Token length:", ADMIN_TOKEN.length);
-                
-                // Fetch submissions from API
+                // Fetch submissions from API - try all three auth methods
                 console.log("Fetching submissions with auth token...");
-                const response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
+                
+                // First try with the token in the Authorization header
+                let response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
                     headers: {
-                        "Authorization": ADMIN_TOKEN // Removed Bearer prefix
+                        "Authorization": ADMIN_TOKEN
                     }
                 });
+                
+                // If that fails, try with Bearer prefix
+                if (!response.ok) {
+                    console.log("First auth attempt failed, trying with Bearer prefix...");
+                    response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
+                        headers: {
+                            "Authorization": `Bearer ${ADMIN_TOKEN}`
+                        }
+                    });
+                }
+                
+                // If that still fails, try with token as query parameter
+                if (!response.ok) {
+                    console.log("Second auth attempt failed, trying with token as query parameter...");
+                    response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}&token=${encodeURIComponent(ADMIN_TOKEN)}`);
+                }
                 
                 // Log response status for debugging
                 console.log("API Response status:", response.status);
@@ -947,29 +917,72 @@
             try {
                 document.getElementById('loading-indicator').style.display = 'block';
                 
-                // Debug logging
-                console.log("Token being used for approval:", ADMIN_TOKEN);
-                console.log("Token length:", ADMIN_TOKEN.length);
+                // Try all three authentication methods
+                let response;
+                let attempts = 0;
+                let lastError;
                 
-                // Call the Netlify function with proper authentication
-                console.log("Sending approval request with token...");
-                const response = await fetch("/.netlify/functions/approve-submission", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": ADMIN_TOKEN // Removed Bearer prefix
-                    },
-                    body: JSON.stringify({ id })
-                });
+                // Try different authentication methods
+                while (attempts < 3) {
+                    try {
+                        if (attempts === 0) {
+                            // First try with the token in the Authorization header
+                            console.log("Trying approval with plain token...");
+                            response = await fetch("/.netlify/functions/approve-submission", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": ADMIN_TOKEN
+                                },
+                                body: JSON.stringify({ id })
+                            });
+                        } else if (attempts === 1) {
+                            // If that fails, try with Bearer prefix
+                            console.log("Trying approval with Bearer prefix...");
+                            response = await fetch("/.netlify/functions/approve-submission", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${ADMIN_TOKEN}`
+                                },
+                                body: JSON.stringify({ id })
+                            });
+                        } else {
+                            // If that still fails, try with token as query parameter
+                            console.log("Trying approval with token as query parameter...");
+                            response = await fetch(`/.netlify/functions/approve-submission?token=${encodeURIComponent(ADMIN_TOKEN)}`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({ id })
+                            });
+                        }
+                        
+                        // If the response is okay, break out of the loop
+                        if (response.ok) {
+                            break;
+                        }
+                        
+                        // Otherwise, save the error and try the next method
+                        lastError = await response.text();
+                        console.error(`Auth attempt ${attempts + 1} failed:`, lastError);
+                        
+                    } catch (error) {
+                        lastError = error.message;
+                        console.error(`Auth attempt ${attempts + 1} error:`, error);
+                    }
+                    
+                    attempts++;
+                }
                 
-                // Log the full response for debugging
-                console.log("API Response status:", response.status);
+                // If we've tried all methods and none worked, throw an error
+                if (!response || !response.ok) {
+                    throw new Error(lastError || "Failed to approve submission after trying multiple auth methods");
+                }
+                
                 const result = await response.json();
                 console.log("API Response data:", result);
-                
-                if (!response.ok) {
-                    throw new Error(result.error || "Failed to approve submission");
-                }
                 
                 // For backwards compatibility, also update localStorage
                 try {
@@ -1036,29 +1049,72 @@
             try {
                 document.getElementById('loading-indicator').style.display = 'block';
                 
-                // Debug logging
-                console.log("Token being used for rejection:", ADMIN_TOKEN);
-                console.log("Token length:", ADMIN_TOKEN.length);
+                // Try all three authentication methods
+                let response;
+                let attempts = 0;
+                let lastError;
                 
-                // Call the Netlify function with proper authentication
-                console.log("Sending rejection request with token...");
-                const response = await fetch("/.netlify/functions/reject-submission", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": ADMIN_TOKEN // Removed Bearer prefix
-                    },
-                    body: JSON.stringify({ id })
-                });
+                // Try different authentication methods
+                while (attempts < 3) {
+                    try {
+                        if (attempts === 0) {
+                            // First try with the token in the Authorization header
+                            console.log("Trying rejection with plain token...");
+                            response = await fetch("/.netlify/functions/reject-submission", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": ADMIN_TOKEN
+                                },
+                                body: JSON.stringify({ id })
+                            });
+                        } else if (attempts === 1) {
+                            // If that fails, try with Bearer prefix
+                            console.log("Trying rejection with Bearer prefix...");
+                            response = await fetch("/.netlify/functions/reject-submission", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${ADMIN_TOKEN}`
+                                },
+                                body: JSON.stringify({ id })
+                            });
+                        } else {
+                            // If that still fails, try with token as query parameter
+                            console.log("Trying rejection with token as query parameter...");
+                            response = await fetch(`/.netlify/functions/reject-submission?token=${encodeURIComponent(ADMIN_TOKEN)}`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({ id })
+                            });
+                        }
+                        
+                        // If the response is okay, break out of the loop
+                        if (response.ok) {
+                            break;
+                        }
+                        
+                        // Otherwise, save the error and try the next method
+                        lastError = await response.text();
+                        console.error(`Auth attempt ${attempts + 1} failed:`, lastError);
+                        
+                    } catch (error) {
+                        lastError = error.message;
+                        console.error(`Auth attempt ${attempts + 1} error:`, error);
+                    }
+                    
+                    attempts++;
+                }
                 
-                // Log the full response for debugging
-                console.log("API Response status:", response.status);
+                // If we've tried all methods and none worked, throw an error
+                if (!response || !response.ok) {
+                    throw new Error(lastError || "Failed to reject submission after trying multiple auth methods");
+                }
+                
                 const result = await response.json();
                 console.log("API Response data:", result);
-                
-                if (!response.ok) {
-                    throw new Error(result.error || "Failed to reject submission");
-                }
                 
                 // For backwards compatibility, also update localStorage
                 try {
@@ -1307,7 +1363,7 @@
                 // Get approved stories
                 fetch('/.netlify/functions/get-submissions?status=approved', {
                     headers: {
-                        "Authorization": ADMIN_TOKEN // Removed Bearer prefix
+                        "Authorization": ADMIN_TOKEN
                     }
                 })
                 .then(response => response.json())
