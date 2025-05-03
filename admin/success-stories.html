@@ -5,6 +5,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin: Success Stories - AppFoundry</title>
     
+    <!-- Inline admin-auth.js script -->
+    <script>
+    /**
+     * Admin Authentication Helper
+     * This file provides a consistent interface for authenticating with the Netlify Functions API
+     */
+
+    const AdminAuth = {
+      // The token from your admin page - should match Netlify environment variable
+      token: "xP8q#Rb7!DtEv3mK9$Lz",
+      
+      // Call any API endpoint with proper authentication
+      async callApi(endpoint, method = 'GET', body = null) {
+        try {
+          const options = {
+            method: method,
+            headers: {
+              'Authorization': `Bearer ${this.token}`,
+              'Content-Type': 'application/json'
+            }
+          };
+          
+          if (body) {
+            options.body = JSON.stringify(body);
+          }
+          
+          console.log(`📡 Calling API: ${endpoint} (${method})`);
+          const response = await fetch(`/.netlify/functions/${endpoint}`, options);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`❌ API error (${response.status}):`, errorText);
+            throw new Error(`API error (${response.status}): ${errorText}`);
+          }
+          
+          console.log(`✅ API call successful: ${endpoint}`);
+          return await response.json();
+        } catch (error) {
+          console.error(`❌ API call to ${endpoint} failed:`, error);
+          throw error;
+        }
+      },
+      
+      // Get submissions with status filter
+      async getSubmissions(status = 'all') {
+        return this.callApi(`get-submissions?status=${status}`);
+      },
+      
+      // Approve a submission
+      async approveSubmission(id) {
+        return this.callApi('approve-submission', 'POST', { id });
+      },
+      
+      // Reject a submission
+      async rejectSubmission(id) {
+        return this.callApi('reject-submission', 'POST', { id });
+      },
+      
+      // Update submission (for editing)
+      async updateSubmission(submission) {
+        return this.callApi('update-submission', 'POST', submission);
+      },
+      
+      // Delete a submission
+      async deleteSubmission(id) {
+        return this.callApi('delete-submission', 'POST', { id });
+      },
+      
+      // Helper function to update localStorage as a fallback
+      updateLocalStorage(id, status) {
+        try {
+          // Find the submission
+          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+          const submissionIndex = submissions.findIndex(s => s.id === id);
+          
+          if (submissionIndex !== -1) {
+            // Update status
+            submissions[submissionIndex].status = status;
+            
+            // Save to localStorage
+            localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+            
+            // Update seed immediately too
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log(`💾 LocalStorage updated: status of ${id} changed to ${status}`);
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error('❌ Error updating localStorage:', error);
+          return false;
+        }
+      }
+    };
+    </script>
+    
     <!-- Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
     <script>
     // Universal Story Manager - ensures stories are consistently available
@@ -494,6 +590,9 @@
             padding: 30px;
             font-size: 16px;
             color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .loading-spinner {
@@ -510,6 +609,45 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Debug Panel */
+        .debug-panel {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #fffaf0;
+            border: 1px solid #fbd38d;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .debug-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .debug-content {
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .debug-toggle {
+            background-color: #fbd38d;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #92400e;
+        }
     </style>
 </head>
 <body>
@@ -522,6 +660,7 @@
             <div class="header-actions">
                 <a href="../index.html">View Site</a>
                 <a href="../success-stories.html">Public Success Stories</a>
+                <a href="#" id="debug-button">Debug Panel</a>
             </div>
         </div>
     </header>
@@ -544,12 +683,21 @@
             </div>
         </div>
         
-        <!-- ADD THIS NEW SECTION: Export Button -->
+        <!-- EXPORT BUTTON SECTION -->
         <div class="admin-actions">
             <button class="export-button" onclick="exportApprovedStories()">
                 Export Approved Stories JSON
             </button>
             <span id="export-result"></span>
+        </div>
+        
+        <!-- DEBUG PANEL -->
+        <div class="debug-panel" id="debug-panel">
+            <div class="debug-title">
+                <span>API Debug Panel</span>
+                <button class="debug-toggle" id="clear-logs">Clear Logs</button>
+            </div>
+            <div class="debug-content" id="debug-content"></div>
         </div>
         
         <div class="submissions-container">
@@ -601,9 +749,6 @@
     </div>
     
     <script>
-        // Constants - hardcoded admin token
-        const ADMIN_TOKEN = "xP8q#Rb7!DtEv3mK9$Lz";
-        
         // Global variables
         let allSubmissions = [];
         let currentTab = 'all';
@@ -612,116 +757,128 @@
         let sortNewestFirst = true;
         let currentStoryId = null;
         
+        // Enhanced logging system
+        const debugLog = {
+            messages: [],
+            maxMessages: 100,
+            
+            log: function(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logObj = { timestamp, message, type };
+                this.messages.unshift(logObj);
+                
+                // Trim log to maxMessages
+                if (this.messages.length > this.maxMessages) {
+                    this.messages = this.messages.slice(0, this.maxMessages);
+                }
+                
+                // Log to console as well
+                console.log(`${timestamp} [${type}] ${message}`);
+                
+                // Update debug panel if visible
+                this.updatePanel();
+            },
+            
+            error: function(message) {
+                this.log(message, 'error');
+            },
+            
+            clear: function() {
+                this.messages = [];
+                this.updatePanel();
+            },
+            
+            updatePanel: function() {
+                const debugContent = document.getElementById('debug-content');
+                if (debugContent) {
+                    debugContent.innerHTML = this.messages.map(msg => {
+                        const color = msg.type === 'error' ? '#ef4444' : (msg.type === 'success' ? '#10b981' : 'inherit');
+                        return `<div style="color: ${color};">[${msg.timestamp}] ${msg.message}</div>`;
+                    }).join('\n');
+                }
+            }
+        };
+        
         // Load submissions when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("Admin page loaded, loading submissions");
-            loadSubmissions();
+            debugLog.log("Admin page loaded, initializing...");
+            
+            // Set up debug panel toggle
+            document.getElementById('debug-button').addEventListener('click', function(e) {
+                e.preventDefault();
+                const debugPanel = document.getElementById('debug-panel');
+                debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+            });
+            
+            // Set up clear logs button
+            document.getElementById('clear-logs').addEventListener('click', function() {
+                debugLog.clear();
+            });
             
             // Set up sort switch
             document.getElementById('sort-switch').addEventListener('change', function() {
                 sortNewestFirst = this.checked;
                 displaySubmissions();
             });
+            
+            // Load submissions
+            loadSubmissions();
         });
         
-        // Load submissions from GitHub via Netlify function
+        // Load submissions using the AdminAuth helper
         async function loadSubmissions() {
             try {
                 // Show loading indicator
-                document.getElementById('loading-indicator').style.display = 'block';
+                document.getElementById('loading-indicator').style.display = 'flex';
                 document.getElementById('submissions').style.display = 'none';
                 document.getElementById('empty-state').style.display = 'none';
                 
-                // Fetch submissions from API - try all three auth methods
-                console.log("Fetching submissions with auth token...");
+                debugLog.log(`Fetching ${currentTab} submissions...`);
                 
-                // First try with the token in the Authorization header
-                let response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
-                    headers: {
-                        "Authorization": ADMIN_TOKEN
-                    }
-                });
+                // Use the AdminAuth helper
+                const submissions = await AdminAuth.getSubmissions(currentTab);
+                allSubmissions = submissions;
                 
-                // If that fails, try with Bearer prefix
-                if (!response.ok) {
-                    console.log("First auth attempt failed, trying with Bearer prefix...");
-                    response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
-                        headers: {
-                            "Authorization": `Bearer ${ADMIN_TOKEN}`
-                        }
-                    });
-                }
+                debugLog.log(`Loaded ${allSubmissions.length} submissions successfully`, 'success');
                 
-                // If that still fails, try with token as query parameter
-                if (!response.ok) {
-                    console.log("Second auth attempt failed, trying with token as query parameter...");
-                    response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}&token=${encodeURIComponent(ADMIN_TOKEN)}`);
-                }
-                
-                // Log response status for debugging
-                console.log("API Response status:", response.status);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error("API error response:", errorText);
-                    throw new Error("Failed to fetch submissions: " + errorText);
-                }
-                
-                const data = await response.json();
-                allSubmissions = data;
-                
-                console.log("Loaded", allSubmissions.length, "submissions");
-                
-                // Fall back to localStorage if no submissions from API
+                // If we still have no submissions, fall back to localStorage
                 if (allSubmissions.length === 0) {
-                    try {
-                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                        
-                        if (storedSubmissions) {
-                            const localSubmissions = JSON.parse(storedSubmissions);
-                            
-                            // Filter by status if needed
-                            if (currentTab !== 'all') {
-                                allSubmissions = localSubmissions.filter(sub => sub.status === currentTab);
-                            } else {
-                                allSubmissions = localSubmissions;
-                            }
-                            
-                            console.log("Loaded", allSubmissions.length, "submissions from localStorage (fallback)");
-                        }
-                    } catch (localStorageError) {
-                        console.error("Error loading from localStorage:", localStorageError);
-                    }
+                    fallbackToLocalStorage();
+                } else {
+                    displaySubmissions();
                 }
-                
-                // Display submissions
-                displaySubmissions();
             } catch (error) {
-                console.error("Error loading submissions:", error);
-                
-                // Fall back to localStorage
-                try {
-                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                    
-                    if (storedSubmissions) {
-                        allSubmissions = JSON.parse(storedSubmissions);
-                        
-                        // Filter by status if needed
-                        if (currentTab !== 'all') {
-                            allSubmissions = allSubmissions.filter(sub => sub.status === currentTab);
-                        }
-                        
-                        console.log("Loaded", allSubmissions.length, "submissions from localStorage (fallback)");
-                        displaySubmissions();
-                    } else {
-                        showEmptyState();
-                    }
-                } catch (localStorageError) {
-                    console.error("Error loading from localStorage:", localStorageError);
-                    showEmptyState();
-                }
+                debugLog.error(`Error loading submissions: ${error.message}`);
+                fallbackToLocalStorage();
             } finally {
                 document.getElementById('loading-indicator').style.display = 'none';
+            }
+        }
+        
+        // Fallback to localStorage if API fails
+        function fallbackToLocalStorage() {
+            debugLog.log("Falling back to localStorage");
+            
+            try {
+                const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                
+                if (storedSubmissions) {
+                    allSubmissions = JSON.parse(storedSubmissions);
+                    
+                    // Filter by status if needed
+                    if (currentTab !== 'all') {
+                        allSubmissions = allSubmissions.filter(sub => sub.status === currentTab);
+                    }
+                    
+                    debugLog.log(`Loaded ${allSubmissions.length} submissions from localStorage (fallback)`);
+                    displaySubmissions();
+                } else {
+                    debugLog.log("No submissions found in localStorage", "error");
+                    showEmptyState();
+                }
+            } catch (localStorageError) {
+                debugLog.error(`Error loading from localStorage: ${localStorageError.message}`);
+                showEmptyState();
             }
         }
         
@@ -732,6 +889,7 @@
             
             if (currentTab !== 'all' && filteredSubmissions.some(sub => sub.status)) {
                 filteredSubmissions = allSubmissions.filter(submission => submission.status === currentTab);
+                debugLog.log(`Filtered to ${filteredSubmissions.length} '${currentTab}' submissions`);
             }
             
             // Sort submissions
@@ -757,6 +915,8 @@
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = Math.min(startIndex + itemsPerPage, filteredSubmissions.length);
             const currentItems = filteredSubmissions.slice(startIndex, endIndex);
+            
+            debugLog.log(`Displaying page ${currentPage} (${startIndex+1}-${endIndex} of ${filteredSubmissions.length})`);
             
             // Display current items
             const submissionsContainer = document.getElementById('submissions');
@@ -912,267 +1072,135 @@
             return card;
         }
         
-        // Update submission status to approved - use GitHub API
+        // Approve a submission using the AdminAuth helper
         async function approveSubmission(id) {
             try {
-                document.getElementById('loading-indicator').style.display = 'block';
+                document.getElementById('loading-indicator').style.display = 'flex';
                 
-                // Try all three authentication methods
-                let response;
-                let attempts = 0;
-                let lastError;
+                debugLog.log(`Approving submission ${id}...`);
                 
-                // Try different authentication methods
-                while (attempts < 3) {
-                    try {
-                        if (attempts === 0) {
-                            // First try with the token in the Authorization header
-                            console.log("Trying approval with plain token...");
-                            response = await fetch("/.netlify/functions/approve-submission", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "Authorization": ADMIN_TOKEN
-                                },
-                                body: JSON.stringify({ id })
-                            });
-                        } else if (attempts === 1) {
-                            // If that fails, try with Bearer prefix
-                            console.log("Trying approval with Bearer prefix...");
-                            response = await fetch("/.netlify/functions/approve-submission", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "Authorization": `Bearer ${ADMIN_TOKEN}`
-                                },
-                                body: JSON.stringify({ id })
-                            });
-                        } else {
-                            // If that still fails, try with token as query parameter
-                            console.log("Trying approval with token as query parameter...");
-                            response = await fetch(`/.netlify/functions/approve-submission?token=${encodeURIComponent(ADMIN_TOKEN)}`, {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json"
-                                },
-                                body: JSON.stringify({ id })
-                            });
-                        }
-                        
-                        // If the response is okay, break out of the loop
-                        if (response.ok) {
-                            break;
-                        }
-                        
-                        // Otherwise, save the error and try the next method
-                        lastError = await response.text();
-                        console.error(`Auth attempt ${attempts + 1} failed:`, lastError);
-                        
-                    } catch (error) {
-                        lastError = error.message;
-                        console.error(`Auth attempt ${attempts + 1} error:`, error);
-                    }
-                    
-                    attempts++;
-                }
+                // Use the AdminAuth helper
+                const result = await AdminAuth.approveSubmission(id);
                 
-                // If we've tried all methods and none worked, throw an error
-                if (!response || !response.ok) {
-                    throw new Error(lastError || "Failed to approve submission after trying multiple auth methods");
-                }
-                
-                const result = await response.json();
-                console.log("API Response data:", result);
+                debugLog.log(`API Response for approval: ${JSON.stringify(result)}`, 'success');
                 
                 // For backwards compatibility, also update localStorage
-                try {
-                    // Find the submission
-                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-                    const submissionIndex = submissions.findIndex(s => s.id === id);
-                    
-                    if (submissionIndex !== -1) {
-                        // Update status
-                        submissions[submissionIndex].status = 'approved';
-                        
-                        // Save to localStorage
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                        
-                        // Update seed immediately too
-                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-                        console.log("💾 Seed updated after approval with", submissions.length, "stories");
-                    }
-                } catch (localStorageError) {
-                    console.warn("Error updating localStorage:", localStorageError);
-                }
+                AdminAuth.updateLocalStorage(id, 'approved');
                 
                 // Reload submissions
                 await loadSubmissions();
                 
                 alert("Submission approved successfully!");
             } catch (error) {
-                console.error("Error approving submission:", error);
+                debugLog.error(`Error approving submission: ${error.message}`);
                 alert(`Error approving submission: ${error.message}`);
                 
                 // Try localStorage fallback
-                try {
-                    // Find the submission
-                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-                    const submissionIndex = submissions.findIndex(s => s.id === id);
-                    
-                    if (submissionIndex !== -1) {
-                        // Update status
-                        submissions[submissionIndex].status = 'approved';
-                        
-                        // Save to localStorage
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                        
-                        // Update seed immediately too
-                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-                        console.log("💾 Seed updated after approval with", submissions.length, "stories");
-                        
-                        // Reload
-                        await loadSubmissions();
-                        
-                        alert("Submission approved successfully (localStorage fallback)!");
-                    }
-                } catch (localStorageError) {
-                    console.error("Error in localStorage fallback:", localStorageError);
-                    alert("Could not approve submission. Please try again later.");
-                }
+                fallbackApprove(id);
             } finally {
                 document.getElementById('loading-indicator').style.display = 'none';
             }
         }
         
-        // Update submission status to rejected - use GitHub API
+        // Fallback approve function
+        function fallbackApprove(id) {
+            try {
+                debugLog.log(`Attempting localStorage fallback for approving ${id}`);
+                
+                // Find the submission
+                const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                const submissionIndex = submissions.findIndex(s => s.id === id);
+                
+                if (submissionIndex !== -1) {
+                    // Update status
+                    submissions[submissionIndex].status = 'approved';
+                    
+                    // Save to localStorage
+                    localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                    
+                    // Update seed immediately too
+                    localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                    debugLog.log(`LocalStorage seed updated after approval with ${submissions.length} stories`);
+                    
+                    // Reload
+                    loadSubmissions();
+                    
+                    alert("Submission approved successfully (localStorage fallback)!");
+                    return true;
+                }
+                
+                debugLog.error(`Submission ${id} not found in localStorage`);
+                return false;
+            } catch (localStorageError) {
+                debugLog.error(`Error in localStorage fallback: ${localStorageError.message}`);
+                alert("Could not approve submission. Please try again later.");
+                return false;
+            }
+        }
+        
+        // Reject a submission using the AdminAuth helper
         async function rejectSubmission(id) {
             try {
-                document.getElementById('loading-indicator').style.display = 'block';
+                document.getElementById('loading-indicator').style.display = 'flex';
                 
-                // Try all three authentication methods
-                let response;
-                let attempts = 0;
-                let lastError;
+                debugLog.log(`Rejecting submission ${id}...`);
                 
-                // Try different authentication methods
-                while (attempts < 3) {
-                    try {
-                        if (attempts === 0) {
-                            // First try with the token in the Authorization header
-                            console.log("Trying rejection with plain token...");
-                            response = await fetch("/.netlify/functions/reject-submission", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "Authorization": ADMIN_TOKEN
-                                },
-                                body: JSON.stringify({ id })
-                            });
-                        } else if (attempts === 1) {
-                            // If that fails, try with Bearer prefix
-                            console.log("Trying rejection with Bearer prefix...");
-                            response = await fetch("/.netlify/functions/reject-submission", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "Authorization": `Bearer ${ADMIN_TOKEN}`
-                                },
-                                body: JSON.stringify({ id })
-                            });
-                        } else {
-                            // If that still fails, try with token as query parameter
-                            console.log("Trying rejection with token as query parameter...");
-                            response = await fetch(`/.netlify/functions/reject-submission?token=${encodeURIComponent(ADMIN_TOKEN)}`, {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json"
-                                },
-                                body: JSON.stringify({ id })
-                            });
-                        }
-                        
-                        // If the response is okay, break out of the loop
-                        if (response.ok) {
-                            break;
-                        }
-                        
-                        // Otherwise, save the error and try the next method
-                        lastError = await response.text();
-                        console.error(`Auth attempt ${attempts + 1} failed:`, lastError);
-                        
-                    } catch (error) {
-                        lastError = error.message;
-                        console.error(`Auth attempt ${attempts + 1} error:`, error);
-                    }
-                    
-                    attempts++;
-                }
+                // Use the AdminAuth helper
+                const result = await AdminAuth.rejectSubmission(id);
                 
-                // If we've tried all methods and none worked, throw an error
-                if (!response || !response.ok) {
-                    throw new Error(lastError || "Failed to reject submission after trying multiple auth methods");
-                }
-                
-                const result = await response.json();
-                console.log("API Response data:", result);
+                debugLog.log(`API Response for rejection: ${JSON.stringify(result)}`, 'success');
                 
                 // For backwards compatibility, also update localStorage
-                try {
-                    // Find the submission
-                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-                    const submissionIndex = submissions.findIndex(s => s.id === id);
-                    
-                    if (submissionIndex !== -1) {
-                        // Update status
-                        submissions[submissionIndex].status = 'rejected';
-                        
-                        // Save to localStorage
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                        
-                        // Update seed immediately too
-                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-                        console.log("💾 Seed updated after rejection with", submissions.length, "stories");
-                    }
-                } catch (localStorageError) {
-                    console.warn("Error updating localStorage:", localStorageError);
-                }
+                AdminAuth.updateLocalStorage(id, 'rejected');
                 
                 // Reload submissions
                 await loadSubmissions();
                 
                 alert("Submission rejected successfully!");
             } catch (error) {
-                console.error("Error rejecting submission:", error);
+                debugLog.error(`Error rejecting submission: ${error.message}`);
                 alert(`Error rejecting submission: ${error.message}`);
                 
                 // Try localStorage fallback
-                try {
-                    // Find the submission
-                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-                    const submissionIndex = submissions.findIndex(s => s.id === id);
-                    
-                    if (submissionIndex !== -1) {
-                        // Update status
-                        submissions[submissionIndex].status = 'rejected';
-                        
-                        // Save to localStorage
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                        
-                        // Update seed immediately too
-                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-                        console.log("💾 Seed updated after rejection with", submissions.length, "stories");
-                        
-                        // Reload
-                        await loadSubmissions();
-                        
-                        alert("Submission rejected successfully (localStorage fallback)!");
-                    }
-                } catch (localStorageError) {
-                    console.error("Error in localStorage fallback:", localStorageError);
-                    alert("Could not reject submission. Please try again later.");
-                }
+                fallbackReject(id);
             } finally {
                 document.getElementById('loading-indicator').style.display = 'none';
+            }
+        }
+        
+        // Fallback reject function
+        function fallbackReject(id) {
+            try {
+                debugLog.log(`Attempting localStorage fallback for rejecting ${id}`);
+                
+                // Find the submission
+                const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                const submissionIndex = submissions.findIndex(s => s.id === id);
+                
+                if (submissionIndex !== -1) {
+                    // Update status
+                    submissions[submissionIndex].status = 'rejected';
+                    
+                    // Save to localStorage
+                    localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                    
+                    // Update seed immediately too
+                    localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                    debugLog.log(`LocalStorage seed updated after rejection with ${submissions.length} stories`);
+                    
+                    // Reload
+                    loadSubmissions();
+                    
+                    alert("Submission rejected successfully (localStorage fallback)!");
+                    return true;
+                }
+                
+                debugLog.error(`Submission ${id} not found in localStorage`);
+                return false;
+            } catch (localStorageError) {
+                debugLog.error(`Error in localStorage fallback: ${localStorageError.message}`);
+                alert("Could not reject submission. Please try again later.");
+                return false;
             }
         }
         
@@ -1180,6 +1208,7 @@
         function changeTab(status) {
             // Update current tab
             currentTab = status;
+            debugLog.log(`Changed tab to "${status}"`);
             
             // Update UI
             const tabs = document.querySelectorAll('.tab');
@@ -1200,6 +1229,8 @@
         
         // Show full story in modal
         function showStory(submission) {
+            debugLog.log(`Viewing full story for ${submission.id} (${submission.appName})`);
+            
             // Set current story ID
             currentStoryId = submission.id;
             
@@ -1264,10 +1295,12 @@
             document.getElementById('story-modal').style.display = 'none';
             document.body.style.overflow = 'auto';
             currentStoryId = null;
+            debugLog.log('Closed story modal');
         }
         
         // Show image in viewer
         function showImage(imageUrl) {
+            debugLog.log(`Viewing image: ${imageUrl}`);
             document.getElementById('full-image').src = imageUrl;
             document.getElementById('image-viewer').style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -1277,6 +1310,7 @@
         function closeImageViewer() {
             document.getElementById('image-viewer').style.display = 'none';
             document.body.style.overflow = 'auto';
+            debugLog.log('Closed image viewer');
         }
         
         // Show empty state
@@ -1284,6 +1318,7 @@
             document.getElementById('submissions').style.display = 'none';
             document.getElementById('empty-state').style.display = 'block';
             document.getElementById('pagination').innerHTML = '';
+            debugLog.log('Showing empty state - no submissions found');
         }
         
         // Update pagination UI
@@ -1331,123 +1366,98 @@
                 }
             };
             paginationContainer.appendChild(nextButton);
+            
+            debugLog.log(`Pagination updated: ${totalPages} total pages`);
         }
         
-        // Close modal on escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeImageViewer();
-            }
-        });
-        
-        // Close modals when clicking outside
-        window.addEventListener('click', function(e) {
-            const storyModal = document.getElementById('story-modal');
-            const imageViewer = document.getElementById('image-viewer');
-            
-            if (e.target === storyModal) {
-                closeModal();
-            }
-            
-            if (e.target === imageViewer) {
-                closeImageViewer();
-            }
-        });
-
         // Export Approved Stories to JSON
-        function exportApprovedStories() {
+        async function exportApprovedStories() {
             try {
-                document.getElementById('loading-indicator').style.display = 'block';
+                document.getElementById('loading-indicator').style.display = 'flex';
+                debugLog.log('Exporting approved stories to JSON...');
                 
-                // Get approved stories
-                fetch('/.netlify/functions/get-submissions?status=approved', {
-                    headers: {
-                        "Authorization": ADMIN_TOKEN
-                    }
-                })
-                .then(response => response.json())
-                .then(approvedStories => {
-                    if (approvedStories.length === 0) {
-                        showExportResult('No approved stories found to export.', 'error');
-                        return;
-                    }
-                    
-                    // Create formatted JSON
-                    const jsonContent = JSON.stringify(approvedStories, null, 2);
-                    
-                    // Create a Blob with the JSON content
-                    const blob = new Blob([jsonContent], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    // Create a download link
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'approved-stories.json';
-                    a.style.display = 'none';
-                    document.body.appendChild(a);
-                    a.click();
-                    
-                    // Clean up
-                    URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                    
-                    showExportResult(`Exported ${approvedStories.length} approved stories. Upload this JSON file to your website.`, 'success');
-                })
-                .catch(error => {
-                    console.error('Error exporting from API:', error);
-                    
-                    // Fall back to localStorage
-                    try {
-                        const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                        
-                        if (storedSubmissions) {
-                            const allSubmissions = JSON.parse(storedSubmissions);
-                            const approvedStories = allSubmissions.filter(story => story.status === 'approved');
-                            
-                            if (approvedStories.length === 0) {
-                                showExportResult('No approved stories found to export.', 'error');
-                                return;
-                            }
-                            
-                            // Create formatted JSON
-                            const jsonContent = JSON.stringify(approvedStories, null, 2);
-                            
-                            // Create a Blob with the JSON content
-                            const blob = new Blob([jsonContent], { type: 'application/json' });
-                            const url = URL.createObjectURL(blob);
-                            
-                            // Create a download link
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = 'approved-stories.json';
-                            a.style.display = 'none';
-                            document.body.appendChild(a);
-                            a.click();
-                            
-                            // Clean up
-                            URL.revokeObjectURL(url);
-                            document.body.removeChild(a);
-                            
-                            showExportResult(`Exported ${approvedStories.length} approved stories from localStorage. Upload this JSON file to your website.`, 'success');
-                        } else {
-                            showExportResult('No submissions found to export.', 'error');
-                        }
-                    } catch (localStorageError) {
-                        console.error('Error exporting from localStorage:', localStorageError);
-                        showExportResult(`Error: ${localStorageError.message}`, 'error');
-                    }
-                })
-                .finally(() => {
-                    document.getElementById('loading-indicator').style.display = 'none';
-                });
+                // Get approved stories using the AdminAuth helper
+                const approvedStories = await AdminAuth.getSubmissions('approved');
+                
+                if (approvedStories.length === 0) {
+                    debugLog.log('No approved stories found to export', 'error');
+                    showExportResult('No approved stories found to export.', 'error');
+                    return;
+                }
+                
+                // Create formatted JSON
+                const jsonContent = JSON.stringify(approvedStories, null, 2);
+                
+                // Create a Blob with the JSON content
+                const blob = new Blob([jsonContent], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                // Create a download link
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'approved-stories.json';
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                
+                // Clean up
+                URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                debugLog.log(`Successfully exported ${approvedStories.length} approved stories`, 'success');
+                showExportResult(`Exported ${approvedStories.length} approved stories. Upload this JSON file to your website.`, 'success');
             } catch (error) {
-                console.error('Error exporting approved stories:', error);
-                showExportResult(`Error: ${error.message}`, 'error');
+                debugLog.error(`Error exporting stories: ${error.message}`);
+                
+                // Fall back to localStorage
+                try {
+                    debugLog.log('Attempting localStorage fallback for export');
+                    const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+                    
+                    if (storedSubmissions) {
+                        const allSubmissions = JSON.parse(storedSubmissions);
+                        const approvedStories = allSubmissions.filter(story => story.status === 'approved');
+                        
+                        if (approvedStories.length === 0) {
+                            debugLog.log('No approved stories found in localStorage', 'error');
+                            showExportResult('No approved stories found to export.', 'error');
+                            return;
+                        }
+                        
+                        // Create formatted JSON
+                        const jsonContent = JSON.stringify(approvedStories, null, 2);
+                        
+                        // Create a Blob with the JSON content
+                        const blob = new Blob([jsonContent], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        
+                        // Create a download link
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'approved-stories.json';
+                        a.style.display = 'none';
+                        document.body.appendChild(a);
+                        a.click();
+                        
+                        // Clean up
+                        URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        
+                        debugLog.log(`Successfully exported ${approvedStories.length} approved stories from localStorage`, 'success');
+                        showExportResult(`Exported ${approvedStories.length} approved stories from localStorage. Upload this JSON file to your website.`, 'success');
+                    } else {
+                        debugLog.log('No submissions found in localStorage', 'error');
+                        showExportResult('No submissions found to export.', 'error');
+                    }
+                } catch (localStorageError) {
+                    debugLog.error(`Error exporting from localStorage: ${localStorageError.message}`);
+                    showExportResult(`Error: ${localStorageError.message}`, 'error');
+                }
+            } finally {
                 document.getElementById('loading-indicator').style.display = 'none';
             }
         }
-
+        
         // Helper function to show export result
         function showExportResult(message, type) {
             const resultDiv = document.getElementById('export-result');
@@ -1460,7 +1470,7 @@
                 resultDiv.className = 'export-error';
             }
             
-            // Auto-hide after 10 seconds
+            // Auto-hide after a few seconds
             setTimeout(() => {
                 resultDiv.style.display = 'none';
             }, 10000);
@@ -1470,7 +1480,7 @@
         function hookApprovalButtons() {
             // This will be called by the Story Manager script
             document.addEventListener('DOMContentLoaded', function() {
-                console.log("🔍 Looking for approval/rejection buttons to hook");
+                debugLog.log("Looking for approval/rejection buttons to hook");
                 
                 // We'll use a mutation observer to watch for changes to the DOM
                 const observer = new MutationObserver(function(mutations) {
@@ -1506,7 +1516,7 @@
                 const existingButtons = document.querySelectorAll('button[onclick*="approve"], button[onclick*="reject"]');
                 existingButtons.forEach(hookButton);
                 
-                console.log("👁️ Now watching for approval/rejection actions");
+                debugLog.log("Now watching for approval/rejection actions");
             });
         }
         
@@ -1517,7 +1527,7 @@
             
             // Mark this button as hooked so we don't hook it again
             button.dataset.hooked = "true";
-            console.log("🔗 Hooking button:", button.textContent);
+            debugLog.log(`Hooking button: ${button.textContent}`);
             
             // Get the original onclick handler
             const originalOnclick = button.getAttribute('onclick');
@@ -1531,24 +1541,46 @@
                 }
                 
                 // Then update the seed
-                console.log("🔄 Button clicked, updating seed after delay");
+                debugLog.log("Button clicked, updating seed after delay");
                 
                 // We need to wait a bit for the original handler to finish
                 setTimeout(function() {
                     try {
                         const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
                         localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-                        console.log("💾 Seed updated after approval/rejection with", submissions.length, "stories");
+                        debugLog.log(`Seed updated after approval/rejection with ${submissions.length} stories`);
                         
                         // Count the approved stories
                         const approvedCount = submissions.filter(s => s.status === 'approved').length;
-                        console.log("✓ There are now", approvedCount, "approved stories");
+                        debugLog.log(`There are now ${approvedCount} approved stories`);
                     } catch (e) {
-                        console.error("❌ Error updating seed after approval/rejection:", e);
+                        debugLog.error(`Error updating seed after approval/rejection: ${e.message}`);
                     }
                 }, 200);
             });
         }
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeImageViewer();
+            }
+        });
+        
+        // Close modals when clicking outside
+        window.addEventListener('click', function(e) {
+            const storyModal = document.getElementById('story-modal');
+            const imageViewer = document.getElementById('image-viewer');
+            
+            if (e.target === storyModal) {
+                closeModal();
+            }
+            
+            if (e.target === imageViewer) {
+                closeImageViewer();
+            }
+        });
     </script>
 </body>
 </html>
