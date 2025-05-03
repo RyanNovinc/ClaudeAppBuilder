@@ -57,163 +57,373 @@ exports.handler = async function(event, context) {
     // Parse request body
     const data = JSON.parse(event.body);
     
-    // Validate required fields
-    if (!data.submissionId) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing submission ID" })
-      };
-    }
+    // Determine operation mode (specific submission or all)
+    const { submissionId, forceAll } = data;
     
-    if (!data.images || !Array.isArray(data.images) || data.images.length === 0) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "No images provided for migration" })
-      };
-    }
-    
-    // Upload base64 images to Cloudinary
-    console.log(`Uploading ${data.images.length} images to Cloudinary`);
-    let cloudinaryImages = [];
-    
-    try {
-      cloudinaryImages = await cloudinaryHelper.uploadMultipleImages(
-        data.images, 
-        'appfoundry-migrations'
-      );
-      
-      console.log(`Successfully uploaded ${cloudinaryImages.length} images to Cloudinary`);
-    } catch (uploadError) {
-      console.error("Error uploading images to Cloudinary:", uploadError);
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ 
-          error: "Failed to upload images to Cloudinary",
-          message: uploadError.message
-        })
-      };
-    }
-    
-    // Find and update the submission in GitHub
+    // Initialize GitHub API client
     const octokit = new Octokit({
       auth: GITHUB_TOKEN
     });
     
-    // Search for the submission in all status files
-    const statusFiles = ['pending-submissions.json', 'approved-submissions.json', 'rejected-submissions.json'];
-    let submissionFound = false;
-    
-    for (const statusFile of statusFiles) {
-      const filePath = `data/${statusFile}`;
+    // Function to find a submission by ID
+    async function findSubmission(id) {
+      const statusFiles = ['pending-submissions.json', 'approved-submissions.json', 'rejected-submissions.json'];
       
+      for (const statusFile of statusFiles) {
+        try {
+          const { data: fileData } = await octokit.repos.getContent({
+            owner: GITHUB_OWNER,
+            repo: GITHUB_REPO,
+            path: `data/${statusFile}`
+          });
+          
+          const content = JSON.parse(Base64.decode(fileData.content));
+          const submissionIndex = content.findIndex(s => s.id === id);
+          
+          if (submissionIndex !== -1) {
+            return {
+              path: `data/${statusFile}`,
+              content,
+              sha: fileData.sha,
+              submission: content[submissionIndex],
+              index: submissionIndex
+            };
+          }
+        } catch (error) {
+          // If file not found, continue to next file
+          if (error.status === 404) {
+            continue;
+          }
+          throw error;
+        }
+      }
+      
+      return null; // Not found
+    }
+    
+    // Function to migrate images for a single submission
+    async function migrateSubmissionImages(sourceInfo) {
+      const submission = sourceInfo.submission;
+      let updated = false;
+      
+      // Skip if no images
+      if (!submission.images || !Array.isArray(submission.images)) {
+        return { updated: false, submission };
+      }
+      
+      // Check for base64 images that need migration
+      const base64Images = submission.images.filter(img => 
+        typeof img === 'string' && img.startsWith('data:')
+      );
+      
+      if (base64Images.length === 0 && !forceAll) {
+        console.log(`No base64 images to migrate for submission ${submission.id}`);
+        return { updated: false, submission };
+      }
+      
+      console.log(`Migrating ${base64Images.length} images for submission ${submission.id}`);
+      
+      // Upload images to Cloudinary
       try {
-        // Get the file
-        const { data: fileData } = await octokit.repos.getContent({
-          owner: GITHUB_OWNER,
-          repo: GITHUB_REPO,
-          path: filePath
-        });
+        // Create a map to track the original to Cloudinary URL
+        const imageMap = new Map();
         
-        // Decode and parse content
-        const content = JSON.parse(Base64.decode(fileData.content));
-        
-        // Find the submission by ID
-        const submissionIndex = content.findIndex(s => s.id === data.submissionId);
-        
-        if (submissionIndex !== -1) {
-          // Found the submission in this file
-          submissionFound = true;
+        for (let i = 0; i < submission.images.length; i++) {
+          const image = submission.images[i];
           
-          // Get the original submission
-          const submission = content[submissionIndex];
+          // Skip null/empty images or non-base64 images (unless forceAll)
+          if (!image || (typeof image !== 'string' || !image.startsWith('data:')) && !forceAll) {
+            continue;
+          }
           
-          // Replace base64 images with Cloudinary images
-          if (submission.images && Array.isArray(submission.images)) {
-            // Create a map from base64 to Cloudinary objects for quick lookup
-            const imageMap = {};
-            data.images.forEach((base64, i) => {
-              if (cloudinaryImages[i]) {
-                imageMap[base64] = cloudinaryImages[i];
-              }
-            });
-            
-            // Replace matching base64 images with Cloudinary objects
-            submission.images = submission.images.map(img => {
-              // If it's a base64 string and we have a Cloudinary replacement, use it
-              if (typeof img === 'string' && img.startsWith('data:') && imageMap[img]) {
-                return imageMap[img];
-              }
-              // Otherwise keep the original
-              return img;
-            });
-            
-            // Update the submission in the array
-            content[submissionIndex] = submission;
-            
-            // Write back to GitHub
+          // Upload to Cloudinary
+          const result = await cloudinaryHelper.uploadImage(
+            image, 
+            `${submission.id}_${i}`,
+            'appfoundry'
+          );
+          
+          // Store the mapping
+          imageMap.set(i, result.secure_url);
+        }
+        
+        // Update images in the submission
+        if (imageMap.size > 0) {
+          const updatedImages = [...submission.images];
+          
+          // Replace each image with its Cloudinary URL
+          for (const [index, url] of imageMap.entries()) {
+            updatedImages[index] = url;
+          }
+          
+          // Update the submission in the content array
+          sourceInfo.content[sourceInfo.index].images = updatedImages;
+          updated = true;
+          
+          // Save changes to GitHub
+          await octokit.repos.createOrUpdateFileContents({
+            owner: GITHUB_OWNER,
+            repo: GITHUB_REPO,
+            path: sourceInfo.path,
+            message: `Migrate images for submission ${submission.id}`,
+            content: Base64.encode(JSON.stringify(sourceInfo.content, null, 2)),
+            sha: sourceInfo.sha
+          });
+          
+          // Return the updated submission
+          return { 
+            updated: true, 
+            submission: sourceInfo.content[sourceInfo.index]
+          };
+        }
+      } catch (error) {
+        console.error(`Error migrating images for submission ${submission.id}:`, error);
+        throw error;
+      }
+      
+      return { updated, submission };
+    }
+    
+    // If we're migrating a specific submission
+    if (submissionId) {
+      const sourceInfo = await findSubmission(submissionId);
+      
+      if (!sourceInfo) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: `Submission ${submissionId} not found` })
+        };
+      }
+      
+      const result = await migrateSubmissionImages(sourceInfo);
+      
+      // Update the sync timestamp
+      try {
+        // Update the last-sync.json file to trigger client syncs
+        const timestamp = new Date().toISOString();
+        
+        try {
+          // Get the current file if it exists
+          const { data: syncFile } = await octokit.repos.getContent({
+            owner: GITHUB_OWNER,
+            repo: GITHUB_REPO,
+            path: 'data/last-sync.json'
+          });
+          
+          // Update it
+          await octokit.repos.createOrUpdateFileContents({
+            owner: GITHUB_OWNER,
+            repo: GITHUB_REPO,
+            path: 'data/last-sync.json',
+            message: `Update sync timestamp: ${timestamp}`,
+            content: Base64.encode(JSON.stringify({ lastSync: timestamp })),
+            sha: syncFile.sha
+          });
+        } catch (error) {
+          // Create if not exists
+          if (error.status === 404) {
             await octokit.repos.createOrUpdateFileContents({
               owner: GITHUB_OWNER,
               repo: GITHUB_REPO,
-              path: filePath,
-              message: `Migrate images for submission ${data.submissionId}`,
+              path: 'data/last-sync.json',
+              message: `Create sync timestamp: ${timestamp}`,
+              content: Base64.encode(JSON.stringify({ lastSync: timestamp }))
+            });
+          } else {
+            throw error;
+          }
+        }
+      } catch (syncError) {
+        console.warn("Error updating sync timestamp:", syncError);
+        // Continue anyway as this is not critical
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          updated: result.updated,
+          message: result.updated 
+            ? "Successfully migrated images to Cloudinary" 
+            : "No images needed migration",
+          submission: result.submission
+        })
+      };
+    }
+    // Migrate all submissions
+    else {
+      const results = {
+        total: 0,
+        updated: 0,
+        details: []
+      };
+      
+      // Process each status file
+      const statusFiles = ['pending-submissions.json', 'approved-submissions.json', 'rejected-submissions.json'];
+      
+      for (const statusFile of statusFiles) {
+        try {
+          // Get the file
+          const { data: fileData } = await octokit.repos.getContent({
+            owner: GITHUB_OWNER,
+            repo: GITHUB_REPO,
+            path: `data/${statusFile}`
+          });
+          
+          // Decode and parse content
+          const content = JSON.parse(Base64.decode(fileData.content));
+          let contentUpdated = false;
+          
+          results.total += content.length;
+          
+          // Process each submission
+          for (let i = 0; i < content.length; i++) {
+            const submission = content[i];
+            
+            // Skip if no images
+            if (!submission.images || !Array.isArray(submission.images)) {
+              continue;
+            }
+            
+            // Check for base64 images that need migration
+            const base64Images = submission.images.filter(img => 
+              typeof img === 'string' && img.startsWith('data:')
+            );
+            
+            if (base64Images.length === 0 && !forceAll) {
+              continue;
+            }
+            
+            console.log(`Migrating ${base64Images.length} images for submission ${submission.id}`);
+            
+            try {
+              // Create a map to track the original to Cloudinary URL
+              const imageMap = new Map();
+              
+              for (let j = 0; j < submission.images.length; j++) {
+                const image = submission.images[j];
+                
+                // Skip null/empty images or non-base64 images (unless forceAll)
+                if (!image || (typeof image !== 'string' || !image.startsWith('data:')) && !forceAll) {
+                  continue;
+                }
+                
+                // Upload to Cloudinary
+                const result = await cloudinaryHelper.uploadImage(
+                  image, 
+                  `${submission.id}_${j}`,
+                  'appfoundry'
+                );
+                
+                // Store the mapping
+                imageMap.set(j, result.secure_url);
+              }
+              
+              // Update images in the submission
+              if (imageMap.size > 0) {
+                const updatedImages = [...submission.images];
+                
+                // Replace each image with its Cloudinary URL
+                for (const [index, url] of imageMap.entries()) {
+                  updatedImages[index] = url;
+                }
+                
+                // Update the submission in the content array
+                content[i].images = updatedImages;
+                contentUpdated = true;
+                results.updated++;
+                
+                results.details.push({
+                  id: submission.id,
+                  message: "Successfully migrated images to Cloudinary"
+                });
+              }
+            } catch (error) {
+              console.error(`Error migrating images for submission ${submission.id}:`, error);
+              results.details.push({
+                id: submission.id,
+                error: error.message
+              });
+            }
+          }
+          
+          // Save changes to GitHub if any updates were made
+          if (contentUpdated) {
+            await octokit.repos.createOrUpdateFileContents({
+              owner: GITHUB_OWNER,
+              repo: GITHUB_REPO,
+              path: `data/${statusFile}`,
+              message: `Migrate images for multiple submissions in ${statusFile}`,
               content: Base64.encode(JSON.stringify(content, null, 2)),
               sha: fileData.sha
             });
-            
-            // Return success with the updated submission
-            return {
-              statusCode: 200,
-              headers,
-              body: JSON.stringify({
-                success: true,
-                message: "Successfully migrated images to Cloudinary",
-                submission,
-                cloudinaryImages
-              })
-            };
+          }
+        } catch (error) {
+          // If file not found, continue to next file
+          if (error.status === 404) {
+            continue;
+          }
+          
+          console.error(`Error processing ${statusFile}:`, error);
+          results.details.push({
+            file: statusFile,
+            error: error.message
+          });
+        }
+      }
+      
+      // Update the sync timestamp
+      try {
+        // Update the last-sync.json file to trigger client syncs
+        const timestamp = new Date().toISOString();
+        
+        try {
+          // Get the current file if it exists
+          const { data: syncFile } = await octokit.repos.getContent({
+            owner: GITHUB_OWNER,
+            repo: GITHUB_REPO,
+            path: 'data/last-sync.json'
+          });
+          
+          // Update it
+          await octokit.repos.createOrUpdateFileContents({
+            owner: GITHUB_OWNER,
+            repo: GITHUB_REPO,
+            path: 'data/last-sync.json',
+            message: `Update sync timestamp: ${timestamp}`,
+            content: Base64.encode(JSON.stringify({ lastSync: timestamp })),
+            sha: syncFile.sha
+          });
+        } catch (error) {
+          // Create if not exists
+          if (error.status === 404) {
+            await octokit.repos.createOrUpdateFileContents({
+              owner: GITHUB_OWNER,
+              repo: GITHUB_REPO,
+              path: 'data/last-sync.json',
+              message: `Create sync timestamp: ${timestamp}`,
+              content: Base64.encode(JSON.stringify({ lastSync: timestamp }))
+            });
+          } else {
+            throw error;
           }
         }
-      } catch (error) {
-        // If file not found, continue to next file
-        if (error.status === 404) {
-          continue;
-        }
-        
-        console.error(`Error processing ${filePath}:`, error);
-        return {
-          statusCode: 500,
-          headers,
-          body: JSON.stringify({
-            error: `Error processing ${filePath}`,
-            message: error.message
-          })
-        };
+      } catch (syncError) {
+        console.warn("Error updating sync timestamp:", syncError);
+        // Continue anyway as this is not critical
       }
-    }
-    
-    // If we get here, the submission wasn't found
-    if (!submissionFound) {
+      
       return {
-        statusCode: 404,
+        statusCode: 200,
         headers,
-        body: JSON.stringify({ error: `Submission ${data.submissionId} not found` })
+        body: JSON.stringify({
+          success: true,
+          results
+        })
       };
     }
-    
-    // Submission was found but had no images to migrate
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        message: "Submission found but had no images to migrate",
-        cloudinaryImages
-      })
-    };
-    
   } catch (error) {
     console.error("Error migrating images:", error);
     
