@@ -601,6 +601,9 @@
     </div>
     
     <script>
+        // Clear any previously stored token
+        localStorage.removeItem('appfoundry_admin_token');
+        
         // Constants - This will use the Netlify environment variable if available, or prompt for it
         let ADMIN_TOKEN = "";
 
@@ -673,11 +676,15 @@
                 document.getElementById('submissions').style.display = 'none';
                 document.getElementById('empty-state').style.display = 'none';
                 
+                // Debug logging
+                console.log("Token being used for loading:", ADMIN_TOKEN);
+                console.log("Token length:", ADMIN_TOKEN.length);
+                
                 // Fetch submissions from API
                 console.log("Fetching submissions with auth token...");
                 const response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
                     headers: {
-                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                        "Authorization": ADMIN_TOKEN // Removed Bearer prefix
                     }
                 });
                 
@@ -940,13 +947,17 @@
             try {
                 document.getElementById('loading-indicator').style.display = 'block';
                 
+                // Debug logging
+                console.log("Token being used for approval:", ADMIN_TOKEN);
+                console.log("Token length:", ADMIN_TOKEN.length);
+                
                 // Call the Netlify function with proper authentication
-                console.log("Sending approval request with token:", ADMIN_TOKEN ? "Token exists" : "No token");
+                console.log("Sending approval request with token...");
                 const response = await fetch("/.netlify/functions/approve-submission", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                        "Authorization": ADMIN_TOKEN // Removed Bearer prefix
                     },
                     body: JSON.stringify({ id })
                 });
@@ -1025,13 +1036,17 @@
             try {
                 document.getElementById('loading-indicator').style.display = 'block';
                 
+                // Debug logging
+                console.log("Token being used for rejection:", ADMIN_TOKEN);
+                console.log("Token length:", ADMIN_TOKEN.length);
+                
                 // Call the Netlify function with proper authentication
-                console.log("Sending rejection request with token:", ADMIN_TOKEN ? "Token exists" : "No token");
+                console.log("Sending rejection request with token...");
                 const response = await fetch("/.netlify/functions/reject-submission", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                        "Authorization": ADMIN_TOKEN // Removed Bearer prefix
                     },
                     body: JSON.stringify({ id })
                 });
@@ -1292,7 +1307,7 @@
                 // Get approved stories
                 fetch('/.netlify/functions/get-submissions?status=approved', {
                     headers: {
-                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                        "Authorization": ADMIN_TOKEN // Removed Bearer prefix
                     }
                 })
                 .then(response => response.json())
