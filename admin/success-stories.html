@@ -787,7 +787,7 @@
             // Test token with a simple API call
             fetch('/.netlify/functions/get-submissions?status=all', {
                 headers: {
-                    "Authorization": `Bearer ${ADMIN_TOKEN}`
+                    "Authorization": "Bearer " + ADMIN_TOKEN
                 }
             })
             .then(response => {
@@ -904,7 +904,7 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${ADMIN_TOKEN}`
+                    "Authorization": "Bearer " + ADMIN_TOKEN
                 },
                 body: JSON.stringify({ id: storyId })
             })
@@ -963,7 +963,7 @@
                 // First try with the token in Authorization header with Bearer prefix
                 let response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
                     headers: {
-                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                        "Authorization": "Bearer " + ADMIN_TOKEN
                     }
                 });
                 
@@ -1261,132 +1261,41 @@
                 // Get token from input
                 ADMIN_TOKEN = document.getElementById('admin-token').value.trim();
                 
-                // Initialize tracking for this submission if not exists
-                if (!approvalAttempts[id]) {
-                    approvalAttempts[id] = {
-                        count: 0,
-                        lastAttempt: null
-                    };
-                }
+                console.log("Attempting to approve with token: " + ADMIN_TOKEN);
                 
-                // Check if we've tried too many times recently
-                const now = Date.now();
-                if (approvalAttempts[id].count >= 3 && 
-                    approvalAttempts[id].lastAttempt && 
-                    (now - approvalAttempts[id].lastAttempt) < 60000) { // 1 minute cooldown
-                    
-                    const remainingTime = Math.ceil((60000 - (now - approvalAttempts[id].lastAttempt)) / 1000);
-                    
-                    if (confirm(`Multiple approval attempts have failed. Would you like to use the Direct Update method instead? (Or wait ${remainingTime} seconds to try again)`)) {
-                        document.getElementById('direct-story-id').value = id;
-                        document.getElementById('direct-status').value = 'approved';
-                        openDirectUpdate();
-                        document.getElementById('loading-indicator').style.display = 'none';
-                        return;
-                    }
-                }
+                // Make API call with exactly the format expected by the server
+                const response = await fetch("/.netlify/functions/approve-submission", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + ADMIN_TOKEN  // Space after Bearer is important
+                  },
+                  body: JSON.stringify({ id })
+                });
                 
-                // Update attempt tracking
-                approvalAttempts[id].count++;
-                approvalAttempts[id].lastAttempt = now;
+                console.log("Response status:", response.status);
                 
-                // Try all three authentication methods
-                let response;
-                let attempts = 0;
-                let lastError;
-                
-                // Try different authentication methods
-                while (attempts < 3) {
-                    try {
-                        if (attempts === 0) {
-                            console.log("Trying approval with Bearer token...");
-                            response = await fetch("/.netlify/functions/approve-submission", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "Authorization": `Bearer ${ADMIN_TOKEN}`
-                                },
-                                body: JSON.stringify({ 
-                                    id,
-                                    // Add retry flag to signal the backend this is a retry attempt
-                                    retry: approvalAttempts[id].count > 1
-                                })
-                            });
-                        } else if (attempts === 1) {
-                            console.log("Trying approval with plain token...");
-                            response = await fetch("/.netlify/functions/approve-submission", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "Authorization": ADMIN_TOKEN
-                                },
-                                body: JSON.stringify({ 
-                                    id,
-                                    retry: approvalAttempts[id].count > 1
-                                })
-                            });
-                        } else {
-                            console.log("Trying approval with token as query parameter...");
-                            response = await fetch(`/.netlify/functions/approve-submission?token=${encodeURIComponent(ADMIN_TOKEN)}`, {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json"
-                                },
-                                body: JSON.stringify({ 
-                                    id,
-                                    retry: approvalAttempts[id].count > 1
-                                })
-                            });
-                        }
-                        
-                        // If the response is okay, break out of the loop
-                        if (response.ok) {
-                            break;
-                        }
-                        
-                        // Otherwise, save the error and try the next method
-                        lastError = await response.text();
-                        console.error(`Auth attempt ${attempts + 1} failed:`, lastError);
-                        
-                    } catch (error) {
-                        lastError = error.message;
-                        console.error(`Auth attempt ${attempts + 1} error:`, error);
-                    }
-                    
-                    attempts++;
-                }
-                
-                // If we've tried all methods and none worked
-                if (!response || !response.ok) {
-                    throw new Error(lastError || "Failed to approve submission after trying multiple auth methods");
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  console.error("API error response:", errorText);
+                  throw new Error(errorText);
                 }
                 
                 const result = await response.json();
-                console.log("API Response data:", result);
+                console.log("API Response:", result);
                 
-                // Reset the attempt counter on success
-                approvalAttempts[id] = {
-                    count: 0,
-                    lastAttempt: null
-                };
-                
-                // For backwards compatibility, also update localStorage
+                // Update localStorage for consistency
                 try {
-                    // Find the submission
-                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-                    const submissionIndex = submissions.findIndex(s => s.id === id);
-                    
-                    if (submissionIndex !== -1) {
-                        // Update status
-                        submissions[submissionIndex].status = 'approved';
-                        
-                        // Save to localStorage
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-                        console.log("💾 Seed updated after approval with", submissions.length, "stories");
-                    }
-                } catch (localStorageError) {
-                    console.warn("Error updating localStorage:", localStorageError);
+                  const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                  const submissionIndex = submissions.findIndex(s => s.id === id);
+                  
+                  if (submissionIndex !== -1) {
+                    submissions[submissionIndex].status = 'approved';
+                    localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                    localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                  }
+                } catch (error) {
+                  console.warn("Error updating localStorage:", error);
                 }
                 
                 // Reload submissions
@@ -1395,6 +1304,7 @@
                 alert("Submission approved successfully!");
             } catch (error) {
                 console.error("Error approving submission:", error);
+                alert("Error approving submission: " + error.message);
                 
                 // Check if it's a conflict error
                 if (error.message && error.message.includes("409") || 
@@ -1412,31 +1322,20 @@
                     }
                 }
                 
-                alert(`Error approving submission: ${error.message}`);
-                
-                // Try localStorage fallback
+                // Update localStorage as fallback
                 try {
-                    // Find the submission
                     const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
                     const submissionIndex = submissions.findIndex(s => s.id === id);
                     
                     if (submissionIndex !== -1) {
-                        // Update status
                         submissions[submissionIndex].status = 'approved';
-                        
-                        // Save to localStorage
                         localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
                         localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-                        console.log("💾 Seed updated after approval with", submissions.length, "stories");
-                        
-                        // Reload
                         await loadSubmissions();
-                        
-                        alert("Submission approved in localStorage only (API update failed). Your changes will be visible locally but won't sync to the server.");
+                        alert("Submission updated in localStorage only.");
                     }
                 } catch (localStorageError) {
                     console.error("Error in localStorage fallback:", localStorageError);
-                    alert("Could not approve submission. Please try again later or use the Direct Update option.");
                 }
             } finally {
                 document.getElementById('loading-indicator').style.display = 'none';
@@ -1451,87 +1350,41 @@
                 // Get token from input
                 ADMIN_TOKEN = document.getElementById('admin-token').value.trim();
                 
-                // Try all three authentication methods
-                let response;
-                let attempts = 0;
-                let lastError;
+                console.log("Attempting to reject with token: " + ADMIN_TOKEN);
                 
-                // Try different authentication methods
-                while (attempts < 3) {
-                    try {
-                        if (attempts === 0) {
-                            console.log("Trying rejection with Bearer token...");
-                            response = await fetch("/.netlify/functions/reject-submission", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "Authorization": `Bearer ${ADMIN_TOKEN}`
-                                },
-                                body: JSON.stringify({ id, retry: true })
-                            });
-                        } else if (attempts === 1) {
-                            console.log("Trying rejection with plain token...");
-                            response = await fetch("/.netlify/functions/reject-submission", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "Authorization": ADMIN_TOKEN
-                                },
-                                body: JSON.stringify({ id, retry: true })
-                            });
-                        } else {
-                            console.log("Trying rejection with token as query parameter...");
-                            response = await fetch(`/.netlify/functions/reject-submission?token=${encodeURIComponent(ADMIN_TOKEN)}`, {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json"
-                                },
-                                body: JSON.stringify({ id, retry: true })
-                            });
-                        }
-                        
-                        // If the response is okay, break out of the loop
-                        if (response.ok) {
-                            break;
-                        }
-                        
-                        // Otherwise, save the error and try the next method
-                        lastError = await response.text();
-                        console.error(`Auth attempt ${attempts + 1} failed:`, lastError);
-                        
-                    } catch (error) {
-                        lastError = error.message;
-                        console.error(`Auth attempt ${attempts + 1} error:`, error);
-                    }
-                    
-                    attempts++;
-                }
+                // Make API call with exactly the format expected by the server
+                const response = await fetch("/.netlify/functions/reject-submission", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + ADMIN_TOKEN  // Space after Bearer is important
+                  },
+                  body: JSON.stringify({ id })
+                });
                 
-                // If we've tried all methods and none worked
-                if (!response || !response.ok) {
-                    throw new Error(lastError || "Failed to reject submission after trying multiple auth methods");
+                console.log("Response status:", response.status);
+                
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  console.error("API error response:", errorText);
+                  throw new Error(errorText);
                 }
                 
                 const result = await response.json();
-                console.log("API Response data:", result);
+                console.log("API Response:", result);
                 
-                // For backwards compatibility, also update localStorage
+                // Update localStorage for consistency
                 try {
-                    // Find the submission
-                    const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-                    const submissionIndex = submissions.findIndex(s => s.id === id);
-                    
-                    if (submissionIndex !== -1) {
-                        // Update status
-                        submissions[submissionIndex].status = 'rejected';
-                        
-                        // Save to localStorage
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-                        console.log("💾 Seed updated after rejection with", submissions.length, "stories");
-                    }
-                } catch (localStorageError) {
-                    console.warn("Error updating localStorage:", localStorageError);
+                  const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                  const submissionIndex = submissions.findIndex(s => s.id === id);
+                  
+                  if (submissionIndex !== -1) {
+                    submissions[submissionIndex].status = 'rejected';
+                    localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
+                    localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+                  }
+                } catch (error) {
+                  console.warn("Error updating localStorage:", error);
                 }
                 
                 // Reload submissions
@@ -1540,6 +1393,7 @@
                 alert("Submission rejected successfully!");
             } catch (error) {
                 console.error("Error rejecting submission:", error);
+                alert("Error rejecting submission: " + error.message);
                 
                 // Check if it's a conflict error
                 if (error.message && error.message.includes("409") || 
@@ -1557,31 +1411,20 @@
                     }
                 }
                 
-                alert(`Error rejecting submission: ${error.message}`);
-                
-                // Try localStorage fallback
+                // Update localStorage as fallback
                 try {
-                    // Find the submission
                     const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
                     const submissionIndex = submissions.findIndex(s => s.id === id);
                     
                     if (submissionIndex !== -1) {
-                        // Update status
                         submissions[submissionIndex].status = 'rejected';
-                        
-                        // Save to localStorage
                         localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
                         localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-                        console.log("💾 Seed updated after rejection with", submissions.length, "stories");
-                        
-                        // Reload
                         await loadSubmissions();
-                        
-                        alert("Submission rejected in localStorage only (API update failed). Your changes will be visible locally but won't sync to the server.");
+                        alert("Submission updated in localStorage only.");
                     }
                 } catch (localStorageError) {
                     console.error("Error in localStorage fallback:", localStorageError);
-                    alert("Could not reject submission. Please try again later or use the Direct Update option.");
                 }
             } finally {
                 document.getElementById('loading-indicator').style.display = 'none';
@@ -1790,7 +1633,7 @@
                 // Get approved stories
                 fetch('/.netlify/functions/get-submissions?status=approved', {
                     headers: {
-                        "Authorization": `Bearer ${ADMIN_TOKEN}`
+                        "Authorization": "Bearer " + ADMIN_TOKEN
                     }
                 })
                 .then(response => response.json())
