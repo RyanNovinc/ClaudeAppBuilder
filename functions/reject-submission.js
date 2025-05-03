@@ -7,7 +7,40 @@ const GITHUB_REPO = "ClaudeAppBuilder";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
+// Default configurations
+const DEFAULT_CONFIG = {
+  MAX_RETRIES: 5,
+  RETRY_DELAY_MS: 500,
+  FETCH_ALL_STATUSES: true,
+  SEARCH_STATUSES: ['pending', 'approved', 'rejected'],
+  LOG_LEVEL: 'info' // 'debug', 'info', 'warn', 'error'
+};
+
+// Utility function for logging with timestamps and levels
+function log(level, message, data = null) {
+  if (['debug', 'info', 'warn', 'error'].indexOf(level) < ['debug', 'info', 'warn', 'error'].indexOf(DEFAULT_CONFIG.LOG_LEVEL)) {
+    return;
+  }
+  
+  const timestamp = new Date().toISOString();
+  const logEntry = { 
+    timestamp, 
+    level, 
+    message,
+    ...(data ? { data } : {})
+  };
+  
+  console.log(JSON.stringify(logEntry));
+}
+
+// Utility function for sleeping - useful for retries with exponential backoff
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 exports.handler = async function(event, context) {
+  log('info', 'Reject submission function called');
+  
   // Set CORS headers
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -18,6 +51,7 @@ exports.handler = async function(event, context) {
 
   // Handle preflight OPTIONS request
   if (event.httpMethod === "OPTIONS") {
+    log('debug', 'Handling OPTIONS request');
     return {
       statusCode: 200,
       headers,
@@ -27,6 +61,7 @@ exports.handler = async function(event, context) {
 
   // Only allow POST requests
   if (event.httpMethod !== "POST") {
+    log('warn', 'Method not allowed', { method: event.httpMethod });
     return {
       statusCode: 405,
       headers,
@@ -54,7 +89,7 @@ exports.handler = async function(event, context) {
   
   // Check if token is valid
   if (!token || token !== ADMIN_TOKEN) {
-    console.log("Authentication failed. Provided token:", token ? "***" : "none");
+    log('warn', 'Authentication failed', { providedToken: token ? '***' : 'none' });
     return {
       statusCode: 401,
       headers,
@@ -64,10 +99,22 @@ exports.handler = async function(event, context) {
 
   try {
     // Parse request body
-    const data = JSON.parse(event.body);
+    let data;
+    try {
+      data = JSON.parse(event.body);
+    } catch (parseError) {
+      log('error', 'Failed to parse request body', { error: parseError.message });
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Invalid request body - must be valid JSON" })
+      };
+    }
+    
     const { id } = data;
     
     if (!id) {
+      log('warn', 'Missing submission ID');
       return {
         statusCode: 400,
         headers,
@@ -75,19 +122,23 @@ exports.handler = async function(event, context) {
       };
     }
     
+    log('info', `Processing rejection for submission ${id}`);
+    
     // Initialize GitHub API client
     const octokit = new Octokit({
       auth: GITHUB_TOKEN
     });
     
-    // NEW ROBUST APPROACH: Process one file at a time with retries
+    // IMPROVED: Find submission in ANY status
     async function findSubmission(id) {
-      // Try each possible source location
-      const sourcePaths = ["pending", "approved"];
+      log('info', `Looking for submission ${id}`);
       
-      for (const sourcePath of sourcePaths) {
+      // Try each possible source location in sequence
+      for (const status of DEFAULT_CONFIG.SEARCH_STATUSES) {
+        const path = `data/${status}-submissions.json`;
+        
         try {
-          const path = `data/${sourcePath}-submissions.json`;
+          log('debug', `Checking ${path}`);
           const { data: fileData } = await octokit.repos.getContent({
             owner: GITHUB_OWNER,
             repo: GITHUB_REPO,
@@ -98,8 +149,9 @@ exports.handler = async function(event, context) {
           const index = content.findIndex(s => s.id === id);
           
           if (index !== -1) {
+            log('info', `Found submission ${id} in ${status}`, { path });
             return {
-              status: sourcePath,
+              status,
               path,
               content,
               sha: fileData.sha,
@@ -109,26 +161,29 @@ exports.handler = async function(event, context) {
           }
         } catch (error) {
           if (error.status === 404) {
-            console.log(`Source file data/${sourcePath}-submissions.json not found, checking next source`);
+            log('debug', `Source file ${path} not found, checking next source`);
             continue;
           }
+          
+          log('error', `Error checking ${path}`, { error: error.message, stack: error.stack });
           throw error;
         }
       }
       
+      log('warn', `Submission ${id} not found in any source`);
       return null; // Not found in any source
     }
     
     async function removeFromSource(sourceInfo) {
-      const MAX_RETRIES = 5;
+      const MAX_RETRIES = DEFAULT_CONFIG.MAX_RETRIES;
       
       for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
-          console.log(`Attempt ${attempt + 1}/${MAX_RETRIES} to remove submission from ${sourceInfo.path}`);
+          log('info', `Attempt ${attempt + 1}/${MAX_RETRIES} to remove submission from ${sourceInfo.path}`);
           
           // If not first attempt, re-fetch the latest content and SHA
           if (attempt > 0) {
-            console.log(`Re-fetching latest content for ${sourceInfo.path}`);
+            log('debug', `Re-fetching latest content for ${sourceInfo.path}`);
             try {
               const { data: fileData } = await octokit.repos.getContent({
                 owner: GITHUB_OWNER,
@@ -144,12 +199,12 @@ exports.handler = async function(event, context) {
               
               // If not found anymore, it was already removed
               if (sourceInfo.index === -1) {
-                console.log(`Submission no longer exists in ${sourceInfo.path}, already removed`);
+                log('info', `Submission no longer exists in ${sourceInfo.path}, already removed`);
                 return true;
               }
             } catch (error) {
               if (error.status === 404) {
-                console.log(`Source file ${sourceInfo.path} no longer exists`);
+                log('info', `Source file ${sourceInfo.path} no longer exists`);
                 return true; // Consider it removed
               }
               throw error;
@@ -169,28 +224,33 @@ exports.handler = async function(event, context) {
             sha: sourceInfo.sha,
           });
           
-          console.log(`Successfully removed submission from ${sourceInfo.path}`);
+          log('info', `Successfully removed submission from ${sourceInfo.path}`);
           return true;
         } catch (error) {
+          // IMPROVED ERROR HANDLING: Better detection of SHA conflicts
           if (error.status === 409 && attempt < MAX_RETRIES - 1) {
-            console.log(`SHA conflict detected when removing, retrying (${attempt + 1}/${MAX_RETRIES})...`);
+            log('warn', `SHA conflict detected when removing, retrying (${attempt + 1}/${MAX_RETRIES})...`);
+            // Add exponential backoff for retries
+            await sleep(DEFAULT_CONFIG.RETRY_DELAY_MS * Math.pow(2, attempt));
             continue;
           }
           
+          log('error', `Failed to remove submission from ${sourceInfo.path}`, { error: error.message, status: error.status });
           throw error;
         }
       }
       
+      log('error', `Failed to remove submission after ${MAX_RETRIES} attempts`);
       return false;
     }
     
-    async function addToTarget(submission, targetStatus) {
-      const MAX_RETRIES = 5;
+    async function addToTarget(submission, targetStatus = "rejected") {
+      const MAX_RETRIES = DEFAULT_CONFIG.MAX_RETRIES;
       const targetPath = `data/${targetStatus}-submissions.json`;
       
       for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
-          console.log(`Attempt ${attempt + 1}/${MAX_RETRIES} to add submission to ${targetPath}`);
+          log('info', `Attempt ${attempt + 1}/${MAX_RETRIES} to add submission to ${targetPath}`);
           
           // Prepare target file - always fetch fresh on each attempt
           let targetContent = [];
@@ -207,7 +267,7 @@ exports.handler = async function(event, context) {
             targetSha = fileData.sha;
           } catch (error) {
             if (error.status === 404) {
-              console.log(`Target file ${targetPath} not found, will create it`);
+              log('info', `Target file ${targetPath} not found, will create it`);
               // Leave the defaults (empty array, null SHA)
             } else {
               throw error;
@@ -217,8 +277,15 @@ exports.handler = async function(event, context) {
           // Update submission status
           submission.status = targetStatus;
           
-          // Add to the beginning of the array
-          targetContent.unshift(submission);
+          // Check if the submission already exists in the target (to avoid duplicates)
+          const existingIndex = targetContent.findIndex(s => s.id === submission.id);
+          if (existingIndex !== -1) {
+            log('warn', `Submission ${submission.id} already exists in ${targetPath}, updating it`);
+            targetContent[existingIndex] = submission;
+          } else {
+            // Add to the beginning of the array
+            targetContent.unshift(submission);
+          }
           
           // Update the target file
           await octokit.repos.createOrUpdateFileContents({
@@ -230,49 +297,69 @@ exports.handler = async function(event, context) {
             sha: targetSha,
           });
           
-          console.log(`Successfully added submission to ${targetPath}`);
+          log('info', `Successfully added submission to ${targetPath}`);
           return true;
         } catch (error) {
           if (error.status === 409 && attempt < MAX_RETRIES - 1) {
-            console.log(`SHA conflict detected when adding, retrying (${attempt + 1}/${MAX_RETRIES})...`);
+            log('warn', `SHA conflict detected when adding, retrying (${attempt + 1}/${MAX_RETRIES})...`);
+            // Add exponential backoff for retries
+            await sleep(DEFAULT_CONFIG.RETRY_DELAY_MS * Math.pow(2, attempt));
             continue;
           }
           
+          log('error', `Failed to add submission to ${targetPath}`, { error: error.message, status: error.status });
           throw error;
         }
       }
       
+      log('error', `Failed to add submission after ${MAX_RETRIES} attempts`);
       return false;
     }
     
-    // Find the submission
-    console.log(`Looking for submission ${id}`);
+    // Find the submission in any status
     const sourceInfo = await findSubmission(id);
     
     if (!sourceInfo) {
+      log('error', `Submission ${id} not found in any source`);
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ error: "Submission not found in any source" })
+        body: JSON.stringify({ error: "Submission not found in any status" })
       };
     }
     
-    console.log(`Found submission ${id} in ${sourceInfo.status}`);
+    log('info', `Found submission ${id} in ${sourceInfo.status}`);
+    
+    // If it's already rejected, no need to do anything
+    if (sourceInfo.status === 'rejected') {
+      log('info', `Submission ${id} is already rejected`);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: "Submission is already rejected",
+          submission: sourceInfo.submission
+        })
+      };
+    }
     
     // Process in separate steps
     // Step 1: Remove from source
     const removeSuccess = await removeFromSource(sourceInfo);
     
     if (!removeSuccess) {
-      throw new Error(`Failed to remove submission from ${sourceInfo.path}`);
+      throw new Error(`Failed to remove submission from ${sourceInfo.status}`);
     }
     
-    // Step 2: Add to target
-    const addSuccess = await addToTarget(sourceInfo.submission, "rejected");
+    // Step 2: Add to rejected
+    const addSuccess = await addToTarget(sourceInfo.submission);
     
     if (!addSuccess) {
       throw new Error(`Failed to add submission to rejected`);
     }
+    
+    log('info', `Successfully rejected submission ${id}`);
     
     return {
       statusCode: 200,
@@ -284,13 +371,14 @@ exports.handler = async function(event, context) {
       })
     };
   } catch (error) {
-    console.error("Error rejecting submission:", error);
+    log('error', `Error rejecting submission: ${error.message}`, { stack: error.stack });
     
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: "An error occurred while rejecting the submission."
+        error: "An error occurred while rejecting the submission.",
+        message: error.message
       })
     };
   }
