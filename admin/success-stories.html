@@ -564,8 +564,8 @@
             
             <div id="empty-state" class="empty-state" style="display: none;">
                 <div class="empty-icon">📪</div>
-                <div class="empty-title">No submissions found</div>
-                <div class="empty-description">There are no success story submissions in this category yet.</div>
+                <div class="empty-state-title">No submissions found</div>
+                <div class="empty-state-description">There are no success story submissions in this category yet.</div>
             </div>
             
             <div class="pagination" id="pagination">
@@ -601,8 +601,32 @@
     </div>
     
     <script>
-        // Constants
-        const ADMIN_TOKEN = "admin_token_secure"; // Replace with your actual admin token
+        // Constants - This will use the Netlify environment variable if available, or prompt for it
+        let ADMIN_TOKEN = "";
+
+        // Function to get admin token - either from localStorage or prompt user
+        function getAdminToken() {
+            // Try to get from localStorage first
+            let storedToken = localStorage.getItem('appfoundry_admin_token');
+            
+            if (storedToken) {
+                console.log("Using stored admin token");
+                return storedToken;
+            }
+            
+            // Prompt user for token if not found
+            const inputToken = prompt("Please enter admin token to continue:", "");
+            
+            if (inputToken) {
+                // Save token to localStorage for future use
+                localStorage.setItem('appfoundry_admin_token', inputToken);
+                console.log("Admin token saved");
+                return inputToken;
+            }
+            
+            // Return empty string if user cancels
+            return "";
+        }
         
         // Global variables
         let allSubmissions = [];
@@ -610,17 +634,35 @@
         let currentPage = 1;
         let itemsPerPage = 6;
         let sortNewestFirst = true;
+        let currentStoryId = null;
         
         // Load submissions when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("Admin page loaded, loading submissions");
-            loadSubmissions();
+            ADMIN_TOKEN = getAdminToken();
             
-            // Set up sort switch
-            document.getElementById('sort-switch').addEventListener('change', function() {
-                sortNewestFirst = this.checked;
-                displaySubmissions();
-            });
+            // Only proceed with loading submissions if we have a token
+            if (ADMIN_TOKEN) {
+                console.log("Admin page loaded, loading submissions");
+                loadSubmissions();
+                
+                // Set up sort switch
+                document.getElementById('sort-switch').addEventListener('change', function() {
+                    sortNewestFirst = this.checked;
+                    displaySubmissions();
+                });
+            } else {
+                alert("Admin token required to access this page.");
+                // Show a login form instead of submissions
+                document.getElementById('loading-indicator').style.display = 'none';
+                document.getElementById('submissions').innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <h2>Admin Authentication Required</h2>
+                        <p>Please refresh the page and enter your admin token to continue.</p>
+                        <button onclick="location.reload()">Refresh Page</button>
+                    </div>
+                `;
+                document.getElementById('submissions').style.display = 'block';
+            }
         });
         
         // Load submissions from GitHub via Netlify function
@@ -632,14 +674,20 @@
                 document.getElementById('empty-state').style.display = 'none';
                 
                 // Fetch submissions from API
+                console.log("Fetching submissions with auth token...");
                 const response = await fetch(`/.netlify/functions/get-submissions?status=${currentTab}`, {
                     headers: {
                         "Authorization": `Bearer ${ADMIN_TOKEN}`
                     }
                 });
                 
+                // Log response status for debugging
+                console.log("API Response status:", response.status);
+                
                 if (!response.ok) {
-                    throw new Error("Failed to fetch submissions");
+                    const errorText = await response.text();
+                    console.error("API error response:", errorText);
+                    throw new Error("Failed to fetch submissions: " + errorText);
                 }
                 
                 const data = await response.json();
@@ -892,17 +940,24 @@
             try {
                 document.getElementById('loading-indicator').style.display = 'block';
                 
-                // Call the Netlify function
-                const response = await fetch("/.netlify/functions/approve-submission", {
+                // Call the Netlify function with proper authentication
+                console.log("Sending approval request with token:", ADMIN_TOKEN ? "Token exists" : "No token");
+                const response = await fetch("/.netlify/functions/update-submission-status", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${ADMIN_TOKEN}`
                     },
-                    body: JSON.stringify({ id })
+                    body: JSON.stringify({
+                        id,
+                        status: 'approved'
+                    })
                 });
                 
+                // Log the full response for debugging
+                console.log("API Response status:", response.status);
                 const result = await response.json();
+                console.log("API Response data:", result);
                 
                 if (!response.ok) {
                     throw new Error(result.error || "Failed to approve submission");
@@ -973,17 +1028,24 @@
             try {
                 document.getElementById('loading-indicator').style.display = 'block';
                 
-                // Call the Netlify function
-                const response = await fetch("/.netlify/functions/reject-submission", {
+                // Call the Netlify function with proper authentication
+                console.log("Sending rejection request with token:", ADMIN_TOKEN ? "Token exists" : "No token");
+                const response = await fetch("/.netlify/functions/update-submission-status", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${ADMIN_TOKEN}`
                     },
-                    body: JSON.stringify({ id })
+                    body: JSON.stringify({
+                        id,
+                        status: 'rejected'
+                    })
                 });
                 
+                // Log the full response for debugging
+                console.log("API Response status:", response.status);
                 const result = await response.json();
+                console.log("API Response data:", result);
                 
                 if (!response.ok) {
                     throw new Error(result.error || "Failed to reject submission");
@@ -1073,6 +1135,9 @@
         
         // Show full story in modal
         function showStory(submission) {
+            // Set current story ID
+            currentStoryId = submission.id;
+            
             // Set modal title
             document.getElementById('modal-title').textContent = submission.appName;
             
@@ -1133,6 +1198,7 @@
         function closeModal() {
             document.getElementById('story-modal').style.display = 'none';
             document.body.style.overflow = 'auto';
+            currentStoryId = null;
         }
         
         // Show image in viewer
