@@ -1,10 +1,8 @@
-const { Octokit } = require("@octokit/rest");
-const { Base64 } = require("js-base64");
+const { createClient } = require('@supabase/supabase-js');
 
-// GitHub repository information
-const GITHUB_OWNER = "RyanNovinc"; 
-const GITHUB_REPO = "ClaudeAppBuilder"; 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+// Supabase configuration
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
 exports.handler = async function(event, context) {
@@ -63,98 +61,66 @@ exports.handler = async function(event, context) {
   }
 
   try {
-    // Initialize GitHub API client
-    const octokit = new Octokit({
-      auth: GITHUB_TOKEN
-    });
+    // Initialize Supabase client with service key for admin operations
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     
     // Get query parameters
     const queryParams = event.queryStringParameters || {};
     const status = queryParams.status || "all"; // pending, approved, rejected, or all
     
-    let submissions = [];
+    // Build the Supabase query
+    let query = supabase.from('submissions').select('*');
     
-    // Determine which file to get based on the status parameter
-    let filePath = "data/pending-submissions.json";
-    if (status === "approved") {
-      filePath = "data/approved-submissions.json";
-    } else if (status === "rejected") {
-      filePath = "data/rejected-submissions.json";
-    } else if (status === "all") {
-      // If "all", we'll combine all three files
-      const files = [
-        "data/pending-submissions.json",
-        "data/approved-submissions.json",
-        "data/rejected-submissions.json"
-      ];
-      
-      for (const path of files) {
-        try {
-          const { data: fileData } = await octokit.repos.getContent({
-            owner: GITHUB_OWNER,
-            repo: GITHUB_REPO,
-            path: path,
-          });
-          
-          const content = Base64.decode(fileData.content);
-          const fileSubmissions = JSON.parse(content);
-          
-          // Add status field based on the file
-          if (path.includes("pending")) {
-            fileSubmissions.forEach(s => s.status = "pending");
-          } else if (path.includes("approved")) {
-            fileSubmissions.forEach(s => s.status = "approved");
-          } else if (path.includes("rejected")) {
-            fileSubmissions.forEach(s => s.status = "rejected");
-          }
-          
-          submissions = submissions.concat(fileSubmissions);
-        } catch (error) {
-          // Skip if file doesn't exist
-          if (error.status !== 404) {
-            throw error;
+    // Add status filter if specified (and not 'all')
+    if (status !== 'all') {
+      query = query.eq('status', status);
+    }
+    
+    // Order by created_at, newest first
+    query = query.order('created_at', { ascending: false });
+    
+    // Execute the query
+    const { data: submissions, error } = await query;
+    
+    if (error) throw error;
+    
+    // Format submissions to match the expected structure in the frontend
+    const formattedSubmissions = submissions.map(submission => {
+      // Parse cloudinary_images, which is stored as JSON string in Supabase
+      let images = [];
+      try {
+        if (submission.cloudinary_images) {
+          if (typeof submission.cloudinary_images === 'string') {
+            images = JSON.parse(submission.cloudinary_images);
+          } else if (Array.isArray(submission.cloudinary_images)) {
+            images = submission.cloudinary_images;
           }
         }
+      } catch (e) {
+        console.error(`Error parsing cloudinary_images for submission ${submission.id}:`, e);
+        images = [];
       }
       
-      // Sort by date (newest first)
-      submissions.sort((a, b) => new Date(b.date) - new Date(a.date));
-      
       return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify(submissions)
+        id: submission.id,
+        name: submission.name,
+        email: submission.email,
+        appName: submission.app_name,
+        appType: submission.app_type,
+        experienceLevel: submission.experience_level,
+        testimonial: submission.testimonial,
+        story: submission.story,
+        status: submission.status,
+        date: submission.created_at,
+        images: images
       };
-    }
+    });
     
-    // If we're getting a specific file (not "all")
-    try {
-      const { data: fileData } = await octokit.repos.getContent({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        path: filePath,
-      });
-      
-      const content = Base64.decode(fileData.content);
-      submissions = JSON.parse(content);
-      
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify(submissions)
-      };
-    } catch (error) {
-      // If file doesn't exist, return empty array
-      if (error.status === 404) {
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify([])
-        };
-      }
-      
-      throw error;
-    }
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(formattedSubmissions)
+    };
   } catch (error) {
     console.error("Error fetching submissions:", error);
     
