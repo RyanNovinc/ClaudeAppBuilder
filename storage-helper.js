@@ -1,11 +1,18 @@
 /**
- * Enhanced Storage Helper with Cloudinary Support
+ * Enhanced Storage Helper with Supabase & Cloudinary Support
  * This script provides robust cross-domain storage management for the AppFoundry success stories
- * and includes support for Cloudinary image URLs
+ * with Supabase as the primary data store and fallback to localStorage
  */
 
 // Create the StorageHelper namespace if it doesn't exist
 window.StorageHelper = window.StorageHelper || {};
+
+// Initialize Supabase client
+const SUPABASE_URL = 'https://your-project-id.supabase.co';
+const SUPABASE_ANON_KEY = 'your-supabase-anon-key';
+
+// Create the Supabase client
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // The primary domain to use for storage
 const PRIMARY_DOMAIN = 'claudeappbuilder.netlify.app';
@@ -14,14 +21,14 @@ const PRIMARY_DOMAIN = 'claudeappbuilder.netlify.app';
 const isOnPrimaryDomain = window.location.hostname === PRIMARY_DOMAIN;
 const isDeployPreview = window.location.hostname.includes('--claudeappbuilder.netlify.app');
 
-// Storage keys
+// Storage keys for localStorage fallback
 const SUBMISSIONS_KEY = 'appfoundry_submissions';
 const BACKUP_KEY = 'appfoundry_approved_seed';
 const LAST_SYNC_KEY = 'appfoundry_last_sync';
 
 // Initialize storage system - run this immediately
 (function initStorage() {
-    console.log("📊 Enhanced StorageHelper initializing");
+    console.log("📊 Enhanced StorageHelper initializing with Supabase");
     console.log("📍 Current hostname:", window.location.hostname);
     console.log("📍 Is primary domain:", isOnPrimaryDomain);
     console.log("📍 Is deploy preview:", isDeployPreview);
@@ -42,27 +49,78 @@ const LAST_SYNC_KEY = 'appfoundry_last_sync';
         }
     }
     
-    // If we have submissions, always update the backup
-    try {
-        const storedSubmissions = localStorage.getItem(SUBMISSIONS_KEY);
-        if (storedSubmissions) {
-            localStorage.setItem(BACKUP_KEY, storedSubmissions);
-            console.log("💾 Backup updated with current submissions data");
-        }
-    } catch (e) {
-        console.error("❌ Error updating backup:", e);
-    }
+    // Sync with Supabase to ensure we have the latest data
+    StorageHelper.syncFromSupabase().then(() => {
+        console.log("🔄 Initial Supabase sync completed");
+    }).catch(error => {
+        console.error("❌ Error during initial Supabase sync:", error);
+    });
 })();
 
 /**
- * Get all submissions from localStorage
- * @returns {Array} Array of submissions or empty array if none found
+ * Get all submissions from Supabase with fallback to localStorage
+ * @param {string} status Optional filter by status (approved, pending, rejected)
+ * @returns {Promise<Array>} Array of submissions
  */
-StorageHelper.getSubmissions = function() {
+StorageHelper.getSubmissions = async function(status = null) {
+    try {
+        // Try to get submissions from Supabase first
+        let query = supabase.from('submissions')
+            .select('*')
+            .order('created_at', { ascending: false });
+            
+        if (status && status !== 'all') {
+            query = query.eq('status', status);
+        }
+            
+        const { data, error } = await query;
+            
+        if (error) throw error;
+            
+        // Format submissions to match the expected structure
+        const formattedSubmissions = data.map(submission => ({
+            id: submission.id,
+            name: submission.name,
+            email: submission.email,
+            appName: submission.app_name,
+            appType: submission.app_type,
+            experienceLevel: submission.experience_level,
+            testimonial: submission.testimonial,
+            story: submission.story,
+            status: submission.status,
+            date: submission.created_at,
+            images: this.processCloudinaryImages(submission.cloudinary_images)
+        }));
+            
+        // Update localStorage as a fallback
+        localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(formattedSubmissions));
+            
+        return formattedSubmissions;
+    } catch (error) {
+        console.error('Error getting submissions from Supabase:', error);
+        
+        // Fallback to localStorage if Supabase fails
+        return this.getSubmissionsFromLocalStorage(status);
+    }
+};
+
+/**
+ * Helper to get submissions from localStorage
+ * @param {string} status Optional filter by status
+ * @returns {Array} Array of submissions
+ */
+StorageHelper.getSubmissionsFromLocalStorage = function(status = null) {
     try {
         const storedSubmissions = localStorage.getItem(SUBMISSIONS_KEY);
         if (storedSubmissions) {
-            return JSON.parse(storedSubmissions);
+            const submissions = JSON.parse(storedSubmissions);
+            
+            // Filter by status if provided
+            if (status && status !== 'all') {
+                return submissions.filter(sub => sub.status === status);
+            }
+            
+            return submissions;
         }
     } catch (error) {
         console.error('Error getting submissions from localStorage:', error);
@@ -71,48 +129,144 @@ StorageHelper.getSubmissions = function() {
 };
 
 /**
- * Add a new submission to localStorage
- * @param {Object} submission The submission object to add
- * @returns {boolean} Success status
+ * Process Cloudinary images from Supabase
+ * @param {Array|string} cloudinaryImages Array or JSON string of Cloudinary URLs
+ * @returns {Array} Array of image URLs
  */
-StorageHelper.addSubmission = function(submission) {
+StorageHelper.processCloudinaryImages = function(cloudinaryImages) {
+    if (!cloudinaryImages) return [];
+    
     try {
-        // Get existing submissions
-        const existingSubmissions = this.getSubmissions();
+        // If it's a string (JSON), parse it
+        if (typeof cloudinaryImages === 'string') {
+            return JSON.parse(cloudinaryImages);
+        }
         
-        // Add new submission to the beginning
+        // If it's already an array, return it
+        if (Array.isArray(cloudinaryImages)) {
+            return cloudinaryImages;
+        }
+    } catch (error) {
+        console.error('Error processing Cloudinary images:', error);
+    }
+    
+    return [];
+};
+
+/**
+ * Add a new submission to Supabase
+ * @param {Object} submission The submission object to add
+ * @returns {Promise<boolean>} Success status
+ */
+StorageHelper.addSubmission = async function(submission) {
+    try {
+        // Format the submission for Supabase
+        const supabaseSubmission = {
+            id: submission.id,
+            name: submission.name,
+            email: submission.email,
+            app_name: submission.appName,
+            app_type: submission.appType,
+            experience_level: submission.experienceLevel,
+            testimonial: submission.testimonial,
+            story: submission.story,
+            status: 'pending', // Always start as pending
+            cloudinary_images: JSON.stringify(submission.images || []),
+            created_at: new Date().toISOString()
+        };
+        
+        // Insert into Supabase
+        const { data, error } = await supabase
+            .from('submissions')
+            .insert([supabaseSubmission])
+            .select();
+            
+        if (error) throw error;
+        
+        // Add to localStorage as a fallback
+        const existingSubmissions = this.getSubmissionsFromLocalStorage();
         existingSubmissions.unshift(submission);
-        
-        // Save back to localStorage
         localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(existingSubmissions));
         
-        // Update the backup
-        localStorage.setItem(BACKUP_KEY, JSON.stringify(existingSubmissions));
-        
-        console.log('Successfully added submission:', submission.id);
+        console.log('Successfully added submission to Supabase:', submission.id);
         return true;
     } catch (error) {
-        console.error('Error adding submission to localStorage:', error);
-        return false;
+        console.error('Error adding submission to Supabase:', error);
+        
+        // Try to add to localStorage as a fallback
+        try {
+            const existingSubmissions = this.getSubmissionsFromLocalStorage();
+            existingSubmissions.unshift(submission);
+            localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(existingSubmissions));
+            console.log('Added submission to localStorage as fallback:', submission.id);
+            return true;
+        } catch (localError) {
+            console.error('Error adding to localStorage fallback:', localError);
+            return false;
+        }
     }
 };
 
 /**
- * Update an existing submission
+ * Update an existing submission in Supabase
+ * @param {string} id The ID of the submission to update
+ * @param {Object} updates The properties to update
+ * @returns {Promise<boolean>} Success status
+ */
+StorageHelper.updateSubmission = async function(id, updates) {
+    try {
+        // Format the updates for Supabase
+        const supabaseUpdates = {};
+        
+        if (updates.name) supabaseUpdates.name = updates.name;
+        if (updates.email) supabaseUpdates.email = updates.email;
+        if (updates.appName) supabaseUpdates.app_name = updates.appName;
+        if (updates.appType) supabaseUpdates.app_type = updates.appType;
+        if (updates.experienceLevel) supabaseUpdates.experience_level = updates.experienceLevel;
+        if (updates.testimonial) supabaseUpdates.testimonial = updates.testimonial;
+        if (updates.story) supabaseUpdates.story = updates.story;
+        if (updates.status) supabaseUpdates.status = updates.status;
+        if (updates.images) supabaseUpdates.cloudinary_images = JSON.stringify(updates.images);
+        
+        // Update in Supabase
+        const { data, error } = await supabase
+            .from('submissions')
+            .update(supabaseUpdates)
+            .eq('id', id)
+            .select();
+            
+        if (error) throw error;
+        
+        // Update in localStorage as a fallback
+        this.updateSubmissionInLocalStorage(id, updates);
+        
+        console.log('Successfully updated submission in Supabase:', id);
+        return true;
+    } catch (error) {
+        console.error('Error updating submission in Supabase:', error);
+        
+        // Try to update in localStorage as a fallback
+        const success = this.updateSubmissionInLocalStorage(id, updates);
+        return success;
+    }
+};
+
+/**
+ * Update submission in localStorage as a fallback
  * @param {string} id The ID of the submission to update
  * @param {Object} updates The properties to update
  * @returns {boolean} Success status
  */
-StorageHelper.updateSubmission = function(id, updates) {
+StorageHelper.updateSubmissionInLocalStorage = function(id, updates) {
     try {
         // Get existing submissions
-        const existingSubmissions = this.getSubmissions();
+        const existingSubmissions = this.getSubmissionsFromLocalStorage();
         
         // Find the index of the submission to update
         const submissionIndex = existingSubmissions.findIndex(s => s.id === id);
         
         if (submissionIndex === -1) {
-            console.error('Submission not found:', id);
+            console.error('Submission not found in localStorage:', id);
             return false;
         }
         
@@ -125,10 +279,12 @@ StorageHelper.updateSubmission = function(id, updates) {
         // Save back to localStorage
         localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(existingSubmissions));
         
-        // Update the backup
-        localStorage.setItem(BACKUP_KEY, JSON.stringify(existingSubmissions));
+        // Update the backup too
+        localStorage.setItem(BACKUP_KEY, JSON.stringify(
+            existingSubmissions.filter(s => s.status === 'approved')
+        ));
         
-        console.log('Successfully updated submission:', id);
+        console.log('Successfully updated submission in localStorage:', id);
         return true;
     } catch (error) {
         console.error('Error updating submission in localStorage:', error);
@@ -138,7 +294,7 @@ StorageHelper.updateSubmission = function(id, updates) {
 
 /**
  * Helper function to get image URL - handles both Cloudinary and base64 images
- * @param {string|Object} image - The image (either base64 string or Cloudinary object)
+ * @param {string|Object} image - The image (either base64 string or Cloudinary object/URL)
  * @param {Object} options - Optional sizing parameters
  * @returns {string} - URL to display the image
  */
@@ -173,11 +329,54 @@ StorageHelper.getImageSrc = function(image, options = {}) {
 };
 
 /**
- * Get all approved submissions
+ * Get all approved submissions from Supabase
+ * @returns {Promise<Array>} Array of approved submissions
+ */
+StorageHelper.getApprovedSubmissions = async function() {
+    try {
+        const { data, error } = await supabase
+            .from('submissions')
+            .select('*')
+            .eq('status', 'approved')
+            .order('created_at', { ascending: false });
+            
+        if (error) throw error;
+        
+        // Format submissions to match the expected structure
+        const formattedSubmissions = data.map(submission => ({
+            id: submission.id,
+            name: submission.name,
+            email: submission.email,
+            appName: submission.app_name,
+            appType: submission.app_type,
+            experienceLevel: submission.experience_level,
+            testimonial: submission.testimonial,
+            story: submission.story,
+            status: submission.status,
+            date: submission.created_at,
+            images: this.processCloudinaryImages(submission.cloudinary_images)
+        }));
+        
+        if (formattedSubmissions.length === 0) {
+            // If no approved submissions, fall back to localStorage or provide sample data
+            return this.getApprovedSubmissionsFromLocalStorage();
+        }
+        
+        return formattedSubmissions;
+    } catch (error) {
+        console.error('Error getting approved submissions from Supabase:', error);
+        
+        // Fallback to localStorage
+        return this.getApprovedSubmissionsFromLocalStorage();
+    }
+};
+
+/**
+ * Get approved submissions from localStorage as a fallback
  * @returns {Array} Array of approved submissions
  */
-StorageHelper.getApprovedSubmissions = function() {
-    const allSubmissions = this.getSubmissions();
+StorageHelper.getApprovedSubmissionsFromLocalStorage = function() {
+    const allSubmissions = this.getSubmissionsFromLocalStorage();
     const approved = allSubmissions.filter(submission => submission.status === 'approved');
     
     // If no approved submissions found, check if we can populate with sample data
@@ -234,8 +433,7 @@ StorageHelper.getApprovedSubmissions = function() {
 };
 
 /**
- * Helper function to convert legacy base64 images to Cloudinary URLs
- * For use in future migration, doesn't actually upload to Cloudinary (that must be done server-side)
+ * Helper function to check legacy base64 images
  * @param {Object} submission - The submission object to check
  * @returns {Object} - Same submission with base64 image indicator if needed
  */
@@ -261,81 +459,74 @@ StorageHelper.checkLegacyImages = function(submission) {
 };
 
 /**
- * Sync submissions from the server to localStorage
+ * Sync submissions from Supabase to localStorage
  * @returns {Promise<boolean>} Success status
  */
-StorageHelper.syncFromServer = async function() {
+StorageHelper.syncFromSupabase = async function() {
     try {
-        console.log("🔄 Starting server sync...");
+        console.log("🔄 Starting Supabase sync...");
         
-        // Try to fetch all submissions from the server
-        const response = await fetch('/.netlify/functions/get-submissions?status=all');
+        // Fetch all submissions from Supabase
+        const { data, error } = await supabase
+            .from('submissions')
+            .select('*')
+            .order('created_at', { ascending: false });
+            
+        if (error) throw error;
         
-        if (!response.ok) {
-            throw new Error(`Server returned ${response.status}`);
-        }
-        
-        const submissions = await response.json();
-        
-        if (Array.isArray(submissions) && submissions.length > 0) {
-            console.log(`📦 Received ${submissions.length} submissions from server`);
+        if (Array.isArray(data) && data.length > 0) {
+            console.log(`📦 Received ${data.length} submissions from Supabase`);
+            
+            // Format submissions to match the expected structure
+            const formattedSubmissions = data.map(submission => ({
+                id: submission.id,
+                name: submission.name,
+                email: submission.email,
+                appName: submission.app_name,
+                appType: submission.app_type,
+                experienceLevel: submission.experience_level,
+                testimonial: submission.testimonial,
+                story: submission.story,
+                status: submission.status,
+                date: submission.created_at,
+                images: this.processCloudinaryImages(submission.cloudinary_images)
+            }));
             
             // Save to localStorage
-            localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(submissions));
+            localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(formattedSubmissions));
             
             // Update the backup as well
-            localStorage.setItem(BACKUP_KEY, JSON.stringify(submissions));
+            localStorage.setItem(BACKUP_KEY, JSON.stringify(
+                formattedSubmissions.filter(s => s.status === 'approved')
+            ));
             
-            console.log(`✅ Successfully synced ${submissions.length} submissions from server`);
+            // Update last sync timestamp
+            localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
+            
+            console.log(`✅ Successfully synced ${formattedSubmissions.length} submissions from Supabase`);
             return true;
         } else {
-            console.warn("⚠️ Server returned empty or invalid submissions array");
+            console.warn("⚠️ Supabase returned empty or invalid submissions array");
             return false;
         }
     } catch (error) {
-        console.error("❌ Error syncing from server:", error);
+        console.error("❌ Error syncing from Supabase:", error);
         return false;
     }
 };
 
-// Periodic check for server updates
+// Periodic check for Supabase updates
 (async function checkForUpdates() {
     // Only run on success stories page
     if (window.location.pathname.includes('success-stories')) {
         try {
-            const lastLocalSync = localStorage.getItem(LAST_SYNC_KEY);
+            await StorageHelper.syncFromSupabase();
             
-            // Check server timestamp
-            try {
-                const response = await fetch('/.netlify/functions/get-sync-timestamp');
-                
-                if (response.ok) {
-                    const { lastSync } = await response.json();
-                    
-                    if (!lastLocalSync || lastSync > lastLocalSync) {
-                        console.log("🔄 Server has newer data, syncing...");
-                        
-                        // Sync and update local timestamp
-                        const success = await StorageHelper.syncFromServer();
-                        
-                        if (success) {
-                            localStorage.setItem(LAST_SYNC_KEY, lastSync);
-                            console.log("✅ Sync complete");
-                            
-                            // Reload approved stories if we're on the success stories page
-                            if (typeof loadApprovedStories === 'function') {
-                                setTimeout(() => {
-                                    loadApprovedStories();
-                                }, 500);
-                            }
-                        }
-                    } else {
-                        console.log("✓ Local data is up to date");
-                    }
-                }
-            } catch (error) {
-                console.warn("⚠️ Error checking sync timestamp:", error);
-                // Continue with normal loading
+            // Reload approved stories if we're on the success stories page
+            if (typeof loadApprovedStories === 'function') {
+                setTimeout(() => {
+                    loadApprovedStories();
+                }, 500);
             }
         } catch (error) {
             console.warn("⚠️ Error during update check:", error);
@@ -350,10 +541,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Try to pre-load approved stories if we're on the success stories page
     if (window.location.pathname.includes('success-stories')) {
         console.log("🔍 Success stories page detected, pre-loading approved stories");
-        const approvedStories = StorageHelper.getApprovedSubmissions();
-        console.log("📊 Found", approvedStories.length, "approved stories");
+        StorageHelper.getApprovedSubmissions().then(approvedStories => {
+            console.log("📊 Found", approvedStories.length, "approved stories");
+        }).catch(error => {
+            console.error("❌ Error pre-loading approved stories:", error);
+        });
     }
 });
 
 // Force initialization right away
-console.log("🚀 StorageHelper initialized and ready to use");
+console.log("🚀 StorageHelper initialized with Supabase integration and ready to use");
