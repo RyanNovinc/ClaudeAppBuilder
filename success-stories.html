@@ -116,6 +116,13 @@
             padding: 25px;
         }
         
+        .story-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
         .story-tag {
             display: inline-block;
             background-color: #e0f2ff;
@@ -124,7 +131,11 @@
             font-weight: 500;
             padding: 4px 8px;
             border-radius: 4px;
-            margin-bottom: 10px;
+        }
+        
+        .story-tag.experience-level {
+            background-color: #f0e8ff;
+            color: #6941c6;
         }
         
         .story-title {
@@ -254,6 +265,11 @@
             font-weight: 500;
         }
         
+        .story-modal-tags {
+            display: flex;
+            gap: 8px;
+        }
+        
         .story-modal-tag {
             background-color: #e0f2ff;
             color: #0070f3;
@@ -261,6 +277,11 @@
             font-weight: 500;
             padding: 4px 8px;
             border-radius: 4px;
+        }
+        
+        .story-modal-tag.experience-level {
+            background-color: #f0e8ff;
+            color: #6941c6;
         }
         
         .story-modal-images {
@@ -444,7 +465,10 @@
             <div class="story-modal-body">
                 <div class="story-modal-meta">
                     <div class="story-modal-author" id="modal-author">Creator Name</div>
-                    <div class="story-modal-tag" id="modal-tag">App Type</div>
+                    <div class="story-modal-tags" id="modal-tags">
+                        <div class="story-modal-tag" id="modal-tag">App Type</div>
+                        <div class="story-modal-tag experience-level" id="modal-experience-level" style="display: none;">Experience Level</div>
+                    </div>
                 </div>
                 
                 <div class="story-modal-testimonial" id="modal-testimonial">
@@ -593,6 +617,8 @@
                             app_name: 'SleepTrack',
                             appType: 'Health & Fitness',
                             app_type: 'Health & Fitness',
+                            experienceLevel: 'Beginner',
+                            experience_level: 'Beginner',
                             testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
                             story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
                             images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App'],
@@ -608,6 +634,8 @@
                             app_name: 'RecipeKeeper',
                             appType: 'Lifestyle',
                             app_type: 'Lifestyle',
+                            experienceLevel: 'Intermediate',
+                            experience_level: 'Intermediate',
                             testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
                             story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
                             images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App'],
@@ -698,11 +726,15 @@
                     // For handling both camelCase and snake_case property names
                     const appName = story.appName || story.app_name || "App";
                     const appType = story.appType || story.app_type || "App";
+                    const experienceLevel = story.experienceLevel || story.experience_level || "";
                     
                     storyCard.innerHTML = `
                         <img src="${imageUrl}" alt="${appName}" class="story-image">
                         <div class="story-content">
-                            <div class="story-tag">${appType}</div>
+                            <div class="story-tags">
+                                <span class="story-tag">${appType} App</span>
+                                ${experienceLevel ? `<span class="story-tag experience-level">${experienceLevel}</span>` : ''}
+                            </div>
                             <h3 class="story-title">${appName}</h3>
                             <div class="story-author">
                                 <span class="story-author-name">By ${story.name}</span>
@@ -753,6 +785,7 @@
                             appType: submission.app_type,
                             app_type: submission.app_type,
                             experienceLevel: submission.experience_level,
+                            experience_level: submission.experience_level,
                             testimonial: submission.testimonial,
                             story: submission.story,
                             status: submission.status,
@@ -942,6 +975,8 @@
                         app_name: data.app_name,
                         appType: data.app_type,
                         app_type: data.app_type,
+                        experienceLevel: data.experience_level,
+                        experience_level: data.experience_level,
                         testimonial: data.testimonial,
                         story: data.story,
                         images: parseCloudinaryImages(data.cloudinary_images),
@@ -1018,6 +1053,8 @@
                         app_name: 'SleepTrack',
                         appType: 'Health & Fitness',
                         app_type: 'Health & Fitness',
+                        experienceLevel: 'Beginner',
+                        experience_level: 'Beginner',
                         testimonial: '"I had zero coding experience but managed to build a sleep tracking app in just 3 weeks using the AppFoundry method. The step-by-step process made it so easy!"',
                         story: 'I\'ve always wanted to create an app to help with my sleep tracking, but I was intimidated by the coding required. When I found the AppFoundry course, I was skeptical that I could really build something without coding knowledge, but I decided to give it a try.\n\nThe step-by-step guidance was incredible. I followed each module, and within 3 weeks, I had a working app that tracks sleep patterns, sends reminders, and even generates reports. My friends were shocked when I told them I built it myself without writing code!\n\nThe most valuable part was learning how to communicate effectively with Claude AI to get exactly what I wanted. Now I can make changes and improvements whenever I need to, without being dependent on expensive developers.\n\nThanks to AppFoundry, I\'ve gone from having zero technical skills to being able to bring my ideas to life independently!',
                         images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/SleepTrack%20App'],
@@ -1033,6 +1070,8 @@
                         app_name: 'RecipeKeeper',
                         appType: 'Lifestyle',
                         app_type: 'Lifestyle',
+                        experienceLevel: 'Intermediate',
+                        experience_level: 'Intermediate',
                         testimonial: '"I\'ve been wanting to build this app for years but was intimidated by coding. The AppFoundry course made it possible for me to create exactly what I envisioned!"',
                         story: 'As someone who loves cooking, I\'ve always wanted a custom recipe app that works exactly how I want it to. I looked at existing apps, but none of them had the specific features I needed.\n\nI had no coding experience and quotes from developers were way out of my budget. When I discovered AppFoundry, it seemed too good to be true - build my own custom app without coding?\n\nBut it actually worked! Following the course, I was able to create a recipe app that lets me organize recipes by cuisine, dietary restrictions, and cooking time. It even has a meal planning feature that I designed myself!\n\nThe best part is that I can continue to improve it whenever I want. Last week I added a feature to automatically generate shopping lists from selected recipes, and it took me just a few hours!',
                         images: ['https://placeholder.pics/svg/300x200/DEDEDE/555555/RecipeKeeper%20App'],
@@ -1057,11 +1096,22 @@
             // Handle both camelCase and snake_case property names
             const appName = story.appName || story.app_name || "App";
             const appType = story.appType || story.app_type || "App";
+            const experienceLevel = story.experienceLevel || story.experience_level || "";
             
             // Fill the modal with story details
             document.getElementById('modal-title').textContent = appName;
             document.getElementById('modal-author').textContent = `Created by ${story.name}`;
-            document.getElementById('modal-tag').textContent = appType;
+            document.getElementById('modal-tag').textContent = `${appType} App`;
+            
+            // Handle experience level
+            const experienceLevelElement = document.getElementById('modal-experience-level');
+            if (experienceLevel) {
+                experienceLevelElement.textContent = experienceLevel;
+                experienceLevelElement.style.display = 'block';
+            } else {
+                experienceLevelElement.style.display = 'none';
+            }
+            
             document.getElementById('modal-testimonial').textContent = story.testimonial;
             
             // Convert story text to paragraphs
