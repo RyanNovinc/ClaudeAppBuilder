@@ -1,18 +1,17 @@
-const { Octokit } = require("@octokit/rest");
-const { Base64 } = require("js-base64");
-const cloudinaryHelper = require("./utils/cloudinary-helper");
+const { createClient } = require('@supabase/supabase-js');
+const { v4: uuidv4 } = require('uuid');
 
-// GitHub repository information
-const GITHUB_OWNER = "RyanNovinc"; // Your actual GitHub username
-const GITHUB_REPO = "ClaudeAppBuilder"; // Your actual repository name
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // Set this in Netlify environment variables
+// Supabase configuration
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 exports.handler = async function(event, context) {
   // Set CORS headers
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS"
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Content-Type": "application/json"
   };
 
   // Handle preflight OPTIONS request
@@ -33,145 +32,92 @@ exports.handler = async function(event, context) {
     };
   }
 
+  console.log("Submit testimonial function called");
+
   try {
-    // Parse the incoming request body
+    // Parse request body
     const data = JSON.parse(event.body);
+    console.log("Received submission data:", JSON.stringify(data));
     
     // Validate required fields
-    const requiredFields = ["name", "email", "appType", "appName", "story", "testimonial"];
-    for (const field of requiredFields) {
-      if (!data[field]) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ error: `Missing required field: ${field}` })
-        };
-      }
+    if (!data.name || !data.appName || !data.testimonial || !data.story) {
+      console.log("Validation failed - missing required fields");
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Missing required fields" })
+      };
     }
-    
-    // Process images first - upload to Cloudinary
-    let processedImages = [];
-    
-    if (data.images && Array.isArray(data.images) && data.images.length > 0) {
-      console.log(`Processing ${data.images.length} images for upload to Cloudinary`);
-      
-      try {
-        // Upload all images to Cloudinary
-        processedImages = await cloudinaryHelper.uploadMultipleImages(
-          data.images, 
-          'appfoundry-submissions'
-        );
-        
-        console.log(`Successfully uploaded ${processedImages.length} images to Cloudinary`);
-      } catch (imgError) {
-        console.error('Error uploading images to Cloudinary:', imgError);
-        // Continue with empty images array - this way the submission still works 
-        // even if image upload fails
-        processedImages = [];
-      }
-    }
-    
-    // Create submission object
-    const newSubmission = {
-      id: `story_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
+
+    // Initialize Supabase client
+    console.log("Initializing Supabase client...");
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    console.log("Supabase client initialized successfully");
+
+    // Prepare the submission data
+    const submission = {
+      id: uuidv4(),
       name: data.name,
-      email: data.email,
-      appName: data.appName,
-      appType: data.appType,
-      experienceLevel: data.experienceLevel || "No experience",
+      email: data.email || '',
+      app_name: data.appName,
+      app_type: data.appType || '',
+      experience_level: data.experienceLevel || '',
       testimonial: data.testimonial,
       story: data.story,
-      images: processedImages, // Now using Cloudinary image objects instead of base64
-      date: new Date().toISOString(),
-      status: "pending"
+      status: 'pending',
+      cloudinary_images: data.images ? JSON.stringify(data.images) : '[]',
+      created_at: new Date().toISOString()
     };
-    
-    // Initialize GitHub API client
-    const octokit = new Octokit({
-      auth: GITHUB_TOKEN
-    });
-    
-    // Get the current pending submissions
-    let pendingSubmissions = [];
-    try {
-      // Get the current file from GitHub
-      const { data: fileData } = await octokit.repos.getContent({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        path: "data/pending-submissions.json",
-      });
-      
-      // Decode content from base64
-      const content = Base64.decode(fileData.content);
-      pendingSubmissions = JSON.parse(content);
-      
-      // Save the SHA for updating the file
-      const fileSha = fileData.sha;
-      
-      // Add new submission to the beginning of the array
-      pendingSubmissions.unshift(newSubmission);
-      
-      // Update the file in GitHub
-      await octokit.repos.createOrUpdateFileContents({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        path: "data/pending-submissions.json",
-        message: `Add new submission: ${newSubmission.id}`,
-        content: Base64.encode(JSON.stringify(pendingSubmissions, null, 2)),
-        sha: fileSha,
-      });
-      
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          success: true,
-          message: "Success story submitted for review!",
-          submissionId: newSubmission.id
-        })
-      };
-    } catch (error) {
-      // If file doesn't exist yet, create it with the new submission
-      if (error.status === 404) {
-        pendingSubmissions = [newSubmission];
-        
-        await octokit.repos.createOrUpdateFileContents({
-          owner: GITHUB_OWNER,
-          repo: GITHUB_REPO,
-          path: "data/pending-submissions.json",
-          message: "Create pending submissions file with first submission",
-          content: Base64.encode(JSON.stringify(pendingSubmissions, null, 2)),
-        });
-        
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify({
-            success: true,
-            message: "Success story submitted for review!",
-            submissionId: newSubmission.id
-          })
-        };
-      }
-      
-      console.error("Error saving submission to GitHub:", error);
-      
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({
-          error: "An error occurred while saving your submission."
-        })
-      };
+
+    console.log("Prepared submission data:", JSON.stringify(submission));
+
+    // Insert into Supabase
+    console.log("Inserting submission into Supabase...");
+    const { data: insertedData, error } = await supabase
+      .from('submissions')
+      .insert([submission])
+      .select();
+
+    if (error) {
+      console.error("Supabase insert error:", error);
+      throw error;
     }
+
+    console.log("Submission successfully inserted into Supabase");
+
+    // Update the sync timestamp
+    try {
+      console.log("Updating sync timestamp...");
+      const timestamp = new Date().toISOString();
+      
+      await supabase
+        .from('sync_log')
+        .upsert([{ id: 'last_sync', timestamp: timestamp }]);
+        
+      console.log("Sync timestamp updated successfully");
+    } catch (syncError) {
+      console.warn("Error updating sync timestamp:", syncError);
+      // Continue anyway as this is not critical
+    }
+    
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success: true,
+        message: "Testimonial submitted successfully",
+        id: submission.id
+      })
+    };
   } catch (error) {
-    console.error("Error processing submission:", error);
+    console.error("Error processing testimonial:", error);
     
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: "An error occurred while processing your submission."
+        error: "An error occurred while processing your submission",
+        message: error.message
       })
     };
   }
