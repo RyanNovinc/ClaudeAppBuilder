@@ -1,147 +1,124 @@
-// functions/submit-success-story.js
-const { getStore } = require('@netlify/blobs');
+const { createClient } = require('@supabase/supabase-js');
+const { v4: uuidv4 } = require('uuid');
+
+// Supabase configuration
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 exports.handler = async function(event, context) {
   // Set CORS headers
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json'
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Content-Type": "application/json"
   };
 
-  // Handle preflight requests
-  if (event.httpMethod === 'OPTIONS') {
+  // Handle preflight OPTIONS request
+  if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
       headers,
-      body: ''
+      body: ""
     };
   }
 
   // Only allow POST requests
-  if (event.httpMethod !== 'POST') {
+  if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
+      body: JSON.stringify({ error: "Method not allowed" })
     };
   }
 
+  console.log("Submit success story function called");
+
   try {
-    // Parse the request body
+    // Parse request body
     const data = JSON.parse(event.body);
+    console.log("Received submission data:", JSON.stringify(data));
     
     // Validate required fields
-    const requiredFields = ['name', 'email', 'app-type', 'app-name', 'story', 'testimonial'];
-    for (const field of requiredFields) {
-      if (!data[field]) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ error: `Missing required field: ${field}` })
-        };
-      }
+    if (!data.name || !data.appName || !data.testimonial || !data.story) {
+      console.log("Validation failed - missing required fields");
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: "Missing required fields" })
+      };
     }
-    
-    // Generate a unique ID using timestamp and random string
-    const uniqueId = `story_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
-    
-    // Create submission object
+
+    // Initialize Supabase client
+    console.log("Initializing Supabase client...");
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    console.log("Supabase client initialized successfully");
+
+    // Prepare the submission data
     const submission = {
-      id: uniqueId,
-      date: new Date().toISOString(),
-      status: 'pending', // pending, approved, rejected
+      id: uuidv4(),
       name: data.name,
-      email: data.email,
-      appType: data['app-type'],
-      appName: data['app-name'],
-      experienceLevel: data['experience-level'] || 'No experience',
-      story: data.story,
+      email: data.email || '',
+      app_name: data.appName,
+      app_type: data.appType || '',
+      experience_level: data.experienceLevel || '',
       testimonial: data.testimonial,
-      images: data.images || [] // Array of image URLs
+      story: data.story,
+      status: 'pending',
+      cloudinary_images: data.images ? JSON.stringify(data.images) : '[]',
+      created_at: new Date().toISOString()
     };
-    
-    console.log('New success story submission:', submission.id);
-    
-    // Initialize Netlify Blob Storage - use getStore instead of new NetlifyBlob
-    const store = getStore({
-      name: 'success-stories'
-    });
-    
-    // Store the submission in Netlify Blob Storage
-    try {
-      // Save the complete submission
-      await store.set(`submission-${submission.id}`, JSON.stringify(submission));
-      console.log(`Success story saved to Netlify Blob Storage with key: submission-${submission.id}`);
-      
-      // Also maintain an index of all submissions
-      try {
-        // Get the current index (or create if it doesn't exist)
-        let submissionIndex = [];
-        try {
-          const existingIndex = await store.get('submission-index');
-          if (existingIndex) {
-            submissionIndex = JSON.parse(existingIndex);
-          }
-        } catch (indexError) {
-          console.log('No existing index found, creating new index');
-        }
-        
-        // Add this submission to the index (just store minimal info)
-        submissionIndex.unshift({
-          id: submission.id,
-          name: submission.name,
-          appName: submission.appName,
-          date: submission.date,
-          status: submission.status
-        });
-        
-        // Save the updated index
-        await store.set('submission-index', JSON.stringify(submissionIndex));
-        console.log('Submission index updated');
-      } catch (indexError) {
-        console.error('Error updating submission index:', indexError);
-        // Continue even if index update fails
-      }
-      
-      // Return success response
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          success: true,
-          message: 'Success story submitted successfully',
-          submissionId: submission.id,
-          submission: submission, // Include full submission data
-          useLocalStorage: true // Also signal to client to store in localStorage as backup
-        })
-      };
-    } catch (storageError) {
-      console.error('Error storing submission in Netlify Blob Storage:', storageError);
-      
-      // If Netlify Blob Storage fails, fall back to returning a response that will
-      // instruct the client to store in localStorage
-      return {
-        statusCode: 200, // Still return 200 to client
-        headers,
-        body: JSON.stringify({
-          success: true,
-          message: 'Success story processed with localStorage fallback',
-          submissionId: submission.id,
-          submission: submission,
-          useLocalStorage: true,
-          storageFallback: true
-        })
-      };
+
+    console.log("Prepared submission data:", JSON.stringify(submission));
+
+    // Insert into Supabase
+    console.log("Inserting submission into Supabase...");
+    const { data: insertedData, error } = await supabase
+      .from('submissions')
+      .insert([submission])
+      .select();
+
+    if (error) {
+      console.error("Supabase insert error:", error);
+      throw error;
     }
+
+    console.log("Submission successfully inserted into Supabase");
+
+    // Update the sync timestamp
+    try {
+      console.log("Updating sync timestamp...");
+      const timestamp = new Date().toISOString();
+      
+      await supabase
+        .from('sync_log')
+        .upsert([{ id: 'last_sync', timestamp: timestamp }]);
+        
+      console.log("Sync timestamp updated successfully");
+    } catch (syncError) {
+      console.warn("Error updating sync timestamp:", syncError);
+      // Continue anyway as this is not critical
+    }
+    
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success: true,
+        message: "Success story submitted successfully",
+        id: submission.id
+      })
+    };
   } catch (error) {
-    console.error('Error processing success story submission:', error);
+    console.error("Error processing submission:", error);
     
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'An error occurred while processing your submission' })
+      body: JSON.stringify({
+        error: "An error occurred while processing your submission",
+        message: error.message
+      })
     };
   }
 };
