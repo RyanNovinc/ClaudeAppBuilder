@@ -1,11 +1,9 @@
-const { Octokit } = require("@octokit/rest");
-const { Base64 } = require("js-base64");
+const { createClient } = require('@supabase/supabase-js');
 const cloudinaryHelper = require("./utils/cloudinary-helper");
 
-// GitHub repository information
-const GITHUB_OWNER = "RyanNovinc"; // Your GitHub username
-const GITHUB_REPO = "ClaudeAppBuilder"; // Your repository name
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+// Supabase configuration
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
 exports.handler = async function(event, context) {
@@ -60,45 +58,60 @@ exports.handler = async function(event, context) {
     // Determine operation mode (specific submission or all)
     const { submissionId, forceAll } = data;
     
-    // Initialize GitHub API client
-    const octokit = new Octokit({
-      auth: GITHUB_TOKEN
-    });
+    // Initialize Supabase client
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     
     // Function to find a submission by ID
     async function findSubmission(id) {
-      const statusFiles = ['pending-submissions.json', 'approved-submissions.json', 'rejected-submissions.json'];
+      try {
+        const { data, error } = await supabase
+          .from('submissions')
+          .select('*')
+          .eq('id', id)
+          .single();
+          
+        if (error) throw error;
+        if (!data) return null;
+        
+        return {
+          submission: {
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            appName: data.app_name,
+            appType: data.app_type,
+            experienceLevel: data.experience_level,
+            testimonial: data.testimonial,
+            story: data.story,
+            status: data.status,
+            date: data.created_at,
+            images: parseCloudinaryImages(data.cloudinary_images)
+          },
+          originalData: data
+        };
+      } catch (error) {
+        console.error(`Error finding submission ${id}:`, error);
+        return null;
+      }
+    }
+    
+    // Parse Cloudinary images from string
+    function parseCloudinaryImages(cloudinaryImages) {
+      if (!cloudinaryImages) return [];
       
-      for (const statusFile of statusFiles) {
-        try {
-          const { data: fileData } = await octokit.repos.getContent({
-            owner: GITHUB_OWNER,
-            repo: GITHUB_REPO,
-            path: `data/${statusFile}`
-          });
-          
-          const content = JSON.parse(Base64.decode(fileData.content));
-          const submissionIndex = content.findIndex(s => s.id === id);
-          
-          if (submissionIndex !== -1) {
-            return {
-              path: `data/${statusFile}`,
-              content,
-              sha: fileData.sha,
-              submission: content[submissionIndex],
-              index: submissionIndex
-            };
-          }
-        } catch (error) {
-          // If file not found, continue to next file
-          if (error.status === 404) {
-            continue;
-          }
-          throw error;
+      try {
+        if (typeof cloudinaryImages === 'string') {
+          return JSON.parse(cloudinaryImages);
         }
+        
+        if (Array.isArray(cloudinaryImages)) {
+          return cloudinaryImages;
+        }
+      } catch (error) {
+        console.error('Error parsing Cloudinary images:', error);
       }
       
-      return null; // Not found
+      return [];
     }
     
     // Function to migrate images for a single submission
@@ -156,24 +169,23 @@ exports.handler = async function(event, context) {
             updatedImages[index] = url;
           }
           
-          // Update the submission in the content array
-          sourceInfo.content[sourceInfo.index].images = updatedImages;
-          updated = true;
+          // Update the submission in Supabase
+          const { data, error } = await supabase
+            .from('submissions')
+            .update({
+              cloudinary_images: JSON.stringify(updatedImages)
+            })
+            .eq('id', submission.id);
+            
+          if (error) throw error;
           
-          // Save changes to GitHub
-          await octokit.repos.createOrUpdateFileContents({
-            owner: GITHUB_OWNER,
-            repo: GITHUB_REPO,
-            path: sourceInfo.path,
-            message: `Migrate images for submission ${submission.id}`,
-            content: Base64.encode(JSON.stringify(sourceInfo.content, null, 2)),
-            sha: sourceInfo.sha
-          });
+          submission.images = updatedImages;
+          updated = true;
           
           // Return the updated submission
           return { 
             updated: true, 
-            submission: sourceInfo.content[sourceInfo.index]
+            submission
           };
         }
       } catch (error) {
@@ -198,42 +210,14 @@ exports.handler = async function(event, context) {
       
       const result = await migrateSubmissionImages(sourceInfo);
       
-      // Update the sync timestamp
+      // Update the last sync timestamp in Supabase (for client syncs)
       try {
-        // Update the last-sync.json file to trigger client syncs
         const timestamp = new Date().toISOString();
-        
-        try {
-          // Get the current file if it exists
-          const { data: syncFile } = await octokit.repos.getContent({
-            owner: GITHUB_OWNER,
-            repo: GITHUB_REPO,
-            path: 'data/last-sync.json'
-          });
+        const { data, error } = await supabase
+          .from('sync_log')
+          .upsert([{ id: 'last_sync', timestamp: timestamp }]);
           
-          // Update it
-          await octokit.repos.createOrUpdateFileContents({
-            owner: GITHUB_OWNER,
-            repo: GITHUB_REPO,
-            path: 'data/last-sync.json',
-            message: `Update sync timestamp: ${timestamp}`,
-            content: Base64.encode(JSON.stringify({ lastSync: timestamp })),
-            sha: syncFile.sha
-          });
-        } catch (error) {
-          // Create if not exists
-          if (error.status === 404) {
-            await octokit.repos.createOrUpdateFileContents({
-              owner: GITHUB_OWNER,
-              repo: GITHUB_REPO,
-              path: 'data/last-sync.json',
-              message: `Create sync timestamp: ${timestamp}`,
-              content: Base64.encode(JSON.stringify({ lastSync: timestamp }))
-            });
-          } else {
-            throw error;
-          }
-        }
+        if (error) throw error;
       } catch (syncError) {
         console.warn("Error updating sync timestamp:", syncError);
         // Continue anyway as this is not critical
@@ -260,156 +244,78 @@ exports.handler = async function(event, context) {
         details: []
       };
       
-      // Process each status file
-      const statusFiles = ['pending-submissions.json', 'approved-submissions.json', 'rejected-submissions.json'];
+      // Get all submissions
+      const { data: submissions, error: fetchError } = await supabase
+        .from('submissions')
+        .select('*');
+        
+      if (fetchError) throw fetchError;
       
-      for (const statusFile of statusFiles) {
+      results.total = submissions.length;
+      
+      // Process each submission
+      for (const submission of submissions) {
+        const sourceInfo = {
+          submission: {
+            id: submission.id,
+            name: submission.name,
+            email: submission.email,
+            appName: submission.app_name,
+            appType: submission.app_type,
+            experienceLevel: submission.experience_level,
+            testimonial: submission.testimonial,
+            story: submission.story,
+            status: submission.status,
+            date: submission.created_at,
+            images: parseCloudinaryImages(submission.cloudinary_images)
+          },
+          originalData: submission
+        };
+        
+        // Skip if no images
+        if (!sourceInfo.submission.images || !Array.isArray(sourceInfo.submission.images)) {
+          continue;
+        }
+        
+        // Check for base64 images that need migration
+        const base64Images = sourceInfo.submission.images.filter(img => 
+          typeof img === 'string' && img.startsWith('data:')
+        );
+        
+        if (base64Images.length === 0 && !forceAll) {
+          continue;
+        }
+        
         try {
-          // Get the file
-          const { data: fileData } = await octokit.repos.getContent({
-            owner: GITHUB_OWNER,
-            repo: GITHUB_REPO,
-            path: `data/${statusFile}`
-          });
+          console.log(`Migrating ${base64Images.length} images for submission ${sourceInfo.submission.id}`);
           
-          // Decode and parse content
-          const content = JSON.parse(Base64.decode(fileData.content));
-          let contentUpdated = false;
+          // Migrate images
+          const result = await migrateSubmissionImages(sourceInfo);
           
-          results.total += content.length;
-          
-          // Process each submission
-          for (let i = 0; i < content.length; i++) {
-            const submission = content[i];
-            
-            // Skip if no images
-            if (!submission.images || !Array.isArray(submission.images)) {
-              continue;
-            }
-            
-            // Check for base64 images that need migration
-            const base64Images = submission.images.filter(img => 
-              typeof img === 'string' && img.startsWith('data:')
-            );
-            
-            if (base64Images.length === 0 && !forceAll) {
-              continue;
-            }
-            
-            console.log(`Migrating ${base64Images.length} images for submission ${submission.id}`);
-            
-            try {
-              // Create a map to track the original to Cloudinary URL
-              const imageMap = new Map();
-              
-              for (let j = 0; j < submission.images.length; j++) {
-                const image = submission.images[j];
-                
-                // Skip null/empty images or non-base64 images (unless forceAll)
-                if (!image || (typeof image !== 'string' || !image.startsWith('data:')) && !forceAll) {
-                  continue;
-                }
-                
-                // Upload to Cloudinary
-                const result = await cloudinaryHelper.uploadImage(
-                  image, 
-                  `${submission.id}_${j}`,
-                  'appfoundry'
-                );
-                
-                // Store the mapping
-                imageMap.set(j, result.secure_url);
-              }
-              
-              // Update images in the submission
-              if (imageMap.size > 0) {
-                const updatedImages = [...submission.images];
-                
-                // Replace each image with its Cloudinary URL
-                for (const [index, url] of imageMap.entries()) {
-                  updatedImages[index] = url;
-                }
-                
-                // Update the submission in the content array
-                content[i].images = updatedImages;
-                contentUpdated = true;
-                results.updated++;
-                
-                results.details.push({
-                  id: submission.id,
-                  message: "Successfully migrated images to Cloudinary"
-                });
-              }
-            } catch (error) {
-              console.error(`Error migrating images for submission ${submission.id}:`, error);
-              results.details.push({
-                id: submission.id,
-                error: error.message
-              });
-            }
-          }
-          
-          // Save changes to GitHub if any updates were made
-          if (contentUpdated) {
-            await octokit.repos.createOrUpdateFileContents({
-              owner: GITHUB_OWNER,
-              repo: GITHUB_REPO,
-              path: `data/${statusFile}`,
-              message: `Migrate images for multiple submissions in ${statusFile}`,
-              content: Base64.encode(JSON.stringify(content, null, 2)),
-              sha: fileData.sha
+          if (result.updated) {
+            results.updated++;
+            results.details.push({
+              id: sourceInfo.submission.id,
+              message: "Successfully migrated images to Cloudinary"
             });
           }
         } catch (error) {
-          // If file not found, continue to next file
-          if (error.status === 404) {
-            continue;
-          }
-          
-          console.error(`Error processing ${statusFile}:`, error);
+          console.error(`Error migrating images for submission ${sourceInfo.submission.id}:`, error);
           results.details.push({
-            file: statusFile,
+            id: sourceInfo.submission.id,
             error: error.message
           });
         }
       }
       
-      // Update the sync timestamp
+      // Update the last sync timestamp in Supabase
       try {
-        // Update the last-sync.json file to trigger client syncs
         const timestamp = new Date().toISOString();
-        
-        try {
-          // Get the current file if it exists
-          const { data: syncFile } = await octokit.repos.getContent({
-            owner: GITHUB_OWNER,
-            repo: GITHUB_REPO,
-            path: 'data/last-sync.json'
-          });
+        const { data, error } = await supabase
+          .from('sync_log')
+          .upsert([{ id: 'last_sync', timestamp: timestamp }]);
           
-          // Update it
-          await octokit.repos.createOrUpdateFileContents({
-            owner: GITHUB_OWNER,
-            repo: GITHUB_REPO,
-            path: 'data/last-sync.json',
-            message: `Update sync timestamp: ${timestamp}`,
-            content: Base64.encode(JSON.stringify({ lastSync: timestamp })),
-            sha: syncFile.sha
-          });
-        } catch (error) {
-          // Create if not exists
-          if (error.status === 404) {
-            await octokit.repos.createOrUpdateFileContents({
-              owner: GITHUB_OWNER,
-              repo: GITHUB_REPO,
-              path: 'data/last-sync.json',
-              message: `Create sync timestamp: ${timestamp}`,
-              content: Base64.encode(JSON.stringify({ lastSync: timestamp }))
-            });
-          } else {
-            throw error;
-          }
-        }
+        if (error) throw error;
       } catch (syncError) {
         console.warn("Error updating sync timestamp:", syncError);
         // Continue anyway as this is not critical
