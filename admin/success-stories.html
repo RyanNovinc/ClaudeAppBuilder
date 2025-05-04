@@ -11,16 +11,34 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     
-    <!-- Admin Auth Helper Script -->
+    <!-- Supabase JS Client -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Admin Auth Helper Script with Supabase Integration -->
     <script>
     /**
-     * Admin Authentication Helper
+     * Admin Authentication Helper with Supabase Integration
      * This file provides a consistent interface for authenticating with the Netlify Functions API
+     * and includes Supabase integration for direct database operations
      */
 
     const AdminAuth = {
       // The token from your admin page - should match Netlify environment variable
       token: "xP8q#Rb7!DtEv3mK9$Lz",
+      
+      // Supabase configuration
+      supabaseUrl: 'https://your-project-id.supabase.co',
+      supabaseAnonKey: 'your-supabase-anon-key',
+      supabaseClient: null,
+      
+      // Initialize Supabase client
+      initSupabase() {
+        if (!this.supabaseClient && typeof supabase !== 'undefined') {
+          this.supabaseClient = supabase.createClient(this.supabaseUrl, this.supabaseAnonKey);
+          console.log("🔄 Supabase client initialized");
+        }
+        return this.supabaseClient;
+      },
       
       // Call any API endpoint with proper authentication
       async callApi(endpoint, method = 'GET', body = null) {
@@ -51,7 +69,7 @@
         } catch (error) {
           console.error(`❌ API call to ${endpoint} failed:`, error);
           
-          // New: Track failed API calls for monitoring
+          // Track failed API calls for monitoring
           this.recordApiFailure(endpoint, method, error);
           
           throw error;
@@ -60,19 +78,180 @@
       
       // Get submissions with status filter
       async getSubmissions(status = 'all') {
-        return this.callApi(`get-submissions?status=${status}`);
+        try {
+          // Try to use API first
+          return await this.callApi(`get-submissions?status=${status}`);
+        } catch (error) {
+          logActivity('warning', `API call to get submissions failed: ${error.message}. Trying direct Supabase connection.`);
+          
+          // Fallback to direct Supabase connection if API fails
+          return this.getSubmissionsFromSupabase(status);
+        }
+      },
+      
+      // Get submissions directly from Supabase
+      async getSubmissionsFromSupabase(status = 'all') {
+        try {
+          // Initialize Supabase client if needed
+          const supabase = this.initSupabase();
+          if (!supabase) {
+            throw new Error("Supabase client not available");
+          }
+          
+          // Build query
+          let query = supabase.from('submissions').select('*');
+          
+          if (status !== 'all') {
+            query = query.eq('status', status);
+          }
+          
+          // Execute query
+          const { data, error } = await query.order('created_at', { ascending: false });
+          
+          if (error) throw error;
+          
+          // Format submissions to match expected structure
+          return data.map(submission => {
+            // Parse cloudinary_images
+            let images = [];
+            try {
+              if (submission.cloudinary_images) {
+                if (typeof submission.cloudinary_images === 'string') {
+                  images = JSON.parse(submission.cloudinary_images);
+                } else if (Array.isArray(submission.cloudinary_images)) {
+                  images = submission.cloudinary_images;
+                }
+              }
+            } catch (e) {
+              console.error(`Error parsing cloudinary_images for submission ${submission.id}:`, e);
+            }
+            
+            return {
+              id: submission.id,
+              name: submission.name,
+              email: submission.email,
+              appName: submission.app_name,
+              appType: submission.app_type,
+              experienceLevel: submission.experience_level,
+              testimonial: submission.testimonial,
+              story: submission.story,
+              status: submission.status,
+              date: submission.created_at,
+              images: images
+            };
+          });
+        } catch (error) {
+          logActivity('error', `Error getting submissions from Supabase: ${error.message}`);
+          
+          // Fall back to localStorage as a last resort
+          return this.getSubmissionsFromLocalStorage(status);
+        }
+      },
+      
+      // Get submissions from localStorage as last fallback
+      getSubmissionsFromLocalStorage(status = 'all') {
+        try {
+          logActivity('warning', "Falling back to localStorage for submissions");
+          
+          const storedSubmissions = localStorage.getItem('appfoundry_submissions');
+          
+          if (!storedSubmissions) {
+            return [];
+          }
+          
+          let submissions = JSON.parse(storedSubmissions);
+          
+          if (status !== 'all') {
+            submissions = submissions.filter(sub => sub.status === status);
+          }
+          
+          return submissions;
+        } catch (error) {
+          logActivity('error', `Error getting submissions from localStorage: ${error.message}`);
+          return [];
+        }
       },
       
       // Approve a submission
       async approveSubmission(id) {
         try {
+          logActivity('info', `Approving submission ${id}`);
+          
+          // Try API first
           const result = await this.callApi('approve-submission', 'POST', { id });
+          
+          // Update localStorage as fallback
           this.updateLocalStorage(id, 'approved');
+          
           return result;
         } catch (error) {
-          // New: Enhanced error handling with logging
-          console.error(`Failed to approve submission ${id}:`, error);
-          logActivity('error', `Failed to approve submission ${id}: ${error.message}`);
+          logActivity('warning', `API call to approve submission failed: ${error.message}. Trying direct Supabase connection.`);
+          
+          // Fallback to direct Supabase connection
+          return this.approveSubmissionInSupabase(id);
+        }
+      },
+      
+      // Approve submission directly in Supabase
+      async approveSubmissionInSupabase(id) {
+        try {
+          // Initialize Supabase client if needed
+          const supabase = this.initSupabase();
+          if (!supabase) {
+            throw new Error("Supabase client not available");
+          }
+          
+          // Update the submission
+          const { data, error } = await supabase
+            .from('submissions')
+            .update({ status: 'approved' })
+            .eq('id', id)
+            .select()
+            .single();
+            
+          if (error) throw error;
+          
+          // Update localStorage
+          this.updateLocalStorage(id, 'approved');
+          
+          // Format the result to match the API response
+          const formattedSubmission = {
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            appName: data.app_name,
+            appType: data.app_type,
+            experienceLevel: data.experience_level,
+            testimonial: data.testimonial,
+            story: data.story,
+            status: data.status,
+            date: data.created_at,
+            images: this.parseCloudinaryImages(data.cloudinary_images)
+          };
+          
+          logActivity('success', `Successfully approved submission ${id} in Supabase`);
+          
+          return {
+            success: true,
+            message: "Submission approved successfully",
+            submission: formattedSubmission
+          };
+        } catch (error) {
+          logActivity('error', `Error approving submission in Supabase: ${error.message}`);
+          
+          // Fall back to localStorage as a last resort
+          const success = this.updateLocalStorage(id, 'approved');
+          
+          if (success) {
+            logActivity('info', `Approved submission ${id} in localStorage only`);
+            
+            return {
+              success: true,
+              message: "Submission approved in localStorage only",
+              offline: true
+            };
+          }
+          
           throw error;
         }
       },
@@ -80,27 +259,186 @@
       // Reject a submission
       async rejectSubmission(id) {
         try {
+          logActivity('info', `Rejecting submission ${id}`);
+          
+          // Try API first
           const result = await this.callApi('reject-submission', 'POST', { id });
+          
+          // Update localStorage as fallback
           this.updateLocalStorage(id, 'rejected');
+          
           return result;
         } catch (error) {
-          // New: Enhanced error handling with logging
-          console.error(`Failed to reject submission ${id}:`, error);
-          logActivity('error', `Failed to reject submission ${id}: ${error.message}`);
+          logActivity('warning', `API call to reject submission failed: ${error.message}. Trying direct Supabase connection.`);
+          
+          // Fallback to direct Supabase connection
+          return this.rejectSubmissionInSupabase(id);
+        }
+      },
+      
+      // Reject submission directly in Supabase
+      async rejectSubmissionInSupabase(id) {
+        try {
+          // Initialize Supabase client if needed
+          const supabase = this.initSupabase();
+          if (!supabase) {
+            throw new Error("Supabase client not available");
+          }
+          
+          // Update the submission
+          const { data, error } = await supabase
+            .from('submissions')
+            .update({ status: 'rejected' })
+            .eq('id', id)
+            .select()
+            .single();
+            
+          if (error) throw error;
+          
+          // Update localStorage
+          this.updateLocalStorage(id, 'rejected');
+          
+          // Format the result to match the API response
+          const formattedSubmission = {
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            appName: data.app_name,
+            appType: data.app_type,
+            experienceLevel: data.experience_level,
+            testimonial: data.testimonial,
+            story: data.story,
+            status: data.status,
+            date: data.created_at,
+            images: this.parseCloudinaryImages(data.cloudinary_images)
+          };
+          
+          logActivity('success', `Successfully rejected submission ${id} in Supabase`);
+          
+          return {
+            success: true,
+            message: "Submission rejected successfully",
+            submission: formattedSubmission
+          };
+        } catch (error) {
+          logActivity('error', `Error rejecting submission in Supabase: ${error.message}`);
+          
+          // Fall back to localStorage as a last resort
+          const success = this.updateLocalStorage(id, 'rejected');
+          
+          if (success) {
+            logActivity('info', `Rejected submission ${id} in localStorage only`);
+            
+            return {
+              success: true,
+              message: "Submission rejected in localStorage only",
+              offline: true
+            };
+          }
+          
           throw error;
         }
+      },
+      
+      // Parse Cloudinary images
+      parseCloudinaryImages(cloudinaryImages) {
+        if (!cloudinaryImages) return [];
+        
+        try {
+          if (typeof cloudinaryImages === 'string') {
+            return JSON.parse(cloudinaryImages);
+          }
+          
+          if (Array.isArray(cloudinaryImages)) {
+            return cloudinaryImages;
+          }
+        } catch (error) {
+          console.error('Error parsing Cloudinary images:', error);
+        }
+        
+        return [];
       },
       
       // Clear all rejected submissions
       async clearRejectedSubmissions() {
         try {
+          logActivity('info', `Clearing all rejected submissions`);
+          
+          // Try API first
           const result = await this.callApi('clear-rejected-submissions', 'POST');
-          logActivity('info', `Cleared rejected submissions: ${result.message}`);
+          
+          // Update localStorage
+          this.clearRejectedSubmissionsInLocalStorage();
+          
           return result;
         } catch (error) {
-          console.error(`Failed to clear rejected submissions:`, error);
-          logActivity('error', `Failed to clear rejected submissions: ${error.message}`);
-          throw error;
+          logActivity('warning', `API call to clear rejected submissions failed: ${error.message}. Trying direct Supabase connection.`);
+          
+          // Fallback to direct Supabase connection
+          return this.clearRejectedSubmissionsInSupabase();
+        }
+      },
+      
+      // Clear rejected submissions directly in Supabase
+      async clearRejectedSubmissionsInSupabase() {
+        try {
+          // Initialize Supabase client if needed
+          const supabase = this.initSupabase();
+          if (!supabase) {
+            throw new Error("Supabase client not available");
+          }
+          
+          // Delete rejected submissions
+          const { data, error } = await supabase
+            .from('submissions')
+            .delete()
+            .eq('status', 'rejected');
+            
+          if (error) throw error;
+          
+          // Update localStorage
+          this.clearRejectedSubmissionsInLocalStorage();
+          
+          logActivity('success', `Successfully cleared rejected submissions in Supabase`);
+          
+          return {
+            success: true,
+            message: "Rejected submissions cleared successfully"
+          };
+        } catch (error) {
+          logActivity('error', `Error clearing rejected submissions in Supabase: ${error.message}`);
+          
+          // Fall back to localStorage as a last resort
+          this.clearRejectedSubmissionsInLocalStorage();
+          
+          logActivity('info', `Cleared rejected submissions in localStorage only`);
+          
+          return {
+            success: true,
+            message: "Rejected submissions cleared in localStorage only",
+            offline: true
+          };
+        }
+      },
+      
+      // Clear rejected submissions in localStorage
+      clearRejectedSubmissionsInLocalStorage() {
+        try {
+          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+          const updatedSubmissions = submissions.filter(sub => sub.status !== 'rejected');
+          
+          localStorage.setItem('appfoundry_submissions', JSON.stringify(updatedSubmissions));
+          
+          // Update seed immediately too
+          localStorage.setItem('appfoundry_approved_seed', JSON.stringify(
+            updatedSubmissions.filter(s => s.status === 'approved')
+          ));
+          
+          logActivity('info', `Cleared rejected submissions in localStorage`);
+          return true;
+        } catch (error) {
+          logActivity('error', `Error clearing rejected submissions in localStorage: ${error.message}`);
+          return false;
         }
       },
       
@@ -108,44 +446,257 @@
       async updateSubmission(submission) {
         try {
           logActivity('info', `Updating submission ${submission.id}`);
+          
+          // Try API first
           const result = await this.callApi('update-submission', 'POST', submission);
           
-          // Also update in localStorage
+          // Update in localStorage
           this.updateSubmissionInLocalStorage(submission);
           
           return result;
         } catch (error) {
-          logActivity('error', `Failed to update submission ${submission.id}: ${error.message}`);
+          logActivity('warning', `API call to update submission failed: ${error.message}. Trying direct Supabase connection.`);
+          
+          // Fallback to direct Supabase connection
+          return this.updateSubmissionInSupabase(submission);
+        }
+      },
+      
+      // Update submission directly in Supabase
+      async updateSubmissionInSupabase(submission) {
+        try {
+          // Initialize Supabase client if needed
+          const supabase = this.initSupabase();
+          if (!supabase) {
+            throw new Error("Supabase client not available");
+          }
+          
+          // Format the submission for Supabase
+          const supabaseSubmission = {
+            name: submission.name,
+            email: submission.email,
+            app_name: submission.appName,
+            app_type: submission.appType,
+            experience_level: submission.experienceLevel,
+            testimonial: submission.testimonial,
+            story: submission.story
+          };
+          
+          // Add images if provided
+          if (submission.images) {
+            supabaseSubmission.cloudinary_images = JSON.stringify(submission.images);
+          }
+          
+          // Update in Supabase
+          const { data, error } = await supabase
+            .from('submissions')
+            .update(supabaseSubmission)
+            .eq('id', submission.id)
+            .select()
+            .single();
+            
+          if (error) throw error;
+          
+          // Update in localStorage
+          this.updateSubmissionInLocalStorage(submission);
+          
+          // Format the result
+          const formattedSubmission = {
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            appName: data.app_name,
+            appType: data.app_type,
+            experienceLevel: data.experience_level,
+            testimonial: data.testimonial,
+            story: data.story,
+            status: data.status,
+            date: data.created_at,
+            images: this.parseCloudinaryImages(data.cloudinary_images)
+          };
+          
+          logActivity('success', `Successfully updated submission ${submission.id} in Supabase`);
+          
+          return {
+            success: true,
+            message: "Submission updated successfully",
+            submission: formattedSubmission
+          };
+        } catch (error) {
+          logActivity('error', `Error updating submission in Supabase: ${error.message}`);
+          
+          // Fall back to localStorage as a last resort
+          const success = this.updateSubmissionInLocalStorage(submission);
+          
+          if (success) {
+            logActivity('info', `Updated submission ${submission.id} in localStorage only`);
+            
+            return {
+              success: true,
+              message: "Submission updated in localStorage only",
+              offline: true
+            };
+          }
+          
           throw error;
         }
       },
       
       // Delete a submission
       async deleteSubmission(id) {
-        return this.callApi('delete-submission', 'POST', { id });
+        try {
+          logActivity('info', `Deleting submission ${id}`);
+          
+          // Try API first
+          return await this.callApi('delete-submission', 'POST', { id });
+        } catch (error) {
+          logActivity('warning', `API call to delete submission failed: ${error.message}. Trying direct Supabase connection.`);
+          
+          // Fallback to direct Supabase connection
+          return this.deleteSubmissionInSupabase(id);
+        }
       },
       
-      // New: Force sync submissions from GitHub to localStorage
-      async forceSync() {
+      // Delete submission directly in Supabase
+      async deleteSubmissionInSupabase(id) {
         try {
-          logActivity('info', 'Force syncing submissions from GitHub to localStorage');
-          const syncResult = await this.callApi('sync-submissions', 'POST');
-          
-          // Update localStorage with the synced data
-          if (syncResult && syncResult.submissions) {
-            localStorage.setItem('appfoundry_submissions', JSON.stringify(syncResult.submissions));
-            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(
-              syncResult.submissions.filter(s => s.status === 'approved')
-            ));
-            
-            logActivity('success', `Synced ${syncResult.submissions.length} submissions from GitHub`);
-            return syncResult;
+          // Initialize Supabase client if needed
+          const supabase = this.initSupabase();
+          if (!supabase) {
+            throw new Error("Supabase client not available");
           }
           
-          return { success: false, message: 'No submissions returned from sync' };
+          // Delete from Supabase
+          const { error } = await supabase
+            .from('submissions')
+            .delete()
+            .eq('id', id);
+            
+          if (error) throw error;
+          
+          // Delete from localStorage
+          this.deleteSubmissionFromLocalStorage(id);
+          
+          logActivity('success', `Successfully deleted submission ${id} from Supabase`);
+          
+          return {
+            success: true,
+            message: "Submission deleted successfully"
+          };
+        } catch (error) {
+          logActivity('error', `Error deleting submission from Supabase: ${error.message}`);
+          
+          // Fall back to localStorage as a last resort
+          const success = this.deleteSubmissionFromLocalStorage(id);
+          
+          if (success) {
+            logActivity('info', `Deleted submission ${id} from localStorage only`);
+            
+            return {
+              success: true,
+              message: "Submission deleted from localStorage only",
+              offline: true
+            };
+          }
+          
+          throw error;
+        }
+      },
+      
+      // Delete submission from localStorage
+      deleteSubmissionFromLocalStorage(id) {
+        try {
+          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+          const updatedSubmissions = submissions.filter(sub => sub.id !== id);
+          
+          if (submissions.length === updatedSubmissions.length) {
+            logActivity('warning', `Submission ${id} not found in localStorage`);
+            return false;
+          }
+          
+          localStorage.setItem('appfoundry_submissions', JSON.stringify(updatedSubmissions));
+          
+          // Update seed immediately too
+          localStorage.setItem('appfoundry_approved_seed', JSON.stringify(
+            updatedSubmissions.filter(s => s.status === 'approved')
+          ));
+          
+          logActivity('info', `Deleted submission ${id} from localStorage`);
+          return true;
+        } catch (error) {
+          logActivity('error', `Error deleting submission from localStorage: ${error.message}`);
+          return false;
+        }
+      },
+      
+      // Force sync submissions from Supabase to localStorage
+      async forceSync() {
+        try {
+          logActivity('info', 'Force syncing submissions from Supabase');
+          
+          // Initialize Supabase client if needed
+          const supabase = this.initSupabase();
+          if (!supabase) {
+            throw new Error("Supabase client not available");
+          }
+          
+          // Get all submissions from Supabase
+          const { data, error } = await supabase
+            .from('submissions')
+            .select('*')
+            .order('created_at', { ascending: false });
+            
+          if (error) throw error;
+          
+          if (!Array.isArray(data) || data.length === 0) {
+            logActivity('warning', 'No submissions found in Supabase');
+            return { success: false, message: 'No submissions found in Supabase' };
+          }
+          
+          // Format submissions
+          const formattedSubmissions = data.map(submission => ({
+            id: submission.id,
+            name: submission.name,
+            email: submission.email,
+            appName: submission.app_name,
+            appType: submission.app_type,
+            experienceLevel: submission.experience_level,
+            testimonial: submission.testimonial,
+            story: submission.story,
+            status: submission.status,
+            date: submission.created_at,
+            images: this.parseCloudinaryImages(submission.cloudinary_images)
+          }));
+          
+          // Update localStorage
+          localStorage.setItem('appfoundry_submissions', JSON.stringify(formattedSubmissions));
+          
+          // Update approved seed
+          localStorage.setItem('appfoundry_approved_seed', JSON.stringify(
+            formattedSubmissions.filter(s => s.status === 'approved')
+          ));
+          
+          // Update last sync timestamp
+          localStorage.setItem('appfoundry_last_sync', new Date().toISOString());
+          
+          logActivity('success', `Successfully synced ${formattedSubmissions.length} submissions from Supabase`);
+          
+          return {
+            success: true,
+            message: `Successfully synced ${formattedSubmissions.length} submissions from Supabase`,
+            submissions: formattedSubmissions
+          };
         } catch (error) {
           logActivity('error', `Force sync failed: ${error.message}`);
-          throw error;
+          
+          // Try API as fallback
+          try {
+            const result = await this.callApi('sync-submissions', 'POST');
+            return result;
+          } catch (apiError) {
+            logActivity('error', `API sync failed: ${apiError.message}`);
+            throw error;
+          }
         }
       },
       
@@ -181,7 +732,7 @@
         }
       },
       
-      // New: Update a submission's details in localStorage
+      // Update a submission's details in localStorage
       updateSubmissionInLocalStorage(updatedSubmission) {
         try {
           // Find the submission
@@ -215,7 +766,30 @@
         }
       },
       
-      // New: Track API failures for monitoring
+      // Migrate images to Cloudinary
+      async migrateImagesToCloudinary(submissionId, forceAll = false) {
+        try {
+          logActivity('info', `Migrating images to Cloudinary${submissionId ? ` for submission ${submissionId}` : ' for all submissions'}`);
+          
+          // Call the migrate-images function
+          const result = await this.callApi('migrate-images', 'POST', { 
+            submissionId: submissionId || null,
+            forceAll: forceAll || false
+          });
+          
+          if (result.success) {
+            // Force sync to update localStorage with the new Cloudinary URLs
+            await this.forceSync();
+          }
+          
+          return result;
+        } catch (error) {
+          logActivity('error', `Error migrating images to Cloudinary: ${error.message}`);
+          throw error;
+        }
+      },
+      
+      // Track API failures for monitoring
       recordApiFailure(endpoint, method, error) {
         try {
           const failures = JSON.parse(localStorage.getItem('appfoundry_api_failures') || '[]');
@@ -237,13 +811,72 @@
         }
       },
       
-      // New: Get API failures history
+      // Get API failures history
       getApiFailures() {
         try {
           return JSON.parse(localStorage.getItem('appfoundry_api_failures') || '[]');
         } catch (e) {
           console.error('Failed to get API failures:', e);
           return [];
+        }
+      },
+      
+      // Run a health check for the system
+      async checkSystemHealth() {
+        try {
+          logActivity('info', 'Running system health check');
+          
+          const results = {
+            success: false,
+            supabase: false,
+            netlifyFunctions: false,
+            cloudinary: false,
+            details: []
+          };
+          
+          // Check Supabase connection
+          try {
+            const supabase = this.initSupabase();
+            if (!supabase) {
+              throw new Error("Supabase client not available");
+            }
+            
+            // Test a simple query
+            const { data, error } = await supabase
+              .from('submissions')
+              .select('id')
+              .limit(1);
+              
+            if (error) throw error;
+            
+            results.supabase = true;
+            results.details.push({ component: 'Supabase', status: 'Connected' });
+          } catch (supabaseError) {
+            results.details.push({ component: 'Supabase', status: 'Error', message: supabaseError.message });
+          }
+          
+          // Check Netlify Functions
+          try {
+            await this.callApi('health-check', 'GET');
+            
+            results.netlifyFunctions = true;
+            results.details.push({ component: 'Netlify Functions', status: 'Connected' });
+          } catch (netlifyError) {
+            results.details.push({ component: 'Netlify Functions', status: 'Error', message: netlifyError.message });
+          }
+          
+          // Overall status
+          results.success = results.supabase || results.netlifyFunctions;
+          
+          return results;
+        } catch (error) {
+          logActivity('error', `System health check failed: ${error.message}`);
+          
+          return {
+            success: false,
+            message: error.message,
+            details: [{ component: 'System', status: 'Error', message: error.message }]
+          };
         }
       }
     };
@@ -582,37 +1215,55 @@
           
           logActivity('info', 'Running system health check');
           
-          // Test GitHub API connectivity
-          const healthResult = await AdminAuth.callApi('health-check', 'GET');
+          // Test system health
+          const healthResult = await AdminAuth.checkSystemHealth();
           
           if (healthResult.success) {
             const healthDetails = document.getElementById('health-details');
             
-            healthDetails.innerHTML = `
+            // Create details HTML
+            let detailsHtml = `
               <div class="bg-green-100 text-green-800 p-4 rounded">
                 <h3 class="font-bold">✅ System Healthy</h3>
                 <ul class="mt-2 space-y-1">
-                  <li>GitHub API: Connected</li>
-                  <li>Repository: ${healthResult.repository || 'Connected'}</li>
-                  <li>Data Files: ${healthResult.dataFiles?.join(', ') || 'Available'}</li>
+            `;
+            
+            // Add components details
+            healthResult.details.forEach(component => {
+              detailsHtml += `<li>${component.name}: ${component.status}</li>`;
+            });
+            
+            detailsHtml += `
                 </ul>
               </div>
             `;
+            
+            healthDetails.innerHTML = detailsHtml;
             
             logActivity('success', 'System health check passed');
           } else {
             const healthDetails = document.getElementById('health-details');
             
-            healthDetails.innerHTML = `
+            // Create error details HTML
+            let detailsHtml = `
               <div class="bg-red-100 text-red-800 p-4 rounded">
                 <h3 class="font-bold">❌ System Issues Detected</h3>
                 <p>${healthResult.message || 'Unknown error'}</p>
                 <ul class="mt-2 space-y-1">
-                  ${healthResult.errors?.map(err => `<li>${err}</li>`).join('') || ''}
+            `;
+            
+            // Add error details
+            healthResult.details.forEach(component => {
+              detailsHtml += `<li>${component.name}: ${component.status}${component.message ? ` - ${component.message}` : ''}</li>`;
+            });
+            
+            detailsHtml += `
                 </ul>
-                <p class="mt-2">Try running a force sync or check your GitHub token.</p>
+                <p class="mt-2">Try running a force sync or check your Supabase configuration.</p>
               </div>
             `;
+            
+            healthDetails.innerHTML = detailsHtml;
             
             logActivity('error', `System health check failed: ${healthResult.message}`);
           }
@@ -623,7 +1274,7 @@
             <div class="bg-red-100 text-red-800 p-4 rounded">
               <h3 class="font-bold">❌ System Check Failed</h3>
               <p>${error.message}</p>
-              <p class="mt-2">Unable to connect to API. Check your network connection and API endpoint.</p>
+              <p class="mt-2">Unable to connect to API or Supabase. Check your network connection and configuration.</p>
             </div>
           `;
           
@@ -634,22 +1285,25 @@
         }
       }
       
-      // Force sync submissions from GitHub
+      // Force sync submissions from Supabase
       async function forceSyncSubmissions() {
+        if (!confirm('Are you sure you want to force sync all submissions from Supabase? This will overwrite local data.')) {
+          return;
+        }
+        
         try {
-          if (!confirm('Are you sure you want to force sync all submissions from GitHub? This will overwrite local data.')) {
-            return;
-          }
-          
+          // Show loading indicator
           document.getElementById('force-sync-button').disabled = true;
           document.getElementById('force-sync-button').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+          document.getElementById('loading-indicator').style.display = 'flex';
+          document.getElementById('submissions').style.display = 'none';
           
-          logActivity('info', 'Force syncing submissions from GitHub');
+          logActivity('info', 'Force syncing submissions from Supabase...');
           
           const syncResult = await AdminAuth.forceSync();
           
           if (syncResult.success) {
-            logActivity('success', `Successfully synced ${syncResult.submissions?.length || 0} submissions from GitHub`);
+            logActivity('success', `Successfully synced ${syncResult.submissions?.length || 0} submissions from Supabase`);
             alert(`Sync successful! ${syncResult.submissions?.length || 0} submissions synced.`);
             loadSubmissions(); // Refresh the display
           } else {
@@ -661,7 +1315,8 @@
           alert(`Sync failed: ${error.message}`);
         } finally {
           document.getElementById('force-sync-button').disabled = false;
-          document.getElementById('force-sync-button').innerHTML = '<i class="fas fa-sync-alt"></i> Force Sync from GitHub';
+          document.getElementById('force-sync-button').innerHTML = '<i class="fas fa-sync-alt"></i> Force Sync from Supabase';
+          document.getElementById('loading-indicator').style.display = 'none';
         }
       }
     </script>
@@ -678,6 +1333,9 @@
       // Load submissions when page loads
       document.addEventListener('DOMContentLoaded', function() {
         logActivity('info', 'Admin dashboard loaded');
+        
+        // Initialize Supabase if available
+        AdminAuth.initSupabase();
         
         // Set up sort switch
         document.getElementById('sort-switch').addEventListener('change', function() {
@@ -984,49 +1642,8 @@
         } catch (error) {
           logActivity('error', `Error approving submission: ${error.message}`);
           showToast('Error', `Failed to approve submission: ${error.message}`, 'error');
-          
-          // Try localStorage fallback
-          fallbackApprove(id);
         } finally {
           document.getElementById('loading-indicator').style.display = 'none';
-        }
-      }
-      
-      // Fallback approve function
-      function fallbackApprove(id) {
-        try {
-          logActivity('warning', `Attempting localStorage fallback for approving ${id}`);
-          
-          // Find the submission
-          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-          const submissionIndex = submissions.findIndex(s => s.id === id);
-          
-          if (submissionIndex !== -1) {
-            // Update status
-            submissions[submissionIndex].status = 'approved';
-            
-            // Save to localStorage
-            localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-            
-            // Update seed immediately too
-            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(
-              submissions.filter(s => s.status === 'approved')
-            ));
-            
-            // Reload
-            loadSubmissions();
-            
-            showToast('Success', 'Submission approved successfully (localStorage fallback)!', 'success');
-            logActivity('success', `Fallback approval successful for ${id}`);
-            return true;
-          }
-          
-          logActivity('error', `Submission ${id} not found in localStorage`);
-          return false;
-        } catch (localStorageError) {
-          logActivity('error', `Error in localStorage fallback: ${localStorageError.message}`);
-          showToast('Error', 'Could not approve submission. Please try again later.', 'error');
-          return false;
         }
       }
       
@@ -1058,49 +1675,8 @@
         } catch (error) {
           logActivity('error', `Error rejecting submission: ${error.message}`);
           showToast('Error', `Failed to reject submission: ${error.message}`, 'error');
-          
-          // Try localStorage fallback
-          fallbackReject(id);
         } finally {
           document.getElementById('loading-indicator').style.display = 'none';
-        }
-      }
-      
-      // Fallback reject function
-      function fallbackReject(id) {
-        try {
-          logActivity('warning', `Attempting localStorage fallback for rejecting ${id}`);
-          
-          // Find the submission
-          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-          const submissionIndex = submissions.findIndex(s => s.id === id);
-          
-          if (submissionIndex !== -1) {
-            // Update status
-            submissions[submissionIndex].status = 'rejected';
-            
-            // Save to localStorage
-            localStorage.setItem('appfoundry_submissions', JSON.stringify(submissions));
-            
-            // Update seed immediately too
-            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(
-              submissions.filter(s => s.status === 'approved')
-            ));
-            
-            // Reload
-            loadSubmissions();
-            
-            showToast('Success', 'Submission rejected successfully (localStorage fallback)!', 'success');
-            logActivity('success', `Fallback rejection successful for ${id}`);
-            return true;
-          }
-          
-          logActivity('error', `Submission ${id} not found in localStorage`);
-          return false;
-        } catch (localStorageError) {
-          logActivity('error', `Error in localStorage fallback: ${localStorageError.message}`);
-          showToast('Error', 'Could not reject submission. Please try again later.', 'error');
-          return false;
         }
       }
       
@@ -1151,20 +1727,10 @@
           
           logActivity('info', 'Clearing all rejected submissions');
           
-          // Call the API to clear rejected submissions
-          const result = await AdminAuth.callApi('clear-rejected-submissions', 'POST');
+          // Call the AdminAuth helper to clear rejected submissions
+          const result = await AdminAuth.clearRejectedSubmissions();
           
           logActivity('success', `Successfully cleared rejected submissions: ${result.message}`);
-          
-          // Update local storage to reflect the changes
-          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-          const updatedSubmissions = submissions.filter(sub => sub.status !== 'rejected');
-          localStorage.setItem('appfoundry_submissions', JSON.stringify(updatedSubmissions));
-          
-          // Update seed immediately too
-          localStorage.setItem('appfoundry_approved_seed', JSON.stringify(
-            updatedSubmissions.filter(s => s.status === 'approved')
-          ));
           
           // Reload submissions
           await loadSubmissions();
@@ -1417,6 +1983,43 @@
           }, 300);
         }, 5000);
       }
+      
+      // Migrate images to Cloudinary function
+      async function migrateImagesToCloudinary() {
+        try {
+          if (!confirm('This will migrate all base64 images to Cloudinary. Continue?')) {
+            return;
+          }
+          
+          // Show loading indicator
+          document.getElementById('loading-indicator').style.display = 'flex';
+          document.getElementById('submissions').style.display = 'none';
+          
+          logActivity('info', 'Starting image migration to Cloudinary...');
+          
+          // Use AdminAuth helper to migrate images
+          const result = await AdminAuth.migrateImagesToCloudinary(null, false);
+          
+          if (result.success) {
+            const updatedCount = result.results?.updated || 0;
+            const totalCount = result.results?.total || 0;
+            
+            logActivity('success', `Migration completed: ${updatedCount} of ${totalCount} submissions updated`);
+            showToast('Success', `Migration completed: ${updatedCount} of ${totalCount} submissions updated`, 'success');
+            
+            // Reload submissions to display updated data
+            await loadSubmissions();
+          } else {
+            throw new Error(result.message || 'Unknown error during migration');
+          }
+        } catch (error) {
+          logActivity('error', `Migration failed: ${error.message}`);
+          showToast('Error', `Migration failed: ${error.message}`, 'error');
+        } finally {
+          // Hide loading indicator
+          document.getElementById('loading-indicator').style.display = 'none';
+        }
+      }
     </script>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -1452,7 +2055,7 @@
                     <i class="fas fa-heartbeat mr-2"></i> Check System Health
                 </button>
                 <button id="force-sync-button" onclick="forceSyncSubmissions()" class="px-3 py-1.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors flex items-center">
-                    <i class="fas fa-sync-alt mr-2"></i> Force Sync from GitHub
+                    <i class="fas fa-sync-alt mr-2"></i> Force Sync from Supabase
                 </button>
             </div>
         </div>
@@ -1666,59 +2269,5 @@
         </button>
         <img id="full-image" src="" alt="Full size image" class="max-w-[90%] max-h-[90vh] object-contain">
     </div>
-    
-    <!-- Cloudinary Migration Function -->
-    <script>
-        // Migration function for Cloudinary
-        async function migrateImagesToCloudinary() {
-            if (!confirm('This will migrate all base64 images to Cloudinary. Continue?')) {
-                return;
-            }
-            
-            try {
-                // Show loading indicator
-                document.getElementById('loading-indicator').style.display = 'flex';
-                document.getElementById('submissions').style.display = 'none';
-                
-                // Call the migrate-images function with admin token
-                logActivity('info', 'Starting image migration to Cloudinary...');
-                
-                const response = await fetch('/.netlify/functions/migrate-images', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${AdminAuth.token}`
-                    },
-                    body: JSON.stringify({ forceAll: false })
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Server returned ${response.status}: ${errorText}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    logActivity('success', `Migration completed: ${result.results?.updated || 0} of ${result.results?.total || 0} submissions updated`);
-                    showToast('Success', `Migration completed: ${result.results?.updated || 0} of ${result.results?.total || 0} submissions updated`, 'success');
-                    
-                    // Force sync local storage with GitHub
-                    await AdminAuth.forceSync();
-                    
-                    // Reload submissions to display updated data
-                    await loadSubmissions();
-                } else {
-                    throw new Error(result.message || 'Unknown error during migration');
-                }
-            } catch (error) {
-                logActivity('error', `Migration failed: ${error.message}`);
-                showToast('Error', `Migration failed: ${error.message}`, 'error');
-            } finally {
-                // Hide loading indicator
-                document.getElementById('loading-indicator').style.display = 'none';
-            }
-        }
-    </script>
 </body>
 </html>
