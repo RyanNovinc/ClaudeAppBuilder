@@ -1,28 +1,11 @@
-const { Octokit } = require("@octokit/rest");
-const { Base64 } = require("js-base64");
+const { createClient } = require('@supabase/supabase-js');
 
-// GitHub repository information
-const GITHUB_OWNER = "RyanNovinc";
-const GITHUB_REPO = "ClaudeAppBuilder";
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+// Supabase configuration
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
-// Log function for consistent logging
-function log(level, message, data = null) {
-  const timestamp = new Date().toISOString();
-  const logEntry = { 
-    timestamp, 
-    level, 
-    message,
-    ...(data ? { data } : {})
-  };
-  
-  console.log(JSON.stringify(logEntry));
-}
-
 exports.handler = async function(event, context) {
-  log('info', 'Sync submissions function called');
-  
   // Set CORS headers
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -33,7 +16,6 @@ exports.handler = async function(event, context) {
 
   // Handle preflight OPTIONS request
   if (event.httpMethod === "OPTIONS") {
-    log('debug', 'Handling OPTIONS request');
     return {
       statusCode: 200,
       headers,
@@ -43,7 +25,6 @@ exports.handler = async function(event, context) {
 
   // Only allow POST requests
   if (event.httpMethod !== "POST") {
-    log('warn', 'Method not allowed', { method: event.httpMethod });
     return {
       statusCode: 405,
       headers,
@@ -51,139 +32,91 @@ exports.handler = async function(event, context) {
     };
   }
   
-  // AUTHENTICATION HANDLING
-  // Get the token from either Authorization header or query parameter
+  // Check authentication
+  const authHeader = event.headers.authorization;
   let token = null;
   
-  // Check Authorization header
-  const authHeader = event.headers.authorization;
   if (authHeader) {
-    // Allow both "Bearer TOKEN" and just "TOKEN"
     token = authHeader.startsWith("Bearer ") 
       ? authHeader.split(" ")[1]
       : authHeader;
   }
   
-  // If no token in header, check query parameters
-  if (!token && event.queryStringParameters && event.queryStringParameters.token) {
-    token = event.queryStringParameters.token;
-  }
-  
-  // Check if token is valid
   if (!token || token !== ADMIN_TOKEN) {
-    log('warn', 'Authentication failed', { providedToken: token ? '***' : 'none' });
     return {
       statusCode: 401,
       headers,
-      body: JSON.stringify({ error: "Unauthorized - Invalid or missing token" })
+      body: JSON.stringify({ error: "Unauthorized - Invalid or missing admin token" })
     };
   }
 
   try {
-    // Initialize GitHub API client
-    const octokit = new Octokit({
-      auth: GITHUB_TOKEN
-    });
+    // Initialize Supabase client
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     
-    // Fetch all submissions from all status files
-    const submissions = [];
-    const errors = [];
-    const dataStatuses = ['pending', 'approved', 'rejected'];
-    
-    for (const status of dataStatuses) {
-      const path = `data/${status}-submissions.json`;
+    // Fetch all submissions from Supabase
+    const { data, error } = await supabase
+      .from('submissions')
+      .select('*')
+      .order('created_at', { ascending: false });
       
+    if (error) throw error;
+    
+    // Format the submissions for the response
+    const formattedSubmissions = data.map(submission => {
+      // Parse cloudinary_images
+      let images = [];
       try {
-        log('info', `Fetching submissions from ${path}`);
-        const { data: fileData } = await octokit.repos.getContent({
-          owner: GITHUB_OWNER,
-          repo: GITHUB_REPO,
-          path,
-        });
-        
-        const content = JSON.parse(Base64.decode(fileData.content));
-        
-        // Ensure all submissions have their status set correctly
-        const statusSubmissions = content.map(submission => ({
-          ...submission,
-          status
-        }));
-        
-        submissions.push(...statusSubmissions);
-        log('info', `Added ${statusSubmissions.length} ${status} submissions`);
-      } catch (fileError) {
-        if (fileError.status === 404) {
-          log('warn', `Data file ${path} not found`);
-        } else {
-          log('error', `Error fetching submissions from ${path}`, { error: fileError.message });
-          errors.push(`Error fetching ${status} submissions: ${fileError.message}`);
+        if (submission.cloudinary_images) {
+          if (typeof submission.cloudinary_images === 'string') {
+            images = JSON.parse(submission.cloudinary_images);
+          } else if (Array.isArray(submission.cloudinary_images)) {
+            images = submission.cloudinary_images;
+          }
         }
+      } catch (e) {
+        console.error(`Error parsing cloudinary_images for submission ${submission.id}:`, e);
       }
-    }
-    
-    // Sort submissions by date, newest first
-    submissions.sort((a, b) => {
-      const dateA = new Date(a.date || 0);
-      const dateB = new Date(b.date || 0);
-      return dateB - dateA;
+      
+      return {
+        id: submission.id,
+        name: submission.name,
+        email: submission.email,
+        appName: submission.app_name,
+        appType: submission.app_type,
+        experienceLevel: submission.experience_level,
+        testimonial: submission.testimonial,
+        story: submission.story,
+        status: submission.status,
+        date: submission.created_at,
+        images: images
+      };
     });
     
-    // Check for duplicate IDs (which shouldn't happen but let's be safe)
-    const submissionIds = new Set();
-    const uniqueSubmissions = [];
-    const duplicates = [];
-    
-    for (const submission of submissions) {
-      if (submissionIds.has(submission.id)) {
-        duplicates.push(submission.id);
-        log('warn', `Found duplicate submission ID: ${submission.id}`);
-      } else {
-        submissionIds.add(submission.id);
-        uniqueSubmissions.push(submission);
-      }
-    }
-    
-    // Prepare response
-    const response = {
-      success: true,
-      submissionCounts: {
-        total: uniqueSubmissions.length,
-        pending: uniqueSubmissions.filter(s => s.status === 'pending').length,
-        approved: uniqueSubmissions.filter(s => s.status === 'approved').length,
-        rejected: uniqueSubmissions.filter(s => s.status === 'rejected').length
-      },
-      submissions: uniqueSubmissions
-    };
-    
-    if (duplicates.length > 0) {
-      response.warnings = [`Found ${duplicates.length} duplicate submission IDs`];
-      response.duplicateIds = duplicates;
-    }
-    
-    if (errors.length > 0) {
-      response.errors = errors;
-    }
-    
-    log('info', 'Sync completed successfully', { 
-      counts: response.submissionCounts,
-      duplicates: duplicates.length
-    });
+    // Update the sync timestamp
+    const timestamp = new Date().toISOString();
+    await supabase
+      .from('sync_log')
+      .upsert([{ id: 'last_sync', timestamp: timestamp }]);
     
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(response)
+      body: JSON.stringify({
+        success: true,
+        message: `Successfully synced ${formattedSubmissions.length} submissions from Supabase`,
+        submissions: formattedSubmissions,
+        timestamp: timestamp
+      })
     };
   } catch (error) {
-    log('error', `Sync submissions error: ${error.message}`, { stack: error.stack });
+    console.error('Error syncing submissions from Supabase:', error);
     
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        success: false,
-        message: "Sync failed",
-        error: error.message
+        error: "An error occurred while syncing submissions from Supabase."
       })
     };
   }
