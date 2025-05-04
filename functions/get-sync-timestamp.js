@@ -1,16 +1,15 @@
-const { Octokit } = require("@octokit/rest");
-const { Base64 } = require("js-base64");
+const { createClient } = require('@supabase/supabase-js');
 
-// GitHub repository information
-const GITHUB_OWNER = "RyanNovinc";
-const GITHUB_REPO = "ClaudeAppBuilder";
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+// Supabase configuration
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 exports.handler = async function(event, context) {
   // Set CORS headers
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Content-Type": "application/json"
   };
 
@@ -23,49 +22,67 @@ exports.handler = async function(event, context) {
     };
   }
 
+  // Only allow GET requests
+  if (event.httpMethod !== "GET") {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: "Method not allowed" })
+    };
+  }
+
   try {
-    // Initialize GitHub API client
-    const octokit = new Octokit({
-      auth: GITHUB_TOKEN
-    });
+    // Initialize Supabase client
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     
-    try {
-      // Get the sync file
-      const { data: syncFile } = await octokit.repos.getContent({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        path: 'data/last-sync.json'
-      });
+    // Get the last sync timestamp from Supabase
+    const { data, error } = await supabase
+      .from('sync_log')
+      .select('*')
+      .eq('id', 'last_sync')
+      .single();
       
-      // Decode and parse content
-      const content = JSON.parse(Base64.decode(syncFile.content));
-      
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify(content)
-      };
-    } catch (error) {
-      // If file doesn't exist, return a default timestamp
-      if (error.status === 404) {
+    if (error) {
+      // If not found, create a new timestamp entry
+      if (error.code === 'PGRST116') {
+        const timestamp = new Date().toISOString();
+        
+        const { data: newData, error: insertError } = await supabase
+          .from('sync_log')
+          .insert([{ id: 'last_sync', timestamp: timestamp }])
+          .select();
+          
+        if (insertError) throw insertError;
+        
         return {
           statusCode: 200,
           headers,
-          body: JSON.stringify({ lastSync: new Date().toISOString() })
+          body: JSON.stringify({
+            lastSync: timestamp,
+            isNew: true
+          })
         };
       }
       
       throw error;
     }
+    
+    // Return the timestamp
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        lastSync: data.timestamp
+      })
+    };
   } catch (error) {
-    console.error("Error getting sync timestamp:", error);
+    console.error('Error getting sync timestamp:', error);
     
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: "An error occurred while getting sync timestamp",
-        message: error.message
+        error: "An error occurred while getting the sync timestamp."
       })
     };
   }
