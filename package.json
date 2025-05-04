@@ -30,6 +30,7 @@
     "fs-extra": "^11.1.1",
     "@octokit/rest": "^19.0.7",
     "js-base64": "^3.7.5",
-    "cloudinary": "^1.41.0"
+    "cloudinary": "^1.41.0",
+    "@supabase/supabase-js": "^2.39.3"
   }
 }
