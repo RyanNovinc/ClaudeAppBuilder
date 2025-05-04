@@ -1,135 +1,121 @@
-// functions/delete-submission.js
-const { getStore } = require('@netlify/blobs');
+const { createClient } = require('@supabase/supabase-js');
+
+// Supabase configuration
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
 exports.handler = async function(event, context) {
   // Set CORS headers
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json'
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Content-Type": "application/json"
   };
 
-  // Handle preflight requests
-  if (event.httpMethod === 'OPTIONS') {
+  // Handle preflight OPTIONS request
+  if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
       headers,
-      body: ''
+      body: ""
     };
   }
 
   // Only allow POST requests
-  if (event.httpMethod !== 'POST') {
+  if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
+      body: JSON.stringify({ error: "Method not allowed" })
     };
   }
-
-  // Basic authentication check
-  const adminToken = process.env.ADMIN_API_KEY || 'admin_token_secure';
   
-  // Check Authorization header
-  if (!event.headers.authorization) {
+  // Check authentication
+  const authHeader = event.headers.authorization;
+  let token = null;
+  
+  if (authHeader) {
+    token = authHeader.startsWith("Bearer ") 
+      ? authHeader.split(" ")[1]
+      : authHeader;
+  }
+  
+  if (!token || token !== ADMIN_TOKEN) {
     return {
       statusCode: 401,
       headers,
-      body: JSON.stringify({ error: 'Missing authorization header' })
+      body: JSON.stringify({ error: "Unauthorized - Invalid or missing admin token" })
     };
-  }
-  
-  // Simple token validation - in production use proper auth
-  if (event.headers.authorization !== `Bearer ${adminToken}`) {
-    // For testing, allow admin_token_ pattern to work
-    if (!event.headers.authorization.startsWith('Bearer admin_token_')) {
-      return {
-        statusCode: 401,
-        headers,
-        body: JSON.stringify({ error: 'Invalid authorization token' })
-      };
-    }
   }
 
   try {
-    // Parse the request body
+    // Parse request body
     const data = JSON.parse(event.body);
+    const { id } = data;
     
-    // Validate required fields
-    if (!data.id) {
+    if (!id) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Missing required field: id' })
+        body: JSON.stringify({ error: "Missing submission ID" })
       };
     }
     
-    // Initialize Netlify Blob Storage using getStore
-    const store = getStore({
-      name: 'success-stories'
-    });
+    // Initialize Supabase client
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     
-    // First check if the submission exists
-    try {
-      const submissionKey = `submission-${data.id}`;
-      const submissionData = await store.get(submissionKey);
+    // First, verify the submission exists
+    const { data: submission, error: fetchError } = await supabase
+      .from('submissions')
+      .select('id')
+      .eq('id', id)
+      .single();
       
-      if (!submissionData) {
+    if (fetchError) {
+      // Not found error
+      if (fetchError.code === 'PGRST116') {
         return {
           statusCode: 404,
           headers,
-          body: JSON.stringify({ error: 'Submission not found' })
+          body: JSON.stringify({ error: `Submission with ID ${id} not found` })
         };
       }
-      
-      // Delete the submission
-      await store.delete(submissionKey);
-      console.log(`Deleted submission: ${data.id}`);
-      
-      // Also update the index
-      try {
-        const indexData = await store.get('submission-index');
-        
-        if (indexData) {
-          let index = JSON.parse(indexData);
-          
-          // Remove the submission from the index
-          index = index.filter(item => item.id !== data.id);
-          
-          // Save the updated index
-          await store.set('submission-index', JSON.stringify(index));
-          console.log('Updated submission index after deletion');
-        }
-      } catch (indexError) {
-        console.error('Error updating index after deletion:', indexError);
-        // Continue even if index update fails
-      }
-      
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          success: true,
-          message: 'Submission deleted successfully'
-        })
-      };
-    } catch (error) {
-      console.error('Error deleting submission:', error);
-      
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'Failed to delete submission' })
-      };
+      throw fetchError;
     }
+    
+    // Delete the submission
+    const { error: deleteError } = await supabase
+      .from('submissions')
+      .delete()
+      .eq('id', id);
+      
+    if (deleteError) throw deleteError;
+    
+    // Update sync timestamp
+    const timestamp = new Date().toISOString();
+    await supabase
+      .from('sync_log')
+      .upsert([{ id: 'last_sync', timestamp: timestamp }]);
+    
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success: true,
+        message: `Submission ${id} deleted successfully`
+      })
+    };
   } catch (error) {
-    console.error('Error processing deletion request:', error);
+    console.error('Error deleting submission:', error);
     
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'An error occurred while processing your request' })
+      body: JSON.stringify({
+        error: "An error occurred while deleting the submission."
+      })
     };
   }
 };
