@@ -529,6 +529,24 @@
         const supabaseUrl = 'https://vyzsauyekanaxevgxkyh.supabase.co';
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c';
         
+        // Map experience levels to more descriptive phrases
+        function getDescriptiveExperienceLevel(level) {
+            if (!level) return "";
+            
+            const lowerLevel = level.toLowerCase();
+            
+            if (lowerLevel === 'beginner') {
+                return "No Coding Experience";
+            } else if (lowerLevel === 'intermediate') {
+                return "Some Coding Knowledge";
+            } else if (lowerLevel === 'advanced') {
+                return "Experienced Developer";
+            }
+            
+            // Return the original if it doesn't match our mapping
+            return level;
+        }
+        
         // Script to load approved stories
         document.addEventListener('DOMContentLoaded', function() {
             // Function to load approved stories
@@ -726,7 +744,8 @@
                     // For handling both camelCase and snake_case property names
                     const appName = story.appName || story.app_name || "App";
                     const appType = story.appType || story.app_type || "App";
-                    const experienceLevel = story.experienceLevel || story.experience_level || "";
+                    const rawExperienceLevel = story.experienceLevel || story.experience_level || "";
+                    const experienceLevel = getDescriptiveExperienceLevel(rawExperienceLevel);
                     
                     storyCard.innerHTML = `
                         <img src="${imageUrl}" alt="${appName}" class="story-image">
@@ -1096,7 +1115,8 @@
             // Handle both camelCase and snake_case property names
             const appName = story.appName || story.app_name || "App";
             const appType = story.appType || story.app_type || "App";
-            const experienceLevel = story.experienceLevel || story.experience_level || "";
+            const rawExperienceLevel = story.experienceLevel || story.experience_level || "";
+            const experienceLevel = getDescriptiveExperienceLevel(rawExperienceLevel);
             
             // Fill the modal with story details
             document.getElementById('modal-title').textContent = appName;
