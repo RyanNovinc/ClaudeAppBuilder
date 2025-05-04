@@ -1,28 +1,10 @@
-const { Octokit } = require("@octokit/rest");
-const { Base64 } = require("js-base64");
+const { createClient } = require('@supabase/supabase-js');
 
-// GitHub repository information
-const GITHUB_OWNER = "RyanNovinc";
-const GITHUB_REPO = "ClaudeAppBuilder";
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
-
-// Log function for consistent logging
-function log(level, message, data = null) {
-  const timestamp = new Date().toISOString();
-  const logEntry = { 
-    timestamp, 
-    level, 
-    message,
-    ...(data ? { data } : {})
-  };
-  
-  console.log(JSON.stringify(logEntry));
-}
+// Supabase configuration
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 exports.handler = async function(event, context) {
-  log('info', 'Health check function called');
-  
   // Set CORS headers
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -33,7 +15,6 @@ exports.handler = async function(event, context) {
 
   // Handle preflight OPTIONS request
   if (event.httpMethod === "OPTIONS") {
-    log('debug', 'Handling OPTIONS request');
     return {
       statusCode: 200,
       headers,
@@ -41,154 +22,108 @@ exports.handler = async function(event, context) {
     };
   }
 
-  // Only allow GET requests
-  if (event.httpMethod !== "GET") {
-    log('warn', 'Method not allowed', { method: event.httpMethod });
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: "Method not allowed" })
-    };
-  }
-  
-  // AUTHENTICATION HANDLING
-  // Get the token from either Authorization header or query parameter
-  let token = null;
-  
-  // Check Authorization header
-  const authHeader = event.headers.authorization;
-  if (authHeader) {
-    // Allow both "Bearer TOKEN" and just "TOKEN"
-    token = authHeader.startsWith("Bearer ") 
-      ? authHeader.split(" ")[1]
-      : authHeader;
-  }
-  
-  // If no token in header, check query parameters
-  if (!token && event.queryStringParameters && event.queryStringParameters.token) {
-    token = event.queryStringParameters.token;
-  }
-  
-  // Check if token is valid
-  if (!token || token !== ADMIN_TOKEN) {
-    log('warn', 'Authentication failed', { providedToken: token ? '***' : 'none' });
-    return {
-      statusCode: 401,
-      headers,
-      body: JSON.stringify({ error: "Unauthorized - Invalid or missing token" })
-    };
-  }
-
   try {
-    // Initialize GitHub API client
-    const octokit = new Octokit({
-      auth: GITHUB_TOKEN
-    });
+    // Initialize Supabase client
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     
-    // Health check results
-    const healthResult = {
+    const result = {
       success: true,
       timestamp: new Date().toISOString(),
-      errors: [],
-      warnings: [],
-      repository: `${GITHUB_OWNER}/${GITHUB_REPO}`,
-      dataFiles: [],
-      submissionCounts: {
-        pending: 0,
-        approved: 0,
-        rejected: 0,
-        total: 0
-      }
+      components: [],
+      tables: []
     };
     
-    // Check repository existence and access
+    // Check Supabase connection
     try {
-      log('info', 'Checking repository access');
-      const { data: repoData } = await octokit.repos.get({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO
+      // Test connection with a simple query
+      const { data, error } = await supabase
+        .from('submissions')
+        .select('id', { count: 'exact', head: true });
+        
+      if (error) throw error;
+      
+      result.components.push({ 
+        name: "Supabase", 
+        status: "connected",
+        message: "Successfully connected to Supabase" 
       });
       
-      healthResult.repository = repoData.full_name;
-      healthResult.repositoryInfo = {
-        defaultBranch: repoData.default_branch,
-        visibility: repoData.visibility,
-        lastUpdated: repoData.updated_at
-      };
-    } catch (repoError) {
-      log('error', 'Failed to access repository', { error: repoError.message });
-      healthResult.success = false;
-      healthResult.errors.push(`Repository access error: ${repoError.message}`);
-    }
-    
-    // Check data file existence and counts
-    const dataStatuses = ['pending', 'approved', 'rejected'];
-    
-    for (const status of dataStatuses) {
-      const path = `data/${status}-submissions.json`;
+      // Check submissions table
+      result.tables.push({
+        name: "submissions",
+        count: data.length,
+        status: "available"
+      });
       
+      // Check sync_log table
       try {
-        log('info', `Checking ${path}`);
-        const { data: fileData } = await octokit.repos.getContent({
-          owner: GITHUB_OWNER,
-          repo: GITHUB_REPO,
-          path,
+        const { data: syncData, error: syncError } = await supabase
+          .from('sync_log')
+          .select('*')
+          .limit(1);
+          
+        if (syncError) throw syncError;
+        
+        result.tables.push({
+          name: "sync_log",
+          status: "available",
+          lastSync: syncData.length > 0 ? syncData[0].timestamp : null
         });
-        
-        const content = JSON.parse(Base64.decode(fileData.content));
-        
-        healthResult.dataFiles.push(path);
-        healthResult.submissionCounts[status] = content.length;
-        healthResult.submissionCounts.total += content.length;
-      } catch (fileError) {
-        if (fileError.status === 404) {
-          log('warn', `Data file ${path} not found`);
-          healthResult.warnings.push(`Data file ${path} not found`);
-        } else {
-          log('error', `Error accessing data file ${path}`, { error: fileError.message });
-          healthResult.errors.push(`Data file access error (${path}): ${fileError.message}`);
-          healthResult.success = false;
-        }
+      } catch (syncError) {
+        result.tables.push({
+          name: "sync_log",
+          status: "error",
+          message: syncError.message
+        });
       }
+    } catch (supabaseError) {
+      result.success = false;
+      result.components.push({ 
+        name: "Supabase", 
+        status: "error",
+        message: supabaseError.message 
+      });
     }
     
-    // Check if any data files are missing and report warnings
-    if (healthResult.dataFiles.length < dataStatuses.length) {
-      const missingFiles = dataStatuses
-        .map(status => `data/${status}-submissions.json`)
-        .filter(path => !healthResult.dataFiles.includes(path));
-      
-      log('warn', 'Some data files are missing', { missingFiles });
-      healthResult.warnings.push(`Missing data files: ${missingFiles.join(', ')}`);
-    }
+    // Check environment variables
+    const requiredEnvVars = [
+      'SUPABASE_URL',
+      'SUPABASE_SERVICE_KEY',
+      'ADMIN_TOKEN'
+    ];
     
-    // If there are errors, mark the health check as failed
-    if (healthResult.errors.length > 0) {
-      healthResult.success = false;
-      healthResult.message = "Health check found issues";
-    } else if (healthResult.warnings.length > 0) {
-      healthResult.message = "Health check passed with warnings";
+    const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+    
+    if (missingEnvVars.length === 0) {
+      result.components.push({
+        name: "Environment Variables",
+        status: "available",
+        message: "All required environment variables are set"
+      });
     } else {
-      healthResult.message = "System is healthy";
+      result.success = false;
+      result.components.push({
+        name: "Environment Variables",
+        status: "error",
+        message: `Missing required environment variables: ${missingEnvVars.join(', ')}`
+      });
     }
     
-    log('info', 'Health check completed', { result: healthResult });
-    
+    // Return health check result
     return {
-      statusCode: 200,
+      statusCode: result.success ? 200 : 500,
       headers,
-      body: JSON.stringify(healthResult)
+      body: JSON.stringify(result)
     };
   } catch (error) {
-    log('error', `Health check error: ${error.message}`, { stack: error.stack });
+    console.error('Error during health check:', error);
     
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         success: false,
-        message: "Health check failed",
-        error: error.message
+        error: "An error occurred during the health check."
       })
     };
   }
