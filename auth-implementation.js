@@ -59,8 +59,28 @@ document.addEventListener('DOMContentLoaded', function() {
             // 2. CHECK IF WE'RE ON A MODULE PAGE
             const isModulePage = checkIfModulePage();
             
-            // 3. HANDLE LOGIN/LOGOUT BUTTON
-            updateAuthButton(hasAccess, currentUser?.email, isTestModeUser || isTestMode);
+            // NEW: Auto-logout on non-module pages if user is authenticated
+            if (!isModulePage && hasAccess && !isLoginPage) {
+                console.log('On non-module page while authenticated - logging out automatically');
+                // Log out the user
+                if (window.AuthService) {
+                    // Clear auth data
+                    localStorage.removeItem('sleeptech_auth');
+                    localStorage.removeItem('sleeptech_email');
+                    localStorage.removeItem('sleeptech_login_time');
+                    localStorage.removeItem('appfoundry_auth');
+                    
+                    // Log out via Auth Service
+                    window.AuthService.signOut().catch(error => {
+                        console.error('Error signing out:', error);
+                    });
+                }
+                // Update UI to reflect logged-out state
+                updateAuthButton(false, null, false);
+            } else {
+                // Normal flow for module pages
+                updateAuthButton(hasAccess, currentUser?.email, isTestModeUser || isTestMode);
+            }
             
             // 4. HANDLE COURSE CONTENT ACCESS (if on a course page)
             handleCourseAccess(hasAccess, isTestModeUser || isTestMode);
@@ -146,7 +166,7 @@ function removeCourseTab() {
 }
 
 /**
- * Updates the login/logout button and adds a Continue Course button for logged-in users
+ * Updates the login/logout button
  */
 function updateAuthButton(isAuthenticated, authEmail, isTestMode) {
     // Find login buttons in header
@@ -198,31 +218,6 @@ function updateAuthButton(isAuthenticated, authEmail, isTestMode) {
                     window.location.replace(getHomeUrl());
                 }
             });
-            
-            // Add a "Continue Course" button next to the Log Out button
-            const continueButton = document.createElement('button');
-            continueButton.textContent = 'Continue Course';
-            continueButton.className = 'cta-button small';
-            continueButton.style.marginRight = '10px';
-            continueButton.style.backgroundColor = '#0070f3'; // Blue color
-            
-            continueButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                // Check if we're in test mode
-                const testParam = isTestMode ? '?test_mode=true' : '';
-                // Direct to the modules page
-                const path = window.location.pathname;
-                const isInSubdirectory = path.split('/').length > 2;
-                
-                if (isInSubdirectory) {
-                    window.location.href = `module1.html${testParam}`;
-                } else {
-                    window.location.href = `modules/module1.html${testParam}`;
-                }
-            });
-            
-            // Insert the Continue Course button before the Log Out button
-            newButton.parentNode.insertBefore(continueButton, newButton);
         } else {
             // USER IS NOT LOGGED IN - Show Login button
             // Skip main call-to-action buttons that should go to checkout
@@ -397,72 +392,4 @@ function hideNavigationInModules() {
         const navElements = document.querySelectorAll('header nav, nav ul, nav li');
         navElements.forEach(nav => {
             if (nav) {
-                console.log('Hiding navigation element:', nav);
-                nav.style.display = 'none';
-            }
-        });
-        
-        // Make the logo non-clickable by capturing all logo links
-        const logoLinks = document.querySelectorAll('header .logo a, .logo a');
-        logoLinks.forEach(link => {
-            if (link) {
-                console.log('Making logo non-clickable:', link);
-                
-                // Create a new span with the same content
-                const span = document.createElement('span');
-                span.innerHTML = link.innerHTML;
-                span.style.cursor = 'default';
-                span.style.color = link.style.color || 'inherit';
-                span.style.fontWeight = link.style.fontWeight || 'inherit';
-                span.style.fontSize = link.style.fontSize || 'inherit';
-                
-                // Replace the link with the span
-                if (link.parentNode) {
-                    link.parentNode.replaceChild(span, link);
-                }
-            }
-        });
-        
-        // Also prevent the default behavior on any remaining logo links
-        document.querySelectorAll('.logo a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Prevented logo link navigation');
-                return false;
-            });
-        });
-        
-        console.log('Navigation hiding complete');
-    }, 100); // Small delay to ensure the DOM is fully loaded
-}
-
-/**
- * Gets the URL for the login page
- */
-function getLoginUrl(isTestMode) {
-    const path = window.location.pathname;
-    const isInSubdirectory = path.split('/').length > 2;
-    const testParam = isTestMode ? '?test_mode=true' : '';
-    
-    return isInSubdirectory ? `../direct-login.html${testParam}` : `direct-login.html${testParam}`;
-}
-
-/**
- * Gets the URL for the home page
- */
-function getHomeUrl() {
-    const path = window.location.pathname;
-    const isInSubdirectory = path.split('/').length > 2;
-    
-    return isInSubdirectory ? '../index.html' : 'index.html';
-}
-
-/**
- * Gets the test mode parameter if present
- */
-function getTestModeParam() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isTestMode = urlParams.get('test_mode') === 'true';
-    
-    return isTestMode ? '?test_mode=true' : '';
-}
+                console.log('Hiding navigation element
