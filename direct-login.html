@@ -255,6 +255,13 @@
             const forgotPasswordLink = document.getElementById('forgot-password-link');
             const debugInfo = document.getElementById('debug-info');
             
+            // FIX: Prevent header login button from redirecting 
+            headerLoginButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Just scroll to the login form instead of redirecting
+                document.querySelector('.login-container').scrollIntoView({ behavior: 'smooth' });
+            });
+            
             // Check if we're in test mode
             const urlParams = new URLSearchParams(window.location.search);
             const isTestMode = urlParams.get('test_mode') === 'true';
@@ -306,9 +313,12 @@
                     await AuthService._ensureInitialized();
                     updateDebugInfo('AuthService initialized');
                     
-                    // Check if already authenticated
-                    if (AuthService.isAuthenticated()) {
-                        updateDebugInfo('User already authenticated, redirecting to course');
+                    // FIX: Only check for authentication and redirect if a redirect parameter is provided
+                    // This prevents automatic redirects to module pages before login
+                    const shouldRedirect = urlParams.get('redirect') === 'true';
+                    
+                    if (shouldRedirect && AuthService.isAuthenticated()) {
+                        updateDebugInfo('User already authenticated, redirecting to course...');
                         
                         // Show success message
                         showSuccess('Already logged in! Redirecting to course...');
@@ -320,11 +330,14 @@
                         }, 1500);
                         
                         return;
+                    } else if (AuthService.isAuthenticated()) {
+                        // User is authenticated but we won't automatically redirect
+                        updateDebugInfo('User already authenticated, but staying on login page');
+                        showInfo('You are currently logged in.');
                     }
                     
-                    // Update header login button
+                    // Update header login button 
                     headerLoginButton.textContent = 'Log In';
-                    headerLoginButton.removeAttribute('onclick');
                     
                     // Add event listeners
                     setupEventListeners();
