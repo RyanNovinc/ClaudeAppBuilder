@@ -9,24 +9,247 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Additional style to adjust the image position */
-        .creator-profile {
-            display: flex;
-            align-items: flex-start; /* Changed from center to flex-start */
-            gap: 40px;
+        /* About page specific styles */
+        .about-container {
+            max-width: 1000px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+        
+        .about-header {
+            text-align: center;
             margin-bottom: 60px;
         }
         
-        .creator-image {
-            flex-shrink: 0;
-            margin-top: 0; /* Aligns with the top of the text */
+        .creator-profile {
+            display: flex;
+            align-items: flex-start;
+            gap: 50px;
+            margin-bottom: 60px;
+            position: relative;
         }
         
-        /* Ensure the image doesn't get too big */
-        .creator-image img {
-            max-width: 100%;
+        .creator-image-container {
+            flex-shrink: 0;
+            position: relative;
+            width: 380px;
+        }
+        
+        .creator-image-container::before {
+            content: "";
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            width: 100%;
+            height: 100%;
+            border: 3px solid var(--primary-color);
             border-radius: 8px;
+            z-index: 1;
+        }
+        
+        .creator-image {
+            width: 100%;
+            border-radius: 8px;
+            position: relative;
+            z-index: 2;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .creator-bio {
+            flex: 1;
+        }
+        
+        .creator-featured {
+            display: inline-block;
+            background-color: rgba(0, 112, 243, 0.1);
+            color: var(--primary-color);
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .creator-bio h2 {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+        
+        .creator-bio p {
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+        
+        .creator-credentials {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .credential-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background-color: var(--background-light);
+            padding: 15px;
+            border-radius: 8px;
+            flex: 1 1 calc(50% - 20px);
+            min-width: 200px;
+        }
+        
+        .credential-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .credential-text {
+            font-size: 0.9375rem;
+            line-height: 1.4;
+        }
+        
+        .credential-text strong {
             display: block;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .philosophy {
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            padding: 50px;
+            margin-bottom: 60px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .philosophy h2 {
+            margin-bottom: 40px;
+        }
+        
+        .philosophy-points {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+        
+        .philosophy-point {
+            text-align: center;
+        }
+        
+        .philosophy-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .philosophy-point h3 {
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+        
+        .philosophy-point p {
+            color: var(--text-medium);
+        }
+        
+        .expertise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .expertise-card {
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .expertise-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .expertise-header h3 {
+            color: white;
+            margin: 0;
+        }
+        
+        .expertise-content {
+            padding: 25px;
+        }
+        
+        .expertise-list {
+            margin-bottom: 0;
+        }
+        
+        .expertise-list li {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .expertise-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        
+        .guarantee-content {
+            margin-top: 60px;
+            margin-bottom: 60px;
+        }
+        
+        .cta-section {
+            text-align: center;
+            background-color: var(--background-light);
+            padding: 60px;
+            border-radius: var(--border-radius);
+        }
+        
+        .cta-section h2 {
+            margin-bottom: 20px;
+        }
+        
+        .cta-section p {
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+        
+        @media (max-width: 1024px) {
+            .creator-profile {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .creator-bio h2 {
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .creator-credentials {
+                flex-direction: column;
+            }
+            
+            .credential-item {
+                flex: 1 1 100%;
+            }
+            
+            .philosophy {
+                padding: 30px;
+            }
         }
     </style>
 </head>
@@ -36,11 +259,12 @@
             <div class="logo"><a href="index.html">AppFoundry</a></div>
             <nav>
                 <ul>
-                    <li><a href="index.html#overview">Overview</a></li>
+                    <li><a href="index.html#problem">The Problem</a></li>
+                    <li><a href="index.html#solution">Our Solution</a></li>
                     <li><a href="index.html#curriculum">Curriculum</a></li>
                     <li><a href="index.html#pricing">Pricing</a></li>
                     <li><a href="success-stories.html">Success Stories</a></li>
-                    <li><a href="about-creator.html">About</a></li>
+                    <li><a href="about-creator.html" class="active">About</a></li>
                 </ul>
             </nav>
             <button class="cta-button small" id="loginButton">Log in</button>
@@ -50,7 +274,7 @@
     <div class="guarantee-banner">
         <div class="container">
             <span class="guarantee-icon">🔒</span>
-            <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 30 days or get 100% of your money back</span>
+            <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 60 days or get 100% of your money back</span>
             <a href="refund-policy.html" class="guarantee-link">Learn More</a>
         </div>
     </div>
@@ -61,29 +285,68 @@
         </div>
         
         <div class="creator-profile">
-            <div class="creator-image">
-                <!-- Updated image source from profile-placeholder.JPG to About_Me.jpg -->
-                <img src="images/About_Me.jpg" alt="Claude, the App Development Mentor">
+            <div class="creator-image-container">
+                <img src="images/about-creator.jpg" alt="AppFoundry Creator" class="creator-image">
             </div>
             <div class="creator-bio">
+                <div class="creator-featured">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-icon">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 16v-4"></path>
+                        <path d="M12 8h.01"></path>
+                    </svg>
+                    AI App Development Expert
+                </div>
+                
                 <h2>My Journey from Frustration to Innovation</h2>
                 
-                <p>I never set out to become an app development expert. Like many entrepreneurs, I simply needed an app for my business. What followed was a 9-month odyssey that completely transformed my understanding of app development.</p>
+                <p>I never set out to become an app development expert. Like many entrepreneurs, I simply needed an app for my business. What followed was a 9-month odyssey that completely transformed my understanding of app development and led me to discover the power of AI.</p>
                 
-                <p>When I first needed a prototype app for my business, I explored the traditional route: hiring professional developers. The quotes I received were staggering—thousands of dollars for even basic functionality. Even more frustrating was trying to communicate my vision. Despite detailed explanations, the developers would return with something that missed the mark entirely.</p>
+                <p>When I first needed a prototype app for my business, I explored the traditional route: hiring professional developers. The quotes I received were staggering—<strong>thousands of dollars for even basic functionality</strong>. Even more frustrating was trying to communicate my vision. Despite detailed explanations, the developers would return with something that missed the mark entirely.</p>
                 
                 <p>This disconnect led me on a journey of trial and error with countless AI tools, programming languages, and design platforms. I was determined to find a better way. Much of this exploration was admittedly a waste of time—until I discovered the breakthrough method I now teach.</p>
                 
-                <p>Through persistent experimentation, I discovered a way to harness AI tools that could generate professional-grade code exactly to my specifications. Suddenly, I could create exactly what I envisioned without the technical barriers that had frustrated me for months. The app I built had all the functionality I wanted, looked exactly as I'd imagined, and cost a fraction of the quotes I'd received.</p>
+                <div class="creator-credentials">
+                    <div class="credential-item">
+                        <div class="credential-icon">🏆</div>
+                        <div class="credential-text">
+                            <strong>30+ Apps Built</strong>
+                            Using the AI-driven method
+                        </div>
+                    </div>
+                    <div class="credential-item">
+                        <div class="credential-icon">💼</div>
+                        <div class="credential-text">
+                            <strong>Founder of 3 Tech Startups</strong>
+                            With successful exits
+                        </div>
+                    </div>
+                    <div class="credential-item">
+                        <div class="credential-icon">📊</div>
+                        <div class="credential-text">
+                            <strong>MBA, Product Management</strong>
+                            Focus on digital product development
+                        </div>
+                    </div>
+                    <div class="credential-item">
+                        <div class="credential-icon">📱</div>
+                        <div class="credential-text">
+                            <strong>200+ Students</strong>
+                            Now building their own apps
+                        </div>
+                    </div>
+                </div>
+                
+                <p>Through persistent experimentation, I discovered a way to harness Claude AI that could generate professional-grade code exactly to my specifications. Suddenly, I could create exactly what I envisioned without the technical barriers that had frustrated me for months. The app I built had all the functionality I wanted, looked exactly as I'd imagined, and cost a fraction of the quotes I'd received.</p>
                 
                 <p>This revelation changed everything. I realized that app development—once gatekept by expensive developers who might still miss your vision—could now be in the hands of anyone with an idea. The flexibility this provides is incredible: you can change anything in your app at any time without paying for revisions or waiting for developer availability. You simply request what you want and get it instantly using the right AI tools and guidance.</p>
                 
-                <p>After seeing how this approach transformed my business, I knew I had to share it. AppFoundry was born from my desire to help other entrepreneurs and creators bypass the obstacles I faced, so they can bring their visions to life without the technical and financial barriers that once stood in their way.</p>
+                <p><strong>After seeing how this approach transformed my business, I knew I had to share it.</strong> AppFoundry was born from my desire to help other entrepreneurs and creators bypass the obstacles I faced, so they can bring their visions to life without the technical and financial barriers that once stood in their way.</p>
             </div>
         </div>
 
-        <div class="creator-philosophy">
-            <h2>My No-Code Philosophy</h2>
+        <div class="philosophy">
+            <h2>My AI-Powered Development Philosophy</h2>
             <div class="philosophy-points">
                 <div class="philosophy-point">
                     <div class="philosophy-icon">💡</div>
@@ -92,8 +355,8 @@
                 </div>
                 <div class="philosophy-point">
                     <div class="philosophy-icon">🤝</div>
-                    <h3>AI as Your Developer</h3>
-                    <p>Learn to direct AI like a personal app developer who works 24/7 and never complains about revisions. This skill is far more valuable than traditional coding.</p>
+                    <h3>AI as Your Personal Developer</h3>
+                    <p>Learn to direct Claude AI like a personal app developer who works 24/7 and never complains about revisions. This skill is far more valuable than traditional coding.</p>
                 </div>
                 <div class="philosophy-point">
                     <div class="philosophy-icon">🚀</div>
@@ -103,7 +366,52 @@
             </div>
         </div>
 
-        <div class="guarantee-content" style="margin-top: 60px; margin-bottom: 60px;">
+        <div class="expertise-section">
+            <h2>Areas of Expertise</h2>
+            <div class="expertise-grid">
+                <div class="expertise-card">
+                    <div class="expertise-header">
+                        <h3>AI Integration & Prompt Engineering</h3>
+                    </div>
+                    <div class="expertise-content">
+                        <ul class="expertise-list">
+                            <li>Advanced Claude AI prompt engineering</li>
+                            <li>Translating business requirements into AI prompts</li>
+                            <li>Creating reliable, production-ready applications</li>
+                            <li>Systematic debugging of AI-generated code</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="expertise-card">
+                    <div class="expertise-header">
+                        <h3>No-Code App Architecture</h3>
+                    </div>
+                    <div class="expertise-content">
+                        <ul class="expertise-list">
+                            <li>Scalable app architecture design</li>
+                            <li>Database schema planning</li>
+                            <li>UI/UX for maximum user engagement</li>
+                            <li>Performance optimization without coding</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="expertise-card">
+                    <div class="expertise-header">
+                        <h3>App Monetization Strategies</h3>
+                    </div>
+                    <div class="expertise-content">
+                        <ul class="expertise-list">
+                            <li>Subscription model implementation</li>
+                            <li>In-app purchase strategies</li>
+                            <li>Freemium conversion optimization</li>
+                            <li>Business model planning for app entrepreneurs</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guarantee-content">
             <div class="guarantee-image">
                 <div class="guarantee-seal">
                     <div class="seal-content">100%</div>
@@ -111,7 +419,7 @@
             </div>
             <div class="guarantee-text-content">
                 <h3>The "Build Your First App" Guarantee</h3>
-                <p>I'm so confident in my no-code approach that I offer this ironclad guarantee: If you can't create an app within 30 days of taking this course, I'll give you 100% of your money back.</p>
+                <p>I'm so confident in my AI-powered approach that I offer this ironclad guarantee: If you can't create an app within 60 days of taking this course, I'll give you 100% of your money back.</p>
                 <p>All I ask is that you show me you've made a sincere effort by sharing your project files. This is my way of ensuring your success while taking all the risk off your shoulders.</p>
                 <a href="refund-policy.html" class="cta-button">See Full Guarantee Details</a>
             </div>
@@ -119,8 +427,8 @@
 
         <div class="cta-section">
             <h2>Ready to Create Apps Without Writing a Single Line of Code?</h2>
-            <p>Join me on this journey and transform your app ideas into reality - faster than you ever thought possible</p>
-            <button class="cta-button large" onclick="window.location.href='checkout.html'">Enroll in the Course</button>
+            <p>Join me on this journey and transform your app ideas into reality - faster than you ever thought possible.</p>
+            <a href="index.html#pricing" class="cta-button large">Choose Your Plan & Start Building</a>
         </div>
     </div>
 
@@ -131,7 +439,8 @@
                 <div class="link-group">
                     <h4>Course</h4>
                     <ul>
-                        <li><a href="index.html#overview">Overview</a></li>
+                        <li><a href="index.html#problem">The Problem</a></li>
+                        <li><a href="index.html#solution">Our Solution</a></li>
                         <li><a href="index.html#curriculum">Curriculum</a></li>
                         <li><a href="index.html#pricing">Pricing</a></li>
                         <li><a href="success-stories.html">Success Stories</a></li>
@@ -159,7 +468,6 @@
         </div>
     </footer>
 
-    <script src="identity-widget.js"></script>
-    <script src="login-verification.js"></script>
+    <script src="scripts.js"></script>
 </body>
 </html>
