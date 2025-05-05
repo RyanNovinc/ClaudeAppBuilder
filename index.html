@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AppFoundry</title>
+    <title>Reset Password - AppFoundry</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,30 +13,16 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <style>
-        /* Reset Password Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        
-        .modal-container {
+        .reset-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 40px;
             background-color: white;
             border-radius: 12px;
-            padding: 40px;
-            width: 90%;
-            max-width: 500px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
         
-        .modal-container h2 {
+        .reset-container h1 {
             text-align: center;
             margin-bottom: 30px;
         }
@@ -100,59 +86,139 @@
             border: 1px solid #dc2626;
         }
         
-        .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #0070f3;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            margin: 10px auto;
+        .status-message.info {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #1d4ed8;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .back-to-login {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .back-to-login a {
+            color: #0070f3;
+            text-decoration: none;
+        }
+        
+        .back-to-login a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Basic styling to match your site's look */
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
         }
     </style>
 </head>
 <body>
-    <!-- Reset Password Modal -->
-    <div id="resetPasswordModal" class="modal-overlay" style="display: none;">
-        <div class="modal-container">
-            <h2>Reset Your Password</h2>
-            
-            <div id="loading-state" style="text-align: center;">
-                <p>Verifying your reset token...</p>
-                <div class="loading-spinner"></div>
+    <header>
+        <div class="container">
+            <div class="logo"><a href="index.html">AppFoundry</a></div>
+            <nav>
+                <ul>
+                    <li><a href="index.html#overview">Overview</a></li>
+                    <li><a href="index.html#curriculum">Curriculum</a></li>
+                    <li><a href="index.html#pricing">Pricing</a></li>
+                    <li><a href="success-stories.html">Success Stories</a></li>
+                    <li><a href="about-creator.html">About</a></li>
+                </ul>
+            </nav>
+            <button class="cta-button small" id="headerLoginButton">Log in</button>
+        </div>
+    </header>
+
+    <div class="reset-container">
+        <h1>Reset Your Password</h1>
+        
+        <div id="loading-message" style="text-align: center; margin-bottom: 20px;">
+            <p>Verifying your reset token...</p>
+        </div>
+        
+        <div id="reset-form" style="display: none;">
+            <div class="form-group">
+                <label for="new-password">New Password</label>
+                <input type="password" id="new-password" required placeholder="Enter new password (min 6 characters)">
             </div>
             
-            <div id="password-form" style="display: none;">
-                <div class="form-group">
-                    <label for="new-password">New Password</label>
-                    <input type="password" id="new-password" required placeholder="Enter new password (min 6 characters)">
-                </div>
-                
-                <div class="form-group">
-                    <label for="confirm-password">Confirm Password</label>
-                    <input type="password" id="confirm-password" required placeholder="Confirm new password">
-                </div>
-                
-                <button id="reset-button" class="reset-button">Reset Password</button>
+            <div class="form-group">
+                <label for="confirm-password">Confirm Password</label>
+                <input type="password" id="confirm-password" required placeholder="Confirm new password">
             </div>
             
-            <div id="error-state" style="display: none; text-align: center;">
-                <p id="error-message">Your reset link has expired or is invalid.</p>
-                <button id="go-to-login" class="reset-button">Go to Login</button>
+            <button id="reset-button" class="reset-button">Reset Password</button>
+        </div>
+        
+        <div id="request-form" style="display: none;">
+            <p>Your reset link has expired or is invalid. Please request a new one:</p>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" required placeholder="your@email.com">
             </div>
             
-            <div id="status-message" class="status-message"></div>
+            <button id="request-button" class="reset-button">Send New Reset Link</button>
+        </div>
+        
+        <div id="status-message" class="status-message"></div>
+        
+        <div class="back-to-login">
+            <a href="direct-login.html">Back to Login</a>
         </div>
     </div>
     
+    <footer>
+        <div class="container">
+            <div class="logo">AppFoundry</div>
+            <div class="footer-links">
+                <div class="link-group">
+                    <h4>Course</h4>
+                    <ul>
+                        <li><a href="index.html#overview">Overview</a></li>
+                        <li><a href="index.html#curriculum">Curriculum</a></li>
+                        <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="success-stories.html">Success Stories</a></li>
+                        <li><a href="about-creator.html">About Creator</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="refund-policy.html">Our Guarantee</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 AppFoundry. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
     <script>
-        // Check for reset password tokens in URL hash
         document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const loadingMessage = document.getElementById('loading-message');
+            const resetForm = document.getElementById('reset-form');
+            const requestForm = document.getElementById('request-form');
+            const resetButton = document.getElementById('reset-button');
+            const requestButton = document.getElementById('request-button');
+            const statusMessage = document.getElementById('status-message');
+            const headerLoginButton = document.getElementById('headerLoginButton');
+            
             // Supabase configuration
             const supabaseUrl = 'https://vyzsauyekanaxevgxkyh.supabase.co';
             const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c';
@@ -160,14 +226,10 @@
             // Initialize Supabase client
             const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
             
-            // Elements
-            const resetModal = document.getElementById('resetPasswordModal');
-            const loadingState = document.getElementById('loading-state');
-            const passwordForm = document.getElementById('password-form');
-            const errorState = document.getElementById('error-state');
-            const resetButton = document.getElementById('reset-button');
-            const goToLoginButton = document.getElementById('go-to-login');
-            const statusMessage = document.getElementById('status-message');
+            // Update header login button
+            headerLoginButton.addEventListener('click', function() {
+                window.location.href = 'direct-login.html';
+            });
             
             // Parse URL hash parameters
             function parseHashParams() {
@@ -187,22 +249,25 @@
                 return params;
             }
             
-            // Check if we have a reset token in the URL
+            // Check for auth tokens in URL
             const params = parseHashParams();
+            console.log('URL hash parameters:', Object.keys(params).join(', '));
             
-            // If we have a recovery token, show the modal
+            // Handle token presence
             if (params.access_token && params.type === 'recovery') {
-                console.log('Found password reset token in URL');
-                resetModal.style.display = 'flex';
-                
-                // Try to validate the token
-                validateToken(params);
+                console.log('Password reset token found');
+                handleResetToken(params);
+            } else {
+                console.log('No reset token found or invalid token type');
+                loadingMessage.style.display = 'none';
+                requestForm.style.display = 'block';
+                showInfo('Please enter your email to request a password reset');
             }
             
-            // Validate the reset token
-            async function validateToken(params) {
+            // Process the reset token
+            async function handleResetToken(params) {
                 try {
-                    console.log('Validating reset token...');
+                    console.log('Setting session with token...');
                     
                     // Set the session with the token
                     const { error } = await supabase.auth.setSession({
@@ -215,32 +280,30 @@
                         throw error;
                     }
                     
-                    // Get user info to confirm token is valid
+                    // Check if the session is valid by getting user info
                     const { data, error: userError } = await supabase.auth.getUser();
                     
-                    if (userError) {
-                        console.error('Error getting user:', userError);
-                        throw userError;
+                    if (userError || !data.user) {
+                        console.error('Error getting user or no user found:', userError);
+                        throw userError || new Error('No user found');
                     }
                     
-                    if (!data.user) {
-                        throw new Error('No user found');
-                    }
+                    console.log('User authenticated successfully, email:', data.user.email);
                     
-                    // Token is valid, show password form
-                    loadingState.style.display = 'none';
-                    passwordForm.style.display = 'block';
+                    // Show password reset form
+                    loadingMessage.style.display = 'none';
+                    resetForm.style.display = 'block';
+                    showInfo('Please enter your new password');
                     
                 } catch (error) {
                     console.error('Token validation error:', error);
-                    loadingState.style.display = 'none';
-                    errorState.style.display = 'block';
-                    document.getElementById('error-message').textContent = 
-                        'Your password reset link has expired or is invalid. Please request a new one.';
+                    loadingMessage.style.display = 'none';
+                    requestForm.style.display = 'block';
+                    showError('Your password reset link has expired or is invalid. Please request a new one.');
                 }
             }
             
-            // Handle password reset submission
+            // Handle reset password button click
             resetButton.addEventListener('click', async function() {
                 const newPassword = document.getElementById('new-password').value;
                 const confirmPassword = document.getElementById('confirm-password').value;
@@ -262,12 +325,15 @@
                 
                 resetButton.disabled = true;
                 resetButton.textContent = 'Updating...';
-                statusMessage.style.display = 'none';
                 
                 try {
                     console.log('Updating password...');
                     
-                    // Update the user's password
+                    // Get current user to get their email
+                    const { data: userData } = await supabase.auth.getUser();
+                    const userEmail = userData.user?.email;
+                    
+                    // Update the password in Supabase
                     const { error } = await supabase.auth.updateUser({
                         password: newPassword
                     });
@@ -277,35 +343,68 @@
                         throw error;
                     }
                     
-                    // Get the user's email for localStorage updates
-                    const { data: { user } } = await supabase.auth.getUser();
+                    console.log('Password updated successfully');
                     
-                    if (user && user.email) {
-                        // Also update in localStorage for backward compatibility
-                        localStorage.setItem('sleeptech_password_' + user.email, newPassword);
+                    // Update in localStorage for backward compatibility
+                    if (userEmail) {
+                        localStorage.setItem('sleeptech_password_' + userEmail, newPassword);
+                        console.log('Also updated password in localStorage for compatibility');
                     }
                     
                     showSuccess('Password updated successfully! Redirecting to login page...');
                     
                     // Redirect to login page after a delay
-                    setTimeout(() => {
+                    setTimeout(function() {
                         window.location.href = 'direct-login.html';
                     }, 2000);
+                    
                 } catch (error) {
                     console.error('Error updating password:', error);
                     showError('There was an error updating your password: ' + error.message);
-                    
                     resetButton.disabled = false;
                     resetButton.textContent = 'Reset Password';
                 }
             });
             
-            // Go to login button
-            goToLoginButton.addEventListener('click', function() {
-                window.location.href = 'direct-login.html';
+            // Handle request new password button click
+            requestButton.addEventListener('click', async function() {
+                const email = document.getElementById('email').value;
+                
+                if (!email) {
+                    showError('Please enter your email address');
+                    return;
+                }
+                
+                requestButton.disabled = true;
+                requestButton.textContent = 'Sending...';
+                
+                try {
+                    console.log('Requesting password reset for:', email);
+                    
+                    // Request password reset email
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: window.location.origin + '/reset-password.html',
+                    });
+                    
+                    if (error) {
+                        console.error('Password reset request error:', error);
+                        throw error;
+                    }
+                    
+                    showSuccess('Password reset email sent! Please check your inbox for further instructions.');
+                    
+                } catch (error) {
+                    console.error('Error requesting password reset:', error);
+                    showError('There was an error sending the password reset email: ' + error.message);
+                } finally {
+                    setTimeout(function() {
+                        requestButton.disabled = false;
+                        requestButton.textContent = 'Send New Reset Link';
+                    }, 3000);
+                }
             });
             
-            // Message display functions
+            // Helper functions for displaying messages
             function showError(message) {
                 statusMessage.textContent = message;
                 statusMessage.className = 'status-message error';
@@ -315,6 +414,12 @@
             function showSuccess(message) {
                 statusMessage.textContent = message;
                 statusMessage.className = 'status-message success';
+                statusMessage.style.display = 'block';
+            }
+            
+            function showInfo(message) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status-message info';
                 statusMessage.style.display = 'block';
             }
         });
