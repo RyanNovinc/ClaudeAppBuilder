@@ -152,6 +152,23 @@
             color: #6b7280;
             display: none;
         }
+        
+        /* Spinner animation for loading states */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 112, 243, 0.3);
+            border-radius: 50%;
+            border-top-color: #0070f3;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -438,8 +455,20 @@
                 try {
                     updateDebugInfo('Requesting password reset...');
                     
+                    // Show loading indicator
+                    const forgotPasswordLink = document.getElementById('forgot-password-link');
+                    const originalText = forgotPasswordLink.textContent;
+                    forgotPasswordLink.innerHTML = '<span class="spinner"></span> Sending reset email...';
+                    forgotPasswordLink.style.pointerEvents = 'none'; // Disable clicks while processing
+                    
                     // Request password reset
                     const result = await window.AuthService.requestPasswordReset(email);
+                    
+                    // Restore the original link text
+                    setTimeout(() => {
+                        forgotPasswordLink.innerHTML = originalText;
+                        forgotPasswordLink.style.pointerEvents = 'auto';
+                    }, 500);
                     
                     if (!result.success) {
                         throw new Error(result.error || 'Failed to send reset email');
@@ -451,6 +480,11 @@
                 } catch (error) {
                     console.error('Error requesting password reset:', error);
                     updateDebugInfo('Error: ' + error.message);
+                    
+                    // Restore the original link text in case of error too
+                    const forgotPasswordLink = document.getElementById('forgot-password-link');
+                    forgotPasswordLink.innerHTML = originalText;
+                    forgotPasswordLink.style.pointerEvents = 'auto';
                     
                     showError('There was an error sending the password reset email. Please try again later.');
                 }
