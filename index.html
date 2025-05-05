@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AppFoundry - From Idea to App Store in Days (No Coding Required)</title>
+    <title>AppFoundry - Build Apps without Coding using Claude AI | No-Code App Development</title>
     
     <!-- Story Manager Script - IMPORTANT: This must be the first script in the head -->
     <script>
@@ -50,113 +50,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        .test-mode-link {
-            display: block;
-            margin-top: 10px;
-            font-size: 14px;
-            color: #6b7280;
-            text-decoration: underline;
-        }
-        
-        .test-mode-link:hover {
-            color: #0070f3;
-        }
-        
-        /* Password Reset Modal Styles */
-        .password-reset-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        
-        .password-reset-container {
-            background-color: white;
-            padding: 40px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .password-reset-container h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            font-family: 'Inter', sans-serif;
-            color: #111827;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            font-family: 'Inter', sans-serif;
-            color: #374151;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 16px;
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .reset-button {
-            background-color: #0070f3;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 14px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            font-family: 'Inter', sans-serif;
-            transition: background-color 0.2s;
-        }
-        
-        .reset-button:hover {
-            background-color: #0055b3;
-        }
-        
-        .reset-button:disabled {
-            background-color: #9cb4d8;
-            cursor: not-allowed;
-        }
-        
-        .status-message {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            display: none;
-        }
-        
-        .status-message.success {
-            background-color: #ecfdf5;
-            color: #10b981;
-            border: 1px solid #10b981;
-        }
-        
-        .status-message.error {
-            background-color: #fee2e2;
-            color: #dc2626;
-            border: 1px solid #dc2626;
-        }
-    </style>
 </head>
 <body>
     <header>
@@ -164,14 +57,14 @@
             <div class="logo">AppFoundry</div>
             <nav>
                 <ul>
-                    <li><a href="#overview">Overview</a></li>
+                    <li><a href="#problem">The Problem</a></li>
+                    <li><a href="#solution">Our Solution</a></li>
                     <li><a href="#curriculum">Curriculum</a></li>
                     <li><a href="#pricing">Pricing</a></li>
                     <li><a href="success-stories.html">Success Stories</a></li>
                     <li><a href="about-creator.html">About</a></li>
                 </ul>
             </nav>
-            <!-- Changed from "Enroll Now" to "Log in" with id="loginButton" -->
             <button class="cta-button small" id="loginButton">Log in</button>
         </div>
     </header>
@@ -179,11 +72,12 @@
     <div class="guarantee-banner">
         <div class="container">
             <span class="guarantee-icon">🔒</span>
-            <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 30 days or get 100% of your money back</span>
+            <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 60 days or get 100% of your money back</span>
             <a href="refund-policy.html" class="guarantee-link">Learn More</a>
         </div>
     </div>
 
+    <!-- HERO SECTION (Z-PATTERN) -->
     <section class="hero">
         <div class="floating-element floating-circle element-1"></div>
         <div class="floating-element floating-square element-2"></div>
@@ -207,185 +101,585 @@
                         No Bullshit
                     </div>
                 </div>
-                <h1>Create Apps in Days, Not Months — Without Writing a Single Line of Code</h1>
-                <p class="subtitle">Why spend $10,000+ on developers when AI can do the heavy lifting? Learn how to leverage Claude AI to create professional apps that would traditionally cost thousands and take months to build.</p>
-                <button class="cta-button large" onclick="window.location.href='checkout.html'">Start Building Your App</button>
+                <h1>Stop Paying Developers $10,000+ When Claude AI Can Build Your App</h1>
+                <p class="subtitle">Learn the exact system that turns Claude AI into your personal app developer. No coding required — just your ideas and our proven process. Launch in days, not months.</p>
+                <a href="#pricing" class="cta-button large primary-cta">Start Building My First App Today</a>
+                <div class="cta-microcopy">No technical skills required. Works for any app idea.</div>
                 <div class="guarantee-badge">
                     <div class="badge-icon">✓</div>
-                    <div class="badge-text">30-Day App Building Guarantee</div>
+                    <div class="badge-text">60-Day App Building Guarantee</div>
                 </div>
             </div>
             <div class="course-preview-card">
-                <p class="course-label">Course</p>
+                <div class="video-container">
+                    <img src="images/demo-video-thumbnail.jpg" alt="See how easy it is to build apps with Claude AI" class="video-placeholder">
+                    <div class="play-button">▶</div>
+                </div>
                 <h3>App Building with Claude</h3>
-                <div class="course-price">$199.00</div>
-                <button class="cta-button large" onclick="window.location.href='checkout.html'">Enroll Now</button>
-                <a href="checkout.html?test_mode=true" class="test-mode-link">Test drive the course</a>
                 <div class="course-meta">
                     <div class="meta-item">
                         <span class="meta-icon">📘</span>
-                        <span>7 Chapters</span>
+                        <span>7 Comprehensive Modules</span>
                     </div>
                     <div class="meta-item">
                         <span class="meta-icon">📝</span>
-                        <span>15 Lessons</span>
+                        <span>15 Practical Lessons</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">⏱️</span>
+                        <span>Build Your First App in 14 Days</span>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="overview" id="overview">
+    <!-- PROBLEM SECTION -->
+    <section class="problem" id="problem">
         <div class="container">
-            <h2>The Fastest Way from Idea to App</h2>
-            <div class="features">
-                <div class="feature">
-                    <div class="feature-icon">🤖</div>
-                    <h3>0% Coding Required</h3>
-                    <p>No programming knowledge needed. We'll show you how to leverage Claude AI to create professional-grade code without understanding a single line of it.</p>
+            <h2>The Painful Reality of App Development Today</h2>
+            
+            <div class="problems-grid">
+                <div class="problem-item">
+                    <div class="problem-icon">💰</div>
+                    <h3>Absurd Costs</h3>
+                    <p>Traditional app development costs $5,000 to $50,000+ and that's just to get started. Each revision? That'll be another invoice.</p>
                 </div>
-                <div class="feature">
-                    <div class="feature-icon">⚡</div>
-                    <h3>App Store in Days, Not Months</h3>
-                    <p>Skip months of learning and development. Create a fully functional app and submit it to app stores in just days, not months or years.</p>
+                <div class="problem-item">
+                    <div class="problem-icon">⏳</div>
+                    <h3>Endless Delays</h3>
+                    <p>Most apps take 3-6 months to build — if you're lucky. Many projects drag on for a year or more before launching.</p>
                 </div>
-                <div class="feature">
-                    <div class="feature-icon">🔄</div>
-                    <h3>Any App Idea, Any Industry</h3>
-                    <p>Our system works for any type of app - health, fitness, productivity, entertainment, social - you dream it, you can build it.</p>
+                <div class="problem-item">
+                    <div class="problem-icon">🔄</div>
+                    <h3>Communication Nightmares</h3>
+                    <p>Explaining your vision to developers is exhausting. What you describe is rarely what you get, leading to costly revisions.</p>
                 </div>
-                <div class="feature">
-                    <div class="feature-icon">🚀</div>
-                    <h3>Endless Possibilities</h3>
-                    <p>Once you master this process, you can create as many professional apps as you want - for yourself, clients, or to sell on app stores.</p>
+                <div class="problem-item">
+                    <div class="problem-icon">🔒</div>
+                    <h3>Dependency Trap</h3>
+                    <p>Once developers build your app, you're locked in. Every tiny change requires going back to them (and paying again).</p>
                 </div>
+            </div>
+            
+            <div class="problem-quote">
+                <p>"I never set out to become an app development expert. Like many entrepreneurs, I simply needed an app for my business. What followed was a 9-month odyssey of frustration that led me to discover a better way..."</p>
+                <div class="quote-author">— AppFoundry Creator</div>
             </div>
         </div>
     </section>
 
-    <section class="value-section">
+    <!-- SOLUTION SECTION -->
+    <section class="solution" id="solution">
         <div class="container">
-            <h2>Why Pay Thousands When AI Can Do the Work?</h2>
-            <div class="value-content">
-                <div class="value-text">
-                    <p>Traditional app development costs $5,000 to $50,000+ and takes months of work by skilled developers. But when you know exactly how to leverage AI, creating professional apps becomes effortless.</p>
-                    
-                    <p>Many people don't yet understand the power of AI to create professional-looking apps that would take teams of developers months to build. You'll be ahead of the curve.</p>
-                    
-                    <h3>Use This Course To:</h3>
-                    <ul class="value-list">
-                        <li><strong>Create apps for personal use</strong> - bring your own ideas to life</li>
-                        <li><strong>Build tools for your business</strong> - without expensive development costs</li>
-                        <li><strong>Develop apps for clients</strong> - charge thousands while leveraging AI</li>
-                        <li><strong>Get ahead of the market</strong> - while everyone else is still playing catch-up</li>
+            <h2>The AppFoundry Solution: AI-Powered App Development</h2>
+            <p class="section-subtitle">What if you could build professional apps without writing a single line of code?</p>
+            
+            <div class="solution-showcase">
+                <div class="solution-text">
+                    <ul class="solution-benefits">
+                        <li><strong>Direct your personal AI developer</strong> using our proven prompt frameworks</li>
+                        <li><strong>Create exactly what you envision</strong> without technical limitations</li>
+                        <li><strong>Make unlimited changes yourself</strong> instead of paying developers</li>
+                        <li><strong>Launch in days, not months</strong> with our streamlined process</li>
+                        <li><strong>Own 100% of your creation</strong> with no ongoing dependencies</li>
                     </ul>
                     
-                    <p class="highlight-text">You're going to be stunned at how easy, how quick, and how professional everything will look with my guidance.</p>
+                    <div class="solution-cta">
+                        <a href="#pricing" class="cta-button">Start Building My App</a>
+                    </div>
                 </div>
-                <div class="value-image">
-                    <div class="price-comparison-visual">
-                        <div class="price-option traditional">
-                            <div class="price-label">Traditional Development</div>
-                            <div class="price-amount">$10,000+</div>
-                            <div class="price-timeline">3-6 months</div>
-                        </div>
-                        <div class="vs">VS</div>
-                        <div class="price-option course">
-                            <div class="price-label">This Course</div>
-                            <div class="price-amount">$199</div>
-                            <div class="price-timeline">Build in days</div>
-                        </div>
+                
+                <div class="solution-image">
+                    <img src="images/app-building-process.png" alt="The AppFoundry process transforms your ideas into working apps using Claude AI">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- QUICK WINS SECTION -->
+    <section class="quick-wins">
+        <div class="container">
+            <h2>What You'll Build in Your First 14 Days</h2>
+            <p class="section-subtitle">Start with these simple projects to build confidence before tackling your main app idea</p>
+            
+            <div class="wins-carousel">
+                <div class="win-item">
+                    <div class="win-image">
+                        <img src="images/task-tracker-app.png" alt="Task Tracker App Screenshot">
+                    </div>
+                    <h3>Task Tracker App</h3>
+                    <p>A simple but powerful task management app with categories, due dates, and notifications.</p>
+                    <div class="build-time">Build time: 4 hours</div>
+                </div>
+                
+                <div class="win-item">
+                    <div class="win-image">
+                        <img src="images/recipe-finder-app.png" alt="Recipe Finder App Screenshot">
+                    </div>
+                    <h3>Recipe Finder App</h3>
+                    <p>Search recipes by ingredients you already have at home with filtering and favorites.</p>
+                    <div class="build-time">Build time: 6 hours</div>
+                </div>
+                
+                <div class="win-item">
+                    <div class="win-image">
+                        <img src="images/workout-tracker-app.png" alt="Workout Tracker App Screenshot">
+                    </div>
+                    <h3>Workout Tracker App</h3>
+                    <p>Track your exercises, sets, reps, and progress with visual progress charts.</p>
+                    <div class="build-time">Build time: 8 hours</div>
+                </div>
+                
+                <div class="carousel-controls">
+                    <button class="carousel-prev">&lt;</button>
+                    <div class="carousel-dots">
+                        <span class="dot active"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                    <button class="carousel-next">&gt;</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ROI CALCULATOR SECTION -->
+    <section class="roi-calculator">
+        <div class="container">
+            <h2>Calculate Your Savings</h2>
+            <p class="section-subtitle">See exactly how much time and money AppFoundry will save you</p>
+            
+            <div class="calculator-container">
+                <div class="calculator-inputs">
+                    <div class="calculator-field">
+                        <label for="app-complexity">App Complexity Level</label>
+                        <select id="app-complexity">
+                            <option value="simple">Simple (5-8 screens)</option>
+                            <option value="medium" selected>Medium (9-15 screens)</option>
+                            <option value="complex">Complex (16+ screens)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="calculator-field">
+                        <label for="developer-rate">Average Developer Rate ($/hour)</label>
+                        <input type="number" id="developer-rate" value="85" min="50" max="200">
+                    </div>
+                    
+                    <div class="calculator-field">
+                        <label for="revisions">Expected Number of Revisions</label>
+                        <input type="number" id="revisions" value="3" min="1" max="10">
+                    </div>
+                    
+                    <button id="calculate-roi" class="cta-button">Calculate My Savings</button>
+                </div>
+                
+                <div class="calculator-results">
+                    <div class="result-card">
+                        <h3>Traditional Development</h3>
+                        <div class="result-cost">$15,200</div>
+                        <div class="result-time">4.5 months</div>
+                        <ul class="result-breakdown">
+                            <li>Development: $12,500</li>
+                            <li>Revisions: $2,700</li>
+                            <li>Initial wait time: 2-3 weeks</li>
+                            <li>Revision wait times: 1-2 weeks each</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="result-card highlight">
+                        <h3>With AppFoundry</h3>
+                        <div class="result-cost">$197</div>
+                        <div class="result-time">2 weeks</div>
+                        <ul class="result-breakdown">
+                            <li>Course: $197 (one-time)</li>
+                            <li>Revisions: $0 (you make them)</li>
+                            <li>Initial development: 1-2 weeks</li>
+                            <li>Revision time: Minutes to hours</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="result-savings">
+                        <h3>Your Total Savings</h3>
+                        <div class="savings-amount">$15,003</div>
+                        <div class="savings-time">4 months</div>
+                        <a href="#pricing" class="cta-button">Start Saving Today</a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- PROOF SECTION (RESULTS & CREDIBILITY) -->
+    <section class="proof">
+        <div class="container">
+            <h2>Proof This Works for Real People</h2>
+            
+            <div class="market-metrics">
+                <div class="metric">
+                    <div class="metric-number">65B+</div>
+                    <div class="metric-label">No-Code Market Value by 2025</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-number">26%</div>
+                    <div class="metric-label">Annual Growth in AI App Development</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-number">87%</div>
+                    <div class="metric-label">Cost Savings vs Traditional Dev</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-number">14x</div>
+                    <div class="metric-label">Faster Development Time</div>
+                </div>
+            </div>
+            
+            <div class="tech-logos">
+                <h3>Built Using the Latest AI Technology</h3>
+                <div class="logo-grid">
+                    <img src="images/claude-logo.png" alt="Claude AI" class="tech-logo">
+                    <img src="images/anthropic-logo.png" alt="Anthropic" class="tech-logo">
+                    <img src="images/netlify-logo.png" alt="Netlify" class="tech-logo">
+                    <img src="images/supabase-logo.png" alt="Supabase" class="tech-logo">
+                    <img src="images/stripe-logo.png" alt="Stripe" class="tech-logo">
+                </div>
+            </div>
+            
+            <div class="launch-examples">
+                <h3>Founding Members Program</h3>
+                <p>Join our exclusive founding members program and be among the first to create apps with our revolutionary approach.</p>
+                
+                <div class="founding-benefits">
+                    <div class="benefit">
+                        <div class="benefit-icon">💎</div>
+                        <h4>Lifetime Access</h4>
+                        <p>All future course updates included forever at the founding member rate.</p>
+                    </div>
+                    <div class="benefit">
+                        <div class="benefit-icon">📊</div>
+                        <h4>App Gallery Access</h4>
+                        <p>Browse a growing library of successful apps built with our system.</p>
+                    </div>
+                    <div class="benefit">
+                        <div class="benefit-icon">🚀</div>
+                        <h4>Priority Support</h4>
+                        <p>Get your questions answered first with dedicated email support.</p>
+                    </div>
+                </div>
+                
+                <div class="spots-remaining">
+                    <div class="spots-meter">
+                        <div class="spots-fill" style="width: 82%;"></div>
+                    </div>
+                    <div class="spots-text"><strong>Only 18 founding member spots remaining!</strong> (out of 100)</div>
+                </div>
+                
+                <a href="#pricing" class="cta-button large">Claim My Founding Member Spot</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CURRICULUM SECTION -->
     <section class="curriculum" id="curriculum">
         <div class="container">
-            <h2>No-Code App Building System</h2>
-            <div class="modules">
-                <div class="module">
-                    <div class="module-number">01</div>
-                    <div class="module-content">
-                        <h3>Setting Up Your AI Development Environment</h3>
-                        <p>Configure Claude and the minimal tools you need to start building without coding</p>
+            <h2>Your App-Building Roadmap</h2>
+            <p class="section-subtitle">A proven 7-module system to turn your ideas into reality without coding</p>
+            
+            <div class="curriculum-visual">
+                <div class="roadmap-line"></div>
+                <div class="modules">
+                    <div class="module">
+                        <div class="module-number">01</div>
+                        <div class="module-content">
+                            <h3>Setting Up Your AI Development Environment</h3>
+                            <p>Configure Claude and the minimal tools you need to start building without coding</p>
+                            <div class="module-expand" data-module="1">See Lesson Details +</div>
+                            <div class="module-details" id="module-details-1">
+                                <ul>
+                                    <li>Setting up your Claude AI account the right way</li>
+                                    <li>Installing the essential tools (all free)</li>
+                                    <li>Creating your first project workspace</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module">
+                        <div class="module-number">02</div>
+                        <div class="module-content">
+                            <h3>Creating Your First AI Project</h3>
+                            <p>Learn how to "speak" to Claude so it creates exactly what you want</p>
+                            <div class="module-expand" data-module="2">See Lesson Details +</div>
+                            <div class="module-details" id="module-details-2">
+                                <ul>
+                                    <li>The exact prompts that get professional results</li>
+                                    <li>How to break down any app idea into AI-friendly components</li>
+                                    <li>Troubleshooting when Claude doesn't understand</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module">
+                        <div class="module-number">03</div>
+                        <div class="module-content">
+                            <h3>Testing Your App: From Concept to Phone</h3>
+                            <p>See your app work on your device without writing a single line of code</p>
+                            <div class="module-expand" data-module="3">See Lesson Details +</div>
+                            <div class="module-details" id="module-details-3">
+                                <ul>
+                                    <li>Setting up your testing environment</li>
+                                    <li>Running your app on multiple devices</li>
+                                    <li>Getting feedback from real users</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module">
+                        <div class="module-number">04</div>
+                        <div class="module-content">
+                            <h3>Directing Claude: Creating Professional UI</h3>
+                            <p>Learn the exact prompts to get beautiful interfaces from Claude</p>
+                            <div class="module-expand" data-module="4">See Lesson Details +</div>
+                            <div class="module-details" id="module-details-4">
+                                <ul>
+                                    <li>Advanced UI prompt techniques</li>
+                                    <li>Creating consistent design systems</li>
+                                    <li>Implementing animations and transitions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module">
+                        <div class="module-number">05</div>
+                        <div class="module-content">
+                            <h3>Building Your App Structure</h3>
+                            <p>Create a complete app blueprint that Claude can turn into reality</p>
+                            <div class="module-expand" data-module="5">See Lesson Details +</div>
+                            <div class="module-details" id="module-details-5">
+                                <ul>
+                                    <li>Planning app architecture without technical knowledge</li>
+                                    <li>Setting up screens and navigation</li>
+                                    <li>Creating data models and functionality</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module">
+                        <div class="module-number">06</div>
+                        <div class="module-content">
+                            <h3>Building Out Your App</h3>
+                            <p>Let Claude do all the technical work while you focus on design and features</p>
+                            <div class="module-expand" data-module="6">See Lesson Details +</div>
+                            <div class="module-details" id="module-details-6">
+                                <ul>
+                                    <li>Implementing complex features with simple prompts</li>
+                                    <li>Adding user authentication and data storage</li>
+                                    <li>Testing and debugging with AI assistance</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module">
+                        <div class="module-number">07</div>
+                        <div class="module-content">
+                            <h3>Submitting to the App Store</h3>
+                            <p>Get your AI-built app published quickly and professionally</p>
+                            <div class="module-expand" data-module="7">See Lesson Details +</div>
+                            <div class="module-details" id="module-details-7">
+                                <ul>
+                                    <li>Preparing your app for submission</li>
+                                    <li>Creating screenshots and descriptions</li>
+                                    <li>Navigating the approval process</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="module">
-                    <div class="module-number">02</div>
-                    <div class="module-content">
-                        <h3>Creating Your First AI Project</h3>
-                        <p>Learn how to "speak" to Claude so it creates exactly what you want</p>
-                    </div>
-                </div>
-                <div class="module">
-                    <div class="module-number">03</div>
-                    <div class="module-content">
-                        <h3>Testing Your App: From Concept to Phone</h3>
-                        <p>See your app work on your device without writing a single line of code</p>
-                    </div>
-                </div>
-                <div class="module">
-                    <div class="module-number">04</div>
-                    <div class="module-content">
-                        <h3>Directing Claude: Creating Professional UI</h3>
-                        <p>Learn the exact prompts to get beautiful interfaces from Claude</p>
-                    </div>
-                </div>
-                <div class="module">
-                    <div class="module-number">05</div>
-                    <div class="module-content">
-                        <h3>Building Your App Structure</h3>
-                        <p>Create a complete app blueprint that Claude can turn into reality</p>
-                    </div>
-                </div>
-                <div class="module">
-                    <div class="module-number">06</div>
-                    <div class="module-content">
-                        <h3>Building Out Your App</h3>
-                        <p>Let Claude do all the technical work while you focus on design and features</p>
-                    </div>
-                </div>
-                <div class="module">
-                    <div class="module-number">07</div>
-                    <div class="module-content">
-                        <h3>Submitting to the App Store</h3>
-                        <p>Get your AI-built app published quickly and professionally</p>
-                    </div>
-                </div>
+            </div>
+            
+            <div class="curriculum-cta">
+                <a href="#pricing" class="cta-button large">Start the Course Today</a>
+                <p class="cta-note">Begin building your first app in the next 24 hours</p>
             </div>
         </div>
     </section>
 
+    <!-- COMPARISON SECTION -->
+    <section class="comparison">
+        <div class="container">
+            <h2>How AppFoundry Compares</h2>
+            <p class="section-subtitle">See why our AI-powered approach gives you the best of all worlds</p>
+            
+            <div class="comparison-table-wrapper">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Traditional Development</th>
+                            <th>No-Code Platforms</th>
+                            <th class="highlight">AppFoundry</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Cost</td>
+                            <td>$5,000 - $50,000+</td>
+                            <td>$15 - $200/month ongoing</td>
+                            <td class="highlight">$197 (one-time)</td>
+                        </tr>
+                        <tr>
+                            <td>Development Time</td>
+                            <td>3-6 months</td>
+                            <td>1-4 weeks</td>
+                            <td class="highlight">1-14 days</td>
+                        </tr>
+                        <tr>
+                            <td>Technical Skills Required</td>
+                            <td>Extensive</td>
+                            <td>Moderate</td>
+                            <td class="highlight">None</td>
+                        </tr>
+                        <tr>
+                            <td>Customization</td>
+                            <td>Unlimited (but expensive)</td>
+                            <td>Limited by platform</td>
+                            <td class="highlight">Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td>Ownership</td>
+                            <td>You own the code</td>
+                            <td>Platform-dependent</td>
+                            <td class="highlight">100% yours</td>
+                        </tr>
+                        <tr>
+                            <td>Future Updates</td>
+                            <td>Additional cost</td>
+                            <td>Subscription fees</td>
+                            <td class="highlight">Free (you do it yourself)</td>
+                        </tr>
+                        <tr>
+                            <td>App Complexity</td>
+                            <td>Any complexity</td>
+                            <td>Simple to moderate</td>
+                            <td class="highlight">Simple to advanced</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING SECTION -->
     <section class="pricing" id="pricing">
         <div class="container">
-            <h2>Course Pricing</h2>
-            <div class="price-card">
-                <h3>Complete No-Code System</h3>
-                <div class="price">$199</div>
-                <div class="price-comparison">Traditional app development: $5,000 - $50,000+</div>
-                <ul class="benefits">
-                    <li>Full access to all 7 modules</li>
-                    <li>Step-by-step AI prompting guides</li>
-                    <li>Zero coding knowledge required</li>
-                    <li>App templates and blueprints</li>
-                    <li>Build unlimited apps for yourself or clients</li>
-                    <li>Lifetime access & updates</li>
-                </ul>
-                <div class="guarantee-highlight">
-                    <span class="guarantee-highlight-icon">🔒</span>
-                    <span>30-Day "Build Your First App" Guarantee</span>
+            <h2>Choose Your App Building Journey</h2>
+            <p class="section-subtitle">All plans include our 60-day "Build Your First App" guarantee</p>
+            
+            <div class="pricing-grid">
+                <div class="price-card basic">
+                    <div class="price-header">
+                        <h3>Essential</h3>
+                        <div class="price">
+                            <span class="regular-price">$197</span>
+                            <span class="one-time">one-time payment</span>
+                        </div>
+                    </div>
+                    
+                    <ul class="price-features">
+                        <li><span class="feature-check">✓</span> Complete 7-module course</li>
+                        <li><span class="feature-check">✓</span> Claude AI prompt templates</li>
+                        <li><span class="feature-check">✓</span> Basic app examples</li>
+                        <li><span class="feature-check">✓</span> Lifetime access to updates</li>
+                        <li><span class="feature-check">✓</span> Community forum access</li>
+                        <li class="feature-missing">✗ Template library</li>
+                        <li class="feature-missing">✗ Advanced project walkthroughs</li>
+                        <li class="feature-missing">✗ Priority email support</li>
+                    </ul>
+                    
+                    <div class="price-cta">
+                        <a href="checkout.html?plan=essential" class="cta-button">Start Building Now</a>
+                    </div>
                 </div>
-                <button class="cta-button large" onclick="window.location.href='checkout.html'">Enroll Now</button>
-                <a href="checkout.html?test_mode=true" class="test-mode-link">Try course before buying</a>
+                
+                <div class="price-card complete">
+                    <div class="most-popular">Most Popular</div>
+                    <div class="price-header">
+                        <h3>Complete</h3>
+                        <div class="price">
+                            <span class="regular-price">$297</span>
+                            <span class="one-time">one-time payment</span>
+                        </div>
+                    </div>
+                    
+                    <ul class="price-features">
+                        <li><span class="feature-check">✓</span> Everything in Essential</li>
+                        <li><span class="feature-check">✓</span> <strong>+ App template library (15+ templates)</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>+ Advanced project walkthroughs</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>+ Priority email support</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>+ AI prompt enhancement tool</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>+ Monthly template updates</strong></li>
+                        <li class="feature-missing">✗ Private community access</li>
+                        <li class="feature-missing">✗ Early access to new features</li>
+                    </ul>
+                    
+                    <div class="price-cta">
+                        <a href="checkout.html?plan=complete" class="cta-button cta-button-highlighted">Get Complete Access</a>
+                    </div>
+                </div>
+                
+                <div class="price-card premium">
+                    <div class="price-header">
+                        <h3>Premium</h3>
+                        <div class="price">
+                            <span class="regular-price">$497</span>
+                            <span class="one-time">one-time payment</span>
+                        </div>
+                    </div>
+                    
+                    <ul class="price-features">
+                        <li><span class="feature-check">✓</span> Everything in Complete</li>
+                        <li><span class="feature-check">✓</span> <strong>+ Private community access</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>+ Early access to new features</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>+ Advanced integration templates</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>+ White-labeled resale rights</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>+ App monetization guides</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>+ Premium support (24-hour response)</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>+ Founding member status</strong></li>
+                    </ul>
+                    
+                    <div class="price-cta">
+                        <a href="checkout.html?plan=premium" class="cta-button">Upgrade to Premium</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="payment-options">
+                <div class="or-divider">
+                    <span>OR</span>
+                </div>
+                
+                <div class="installment-plan">
+                    <h3>Payment Plan Option</h3>
+                    <p>Pay for the Complete package in 3 monthly installments</p>
+                    
+                    <div class="installment-details">
+                        <div class="installment-price">
+                            <span class="installment-amount">$79</span>
+                            <span class="installment-text">per month for 3 months</span>
+                        </div>
+                        <div class="total-price">Total: $237 (save $60 with one-time payment)</div>
+                    </div>
+                    
+                    <a href="checkout.html?plan=complete-installment" class="cta-button">Start With Payment Plan</a>
+                </div>
             </div>
         </div>
     </section>
 
+    <!-- GUARANTEE SECTION (EXPANDED) -->
     <section class="guarantee-section">
         <div class="container">
-            <h2>Our Ironclad Guarantee</h2>
+            <h2>Our Ironclad 60-Day Guarantee</h2>
+            
             <div class="guarantee-content">
                 <div class="guarantee-image">
                     <div class="guarantee-seal">
@@ -394,20 +688,134 @@
                 </div>
                 <div class="guarantee-text-content">
                     <h3>The "Build Your First App" Guarantee</h3>
-                    <p>We're so confident in our system that we're taking ALL the risk. If you can't create an app within 30 days, we'll give you 100% of your money back.</p>
-                    <p>Just show us you've made a sincere effort by sharing your project files, and we'll process your refund - no questions asked.</p>
+                    <p>If you can't create a working app within 60 days of taking this course, I'll give you 100% of your money back, no questions asked.</p>
+                    <p>All I ask is that you show me you've made a sincere effort by sharing your project files. This is my way of ensuring your success while taking all the risk off your shoulders.</p>
+                    <p><strong>I'm so confident in this system because I've seen complete beginners transform into app creators in days, not months.</strong></p>
                     <a href="refund-policy.html" class="cta-button">See Full Guarantee Details</a>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- FAQ SECTION -->
+    <section class="faq">
+        <div class="container">
+            <h2>Frequently Asked Questions</h2>
+            
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>What technical background do I need?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Absolutely none! The course is specifically designed for people with zero coding knowledge. If you can use a computer and follow instructions, you have all the skills you need to succeed.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>How is AppFoundry different from other no-code courses?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Unlike traditional no-code platforms that lock you into their ecosystems with monthly fees, AppFoundry teaches you how to leverage Claude AI to create truly custom apps that you own 100%. You're not limited by platform constraints, and there are no ongoing fees.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>How long will it take to complete the course?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>The core curriculum takes about 10-15 hours to complete. Most students finish in 1-2 weeks while working on their first app. You'll start seeing results within the first few hours as you complete the initial modules.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>What kind of apps can I build after taking this course?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>You can build a wide range of apps including: social networking apps, productivity tools, e-commerce platforms, health and fitness trackers, educational apps, entertainment apps, and much more. If you can imagine it, you can build it with the AppFoundry method.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Will I receive certification?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Yes, upon completing the course, you'll receive an AppFoundry certification that demonstrates your ability to build apps using AI. More importantly, you'll have actual apps you've built that showcase your skills far better than any certificate.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>What support is available if I get stuck?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>All students get access to our community forum where you can ask questions and get help from other students. Complete and Premium plan members receive priority email support. Premium members also get access to our private community with faster response times.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Can I build apps for clients or my employer?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Absolutely! Many of our students use AppFoundry to start app development businesses or to add value at their workplace. The Premium plan includes white-labeled resale rights, allowing you to create and sell apps to clients without attribution.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>How does the Claude AI integration work?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Claude AI is a powerful language model created by Anthropic. Our course teaches you the exact prompts and techniques to direct Claude to generate code, design interfaces, and build app components. You'll learn how to interact with Claude effectively, even with no technical background.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Do I need to purchase additional tools or software?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>No, you don't need to purchase any additional software. You'll need a Claude AI account (which has a free tier sufficient for learning), and we'll cover several free hosting and deployment options. The course includes all templates and resources needed.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>What is your refund policy?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>We offer a 60-day "Build Your First App" guarantee. If you can't create a working app within 60 days of taking the course, we'll refund 100% of your purchase price. All we ask is that you show us you've made a sincere effort by sharing your project files.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FINAL CTA SECTION -->
     <section class="cta-section">
         <div class="container">
-            <h2>Ready to Build Your Dream App Without Coding?</h2>
+            <h2>Start Building Your Dream App Today</h2>
             <p>Join hundreds of non-technical creators who've built professional apps using our AI-powered system</p>
-            <button class="cta-button large" onclick="window.location.href='checkout.html'">Start Building Today</button>
-            <a href="checkout.html?test_mode=true" class="test-mode-link">Want to test the course first? Click here</a>
+            <a href="#pricing" class="cta-button large">I'm Ready to Build My App</a>
+            <div class="cta-guarantee">
+                <span class="guarantee-icon">🔒</span>
+                <span class="guarantee-text">Protected by our 60-day money-back guarantee</span>
+            </div>
         </div>
     </section>
 
@@ -418,7 +826,8 @@
                 <div class="link-group">
                     <h4>Course</h4>
                     <ul>
-                        <li><a href="#overview">Overview</a></li>
+                        <li><a href="#problem">The Problem</a></li>
+                        <li><a href="#solution">Our Solution</a></li>
                         <li><a href="#curriculum">Curriculum</a></li>
                         <li><a href="#pricing">Pricing</a></li>
                         <li><a href="success-stories.html">Success Stories</a></li>
@@ -446,189 +855,141 @@
         </div>
     </footer>
 
-    <!-- Password Reset Modal Template (initially hidden) -->
-    <div id="passwordResetModal" class="password-reset-modal" style="display: none;">
-        <div class="password-reset-container">
-            <h2>Reset Your Password</h2>
-            
-            <div id="password-form">
-                <div class="form-group">
-                    <label for="new-password">New Password</label>
-                    <input type="password" id="new-password" required placeholder="Enter new password (min 6 characters)">
-                </div>
-                
-                <div class="form-group">
-                    <label for="confirm-password">Confirm Password</label>
-                    <input type="password" id="confirm-password" required placeholder="Confirm new password">
-                </div>
-                
-                <button id="reset-button" class="reset-button">Reset Password</button>
-                
-                <div id="reset-status-message" class="status-message"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Include regular scripts -->
+    <!-- Scripts -->
     <script src="scripts.js"></script>
     <script src="auth-implementation.js"></script>
     
-    <!-- Load Supabase library if it's going to be needed -->
     <script>
-        // Check if we have a recovery token in the URL hash
-        const hash = window.location.hash.substring(1);
-        if (hash && hash.includes('type=recovery')) {
-            // Dynamically load Supabase
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/@supabase/supabase-js@2';
-            document.head.appendChild(script);
-        }
-    </script>
-    
-    <!-- Password Reset Handler Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Parse URL hash parameters
-            function parseHashParams() {
-                const hash = window.location.hash.substring(1);
-                const params = {};
+        // Module details toggle
+        document.querySelectorAll('.module-expand').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const moduleId = this.getAttribute('data-module');
+                const details = document.getElementById(`module-details-${moduleId}`);
                 
-                if (!hash) return params;
-                
-                const pairs = hash.split('&');
-                for (let i = 0; i < pairs.length; i++) {
-                    const pair = pairs[i].split('=');
-                    params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+                if (details.style.display === 'block') {
+                    details.style.display = 'none';
+                    this.textContent = `See Lesson Details +`;
+                } else {
+                    details.style.display = 'block';
+                    this.textContent = `Hide Lesson Details -`;
                 }
-                
-                return params;
-            }
-            
-            // Get parameters from URL
-            const params = parseHashParams();
-            
-            // Check if this is a password reset link
-            if (params.access_token && params.type === 'recovery') {
-                console.log('Password reset token detected in URL');
-                
-                // Wait for Supabase to load
-                function checkSupabaseAndInit() {
-                    if (typeof supabase !== 'undefined') {
-                        initializePasswordReset(params);
-                    } else {
-                        setTimeout(checkSupabaseAndInit, 100);
-                    }
-                }
-                
-                checkSupabaseAndInit();
-            }
-            
-            // Initialize password reset functionality
-            function initializePasswordReset(params) {
-                console.log('Initializing password reset');
-                
-                // Get modal and form elements
-                const modal = document.getElementById('passwordResetModal');
-                const resetButton = document.getElementById('reset-button');
-                const statusMessage = document.getElementById('reset-status-message');
-                
-                // Show the modal
-                modal.style.display = 'flex';
-                
-                // Initialize Supabase client
-                const supabaseClient = supabase.createClient(
-                    'https://vyzsauyekanaxevgxkyh.supabase.co',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c'
-                );
-                
-                // Validate the token first
-                supabaseClient.auth.setSession({
-                    access_token: params.access_token,
-                    refresh_token: params.refresh_token || ''
-                }).then(({ data, error }) => {
-                    if (error) {
-                        console.error('Error validating token:', error);
-                        showErrorMessage('Your password reset link is invalid or has expired. Please request a new one.');
-                        resetButton.disabled = true;
-                    } else {
-                        console.log('Token validated successfully');
-                    }
-                });
-                
-                // Handle reset button click
-                resetButton.addEventListener('click', async function() {
-                    const newPassword = document.getElementById('new-password').value;
-                    const confirmPassword = document.getElementById('confirm-password').value;
-                    
-                    // Validate passwords
-                    if (!newPassword || !confirmPassword) {
-                        showErrorMessage('Please fill in both password fields');
-                        return;
-                    }
-                    
-                    if (newPassword.length < 6) {
-                        showErrorMessage('Password must be at least 6 characters long');
-                        return;
-                    }
-                    
-                    if (newPassword !== confirmPassword) {
-                        showErrorMessage('Passwords do not match');
-                        return;
-                    }
-                    
-                    // Disable button and show loading state
-                    resetButton.disabled = true;
-                    resetButton.textContent = 'Updating...';
-                    
-                    try {
-                        // Update the user's password
-                        const { data, error } = await supabaseClient.auth.updateUser({
-                            password: newPassword
-                        });
-                        
-                        if (error) {
-                            console.error('Error updating password:', error);
-                            throw error;
-                        }
-                        
-                        // Get user email for localStorage update
-                        const { data: userData } = await supabaseClient.auth.getUser();
-                        const userEmail = userData.user?.email;
-                        
-                        // Also update in localStorage for backward compatibility
-                        if (userEmail) {
-                            localStorage.setItem('sleeptech_password_' + userEmail, newPassword);
-                        }
-                        
-                        showSuccessMessage('Password updated successfully! Redirecting to login page...');
-                        
-                        // Redirect to login page after a delay
-                        setTimeout(function() {
-                            window.location.href = 'direct-login.html';
-                        }, 2000);
-                        
-                    } catch (error) {
-                        console.error('Error in password reset:', error);
-                        showErrorMessage('There was an error updating your password: ' + error.message);
-                        resetButton.disabled = false;
-                        resetButton.textContent = 'Reset Password';
-                    }
-                });
-                
-                // Helper functions for displaying messages
-                function showErrorMessage(message) {
-                    statusMessage.textContent = message;
-                    statusMessage.className = 'status-message error';
-                    statusMessage.style.display = 'block';
-                }
-                
-                function showSuccessMessage(message) {
-                    statusMessage.textContent = message;
-                    statusMessage.className = 'status-message success';
-                    statusMessage.style.display = 'block';
-                }
-            }
+            });
         });
+        
+        // FAQ toggles
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', function() {
+                const answer = this.nextElementSibling;
+                const icon = this.querySelector('.toggle-icon');
+                
+                if (answer.style.display === 'block') {
+                    answer.style.display = 'none';
+                    icon.textContent = '+';
+                } else {
+                    answer.style.display = 'block';
+                    icon.textContent = '-';
+                }
+            });
+        });
+        
+        // ROI Calculator
+        document.getElementById('calculate-roi').addEventListener('click', function() {
+            const complexity = document.getElementById('app-complexity').value;
+            const rate = parseInt(document.getElementById('developer-rate').value);
+            const revisions = parseInt(document.getElementById('revisions').value);
+            
+            let baseCost, baseTime;
+            
+            switch(complexity) {
+                case 'simple':
+                    baseCost = 8000;
+                    baseTime = 2.5;
+                    break;
+                case 'medium':
+                    baseCost = 15000;
+                    baseTime = 4.5;
+                    break;
+                case 'complex':
+                    baseCost = 30000;
+                    baseTime = 7;
+                    break;
+                default:
+                    baseCost = 15000;
+                    baseTime = 4.5;
+            }
+            
+            // Adjust based on rate
+            const rateFactor = rate / 85;
+            baseCost = Math.round(baseCost * rateFactor);
+            
+            // Calculate revision costs
+            const revisionCost = Math.round(baseCost * 0.15 * revisions);
+            const totalCost = baseCost + revisionCost;
+            
+            // Calculate total time
+            const revisionTime = revisions * 0.5;
+            const totalTime = baseTime + revisionTime;
+            
+            // Update the results
+            document.querySelector('.result-card:nth-child(1) .result-cost').textContent = `$${totalCost.toLocaleString()}`;
+            document.querySelector('.result-card:nth-child(1) .result-time').textContent = `${totalTime.toFixed(1)} months`;
+            document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(1)').textContent = `Development: $${baseCost.toLocaleString()}`;
+            document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(2)').textContent = `Revisions: $${revisionCost.toLocaleString()}`;
+            
+            // Calculate savings
+            const savings = totalCost - 197;
+            const timeMonths = totalTime - 0.5;
+            
+            document.querySelector('.savings-amount').textContent = `$${savings.toLocaleString()}`;
+            document.querySelector('.savings-time').textContent = `${timeMonths.toFixed(1)} months`;
+        });
+        
+        // Carousel functionality
+        const carousel = document.querySelector('.wins-carousel');
+        const items = document.querySelectorAll('.win-item');
+        const dots = document.querySelectorAll('.carousel-dots .dot');
+        const prevButton = document.querySelector('.carousel-prev');
+        const nextButton = document.querySelector('.carousel-next');
+        let currentIndex = 0;
+        
+        function showSlide(index) {
+            // Reset current index if out of bounds
+            if (index >= items.length) {
+                index = 0;
+            } else if (index < 0) {
+                index = items.length - 1;
+            }
+            
+            // Update current index
+            currentIndex = index;
+            
+            // Update carousel position
+            items.forEach((item, i) => {
+                item.style.display = i === currentIndex ? 'block' : 'none';
+            });
+            
+            // Update dots
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentIndex);
+            });
+        }
+        
+        // Set up event listeners
+        prevButton.addEventListener('click', () => showSlide(currentIndex - 1));
+        nextButton.addEventListener('click', () => showSlide(currentIndex + 1));
+        
+        dots.forEach((dot, i) => {
+            dot.addEventListener('click', () => showSlide(i));
+        });
+        
+        // Initialize carousel
+        showSlide(0);
+        
+        // Auto-advance carousel every 5 seconds
+        setInterval(() => {
+            showSlide(currentIndex + 1);
+        }, 5000);
     </script>
+</head>
 </body>
 </html>
