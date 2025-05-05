@@ -241,6 +241,12 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Immediately remove any access overlays on the login page
+            const accessOverlay = document.getElementById('access-overlay');
+            if (accessOverlay) {
+                accessOverlay.style.display = 'none';
+            }
+            
             // Initialize variables
             const loginButton = document.getElementById('login-button');
             const testModeButton = document.getElementById('test-mode-button');
