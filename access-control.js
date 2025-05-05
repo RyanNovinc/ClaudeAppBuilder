@@ -129,7 +129,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.removeItem('sleeptech_email');
                 localStorage.removeItem('sleeptech_login_time');
                 localStorage.removeItem('appfoundry_auth');
-                window.location.href = '../index.html';
+                
+                // Replace current page in history instead of adding to it
+                window.location.replace('../index.html');
             };
         }
     }
