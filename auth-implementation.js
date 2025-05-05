@@ -146,7 +146,7 @@ function removeCourseTab() {
 }
 
 /**
- * Updates the login/logout button
+ * Updates the login/logout button and adds a Continue Course button for logged-in users
  */
 function updateAuthButton(isAuthenticated, authEmail, isTestMode) {
     // Find login buttons in header
@@ -198,6 +198,31 @@ function updateAuthButton(isAuthenticated, authEmail, isTestMode) {
                     window.location.replace(getHomeUrl());
                 }
             });
+            
+            // Add a "Continue Course" button next to the Log Out button
+            const continueButton = document.createElement('button');
+            continueButton.textContent = 'Continue Course';
+            continueButton.className = 'cta-button small';
+            continueButton.style.marginRight = '10px';
+            continueButton.style.backgroundColor = '#0070f3'; // Blue color
+            
+            continueButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Check if we're in test mode
+                const testParam = isTestMode ? '?test_mode=true' : '';
+                // Direct to the modules page
+                const path = window.location.pathname;
+                const isInSubdirectory = path.split('/').length > 2;
+                
+                if (isInSubdirectory) {
+                    window.location.href = `module1.html${testParam}`;
+                } else {
+                    window.location.href = `modules/module1.html${testParam}`;
+                }
+            });
+            
+            // Insert the Continue Course button before the Log Out button
+            newButton.parentNode.insertBefore(continueButton, newButton);
         } else {
             // USER IS NOT LOGGED IN - Show Login button
             // Skip main call-to-action buttons that should go to checkout
