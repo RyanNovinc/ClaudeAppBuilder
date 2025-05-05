@@ -1,41 +1,153 @@
-// auth-implementation.js - Final version with complete nav hiding in modules
+// auth-implementation.js - Updated with Supabase integration
 // This file can replace all your existing auth JS files
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Auth implementation loaded - Page:', window.location.pathname);
     
+    // Initialize Supabase client
+    const supabaseUrl = 'https://vyzsauyekanaxevgxkyh.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c';
+    const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+    
     // Check for test mode
     const urlParams = new URLSearchParams(window.location.search);
     const isTestMode = urlParams.get('test_mode') === 'true';
     
-    // Check authentication status
-    const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
-                          localStorage.getItem('appfoundry_auth') === 'true';
-    const authEmail = localStorage.getItem('sleeptech_email') || 'user@example.com';
+    // First check authentication in Supabase
+    checkAuthStatus().then(({ isAuthenticated, authEmail, isTestModeUser }) => {
+        console.log('Auth status check - authenticated:', isAuthenticated, 'email:', authEmail);
+        
+        // 1. REMOVE ANY COURSE TAB FROM NAVIGATION
+        removeCourseTab();
+        
+        // 2. CHECK IF WE'RE ON A MODULE PAGE
+        const isModulePage = checkIfModulePage();
+        
+        // 3. HANDLE LOGIN/LOGOUT BUTTON
+        updateAuthButton(isAuthenticated, authEmail, isTestModeUser || isTestMode);
+        
+        // 4. HANDLE COURSE CONTENT ACCESS (if on a course page)
+        handleCourseAccess(isAuthenticated, isTestModeUser || isTestMode);
+        
+        // 5. SPECIAL HANDLING FOR CHECKOUT AND THANK YOU PAGES
+        handleSpecialPages(isTestModeUser || isTestMode);
+        
+        // 6. CHANGE "ENROLL NOW" TO "LOG IN" ON MAIN SCREEN - IMPROVED IMPLEMENTATION
+        changeAllEnrollButtonsToLogin(isAuthenticated);
+        
+        // 7. HIDE NAVIGATION IN COURSE MODULES
+        if (isModulePage && isAuthenticated) {
+            hideNavigationInModules();
+        }
+    });
     
-    console.log('Auth status check - authenticated:', isAuthenticated);
+    // Checks authentication in Supabase first, then falls back to localStorage
+    async function checkAuthStatus() {
+        try {
+            // 1. First try Supabase Auth
+            const { data } = await supabase.auth.getSession();
+            
+            if (data.session) {
+                // Check if user is in test mode
+                const { data: userData, error } = await supabase
+                    .from('users')
+                    .select('test_mode')
+                    .eq('id', data.session.user.id)
+                    .single();
+                    
+                const isTestModeUser = userData?.test_mode || false;
+                
+                // Set localStorage for backward compatibility
+                if (isTestModeUser) {
+                    localStorage.setItem('appfoundry_auth', 'true');
+                } else {
+                    localStorage.setItem('sleeptech_auth', 'true');
+                }
+                localStorage.setItem('sleeptech_email', data.session.user.email);
+                localStorage.setItem('sleeptech_login_time', new Date().getTime());
+                
+                return {
+                    isAuthenticated: true,
+                    authEmail: data.session.user.email,
+                    isTestModeUser
+                };
+            }
+        } catch (error) {
+            console.error('Supabase auth check error:', error);
+            // Fall back to localStorage if Supabase fails
+        }
+        
+        // 2. Fall back to localStorage if Supabase doesn't have a session
+        const isLocallyAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
+                                      localStorage.getItem('appfoundry_auth') === 'true';
+        const authEmail = localStorage.getItem('sleeptech_email');
+        const isTestModeUser = localStorage.getItem('appfoundry_auth') === 'true';
+        
+        // If authenticated in localStorage but not in Supabase, try to migrate
+        if (isLocallyAuthenticated && authEmail) {
+            const storedPassword = localStorage.getItem('sleeptech_password_' + authEmail);
+            
+            if (storedPassword) {
+                try {
+                    // Try to create user in Supabase (will quietly do nothing if user already exists)
+                    await createUserInSupabase(authEmail, storedPassword, isTestModeUser);
+                } catch (error) {
+                    console.error('Error migrating user to Supabase:', error);
+                }
+            }
+            
+            return {
+                isAuthenticated: true,
+                authEmail,
+                isTestModeUser
+            };
+        }
+        
+        return {
+            isAuthenticated: false,
+            authEmail: null,
+            isTestModeUser: false
+        };
+    }
     
-    // 1. REMOVE ANY COURSE TAB FROM NAVIGATION
-    removeCourseTab();
-    
-    // 2. CHECK IF WE'RE ON A MODULE PAGE
-    const isModulePage = checkIfModulePage();
-    
-    // 3. HANDLE LOGIN/LOGOUT BUTTON
-    updateAuthButton(isAuthenticated, authEmail, isTestMode);
-    
-    // 4. HANDLE COURSE CONTENT ACCESS (if on a course page)
-    handleCourseAccess(isAuthenticated, isTestMode);
-    
-    // 5. SPECIAL HANDLING FOR CHECKOUT AND THANK YOU PAGES
-    handleSpecialPages(isTestMode);
-    
-    // 6. CHANGE "ENROLL NOW" TO "LOG IN" ON MAIN SCREEN - IMPROVED IMPLEMENTATION
-    changeAllEnrollButtonsToLogin(isAuthenticated);
-    
-    // 7. HIDE NAVIGATION IN COURSE MODULES
-    if (isModulePage && isAuthenticated) {
-        hideNavigationInModules();
+    // Function to try to create a user in Supabase for migration purposes
+    async function createUserInSupabase(email, password, isTestMode) {
+        try {
+            // First check if user already exists by trying to sign in
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+            
+            if (!error && data.user) {
+                // User already exists in Supabase
+                return;
+            }
+            
+            // Create the user in Supabase Auth
+            const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
+                email,
+                password,
+            });
+            
+            if (signUpError) throw signUpError;
+            
+            // Add user to the users table
+            await supabase.from('users').insert([
+                {
+                    id: signUpData.user.id,
+                    email,
+                    name: email.split('@')[0],
+                    test_mode: isTestMode,
+                    created_at: new Date().toISOString(),
+                    course_access: true,
+                    access_expires_at: null
+                }
+            ]);
+        } catch (error) {
+            console.error('Error creating user in Supabase:', error);
+            throw error;
+        }
     }
 });
 
@@ -93,11 +205,18 @@ function updateAuthButton(isAuthenticated, authEmail, isTestMode) {
             newButton.addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                // Clear all auth data
+                // Clear localStorage auth data
                 localStorage.removeItem('sleeptech_auth');
                 localStorage.removeItem('sleeptech_email');
                 localStorage.removeItem('sleeptech_login_time');
                 localStorage.removeItem('appfoundry_auth');
+                
+                // Sign out from Supabase
+                const supabase = window.supabase.createClient(
+                    'https://vyzsauyekanaxevgxkyh.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c'
+                );
+                supabase.auth.signOut().catch(console.error);
                 
                 // Redirect to home page without test_mode
                 window.location.href = getHomeUrl();
@@ -228,6 +347,19 @@ function handleSpecialPages(isTestMode) {
             localStorage.setItem('sleeptech_auth', 'true');
             localStorage.setItem('sleeptech_email', emailParam);
             localStorage.setItem('sleeptech_login_time', new Date().getTime());
+            
+            // Try to authenticate with Supabase too
+            const supabase = window.supabase.createClient(
+                'https://vyzsauyekanaxevgxkyh.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c'
+            );
+            supabase.auth.signInWithPassword({
+                email: emailParam,
+                password: passwordParam
+            }).catch(error => {
+                console.error('Error signing in with Supabase:', error);
+                // Continue anyway since we've set localStorage auth
+            });
             
             // Refresh the page to update UI
             window.location.reload();
