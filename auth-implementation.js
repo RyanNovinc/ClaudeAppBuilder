@@ -1,60 +1,190 @@
-// auth-implementation.js - Updated with full Supabase integration
-// This file handles authentication and course access across the entire site
+// auth-implementation.js - Complete Supabase integration
+// This version removes localStorage dependency and uses Supabase exclusively
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Auth implementation loaded - Page:', window.location.pathname);
+    
+    // Supabase configuration
+    const supabaseUrl = 'https://vyzsauyekanaxevgxkyh.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c';
+    
+    // Load Supabase library if not already loaded
+    function loadSupabaseLibrary() {
+        return new Promise((resolve, reject) => {
+            // Check if Supabase is already loaded
+            if (typeof supabase !== 'undefined') {
+                resolve();
+                return;
+            }
+            
+            // Load Supabase library
+            console.log('Loading Supabase library...');
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/@supabase/supabase-js@2';
+            script.onload = () => {
+                console.log('Supabase library loaded successfully');
+                resolve();
+            };
+            script.onerror = (error) => {
+                console.error('Error loading Supabase library:', error);
+                reject(error);
+            };
+            document.head.appendChild(script);
+        });
+    }
     
     // Check for test mode
     const urlParams = new URLSearchParams(window.location.search);
     const isTestMode = urlParams.get('test_mode') === 'true';
     
-    // First check authentication status
-    SupabaseAuth.checkAuthStatus().then(({ isAuthenticated, authEmail, isTestModeUser }) => {
-        console.log('Auth status check - authenticated:', isAuthenticated, 'email:', authEmail);
-        
-        // 1. REMOVE ANY COURSE TAB FROM NAVIGATION
-        removeCourseTab();
-        
-        // 2. CHECK IF WE'RE ON A MODULE PAGE
-        const isModulePage = checkIfModulePage();
-        
-        // 3. HANDLE LOGIN/LOGOUT BUTTON
-        updateAuthButton(isAuthenticated, authEmail, isTestModeUser || isTestMode);
-        
-        // 4. HANDLE COURSE CONTENT ACCESS (if on a course page)
-        handleCourseAccess(isAuthenticated, isTestModeUser || isTestMode);
-        
-        // 5. SPECIAL HANDLING FOR CHECKOUT AND THANK YOU PAGES
-        handleSpecialPages(isTestModeUser || isTestMode);
-        
-        // 6. CHANGE "ENROLL NOW" TO "LOG IN" ON MAIN SCREEN
-        changeAllEnrollButtonsToLogin(isAuthenticated);
-        
-        // 7. HIDE NAVIGATION IN COURSE MODULES
-        if (isModulePage && isAuthenticated) {
-            hideNavigationInModules();
+    // Initialize Supabase and check authentication
+    loadSupabaseLibrary()
+        .then(() => {
+            console.log('Initializing Supabase client...');
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+            return checkAuthStatus(supabase);
+        })
+        .then(({ isAuthenticated, authEmail, isTestModeUser }) => {
+            console.log('Auth status check - authenticated:', isAuthenticated, 'email:', authEmail);
+            
+            // 1. REMOVE ANY COURSE TAB FROM NAVIGATION
+            removeCourseTab();
+            
+            // 2. CHECK IF WE'RE ON A MODULE PAGE
+            const isModulePage = checkIfModulePage();
+            
+            // 3. HANDLE LOGIN/LOGOUT BUTTON
+            updateAuthButton(isAuthenticated, authEmail, isTestModeUser || isTestMode);
+            
+            // 4. HANDLE COURSE CONTENT ACCESS (if on a course page)
+            handleCourseAccess(isAuthenticated, isTestModeUser || isTestMode);
+            
+            // 5. SPECIAL HANDLING FOR CHECKOUT AND THANK YOU PAGES
+            handleSpecialPages(isTestModeUser || isTestMode);
+            
+            // 6. CHANGE "ENROLL NOW" TO "LOG IN" ON MAIN SCREEN
+            changeAllEnrollButtonsToLogin(isAuthenticated);
+            
+            // 7. HIDE NAVIGATION IN COURSE MODULES
+            if (isModulePage && isAuthenticated) {
+                hideNavigationInModules();
+            }
+        })
+        .catch(error => {
+            console.error('Error in Supabase authentication:', error);
+            
+            // Fall back to test mode if authentication fails
+            if (isTestMode) {
+                console.log('Using test mode as fallback due to auth error');
+                removeCourseTab();
+                const isModulePage = checkIfModulePage();
+                updateAuthButton(true, 'test@user.com', true);
+                handleCourseAccess(true, true);
+                handleSpecialPages(true);
+                
+                if (isModulePage) {
+                    hideNavigationInModules();
+                }
+            } else {
+                // If not test mode, handle as unauthenticated
+                removeCourseTab();
+                const isModulePage = checkIfModulePage();
+                updateAuthButton(false, null, false);
+                handleCourseAccess(false, false);
+                handleSpecialPages(false);
+                changeAllEnrollButtonsToLogin(false);
+            }
+        });
+    
+    /**
+     * Check authentication status with Supabase
+     * @param {Object} supabase - Supabase client instance
+     * @returns {Promise<Object>} Authentication status
+     */
+    async function checkAuthStatus(supabase) {
+        try {
+            console.log('Checking authentication status with Supabase...');
+            
+            // Get the current session
+            const { data, error } = await supabase.auth.getSession();
+            
+            if (error) {
+                console.error('Supabase session error:', error);
+                throw error;
+            }
+            
+            if (!data.session) {
+                console.log('No active Supabase session found');
+                return {
+                    isAuthenticated: false,
+                    authEmail: null,
+                    isTestModeUser: false
+                };
+            }
+            
+            console.log('Supabase session found, user:', data.session.user.email);
+            
+            // Check if user has course access in the users table
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('test_mode, course_access')
+                .eq('id', data.session.user.id)
+                .single();
+            
+            if (userError) {
+                console.error('Error fetching user data:', userError);
+                // If error fetching user data, check if we're in test mode
+                if (isTestMode) {
+                    return {
+                        isAuthenticated: true,
+                        authEmail: data.session.user.email,
+                        isTestModeUser: true
+                    };
+                }
+                
+                // If not in test mode and can't get user data, consider not authenticated
+                throw userError;
+            }
+            
+            console.log('User data fetched:', userData);
+            
+            // Ensure course_access is set to true if not already
+            if (userData && !userData.course_access) {
+                console.log('Setting course_access to true for user');
+                
+                // Update the user's course_access to true
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update({ course_access: true, updated_at: new Date().toISOString() })
+                    .eq('id', data.session.user.id);
+                
+                if (updateError) {
+                    console.error('Error updating course access:', updateError);
+                }
+            }
+            
+            // User is authenticated and has course access
+            return {
+                isAuthenticated: true,
+                authEmail: data.session.user.email,
+                isTestModeUser: userData?.test_mode || false
+            };
+        } catch (error) {
+            console.error('Error in checkAuthStatus:', error);
+            
+            // In case of error, check if we're in test mode
+            if (isTestMode) {
+                return {
+                    isAuthenticated: true,
+                    authEmail: 'test@user.com',
+                    isTestModeUser: true
+                };
+            }
+            
+            // If not in test mode, propagate the error
+            throw error;
         }
-    }).catch(error => {
-        console.error('Error checking authentication status:', error);
-        
-        // Fall back to localStorage-only check if the Supabase check fails completely
-        const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
-                              localStorage.getItem('appfoundry_auth') === 'true';
-        const authEmail = localStorage.getItem('sleeptech_email');
-        const isLocalTestMode = localStorage.getItem('appfoundry_auth') === 'true';
-        
-        // Run the same flow with localStorage data
-        removeCourseTab();
-        const isModulePage = checkIfModulePage();
-        updateAuthButton(isAuthenticated, authEmail, isLocalTestMode || isTestMode);
-        handleCourseAccess(isAuthenticated, isLocalTestMode || isTestMode);
-        handleSpecialPages(isLocalTestMode || isTestMode);
-        changeAllEnrollButtonsToLogin(isAuthenticated);
-        
-        if (isModulePage && isAuthenticated) {
-            hideNavigationInModules();
-        }
-    });
+    }
 });
 
 /**
@@ -111,15 +241,26 @@ function updateAuthButton(isAuthenticated, authEmail, isTestMode) {
             newButton.addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                // Sign out using the auth library
-                SupabaseAuth.signOut().then(() => {
-                    // Redirect to home page without test_mode
-                    window.location.href = getHomeUrl();
-                }).catch(error => {
-                    console.error('Error signing out:', error);
-                    // Redirect anyway
-                    window.location.href = getHomeUrl();
-                });
+                // Sign out from Supabase
+                if (typeof supabase !== 'undefined') {
+                    const supabaseClient = supabase.createClient(
+                        'https://vyzsauyekanaxevgxkyh.supabase.co',
+                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c'
+                    );
+                    
+                    supabaseClient.auth.signOut().catch(error => {
+                        console.error('Error signing out:', error);
+                    });
+                }
+                
+                // Also clear localStorage for backward compatibility
+                localStorage.removeItem('sleeptech_auth');
+                localStorage.removeItem('sleeptech_email');
+                localStorage.removeItem('sleeptech_login_time');
+                localStorage.removeItem('appfoundry_auth');
+                
+                // Redirect to home page without test_mode
+                window.location.href = getHomeUrl();
             });
         } else {
             // USER IS NOT LOGGED IN - Show Login button
@@ -156,9 +297,8 @@ function handleCourseAccess(isAuthenticated, isTestMode) {
             return;
         }
         
-        // Check if authentication is valid
         if (isAuthenticated) {
-            // User is authenticated with a valid session
+            // User is authenticated, show content
             showCourseContent();
         } else {
             // No valid authentication, show login prompt
@@ -224,35 +364,6 @@ function handleSpecialPages(isTestMode) {
         // Don't automatically set or check auth on thank-you page
         // Auth will be set by the thank-you.html page's own script
         return;
-    }
-    
-    // Handle URL parameters for login from thank you page
-    const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session_id');
-    const forceLogin = urlParams.get('login') === 'true';
-    const emailParam = urlParams.get('email');
-    const passwordParam = urlParams.get('password');
-    
-    if (sessionId && emailParam && passwordParam && !path.includes('thank-you.html')) {
-        // Store password for this email
-        localStorage.setItem('sleeptech_password_' + emailParam, passwordParam);
-        
-        // If force login is true, log the user in
-        if (forceLogin) {
-            // Set localStorage for backward compatibility
-            localStorage.setItem('sleeptech_auth', 'true');
-            localStorage.setItem('sleeptech_email', emailParam);
-            localStorage.setItem('sleeptech_login_time', new Date().getTime());
-            
-            // Try to sign in with Supabase too
-            SupabaseAuth.signIn(emailParam, passwordParam).catch(error => {
-                console.error('Error signing in with Supabase:', error);
-                // Continue anyway since we've set localStorage auth
-            });
-            
-            // Refresh the page to update UI
-            window.location.reload();
-        }
     }
 }
 
