@@ -170,12 +170,22 @@ function updateAuthButton(isAuthenticated, authEmail, isTestMode) {
                 // Sign out using the auth service
                 if (window.AuthService) {
                     window.AuthService.signOut().then(() => {
-                        // Redirect to home page without test_mode
-                        window.location.href = getHomeUrl();
+                        // Clear cache to prevent back button issues
+                        localStorage.removeItem('sleeptech_auth');
+                        localStorage.removeItem('sleeptech_email');
+                        localStorage.removeItem('sleeptech_login_time');
+                        localStorage.removeItem('appfoundry_auth');
+                        
+                        // Replace current page in history instead of adding to it
+                        window.location.replace(getHomeUrl());
                     }).catch(error => {
                         console.error('Error signing out:', error);
-                        // Redirect anyway
-                        window.location.href = getHomeUrl();
+                        // Clear cache and redirect anyway
+                        localStorage.removeItem('sleeptech_auth');
+                        localStorage.removeItem('sleeptech_email');
+                        localStorage.removeItem('sleeptech_login_time');
+                        localStorage.removeItem('appfoundry_auth');
+                        window.location.replace(getHomeUrl());
                     });
                 } else {
                     // Fallback if auth service is not available
@@ -184,8 +194,8 @@ function updateAuthButton(isAuthenticated, authEmail, isTestMode) {
                     localStorage.removeItem('sleeptech_login_time');
                     localStorage.removeItem('appfoundry_auth');
                     
-                    // Redirect to home page
-                    window.location.href = getHomeUrl();
+                    // Replace current page in history instead of adding to it
+                    window.location.replace(getHomeUrl());
                 }
             });
         } else {
