@@ -1,20 +1,15 @@
-// auth-implementation.js - Updated with Supabase integration
-// This file can replace all your existing auth JS files
+// auth-implementation.js - Updated with full Supabase integration
+// This file handles authentication and course access across the entire site
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Auth implementation loaded - Page:', window.location.pathname);
-    
-    // Initialize Supabase client
-    const supabaseUrl = 'https://vyzsauyekanaxevgxkyh.supabase.co';
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c';
-    const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
     
     // Check for test mode
     const urlParams = new URLSearchParams(window.location.search);
     const isTestMode = urlParams.get('test_mode') === 'true';
     
-    // First check authentication in Supabase
-    checkAuthStatus().then(({ isAuthenticated, authEmail, isTestModeUser }) => {
+    // First check authentication status
+    SupabaseAuth.checkAuthStatus().then(({ isAuthenticated, authEmail, isTestModeUser }) => {
         console.log('Auth status check - authenticated:', isAuthenticated, 'email:', authEmail);
         
         // 1. REMOVE ANY COURSE TAB FROM NAVIGATION
@@ -32,123 +27,34 @@ document.addEventListener('DOMContentLoaded', function() {
         // 5. SPECIAL HANDLING FOR CHECKOUT AND THANK YOU PAGES
         handleSpecialPages(isTestModeUser || isTestMode);
         
-        // 6. CHANGE "ENROLL NOW" TO "LOG IN" ON MAIN SCREEN - IMPROVED IMPLEMENTATION
+        // 6. CHANGE "ENROLL NOW" TO "LOG IN" ON MAIN SCREEN
         changeAllEnrollButtonsToLogin(isAuthenticated);
         
         // 7. HIDE NAVIGATION IN COURSE MODULES
         if (isModulePage && isAuthenticated) {
             hideNavigationInModules();
         }
-    });
-    
-    // Checks authentication in Supabase first, then falls back to localStorage
-    async function checkAuthStatus() {
-        try {
-            // 1. First try Supabase Auth
-            const { data } = await supabase.auth.getSession();
-            
-            if (data.session) {
-                // Check if user is in test mode
-                const { data: userData, error } = await supabase
-                    .from('users')
-                    .select('test_mode')
-                    .eq('id', data.session.user.id)
-                    .single();
-                    
-                const isTestModeUser = userData?.test_mode || false;
-                
-                // Set localStorage for backward compatibility
-                if (isTestModeUser) {
-                    localStorage.setItem('appfoundry_auth', 'true');
-                } else {
-                    localStorage.setItem('sleeptech_auth', 'true');
-                }
-                localStorage.setItem('sleeptech_email', data.session.user.email);
-                localStorage.setItem('sleeptech_login_time', new Date().getTime());
-                
-                return {
-                    isAuthenticated: true,
-                    authEmail: data.session.user.email,
-                    isTestModeUser
-                };
-            }
-        } catch (error) {
-            console.error('Supabase auth check error:', error);
-            // Fall back to localStorage if Supabase fails
-        }
+    }).catch(error => {
+        console.error('Error checking authentication status:', error);
         
-        // 2. Fall back to localStorage if Supabase doesn't have a session
-        const isLocallyAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
-                                      localStorage.getItem('appfoundry_auth') === 'true';
+        // Fall back to localStorage-only check if the Supabase check fails completely
+        const isAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
+                              localStorage.getItem('appfoundry_auth') === 'true';
         const authEmail = localStorage.getItem('sleeptech_email');
-        const isTestModeUser = localStorage.getItem('appfoundry_auth') === 'true';
+        const isLocalTestMode = localStorage.getItem('appfoundry_auth') === 'true';
         
-        // If authenticated in localStorage but not in Supabase, try to migrate
-        if (isLocallyAuthenticated && authEmail) {
-            const storedPassword = localStorage.getItem('sleeptech_password_' + authEmail);
-            
-            if (storedPassword) {
-                try {
-                    // Try to create user in Supabase (will quietly do nothing if user already exists)
-                    await createUserInSupabase(authEmail, storedPassword, isTestModeUser);
-                } catch (error) {
-                    console.error('Error migrating user to Supabase:', error);
-                }
-            }
-            
-            return {
-                isAuthenticated: true,
-                authEmail,
-                isTestModeUser
-            };
-        }
+        // Run the same flow with localStorage data
+        removeCourseTab();
+        const isModulePage = checkIfModulePage();
+        updateAuthButton(isAuthenticated, authEmail, isLocalTestMode || isTestMode);
+        handleCourseAccess(isAuthenticated, isLocalTestMode || isTestMode);
+        handleSpecialPages(isLocalTestMode || isTestMode);
+        changeAllEnrollButtonsToLogin(isAuthenticated);
         
-        return {
-            isAuthenticated: false,
-            authEmail: null,
-            isTestModeUser: false
-        };
-    }
-    
-    // Function to try to create a user in Supabase for migration purposes
-    async function createUserInSupabase(email, password, isTestMode) {
-        try {
-            // First check if user already exists by trying to sign in
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-            
-            if (!error && data.user) {
-                // User already exists in Supabase
-                return;
-            }
-            
-            // Create the user in Supabase Auth
-            const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
-                email,
-                password,
-            });
-            
-            if (signUpError) throw signUpError;
-            
-            // Add user to the users table
-            await supabase.from('users').insert([
-                {
-                    id: signUpData.user.id,
-                    email,
-                    name: email.split('@')[0],
-                    test_mode: isTestMode,
-                    created_at: new Date().toISOString(),
-                    course_access: true,
-                    access_expires_at: null
-                }
-            ]);
-        } catch (error) {
-            console.error('Error creating user in Supabase:', error);
-            throw error;
+        if (isModulePage && isAuthenticated) {
+            hideNavigationInModules();
         }
-    }
+    });
 });
 
 /**
@@ -205,21 +111,15 @@ function updateAuthButton(isAuthenticated, authEmail, isTestMode) {
             newButton.addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                // Clear localStorage auth data
-                localStorage.removeItem('sleeptech_auth');
-                localStorage.removeItem('sleeptech_email');
-                localStorage.removeItem('sleeptech_login_time');
-                localStorage.removeItem('appfoundry_auth');
-                
-                // Sign out from Supabase
-                const supabase = window.supabase.createClient(
-                    'https://vyzsauyekanaxevgxkyh.supabase.co',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c'
-                );
-                supabase.auth.signOut().catch(console.error);
-                
-                // Redirect to home page without test_mode
-                window.location.href = getHomeUrl();
+                // Sign out using the auth library
+                SupabaseAuth.signOut().then(() => {
+                    // Redirect to home page without test_mode
+                    window.location.href = getHomeUrl();
+                }).catch(error => {
+                    console.error('Error signing out:', error);
+                    // Redirect anyway
+                    window.location.href = getHomeUrl();
+                });
             });
         } else {
             // USER IS NOT LOGGED IN - Show Login button
@@ -256,13 +156,8 @@ function handleCourseAccess(isAuthenticated, isTestMode) {
             return;
         }
         
-        // Check if authentication is valid (not expired)
-        const authTime = localStorage.getItem('sleeptech_login_time');
-        const now = new Date().getTime();
-        const oneDay = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-        const isAuthValid = authTime && (now - parseInt(authTime) < oneDay);
-        
-        if (isAuthenticated && isAuthValid) {
+        // Check if authentication is valid
+        if (isAuthenticated) {
             // User is authenticated with a valid session
             showCourseContent();
         } else {
@@ -344,19 +239,13 @@ function handleSpecialPages(isTestMode) {
         
         // If force login is true, log the user in
         if (forceLogin) {
+            // Set localStorage for backward compatibility
             localStorage.setItem('sleeptech_auth', 'true');
             localStorage.setItem('sleeptech_email', emailParam);
             localStorage.setItem('sleeptech_login_time', new Date().getTime());
             
-            // Try to authenticate with Supabase too
-            const supabase = window.supabase.createClient(
-                'https://vyzsauyekanaxevgxkyh.supabase.co',
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c'
-            );
-            supabase.auth.signInWithPassword({
-                email: emailParam,
-                password: passwordParam
-            }).catch(error => {
+            // Try to sign in with Supabase too
+            SupabaseAuth.signIn(emailParam, passwordParam).catch(error => {
                 console.error('Error signing in with Supabase:', error);
                 // Continue anyway since we've set localStorage auth
             });
@@ -369,7 +258,6 @@ function handleSpecialPages(isTestMode) {
 
 /**
  * Change "Enroll Now" to "Log In" on the main screen and other places
- * Improved implementation that consistently handles all Enroll Now buttons
  */
 function changeAllEnrollButtonsToLogin(isAuthenticated) {
     // Skip if user is already logged in
