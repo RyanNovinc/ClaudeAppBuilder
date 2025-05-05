@@ -2,6 +2,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Access control script loaded');
     
+    // Check if we're on the login page, and if so, exit early
+    const isLoginPage = window.location.pathname.includes('direct-login.html');
+    if (isLoginPage) {
+        console.log('On login page, skipping access control');
+        return; // Skip access control on login page
+    }
+    
     // Check if we're in test mode
     const urlParams = new URLSearchParams(window.location.search);
     const isTestMode = urlParams.get('test_mode') === 'true';
