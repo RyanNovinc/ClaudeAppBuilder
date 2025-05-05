@@ -3,176 +3,320 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password - AppFoundry</title>
+    <title>AppFoundry - From Idea to App Store in Days (No Coding Required)</title>
+    
+    <!-- Story Manager Script - IMPORTANT: This must be the first script in the head -->
+    <script>
+    // Universal Story Manager - ensures stories are consistently available
+    (function() {
+      // Run on all pages to ensure localStorage data consistency
+      console.log("📊 Story Manager initializing on index page");
+      
+      // Check if we need to seed the localStorage from our backup
+      function seedStoriesIfNeeded() {
+        // Only run if appfoundry_submissions doesn't exist or is empty
+        if (!localStorage.getItem('appfoundry_submissions')) {
+          console.log("🌱 No stories found in localStorage, checking for seed data");
+          
+          // Check if we have any stories in our seed
+          if (localStorage.getItem('appfoundry_approved_seed')) {
+            console.log("🔄 Restoring stories from seed");
+            try {
+              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+              console.log("✅ Successfully restored", seed.length, "stories from seed");
+            } catch (e) {
+              console.error("❌ Error restoring from seed:", e);
+            }
+          }
+        } else {
+          // If we have submissions, make sure we have an up-to-date seed
+          try {
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log("💾 Seed updated with", submissions.length, "stories");
+          } catch (e) {
+            console.error("❌ Error updating seed:", e);
+          }
+        }
+      }
+      
+      // Run the seed check immediately
+      seedStoriesIfNeeded();
+    })();
+    </script>
+    
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Add Supabase Client -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
     <style>
-        .reset-container {
-            max-width: 500px;
-            margin: 100px auto;
-            padding: 40px;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .reset-container h1 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
+        .test-mode-link {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 16px;
-        }
-        
-        .reset-button {
-            background-color: #0070f3;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 14px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: background-color 0.2s ease;
-        }
-        
-        .reset-button:hover {
-            background-color: #0055b3;
-        }
-        
-        .reset-button:disabled {
-            background-color: #9cb4d8;
-            cursor: not-allowed;
-        }
-        
-        .status-message {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 6px;
-            display: none;
-        }
-        
-        .status-message.success {
-            background-color: #ecfdf5;
-            color: #10b981;
-            border: 1px solid #10b981;
-        }
-        
-        .status-message.error {
-            background-color: #fee2e2;
-            color: #dc2626;
-            border: 1px solid #dc2626;
-        }
-        
-        .status-message.info {
-            background-color: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #1d4ed8;
-        }
-        
-        .back-to-login {
-            text-align: center;
-            margin-top: 15px;
+            margin-top: 10px;
             font-size: 14px;
-        }
-        
-        .back-to-login a {
-            color: #0070f3;
-            text-decoration: none;
-        }
-        
-        .back-to-login a:hover {
+            color: #6b7280;
             text-decoration: underline;
         }
         
-        /* Basic styling to match your site's look */
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            background-color: #f3f4f6;
-            margin: 0;
-            padding: 0;
+        .test-mode-link:hover {
+            color: #0070f3;
         }
     </style>
 </head>
 <body>
     <header>
         <div class="container">
-            <div class="logo"><a href="index.html">AppFoundry</a></div>
+            <div class="logo">AppFoundry</div>
             <nav>
                 <ul>
-                    <li><a href="index.html#overview">Overview</a></li>
-                    <li><a href="index.html#curriculum">Curriculum</a></li>
-                    <li><a href="index.html#pricing">Pricing</a></li>
+                    <li><a href="#overview">Overview</a></li>
+                    <li><a href="#curriculum">Curriculum</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
                     <li><a href="success-stories.html">Success Stories</a></li>
                     <li><a href="about-creator.html">About</a></li>
                 </ul>
             </nav>
-            <button class="cta-button small" id="headerLoginButton">Log in</button>
+            <!-- Changed from "Enroll Now" to "Log in" with id="loginButton" -->
+            <button class="cta-button small" id="loginButton">Log in</button>
         </div>
     </header>
 
-    <div class="reset-container">
-        <h1>Reset Your Password</h1>
-        
-        <div id="loading-message" style="text-align: center; margin-bottom: 20px;">
-            <p>Verifying your reset token...</p>
-        </div>
-        
-        <div id="reset-form" style="display: none;">
-            <div class="form-group">
-                <label for="new-password">New Password</label>
-                <input type="password" id="new-password" required placeholder="Enter new password (min 6 characters)">
-            </div>
-            
-            <div class="form-group">
-                <label for="confirm-password">Confirm Password</label>
-                <input type="password" id="confirm-password" required placeholder="Confirm new password">
-            </div>
-            
-            <button id="reset-button" class="reset-button">Reset Password</button>
-        </div>
-        
-        <div id="request-form" style="display: none;">
-            <p>Your reset link has expired or is invalid. Please request a new one:</p>
-            
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" required placeholder="your@email.com">
-            </div>
-            
-            <button id="request-button" class="reset-button">Send New Reset Link</button>
-        </div>
-        
-        <div id="status-message" class="status-message"></div>
-        
-        <div class="back-to-login">
-            <a href="direct-login.html">Back to Login</a>
+    <div class="guarantee-banner">
+        <div class="container">
+            <span class="guarantee-icon">🔒</span>
+            <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 30 days or get 100% of your money back</span>
+            <a href="refund-policy.html" class="guarantee-link">Learn More</a>
         </div>
     </div>
-    
+
+    <section class="hero">
+        <div class="floating-element floating-circle element-1"></div>
+        <div class="floating-element floating-square element-2"></div>
+        <div class="floating-element floating-circle element-3"></div>
+        
+        <div class="container hero-container">
+            <div class="hero-content">
+                <div class="tag-container">
+                    <div class="ai-powered-tag">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a10 10 0 1 0 10 10 4 4 0 1 1-4-4"/>
+                            <path d="M18 2a4 4 0 0 0-4 4"/>
+                        </svg>
+                        AI-Powered
+                    </div>
+                    <div class="no-bs-tag">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"/>
+                            <path d="m12 5-7 7 7 7"/>
+                        </svg>
+                        No Bullshit
+                    </div>
+                </div>
+                <h1>Create Apps in Days, Not Months — Without Writing a Single Line of Code</h1>
+                <p class="subtitle">Why spend $10,000+ on developers when AI can do the heavy lifting? Learn how to leverage Claude AI to create professional apps that would traditionally cost thousands and take months to build.</p>
+                <button class="cta-button large" onclick="window.location.href='checkout.html'">Start Building Your App</button>
+                <div class="guarantee-badge">
+                    <div class="badge-icon">✓</div>
+                    <div class="badge-text">30-Day App Building Guarantee</div>
+                </div>
+            </div>
+            <div class="course-preview-card">
+                <p class="course-label">Course</p>
+                <h3>App Building with Claude</h3>
+                <div class="course-price">$199.00</div>
+                <button class="cta-button large" onclick="window.location.href='checkout.html'">Enroll Now</button>
+                <a href="checkout.html?test_mode=true" class="test-mode-link">Test drive the course</a>
+                <div class="course-meta">
+                    <div class="meta-item">
+                        <span class="meta-icon">📘</span>
+                        <span>7 Chapters</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">📝</span>
+                        <span>15 Lessons</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="overview" id="overview">
+        <div class="container">
+            <h2>The Fastest Way from Idea to App</h2>
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">🤖</div>
+                    <h3>0% Coding Required</h3>
+                    <p>No programming knowledge needed. We'll show you how to leverage Claude AI to create professional-grade code without understanding a single line of it.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <h3>App Store in Days, Not Months</h3>
+                    <p>Skip months of learning and development. Create a fully functional app and submit it to app stores in just days, not months or years.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Any App Idea, Any Industry</h3>
+                    <p>Our system works for any type of app - health, fitness, productivity, entertainment, social - you dream it, you can build it.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🚀</div>
+                    <h3>Endless Possibilities</h3>
+                    <p>Once you master this process, you can create as many professional apps as you want - for yourself, clients, or to sell on app stores.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="value-section">
+        <div class="container">
+            <h2>Why Pay Thousands When AI Can Do the Work?</h2>
+            <div class="value-content">
+                <div class="value-text">
+                    <p>Traditional app development costs $5,000 to $50,000+ and takes months of work by skilled developers. But when you know exactly how to leverage AI, creating professional apps becomes effortless.</p>
+                    
+                    <p>Many people don't yet understand the power of AI to create professional-looking apps that would take teams of developers months to build. You'll be ahead of the curve.</p>
+                    
+                    <h3>Use This Course To:</h3>
+                    <ul class="value-list">
+                        <li><strong>Create apps for personal use</strong> - bring your own ideas to life</li>
+                        <li><strong>Build tools for your business</strong> - without expensive development costs</li>
+                        <li><strong>Develop apps for clients</strong> - charge thousands while leveraging AI</li>
+                        <li><strong>Get ahead of the market</strong> - while everyone else is still playing catch-up</li>
+                    </ul>
+                    
+                    <p class="highlight-text">You're going to be stunned at how easy, how quick, and how professional everything will look with my guidance.</p>
+                </div>
+                <div class="value-image">
+                    <div class="price-comparison-visual">
+                        <div class="price-option traditional">
+                            <div class="price-label">Traditional Development</div>
+                            <div class="price-amount">$10,000+</div>
+                            <div class="price-timeline">3-6 months</div>
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="price-option course">
+                            <div class="price-label">This Course</div>
+                            <div class="price-amount">$199</div>
+                            <div class="price-timeline">Build in days</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="curriculum" id="curriculum">
+        <div class="container">
+            <h2>No-Code App Building System</h2>
+            <div class="modules">
+                <div class="module">
+                    <div class="module-number">01</div>
+                    <div class="module-content">
+                        <h3>Setting Up Your AI Development Environment</h3>
+                        <p>Configure Claude and the minimal tools you need to start building without coding</p>
+                    </div>
+                </div>
+                <div class="module">
+                    <div class="module-number">02</div>
+                    <div class="module-content">
+                        <h3>Creating Your First AI Project</h3>
+                        <p>Learn how to "speak" to Claude so it creates exactly what you want</p>
+                    </div>
+                </div>
+                <div class="module">
+                    <div class="module-number">03</div>
+                    <div class="module-content">
+                        <h3>Testing Your App: From Concept to Phone</h3>
+                        <p>See your app work on your device without writing a single line of code</p>
+                    </div>
+                </div>
+                <div class="module">
+                    <div class="module-number">04</div>
+                    <div class="module-content">
+                        <h3>Directing Claude: Creating Professional UI</h3>
+                        <p>Learn the exact prompts to get beautiful interfaces from Claude</p>
+                    </div>
+                </div>
+                <div class="module">
+                    <div class="module-number">05</div>
+                    <div class="module-content">
+                        <h3>Building Your App Structure</h3>
+                        <p>Create a complete app blueprint that Claude can turn into reality</p>
+                    </div>
+                </div>
+                <div class="module">
+                    <div class="module-number">06</div>
+                    <div class="module-content">
+                        <h3>Building Out Your App</h3>
+                        <p>Let Claude do all the technical work while you focus on design and features</p>
+                    </div>
+                </div>
+                <div class="module">
+                    <div class="module-number">07</div>
+                    <div class="module-content">
+                        <h3>Submitting to the App Store</h3>
+                        <p>Get your AI-built app published quickly and professionally</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <h2>Course Pricing</h2>
+            <div class="price-card">
+                <h3>Complete No-Code System</h3>
+                <div class="price">$199</div>
+                <div class="price-comparison">Traditional app development: $5,000 - $50,000+</div>
+                <ul class="benefits">
+                    <li>Full access to all 7 modules</li>
+                    <li>Step-by-step AI prompting guides</li>
+                    <li>Zero coding knowledge required</li>
+                    <li>App templates and blueprints</li>
+                    <li>Build unlimited apps for yourself or clients</li>
+                    <li>Lifetime access & updates</li>
+                </ul>
+                <div class="guarantee-highlight">
+                    <span class="guarantee-highlight-icon">🔒</span>
+                    <span>30-Day "Build Your First App" Guarantee</span>
+                </div>
+                <button class="cta-button large" onclick="window.location.href='checkout.html'">Enroll Now</button>
+                <a href="checkout.html?test_mode=true" class="test-mode-link">Try course before buying</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="guarantee-section">
+        <div class="container">
+            <h2>Our Ironclad Guarantee</h2>
+            <div class="guarantee-content">
+                <div class="guarantee-image">
+                    <div class="guarantee-seal">
+                        <div class="seal-content">100%</div>
+                    </div>
+                </div>
+                <div class="guarantee-text-content">
+                    <h3>The "Build Your First App" Guarantee</h3>
+                    <p>We're so confident in our system that we're taking ALL the risk. If you can't create an app within 30 days, we'll give you 100% of your money back.</p>
+                    <p>Just show us you've made a sincere effort by sharing your project files, and we'll process your refund - no questions asked.</p>
+                    <a href="refund-policy.html" class="cta-button">See Full Guarantee Details</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Build Your Dream App Without Coding?</h2>
+            <p>Join hundreds of non-technical creators who've built professional apps using our AI-powered system</p>
+            <button class="cta-button large" onclick="window.location.href='checkout.html'">Start Building Today</button>
+            <a href="checkout.html?test_mode=true" class="test-mode-link">Want to test the course first? Click here</a>
+        </div>
+    </section>
+
     <footer>
         <div class="container">
             <div class="logo">AppFoundry</div>
@@ -180,9 +324,9 @@
                 <div class="link-group">
                     <h4>Course</h4>
                     <ul>
-                        <li><a href="index.html#overview">Overview</a></li>
-                        <li><a href="index.html#curriculum">Curriculum</a></li>
-                        <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="#overview">Overview</a></li>
+                        <li><a href="#curriculum">Curriculum</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
                         <li><a href="success-stories.html">Success Stories</a></li>
                         <li><a href="about-creator.html">About Creator</a></li>
                     </ul>
@@ -208,221 +352,8 @@
         </div>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elements
-            const loadingMessage = document.getElementById('loading-message');
-            const resetForm = document.getElementById('reset-form');
-            const requestForm = document.getElementById('request-form');
-            const resetButton = document.getElementById('reset-button');
-            const requestButton = document.getElementById('request-button');
-            const statusMessage = document.getElementById('status-message');
-            const headerLoginButton = document.getElementById('headerLoginButton');
-            
-            // Supabase configuration
-            const supabaseUrl = 'https://vyzsauyekanaxevgxkyh.supabase.co';
-            const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c';
-            
-            // Initialize Supabase client
-            const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
-            
-            // Update header login button
-            headerLoginButton.addEventListener('click', function() {
-                window.location.href = 'direct-login.html';
-            });
-            
-            // Parse URL hash parameters
-            function parseHashParams() {
-                const hash = window.location.hash.substring(1);
-                const params = {};
-                
-                if (!hash) {
-                    return params;
-                }
-                
-                const pairs = hash.split('&');
-                for (let i = 0; i < pairs.length; i++) {
-                    const pair = pairs[i].split('=');
-                    params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
-                }
-                
-                return params;
-            }
-            
-            // Check for auth tokens in URL
-            const params = parseHashParams();
-            console.log('URL hash parameters:', Object.keys(params).join(', '));
-            
-            // Handle token presence
-            if (params.access_token && params.type === 'recovery') {
-                console.log('Password reset token found');
-                handleResetToken(params);
-            } else {
-                console.log('No reset token found or invalid token type');
-                loadingMessage.style.display = 'none';
-                requestForm.style.display = 'block';
-                showInfo('Please enter your email to request a password reset');
-            }
-            
-            // Process the reset token
-            async function handleResetToken(params) {
-                try {
-                    console.log('Setting session with token...');
-                    
-                    // Set the session with the token
-                    const { error } = await supabase.auth.setSession({
-                        access_token: params.access_token,
-                        refresh_token: params.refresh_token || ''
-                    });
-                    
-                    if (error) {
-                        console.error('Error setting session:', error);
-                        throw error;
-                    }
-                    
-                    // Check if the session is valid by getting user info
-                    const { data, error: userError } = await supabase.auth.getUser();
-                    
-                    if (userError || !data.user) {
-                        console.error('Error getting user or no user found:', userError);
-                        throw userError || new Error('No user found');
-                    }
-                    
-                    console.log('User authenticated successfully, email:', data.user.email);
-                    
-                    // Show password reset form
-                    loadingMessage.style.display = 'none';
-                    resetForm.style.display = 'block';
-                    showInfo('Please enter your new password');
-                    
-                } catch (error) {
-                    console.error('Token validation error:', error);
-                    loadingMessage.style.display = 'none';
-                    requestForm.style.display = 'block';
-                    showError('Your password reset link has expired or is invalid. Please request a new one.');
-                }
-            }
-            
-            // Handle reset password button click
-            resetButton.addEventListener('click', async function() {
-                const newPassword = document.getElementById('new-password').value;
-                const confirmPassword = document.getElementById('confirm-password').value;
-                
-                if (!newPassword || !confirmPassword) {
-                    showError('Please fill in both password fields');
-                    return;
-                }
-                
-                if (newPassword.length < 6) {
-                    showError('Password must be at least 6 characters long');
-                    return;
-                }
-                
-                if (newPassword !== confirmPassword) {
-                    showError('Passwords do not match');
-                    return;
-                }
-                
-                resetButton.disabled = true;
-                resetButton.textContent = 'Updating...';
-                
-                try {
-                    console.log('Updating password...');
-                    
-                    // Get current user to get their email
-                    const { data: userData } = await supabase.auth.getUser();
-                    const userEmail = userData.user?.email;
-                    
-                    // Update the password in Supabase
-                    const { error } = await supabase.auth.updateUser({
-                        password: newPassword
-                    });
-                    
-                    if (error) {
-                        console.error('Password update error:', error);
-                        throw error;
-                    }
-                    
-                    console.log('Password updated successfully');
-                    
-                    // Update in localStorage for backward compatibility
-                    if (userEmail) {
-                        localStorage.setItem('sleeptech_password_' + userEmail, newPassword);
-                        console.log('Also updated password in localStorage for compatibility');
-                    }
-                    
-                    showSuccess('Password updated successfully! Redirecting to login page...');
-                    
-                    // Redirect to login page after a delay
-                    setTimeout(function() {
-                        window.location.href = 'direct-login.html';
-                    }, 2000);
-                    
-                } catch (error) {
-                    console.error('Error updating password:', error);
-                    showError('There was an error updating your password: ' + error.message);
-                    resetButton.disabled = false;
-                    resetButton.textContent = 'Reset Password';
-                }
-            });
-            
-            // Handle request new password button click
-            requestButton.addEventListener('click', async function() {
-                const email = document.getElementById('email').value;
-                
-                if (!email) {
-                    showError('Please enter your email address');
-                    return;
-                }
-                
-                requestButton.disabled = true;
-                requestButton.textContent = 'Sending...';
-                
-                try {
-                    console.log('Requesting password reset for:', email);
-                    
-                    // Request password reset email
-                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: window.location.origin + '/reset-password.html',
-                    });
-                    
-                    if (error) {
-                        console.error('Password reset request error:', error);
-                        throw error;
-                    }
-                    
-                    showSuccess('Password reset email sent! Please check your inbox for further instructions.');
-                    
-                } catch (error) {
-                    console.error('Error requesting password reset:', error);
-                    showError('There was an error sending the password reset email: ' + error.message);
-                } finally {
-                    setTimeout(function() {
-                        requestButton.disabled = false;
-                        requestButton.textContent = 'Send New Reset Link';
-                    }, 3000);
-                }
-            });
-            
-            // Helper functions for displaying messages
-            function showError(message) {
-                statusMessage.textContent = message;
-                statusMessage.className = 'status-message error';
-                statusMessage.style.display = 'block';
-            }
-            
-            function showSuccess(message) {
-                statusMessage.textContent = message;
-                statusMessage.className = 'status-message success';
-                statusMessage.style.display = 'block';
-            }
-            
-            function showInfo(message) {
-                statusMessage.textContent = message;
-                statusMessage.className = 'status-message info';
-                statusMessage.style.display = 'block';
-            }
-        });
-    </script>
+    <!-- Include both scripts to ensure proper functionality -->
+    <script src="scripts.js"></script>
+    <script src="auth-implementation.js"></script>
 </body>
 </html>
