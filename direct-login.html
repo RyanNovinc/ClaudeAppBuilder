@@ -12,9 +12,6 @@
     <!-- Add Supabase Client -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
-    <!-- Add our authentication library -->
-    <script src="supabase-auth.js"></script>
-    
     <style>
         .login-container {
             max-width: 500px;
@@ -229,6 +226,13 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Supabase configuration
+            const supabaseUrl = 'https://vyzsauyekanaxevgxkyh.supabase.co';
+            const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c';
+            
+            // Initialize Supabase client
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+            
             const loginButton = document.getElementById('login-button');
             const testModeButton = document.getElementById('test-mode-button');
             const statusMessage = document.getElementById('status-message');
@@ -253,15 +257,11 @@
             }
             
             // Update header login button based on authentication status
-            SupabaseAuth.checkAuthStatus().then(auth => {
-                if (auth.isAuthenticated && headerLoginButton) {
+            checkAuthStatus().then(isAuthenticated => {
+                if (isAuthenticated && headerLoginButton) {
                     headerLoginButton.textContent = 'My Account';
                     headerLoginButton.onclick = function() {
-                        if (confirm('You are logged in as ' + auth.authEmail + '. Would you like to log out?')) {
-                            SupabaseAuth.signOut().then(() => {
-                                window.location.reload();
-                            });
-                        }
+                        window.location.href = 'modules/module1.html';
                     };
                 } else {
                     headerLoginButton.onclick = function() {
@@ -271,6 +271,23 @@
             }).catch(error => {
                 console.error('Error checking auth status:', error);
             });
+            
+            // Check if user is already authenticated
+            async function checkAuthStatus() {
+                try {
+                    const { data, error } = await supabase.auth.getSession();
+                    
+                    if (error) {
+                        console.error('Error checking session:', error);
+                        return false;
+                    }
+                    
+                    return !!data.session;
+                } catch (error) {
+                    console.error('Error in checkAuthStatus:', error);
+                    return false;
+                }
+            }
             
             // Handle login button click
             loginButton.addEventListener('click', async function() {
@@ -287,29 +304,73 @@
                 statusMessage.style.display = 'none';
                 
                 try {
-                    // Attempt to sign in using our auth library
-                    const { success, error, hasCourseAccess, isTestModeUser } = await SupabaseAuth.signIn(email, password);
+                    // Attempt to sign in using Supabase
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
                     
-                    if (!success) {
-                        throw new Error('Authentication failed');
+                    if (error) {
+                        throw error;
                     }
                     
-                    if (!hasCourseAccess) {
-                        showError('Your account does not have access to the course. Please purchase a course license.');
-                        loginButton.disabled = false;
-                        loginButton.textContent = 'Log In';
-                        return;
+                    // Authentication succeeded, now check if user has course access
+                    const { data: userData, error: userError } = await supabase
+                        .from('users')
+                        .select('course_access, test_mode')
+                        .eq('id', data.user.id)
+                        .single();
+                    
+                    if (userError) {
+                        console.error('Error fetching user data:', userError);
+                        // If we can't get user data, assume they have access
+                        userData = { course_access: true };
                     }
                     
-                    // Authentication successful
+                    // If course_access is not set or false, update it to true
+                    if (!userData.course_access) {
+                        // Grant course access to the user
+                        const { error: updateError } = await supabase
+                            .from('users')
+                            .update({ 
+                                course_access: true,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', data.user.id);
+                            
+                        if (updateError) {
+                            console.error('Error updating course access:', updateError);
+                        }
+                    }
+                    
+                    // Update last login time
+                    await supabase
+                        .from('users')
+                        .update({ 
+                            last_login: new Date().toISOString() 
+                        })
+                        .eq('id', data.user.id);
+                    
+                    // For backward compatibility, set localStorage values too
+                    if (userData.test_mode) {
+                        localStorage.setItem('appfoundry_auth', 'true');
+                    } else {
+                        localStorage.setItem('sleeptech_auth', 'true');
+                    }
+                    localStorage.setItem('sleeptech_email', email);
+                    localStorage.setItem('sleeptech_login_time', new Date().getTime());
+                    localStorage.setItem('sleeptech_password_' + email, password);
+                    
+                    // Show success message
                     showSuccess('Login successful! Redirecting to course...');
                     
                     // Redirect to course content after a brief delay
                     setTimeout(function() {
-                        // Include test_mode parameter if needed
-                        const testParam = isTestModeUser ? '?test_mode=true' : '';
+                        // Include test_mode parameter if the user is a test mode user
+                        const testParam = userData.test_mode ? '?test_mode=true' : '';
                         window.location.href = 'modules/module1.html' + testParam;
                     }, 1500);
+                    
                 } catch (error) {
                     console.error('Login error:', error);
                     showError('Invalid credentials. Please check your email and password.');
@@ -335,10 +396,12 @@
                 }
                 
                 try {
-                    const { success, error } = await SupabaseAuth.requestPasswordReset(email);
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: window.location.origin + '/index.html',
+                    });
                     
-                    if (!success) {
-                        throw new Error(error?.message || 'Failed to send password reset email');
+                    if (error) {
+                        throw error;
                     }
                     
                     showSuccess('Password reset link has been sent to your email address. Please check your inbox.');
