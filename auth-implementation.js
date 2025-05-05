@@ -364,32 +364,51 @@ function changeAllEnrollButtonsToLogin(isAuthenticated) {
  * Only leave the logo visible but not clickable
  */
 function hideNavigationInModules() {
-    // Find the navigation menu
-    const navElement = document.querySelector('header nav');
+    console.log('Attempting to hide navigation on module page');
     
-    if (navElement) {
-        console.log('Found navigation element, hiding it in module view');
+    // Use setTimeout to ensure this runs after all other scripts
+    setTimeout(function() {
+        // Find and hide the navigation menu more aggressively
+        const navElements = document.querySelectorAll('header nav, nav ul, nav li');
+        navElements.forEach(nav => {
+            if (nav) {
+                console.log('Hiding navigation element:', nav);
+                nav.style.display = 'none';
+            }
+        });
         
-        // Hide the entire navigation element
-        navElement.style.display = 'none';
+        // Make the logo non-clickable by capturing all logo links
+        const logoLinks = document.querySelectorAll('header .logo a, .logo a');
+        logoLinks.forEach(link => {
+            if (link) {
+                console.log('Making logo non-clickable:', link);
+                
+                // Create a new span with the same content
+                const span = document.createElement('span');
+                span.innerHTML = link.innerHTML;
+                span.style.cursor = 'default';
+                span.style.color = link.style.color || 'inherit';
+                span.style.fontWeight = link.style.fontWeight || 'inherit';
+                span.style.fontSize = link.style.fontSize || 'inherit';
+                
+                // Replace the link with the span
+                if (link.parentNode) {
+                    link.parentNode.replaceChild(span, link);
+                }
+            }
+        });
         
-        // Make the logo visible but not clickable
-        const logoLink = document.querySelector('header .logo a');
-        if (logoLink) {
-            // Get the text content of the link
-            const logoText = logoLink.textContent;
-            
-            // Create a span to replace the link
-            const logoSpan = document.createElement('span');
-            logoSpan.textContent = logoText;
-            logoSpan.style.cursor = 'default'; // Normal cursor, not pointer
-            
-            // Replace the link with the span
-            logoLink.parentNode.replaceChild(logoSpan, logoLink);
-            
-            console.log('Replaced logo link with non-clickable text');
-        }
-    }
+        // Also prevent the default behavior on any remaining logo links
+        document.querySelectorAll('.logo a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Prevented logo link navigation');
+                return false;
+            });
+        });
+        
+        console.log('Navigation hiding complete');
+    }, 100); // Small delay to ensure the DOM is fully loaded
 }
 
 /**
