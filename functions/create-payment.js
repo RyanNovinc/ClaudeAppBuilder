@@ -1,13 +1,19 @@
 // Netlify function: create-payment.js
-// This file should be placed in the "functions" folder in your repository root
+// Fully integrated with Supabase for authentication and user management
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const fetch = require('node-fetch');
 const { v4: uuidv4 } = require('uuid');
+const { createClient } = require('@supabase/supabase-js');
+
+// Supabase configuration
+const supabaseUrl = process.env.SUPABASE_URL || 'https://vyzsauyekanaxevgxkyh.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 exports.handler = async function(event, context) {
   // Set CORS headers to allow requests from your domain
   const headers = {
-    'Access-Control-Allow-Origin': '*', // In production, set this to your specific domain
+    'Access-Control-Allow-Origin': '*', 
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
@@ -35,11 +41,20 @@ exports.handler = async function(event, context) {
   try {
     // Parse the incoming request body
     const data = JSON.parse(event.body);
-    const { paymentMethodId, amount, currency, customerEmail, customerName, productName, testMode, forceEmailSend } = data;
+    const { 
+      paymentMethodId, 
+      amount, 
+      currency, 
+      customerEmail, 
+      customerName, 
+      productName, 
+      supportEmail, 
+      testMode, 
+      forceEmailSend 
+    } = data;
     
     console.log('Payment request received for:', customerEmail);
     console.log('Test mode:', testMode === true);
-    console.log('Force email send:', forceEmailSend === true);
     
     // Validate the required fields
     if (!paymentMethodId || !customerEmail) {
@@ -56,8 +71,9 @@ exports.handler = async function(event, context) {
     let paymentIntent;
     let customer;
     
+    // Process payment (or simulate for test mode)
     if (!isTestMode) {
-      // Create a new customer
+      // Create a new customer in Stripe
       customer = await stripe.customers.create({
         email: customerEmail,
         name: customerName,
@@ -66,18 +82,18 @@ exports.handler = async function(event, context) {
       
       // Create a payment intent
       paymentIntent = await stripe.paymentIntents.create({
-  amount: 19900, // $199.00 in cents, updated from 9900
-  currency: currency,
-  customer: customer.id,
-  payment_method: paymentMethodId,
-  description: `Purchase of ${productName}`,
-  confirm: true,
-  receipt_email: customerEmail,
-  metadata: {
-    product: productName,
-    support_email: 'hello@risegg.net'
-  }
-});
+        amount: amount || 19900, // $199.00 in cents by default
+        currency: currency || 'usd',
+        customer: customer.id,
+        payment_method: paymentMethodId,
+        description: `Purchase of ${productName}`,
+        confirm: true,
+        receipt_email: customerEmail,
+        metadata: {
+          product: productName,
+          support_email: supportEmail || 'hello@risegg.net'
+        }
+      });
       
       console.log('Payment processed successfully:', paymentIntent.id);
     } else {
@@ -88,153 +104,167 @@ exports.handler = async function(event, context) {
       console.log('Test mode payment with ID:', paymentIntent.id);
     }
     
-    // Generate a random password for test users
+    // Generate a secure random password
     const tempPassword = generatePassword();
     
-    // Create user account in Netlify Identity (for both real and test mode)
+    // Create user account in Supabase
+    let supabaseUser;
+    let userCreationStatus = '';
+    
     try {
-      console.log('Creating user account in Netlify Identity');
+      console.log('Creating/updating user account in Supabase');
       
-      // Get the site URL - ensure it's the full absolute URL
-      const siteUrl = process.env.URL || `https://${process.env.NETLIFY_SITE_NAME}.netlify.app`;
+      // Check if user already exists in Supabase Auth
+      const { data: userData, error: userError } = await supabase.auth.admin
+        .listUsers({ filter: `email.eq.${customerEmail}` });
       
-      // Netlify Identity API endpoint for creating users
-      const netlifyIdentityEndpoint = `${siteUrl}/.netlify/identity/admin/users`;
+      if (userError) {
+        console.error('Error checking for existing user:', userError);
+        throw userError;
+      }
       
-      console.log('Using Netlify Identity endpoint:', netlifyIdentityEndpoint);
+      // Check if user exists in Auth
+      const existingUser = userData?.users && userData.users.length > 0 
+        ? userData.users[0] 
+        : null;
       
-      // For testing purposes, we'll skip the actual Netlify Identity API call
-      // but still send the welcome email with login credentials
-      if (isTestMode) {
-        console.log('Test mode - bypassing actual Netlify Identity API call');
-        console.log('But we will still send a welcome email with test credentials');
+      if (existingUser) {
+        console.log('User already exists in Supabase Auth, updating password');
+        userCreationStatus = 'updated';
+        
+        // Update user password
+        const { data, error } = await supabase.auth.admin.updateUserById(
+          existingUser.id,
+          { password: tempPassword }
+        );
+        
+        if (error) {
+          console.error('Error updating user password:', error);
+          throw error;
+        }
+        
+        supabaseUser = data.user;
       } else {
-        // For real payments, try to create a Netlify Identity user
-        // First check if the user already exists
-        const getUsersResponse = await fetch(netlifyIdentityEndpoint, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
-          }
+        console.log('Creating new user in Supabase Auth');
+        userCreationStatus = 'created';
+        
+        // Create new user in Supabase Auth
+        const { data, error } = await supabase.auth.admin.createUser({
+          email: customerEmail,
+          password: tempPassword,
+          email_confirm: true
         });
         
-        if (getUsersResponse.ok) {
-          const users = await getUsersResponse.json();
-          const existingUser = users.find(u => u.email === customerEmail);
-          
-          if (existingUser) {
-            console.log('User already exists, updating instead of creating');
-            
-            // Update the existing user
-            const updateResponse = await fetch(`${netlifyIdentityEndpoint}/${existingUser.id}`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
-              },
-              body: JSON.stringify({
-                email: customerEmail,
-                confirmed_at: new Date().toISOString(),
-                app_metadata: {
-                  ...(existingUser.app_metadata || {}),
-                  roles: ["paying_customer"]
-                },
-                user_metadata: {
-                  ...(existingUser.user_metadata || {}),
-                  full_name: customerName,
-                  course_access: true,
-                  purchase_date: new Date().toISOString(),
-                  payment_id: paymentIntent.id
-                }
-              })
-            });
-            
-            if (!updateResponse.ok) {
-              console.error('Error updating user:', await updateResponse.text());
-            } else {
-              console.log('User updated successfully');
-            }
-          } else {
-            // Create a new user
-            const userResponse = await fetch(netlifyIdentityEndpoint, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.NETLIFY_IDENTITY_TOKEN}`
-              },
-              body: JSON.stringify({
-                email: customerEmail,
-                password: tempPassword,
-                confirmed_at: new Date().toISOString(),
-                app_metadata: {
-                  roles: ["paying_customer"]
-                },
-                user_metadata: {
-                  full_name: customerName,
-                  course_access: true,
-                  purchase_date: new Date().toISOString(),
-                  payment_id: paymentIntent.id
-                }
-              })
-            });
-            
-            if (!userResponse.ok) {
-              const errorData = await userResponse.text();
-              console.error('Error creating user in Netlify Identity:', errorData);
-            } else {
-              console.log('User account created successfully');
-            }
-          }
-        } else {
-          console.error('Failed to get users from Netlify Identity');
+        if (error) {
+          console.error('Error creating user:', error);
+          throw error;
+        }
+        
+        supabaseUser = data.user;
+      }
+      
+      // Now check if user exists in users table
+      const { data: existingUserRecord, error: recordError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', supabaseUser.id)
+        .single();
+      
+      if (recordError && recordError.code !== 'PGRST116') {
+        console.error('Error checking user record:', recordError);
+      }
+      
+      if (existingUserRecord) {
+        // Update existing user record
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            name: customerName,
+            email: customerEmail,
+            test_mode: isTestMode,
+            course_access: true,
+            updated_at: new Date().toISOString(),
+            payment_id: paymentIntent.id,
+            payment_amount: amount || 19900,
+            payment_date: new Date().toISOString()
+          })
+          .eq('id', supabaseUser.id);
+        
+        if (updateError) {
+          console.error('Error updating user record:', updateError);
+        }
+      } else {
+        // Insert new user record
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert([{
+            id: supabaseUser.id,
+            email: customerEmail,
+            name: customerName || customerEmail.split('@')[0],
+            test_mode: isTestMode,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            course_access: true,
+            payment_id: paymentIntent.id,
+            payment_amount: amount || 19900,
+            payment_date: new Date().toISOString()
+          }]);
+        
+        if (insertError) {
+          console.error('Error inserting user record:', insertError);
         }
       }
-    } catch (userError) {
-      console.error('Error creating user account:', userError);
-      // Don't fail the whole process if user creation fails
+      
+      console.log(`User ${userCreationStatus} successfully in Supabase`);
+    } catch (supabaseError) {
+      console.error('Error with Supabase operations:', supabaseError);
+      // Continue with the process even if Supabase operations fail
     }
     
-    // Send welcome email with receipt and login details for both real and test modes
+    // Send welcome email with login credentials
     try {
       console.log('Sending welcome email');
       
-      // Get the site URL - ensure it's the full absolute URL
+      // Get the site URL
       const siteUrl = process.env.URL || `https://${process.env.NETLIFY_SITE_NAME}.netlify.app`;
       const emailFunctionUrl = `${siteUrl}/.netlify/functions/send-email`;
       
       console.log('Using email function URL:', emailFunctionUrl);
       
-      // We'll send real emails in both real mode and test mode
-      await fetch(emailFunctionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          customerEmail,
-          customerName,
-          orderDetails: {
-            amount: isTestMode ? '0.00 (Test)' : (amount / 100).toFixed(2), // Convert cents to dollars
-            paymentMethod: isTestMode ? 'Test Mode (No Charge)' : 'Credit Card',
-            date: new Date().toISOString(),
-            productName
+      // Send email in both real mode and test mode (if forceEmailSend is true)
+      if (!isTestMode || forceEmailSend) {
+        await fetch(emailFunctionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
           },
-          sessionId: paymentIntent.id,
-          loginDetails: {
-            email: customerEmail,
-            password: tempPassword
-          },
-          forceEmailInTestMode: true, // Force email sending in test mode
-          testMode: isTestMode
-        })
-      });
-      console.log('Welcome email request sent');
+          body: JSON.stringify({
+            customerEmail,
+            customerName,
+            orderDetails: {
+              amount: isTestMode ? '0.00 (Test)' : ((amount || 19900) / 100).toFixed(2),
+              paymentMethod: isTestMode ? 'Test Mode (No Charge)' : 'Credit Card',
+              date: new Date().toISOString(),
+              productName
+            },
+            sessionId: paymentIntent.id,
+            loginDetails: {
+              email: customerEmail,
+              password: tempPassword
+            },
+            forceEmailInTestMode: forceEmailSend,
+            testMode: isTestMode,
+            supabaseIntegration: true
+          })
+        });
+        console.log('Welcome email request sent');
+      }
     } catch (emailError) {
       console.error('Error sending welcome email:', emailError);
       // Don't fail the process if email sending fails
     }
     
-    // Send success response with password
+    // Send success response
     return {
       statusCode: 200,
       headers,
@@ -242,11 +272,13 @@ exports.handler = async function(event, context) {
         success: true,
         paymentIntentId: paymentIntent.id,
         customerEmail: customerEmail,
-        amount: isTestMode ? 0 : amount / 100, // Convert back to dollars for display
+        amount: isTestMode ? 0 : (amount || 19900) / 100,
         userCreated: true,
-        tempPassword: tempPassword, // Include this in response for test mode only
-        emailSent: true, // Indicate that we attempted to send an email
-        testMode: isTestMode
+        tempPassword: tempPassword,
+        emailSent: !isTestMode || forceEmailSend,
+        testMode: isTestMode,
+        supabaseIntegration: true,
+        userCreationStatus
       })
     };
   } catch (error) {
@@ -262,9 +294,8 @@ exports.handler = async function(event, context) {
   }
 };
 
-// Helper function to generate a random password
-function generatePassword() {
-  const length = 12;
+// Helper function to generate a secure random password
+function generatePassword(length = 12) {
   const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
   let password = "";
   
