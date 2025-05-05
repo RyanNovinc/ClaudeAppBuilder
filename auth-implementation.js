@@ -361,7 +361,7 @@ function changeAllEnrollButtonsToLogin(isAuthenticated) {
 
 /**
  * Completely hide the navigation menu in module pages
- * Only leave the logo and logout button
+ * Only leave the logo visible but not clickable
  */
 function hideNavigationInModules() {
     // Find the navigation menu
@@ -373,24 +373,21 @@ function hideNavigationInModules() {
         // Hide the entire navigation element
         navElement.style.display = 'none';
         
-        // Make sure the logo redirects to module1.html instead of index.html
+        // Make the logo visible but not clickable
         const logoLink = document.querySelector('header .logo a');
         if (logoLink) {
-            logoLink.removeAttribute('href');
-            logoLink.style.cursor = 'pointer';
+            // Get the text content of the link
+            const logoText = logoLink.textContent;
             
-            logoLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                // Redirect to module1 page instead of home
-                const isInSubdirectory = window.location.pathname.split('/').length > 2;
-                const testParam = getTestModeParam();
-                
-                if (isInSubdirectory) {
-                    window.location.href = `module1.html${testParam}`;
-                } else {
-                    window.location.href = `modules/module1.html${testParam}`;
-                }
-            });
+            // Create a span to replace the link
+            const logoSpan = document.createElement('span');
+            logoSpan.textContent = logoText;
+            logoSpan.style.cursor = 'default'; // Normal cursor, not pointer
+            
+            // Replace the link with the span
+            logoLink.parentNode.replaceChild(logoSpan, logoLink);
+            
+            console.log('Replaced logo link with non-clickable text');
         }
     }
 }
