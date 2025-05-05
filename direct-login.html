@@ -12,6 +12,9 @@
     <!-- Add Supabase Client -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
+    <!-- Add Auth Service -->
+    <script type="module" src="auth-service.js"></script>
+    
     <style>
         .login-container {
             max-width: 500px;
@@ -139,6 +142,16 @@
         .separator:not(:empty)::after {
             margin-left: 1em;
         }
+        
+        .debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #6b7280;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -187,6 +200,8 @@
                 Try with Test Mode
             </button>
         </div>
+        
+        <div id="debug-info" class="debug-info"></div>
     </div>
     
     <footer>
@@ -226,18 +241,13 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Supabase configuration
-            const supabaseUrl = 'https://vyzsauyekanaxevgxkyh.supabase.co';
-            const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c';
-            
-            // Initialize Supabase client
-            const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-            
+            // Initialize variables
             const loginButton = document.getElementById('login-button');
             const testModeButton = document.getElementById('test-mode-button');
             const statusMessage = document.getElementById('status-message');
             const headerLoginButton = document.getElementById('headerLoginButton');
             const forgotPasswordLink = document.getElementById('forgot-password-link');
+            const debugInfo = document.getElementById('debug-info');
             
             // Check if we're in test mode
             const urlParams = new URLSearchParams(window.location.search);
@@ -256,41 +266,94 @@
                 testModeIndicator.textContent = 'TEST MODE - You can use any email and password to access the course';
             }
             
-            // Update header login button based on authentication status
-            checkAuthStatus().then(isAuthenticated => {
-                if (isAuthenticated && headerLoginButton) {
-                    headerLoginButton.textContent = 'My Account';
-                    headerLoginButton.onclick = function() {
-                        window.location.href = 'modules/module1.html';
-                    };
-                } else {
-                    headerLoginButton.onclick = function() {
-                        // Don't do anything since we're already on the login page
-                    };
-                }
-            }).catch(error => {
-                console.error('Error checking auth status:', error);
-            });
+            // Enable debug mode with URL parameter
+            const isDebugMode = urlParams.get('debug') === 'true';
+            if (isDebugMode) {
+                debugInfo.style.display = 'block';
+                updateDebugInfo('Debug mode enabled');
+            }
             
-            // Check if user is already authenticated
-            async function checkAuthStatus() {
+            // Wait for AuthService to be ready
+            function waitForAuthService() {
+                return new Promise((resolve) => {
+                    function checkService() {
+                        if (window.AuthService) {
+                            resolve(window.AuthService);
+                        } else {
+                            setTimeout(checkService, 100);
+                        }
+                    }
+                    checkService();
+                });
+            }
+            
+            // Initialize the login page
+            async function initLoginPage() {
                 try {
-                    const { data, error } = await supabase.auth.getSession();
+                    updateDebugInfo('Waiting for AuthService...');
                     
-                    if (error) {
-                        console.error('Error checking session:', error);
-                        return false;
+                    // Wait for AuthService to be available
+                    const AuthService = await waitForAuthService();
+                    updateDebugInfo('AuthService loaded');
+                    
+                    // Wait for AuthService to be initialized
+                    await AuthService._ensureInitialized();
+                    updateDebugInfo('AuthService initialized');
+                    
+                    // Check if already authenticated
+                    if (AuthService.isAuthenticated()) {
+                        updateDebugInfo('User already authenticated, redirecting to course');
+                        
+                        // Show success message
+                        showSuccess('Already logged in! Redirecting to course...');
+                        
+                        // Redirect to course content
+                        setTimeout(function() {
+                            const testParam = AuthService.isInTestMode() ? '?test_mode=true' : '';
+                            window.location.href = 'modules/module1.html' + testParam;
+                        }, 1500);
+                        
+                        return;
                     }
                     
-                    return !!data.session;
+                    // Update header login button
+                    headerLoginButton.textContent = 'Log In';
+                    headerLoginButton.removeAttribute('onclick');
+                    
+                    // Add event listeners
+                    setupEventListeners();
                 } catch (error) {
-                    console.error('Error in checkAuthStatus:', error);
-                    return false;
+                    console.error('Error initializing login page:', error);
+                    updateDebugInfo('Error: ' + error.message);
+                    
+                    // Set up event listeners anyway
+                    setupEventListeners();
                 }
             }
             
+            // Set up event listeners
+            function setupEventListeners() {
+                // Handle login button click
+                loginButton.addEventListener('click', handleLogin);
+                
+                // Handle test mode button click
+                testModeButton.addEventListener('click', function() {
+                    window.location.href = window.location.pathname + '?test_mode=true';
+                });
+                
+                // Handle forgot password link click
+                forgotPasswordLink.addEventListener('click', handleForgotPassword);
+                
+                // Handle enter key press for login
+                document.getElementById('password').addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !loginButton.disabled) {
+                        loginButton.click();
+                    }
+                });
+            }
+            
             // Handle login button click
-            loginButton.addEventListener('click', async function() {
+            async function handleLogin() {
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 
@@ -299,93 +362,51 @@
                     return;
                 }
                 
+                // Update UI
                 loginButton.disabled = true;
                 loginButton.textContent = 'Logging in...';
                 statusMessage.style.display = 'none';
                 
                 try {
-                    // Attempt to sign in using Supabase
-                    const { data, error } = await supabase.auth.signInWithPassword({
-                        email,
-                        password
-                    });
+                    updateDebugInfo('Attempting to sign in...');
                     
-                    if (error) {
-                        throw error;
+                    // Attempt to sign in using AuthService
+                    const result = await window.AuthService.signIn(email, password);
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'Authentication failed');
                     }
                     
-                    // Authentication succeeded, now check if user has course access
-                    const { data: userData, error: userError } = await supabase
-                        .from('users')
-                        .select('course_access, test_mode')
-                        .eq('id', data.user.id)
-                        .single();
-                    
-                    if (userError) {
-                        console.error('Error fetching user data:', userError);
-                        // If we can't get user data, assume they have access
-                        userData = { course_access: true };
-                    }
-                    
-                    // If course_access is not set or false, update it to true
-                    if (!userData.course_access) {
-                        // Grant course access to the user
-                        const { error: updateError } = await supabase
-                            .from('users')
-                            .update({ 
-                                course_access: true,
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('id', data.user.id);
-                            
-                        if (updateError) {
-                            console.error('Error updating course access:', updateError);
-                        }
-                    }
-                    
-                    // Update last login time
-                    await supabase
-                        .from('users')
-                        .update({ 
-                            last_login: new Date().toISOString() 
-                        })
-                        .eq('id', data.user.id);
-                    
-                    // For backward compatibility, set localStorage values too
-                    if (userData.test_mode) {
-                        localStorage.setItem('appfoundry_auth', 'true');
-                    } else {
-                        localStorage.setItem('sleeptech_auth', 'true');
-                    }
-                    localStorage.setItem('sleeptech_email', email);
-                    localStorage.setItem('sleeptech_login_time', new Date().getTime());
-                    localStorage.setItem('sleeptech_password_' + email, password);
+                    updateDebugInfo('Sign in successful');
                     
                     // Show success message
                     showSuccess('Login successful! Redirecting to course...');
                     
                     // Redirect to course content after a brief delay
                     setTimeout(function() {
-                        // Include test_mode parameter if the user is a test mode user
-                        const testParam = userData.test_mode ? '?test_mode=true' : '';
+                        // Include test_mode parameter if needed
+                        const testParam = result.testMode ? '?test_mode=true' : '';
                         window.location.href = 'modules/module1.html' + testParam;
                     }, 1500);
-                    
                 } catch (error) {
                     console.error('Login error:', error);
-                    showError('Invalid credentials. Please check your email and password.');
+                    updateDebugInfo('Error: ' + error.message);
+                    
+                    if (isDebugMode) {
+                        // In debug mode, show full error
+                        showError('Authentication error: ' + error.message);
+                    } else {
+                        // In production, show generic message
+                        showError('Invalid credentials. Please check your email and password.');
+                    }
+                    
                     loginButton.disabled = false;
                     loginButton.textContent = 'Log In';
                 }
-            });
-            
-            // Handle test mode button click
-            testModeButton.addEventListener('click', function() {
-                window.location.href = window.location.pathname + '?test_mode=true';
-            });
+            }
             
             // Handle forgot password link click
-            forgotPasswordLink.addEventListener('click', async function(e) {
+            async function handleForgotPassword(e) {
                 e.preventDefault();
                 
                 const email = document.getElementById('email').value;
@@ -396,22 +417,27 @@
                 }
                 
                 try {
-                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: window.location.origin + '/index.html',
-                    });
+                    updateDebugInfo('Requesting password reset...');
                     
-                    if (error) {
-                        throw error;
+                    // Request password reset
+                    const result = await window.AuthService.requestPasswordReset(email);
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'Failed to send reset email');
                     }
+                    
+                    updateDebugInfo('Password reset email sent');
                     
                     showSuccess('Password reset link has been sent to your email address. Please check your inbox.');
                 } catch (error) {
                     console.error('Error requesting password reset:', error);
+                    updateDebugInfo('Error: ' + error.message);
+                    
                     showError('There was an error sending the password reset email. Please try again later.');
                 }
-            });
+            }
             
-            // Message display functions
+            // Helper functions for displaying messages
             function showError(message) {
                 statusMessage.textContent = message;
                 statusMessage.className = 'status-message error';
@@ -430,12 +456,17 @@
                 statusMessage.style.display = 'block';
             }
             
-            // Handle enter key press for login
-            document.getElementById('password').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !loginButton.disabled) {
-                    loginButton.click();
+            function updateDebugInfo(message) {
+                if (isDebugMode) {
+                    const timestamp = new Date().toISOString().substr(11, 8);
+                    debugInfo.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                    // Auto-scroll to bottom
+                    debugInfo.scrollTop = debugInfo.scrollHeight;
                 }
-            });
+            }
+            
+            // Start initialization
+            initLoginPage();
         });
     </script>
 </body>
