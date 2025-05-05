@@ -29,6 +29,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize auth functionality across the site
     async function initializeAuth() {
         try {
+            // Check if we're on the login page, and if so, skip access control
+            const isLoginPage = window.location.pathname.includes('direct-login.html');
+            if (isLoginPage) {
+                console.log('On login page, skipping access control');
+                return; // Skip access control on login page
+            }
+            
             // Wait for AuthService to be initialized
             await window.AuthService._ensureInitialized();
             
@@ -70,6 +77,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error in auth initialization:', error);
+            
+            // Check if we're on the login page, and if so, skip fallback
+            const isLoginPage = window.location.pathname.includes('direct-login.html');
+            if (isLoginPage) {
+                console.log('On login page, skipping fallback');
+                return;
+            }
             
             // Fall back to test mode if available
             const urlParams = new URLSearchParams(window.location.search);
