@@ -12,6 +12,9 @@
     <!-- Add Supabase Client -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
+    <!-- Add our authentication library -->
+    <script src="supabase-auth.js"></script>
+    
     <style>
         .login-container {
             max-width: 500px;
@@ -60,6 +63,11 @@
         
         .login-button:hover {
             background-color: #0055b3;
+        }
+        
+        .login-button:disabled {
+            background-color: #9cb4d8;
+            cursor: not-allowed;
         }
         
         .status-message {
@@ -111,6 +119,29 @@
         .forgot-password a:hover {
             text-decoration: underline;
         }
+        
+        .separator {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0;
+            color: #6b7280;
+        }
+
+        .separator::before,
+        .separator::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .separator:not(:empty)::before {
+            margin-right: 1em;
+        }
+
+        .separator:not(:empty)::after {
+            margin-left: 1em;
+        }
     </style>
 </head>
 <body>
@@ -151,6 +182,14 @@
         <div class="forgot-password">
             <a href="#" id="forgot-password-link">Forgot your password?</a>
         </div>
+        
+        <div class="separator">or</div>
+        
+        <div class="test-mode-access">
+            <button id="test-mode-button" class="login-button" style="background-color: #f59e0b;">
+                Try with Test Mode
+            </button>
+        </div>
     </div>
     
     <footer>
@@ -188,15 +227,10 @@
         </div>
     </footer>
 
-    <script src="identity-widget.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Supabase client
-            const supabaseUrl = 'https://vyzsauyekanaxevgxkyh.supabase.co';
-            const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c';
-            const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
-            
             const loginButton = document.getElementById('login-button');
+            const testModeButton = document.getElementById('test-mode-button');
             const statusMessage = document.getElementById('status-message');
             const headerLoginButton = document.getElementById('headerLoginButton');
             const forgotPasswordLink = document.getElementById('forgot-password-link');
@@ -215,67 +249,28 @@
             if (isTestMode) {
                 const testModeIndicator = document.getElementById('test-mode-indicator');
                 testModeIndicator.classList.add('test-mode-banner');
-                testModeIndicator.textContent = 'TEST MODE - You must use the provided test credentials';
+                testModeIndicator.textContent = 'TEST MODE - You can use any email and password to access the course';
             }
             
-            // Check authentication status
-            async function checkAuthStatus() {
-                try {
-                    // First try Supabase
-                    const { data } = await supabase.auth.getSession();
-                    if (data.session) {
-                        return {
-                            isAuthenticated: true,
-                            email: data.session.user.email,
-                            source: 'supabase'
-                        };
-                    }
-                } catch (error) {
-                    console.error('Supabase auth check error:', error);
-                }
-                
-                // Fall back to localStorage if Supabase doesn't have a session
-                const isLocallyAuthenticated = localStorage.getItem('sleeptech_auth') === 'true' || 
-                                            localStorage.getItem('appfoundry_auth') === 'true';
-                const authEmail = localStorage.getItem('sleeptech_email');
-                
-                if (isLocallyAuthenticated && authEmail) {
-                    return {
-                        isAuthenticated: true,
-                        email: authEmail,
-                        source: 'localStorage'
-                    };
-                }
-                
-                return {
-                    isAuthenticated: false,
-                    email: null,
-                    source: null
-                };
-            }
-            
-            // Update header login button
-            async function updateHeaderButton() {
-                const auth = await checkAuthStatus();
-                
+            // Update header login button based on authentication status
+            SupabaseAuth.checkAuthStatus().then(auth => {
                 if (auth.isAuthenticated && headerLoginButton) {
                     headerLoginButton.textContent = 'My Account';
                     headerLoginButton.onclick = function() {
-                        if (confirm('You are logged in as ' + auth.email + '. Would you like to log out?')) {
-                            // Sign out from both Supabase and localStorage
-                            supabase.auth.signOut().catch(console.error);
-                            localStorage.removeItem('sleeptech_auth');
-                            localStorage.removeItem('sleeptech_email');
-                            localStorage.removeItem('sleeptech_login_time');
-                            localStorage.removeItem('appfoundry_auth');
-                            window.location.reload();
+                        if (confirm('You are logged in as ' + auth.authEmail + '. Would you like to log out?')) {
+                            SupabaseAuth.signOut().then(() => {
+                                window.location.reload();
+                            });
                         }
                     };
+                } else {
+                    headerLoginButton.onclick = function() {
+                        // Don't do anything since we're already on the login page
+                    };
                 }
-            }
-            
-            // Initialize the page
-            updateHeaderButton();
+            }).catch(error => {
+                console.error('Error checking auth status:', error);
+            });
             
             // Handle login button click
             loginButton.addEventListener('click', async function() {
@@ -291,181 +286,65 @@
                 loginButton.textContent = 'Logging in...';
                 statusMessage.style.display = 'none';
                 
-                // Try Supabase authentication first
                 try {
-                    const { data, error } = await supabase.auth.signInWithPassword({
-                        email,
-                        password
-                    });
+                    // Attempt to sign in using our auth library
+                    const { success, error, hasCourseAccess, isTestModeUser } = await SupabaseAuth.signIn(email, password);
                     
-                    if (error) {
-                        // If Supabase auth fails, try localStorage fallback
-                        console.log('Supabase auth failed, trying localStorage fallback');
-                        handleLocalStorageFallback(email, password);
+                    if (!success) {
+                        throw new Error('Authentication failed');
+                    }
+                    
+                    if (!hasCourseAccess) {
+                        showError('Your account does not have access to the course. Please purchase a course license.');
+                        loginButton.disabled = false;
+                        loginButton.textContent = 'Log In';
                         return;
                     }
                     
-                    // Update last_login timestamp
-                    if (data.user) {
-                        await supabase
-                            .from('users')
-                            .update({ 
-                                last_login: new Date().toISOString() 
-                            })
-                            .eq('id', data.user.id);
-                            
-                        // Check for test mode
-                        const { data: userData } = await supabase
-                            .from('users')
-                            .select('test_mode')
-                            .eq('id', data.user.id)
-                            .single();
-                            
-                        const userIsInTestMode = userData?.test_mode || false;
-                        
-                        // Set localStorage for backward compatibility
-                        if (userIsInTestMode) {
-                            localStorage.setItem('appfoundry_auth', 'true');
-                        } else {
-                            localStorage.setItem('sleeptech_auth', 'true');
-                        }
-                        localStorage.setItem('sleeptech_email', email);
-                        localStorage.setItem('sleeptech_login_time', new Date().getTime());
-                        localStorage.setItem('sleeptech_password_' + email, password);
-                        
-                        handleSuccessfulLogin(userIsInTestMode);
-                    } else {
-                        handleLocalStorageFallback(email, password);
-                    }
-                } catch (supabaseError) {
-                    console.error('Supabase authentication error:', supabaseError);
-                    showError('Authentication service unavailable. Trying fallback authentication...');
-                    handleLocalStorageFallback(email, password);
+                    // Authentication successful
+                    showSuccess('Login successful! Redirecting to course...');
+                    
+                    // Redirect to course content after a brief delay
+                    setTimeout(function() {
+                        // Include test_mode parameter if needed
+                        const testParam = isTestModeUser ? '?test_mode=true' : '';
+                        window.location.href = 'modules/module1.html' + testParam;
+                    }, 1500);
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showError('Invalid credentials. Please check your email and password.');
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Log In';
                 }
             });
             
-            // Handle localStorage fallback authentication
-            function handleLocalStorageFallback(email, password) {
-                // Get stored password for this email
-                const storedPassword = localStorage.getItem('sleeptech_password_' + email);
-                
-                // In test mode, we check if the provided password matches the stored one
-                // In regular mode, we also check if we have a stored password for comparison
-                let isValid = false;
-                
-                if (storedPassword) {
-                    // If we have a stored password, validate against it
-                    isValid = password === storedPassword;
-                } else if (isTestMode) {
-                    // In test mode without stored password, check basic format
-                    isValid = checkCredentials(email, password);
-                } else {
-                    // For regular login without stored password, check credentials format
-                    isValid = checkCredentials(email, password);
-                    
-                    // Store the password for this new user
-                    if (isValid) {
-                        localStorage.setItem('sleeptech_password_' + email, password);
-                        
-                        // Show message about migrating to Supabase
-                        showInfo('Note: Your account is being migrated to our new system for enhanced security.');
-                        
-                        // Try to create this user in Supabase for future logins
-                        createUserInSupabase(email, password, isTestMode).catch(console.error);
-                    }
-                }
-                
-                if (isValid) {
-                    // Set authentication in localStorage
-                    if (isTestMode) {
-                        localStorage.setItem('appfoundry_auth', 'true');
-                    } else {
-                        localStorage.setItem('sleeptech_auth', 'true');
-                    }
-                    localStorage.setItem('sleeptech_email', email);
-                    localStorage.setItem('sleeptech_login_time', new Date().getTime());
-                    
-                    handleSuccessfulLogin(isTestMode);
-                } else {
-                    loginButton.disabled = false;
-                    loginButton.textContent = 'Log In';
-                    showError('Invalid credentials. Please check your email and password.');
-                }
-            }
+            // Handle test mode button click
+            testModeButton.addEventListener('click', function() {
+                window.location.href = window.location.pathname + '?test_mode=true';
+            });
             
-            // Function to create a user in Supabase for migration purposes
-            async function createUserInSupabase(email, password, isTestMode) {
-                try {
-                    // First check if user already exists
-                    const { data, error } = await supabase.auth.signInWithPassword({
-                        email,
-                        password
-                    });
-                    
-                    if (!error && data.user) {
-                        // User already exists in Supabase
-                        return;
-                    }
-                    
-                    // Create the user in Supabase Auth
-                    const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
-                        email,
-                        password,
-                    });
-                    
-                    if (signUpError) throw signUpError;
-                    
-                    // Add user to the users table
-                    await supabase.from('users').insert([
-                        {
-                            id: signUpData.user.id,
-                            email,
-                            name: email.split('@')[0],
-                            test_mode: isTestMode,
-                            created_at: new Date().toISOString(),
-                            course_access: true,
-                            access_expires_at: null
-                        }
-                    ]);
-                } catch (error) {
-                    console.error('Error creating user in Supabase:', error);
-                }
-            }
-            
-            // Handle successful login
-            function handleSuccessfulLogin(isTestMode) {
-                showSuccess('Login successful! Redirecting to course...');
-                
-                // Redirect to course content after a brief delay
-                setTimeout(function() {
-                    // Include test_mode parameter if in test mode
-                    const testParam = isTestMode ? '?test_mode=true' : '';
-                    window.location.href = 'modules/module1.html' + testParam;
-                }, 1500);
-            }
-            
-            // Handle forgot password
+            // Handle forgot password link click
             forgotPasswordLink.addEventListener('click', async function(e) {
                 e.preventDefault();
                 
                 const email = document.getElementById('email').value;
                 
                 if (!email) {
-                    showError('Please enter your email address first');
+                    showError('Please enter your email address before resetting password');
                     return;
                 }
                 
                 try {
-                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: window.location.origin + '/reset-password.html',
-                    });
+                    const { success, error } = await SupabaseAuth.requestPasswordReset(email);
                     
-                    if (error) throw error;
+                    if (!success) {
+                        throw new Error(error?.message || 'Failed to send password reset email');
+                    }
                     
-                    showSuccess('Password reset email sent! Please check your inbox.');
+                    showSuccess('Password reset link has been sent to your email address. Please check your inbox.');
                 } catch (error) {
-                    console.error('Error sending password reset:', error);
-                    showError('Could not send password reset email. Please contact support.');
+                    console.error('Error requesting password reset:', error);
+                    showError('There was an error sending the password reset email. Please try again later.');
                 }
             });
             
@@ -488,15 +367,12 @@
                 statusMessage.style.display = 'block';
             }
             
-            // This function checks if credentials are valid
-            function checkCredentials(email, password) {
-                // For demonstration purposes, we'll accept any reasonably formatted credentials
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                const validEmail = emailRegex.test(email);
-                const validPassword = password.length >= 6;
-                
-                return validEmail && validPassword;
-            }
+            // Handle enter key press for login
+            document.getElementById('password').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !loginButton.disabled) {
+                    loginButton.click();
+                }
+            });
         });
     </script>
 </body>
