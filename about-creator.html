@@ -8,6 +8,27 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Additional style to adjust the image position */
+        .creator-profile {
+            display: flex;
+            align-items: flex-start; /* Changed from center to flex-start */
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+        
+        .creator-image {
+            flex-shrink: 0;
+            margin-top: 0; /* Aligns with the top of the text */
+        }
+        
+        /* Ensure the image doesn't get too big */
+        .creator-image img {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+        }
+    </style>
 </head>
 <body>
     <header>
