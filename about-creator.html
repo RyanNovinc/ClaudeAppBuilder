@@ -211,50 +211,91 @@
             margin-bottom: 5px;
         }
         
-        .philosophy {
-            background-color: var(--background-white);
-            border-radius: var(--border-radius);
-            padding: 50px;
+        .portfolio-section {
             margin-bottom: 60px;
-            box-shadow: var(--box-shadow);
         }
         
-        .philosophy h2 {
+        .portfolio-section h2 {
             text-align: center;
             font-size: 2rem;
             margin-bottom: 40px;
             color: var(--text-dark);
         }
         
-        .philosophy-points {
+        .app-gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
         }
         
-        .philosophy-point {
-            text-align: center;
+        .app-item {
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: transform var(--transition-fast);
         }
         
-        .philosophy-icon {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            color: var(--primary-color);
+        .app-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
         
-        .philosophy-point h3 {
-            margin-bottom: 15px;
-            color: var(--text-dark);
+        .app-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .app-content {
+            padding: 20px;
+        }
+        
+        .app-content h3 {
+            margin-bottom: 10px;
             font-size: 1.25rem;
+            color: var(--text-dark);
         }
         
-        .philosophy-point p {
+        .app-content p {
             color: var(--text-medium);
+            margin-bottom: 15px;
+            font-size: 0.9375rem;
             line-height: 1.6;
         }
         
-        .methodology-section {
-            margin-bottom: 60px;
+        .app-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        .app-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .limitation-notice {
+            background-color: #fff8e6;
+            border-left: 4px solid #fbbf24;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .limitation-notice h4 {
+            color: #92400e;
+            margin-bottom: 10px;
+            font-size: 1.125rem;
+        }
+        
+        .limitation-notice p {
+            color: #92400e;
+            margin-bottom: 0;
+            font-size: 0.9375rem;
+            line-height: 1.6;
         }
         
         .methodology-section h2 {
@@ -326,145 +367,6 @@
             margin-bottom: 0;
         }
         
-        .project-timeline {
-            background-color: var(--background-light);
-            border-radius: var(--border-radius);
-            padding: 40px;
-            margin-top: 40px;
-        }
-        
-        .timeline-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .timeline-header h3 {
-            font-size: 1.5rem;
-            color: var(--text-dark);
-            margin-bottom: 10px;
-        }
-        
-        .timeline-header p {
-            color: var(--text-medium);
-        }
-        
-        .timeline-item {
-            display: flex;
-            margin-bottom: 20px;
-            position: relative;
-        }
-        
-        .timeline-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .timeline-date {
-            width: 120px;
-            font-weight: 600;
-            color: var(--primary-color);
-            flex-shrink: 0;
-            padding-right: 20px;
-            position: relative;
-        }
-        
-        .timeline-date::after {
-            content: "";
-            position: absolute;
-            top: 10px;
-            right: 0;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: var(--primary-color);
-        }
-        
-        .timeline-content {
-            flex: 1;
-            padding-left: 20px;
-            border-left: 2px solid var(--border-light);
-            padding-bottom: 20px;
-        }
-        
-        .timeline-item:last-child .timeline-content {
-            padding-bottom: 0;
-        }
-        
-        .timeline-content h4 {
-            margin-bottom: 5px;
-            color: var(--text-dark);
-        }
-        
-        .timeline-content p {
-            color: var(--text-medium);
-            margin-bottom: 0;
-        }
-        
-        .portfolio-section {
-            margin-bottom: 60px;
-        }
-        
-        .portfolio-section h2 {
-            text-align: center;
-            font-size: 2rem;
-            margin-bottom: 40px;
-            color: var(--text-dark);
-        }
-        
-        .app-gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
-        
-        .app-item {
-            background-color: var(--background-white);
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--box-shadow);
-            transition: transform var(--transition-fast);
-        }
-        
-        .app-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .app-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-        
-        .app-content {
-            padding: 20px;
-        }
-        
-        .app-content h3 {
-            margin-bottom: 10px;
-            font-size: 1.25rem;
-            color: var(--text-dark);
-        }
-        
-        .app-content p {
-            color: var(--text-medium);
-            margin-bottom: 15px;
-            font-size: 0.9375rem;
-            line-height: 1.6;
-        }
-        
-        .app-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.875rem;
-            color: var(--text-light);
-        }
-        
-        .app-meta span {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
         .guarantee-content {
             background-color: #f0fdf4;
             border-radius: var(--border-radius);
@@ -490,17 +392,6 @@
             position: relative;
             border: 2px solid white;
             box-shadow: 0 0 0 2px var(--success-color);
-        }
-        
-        .guarantee-seal::before {
-            content: "";
-            position: absolute;
-            top: -8px;
-            left: -8px;
-            right: -8px;
-            bottom: -8px;
-            border: 2px dashed var(--success-color);
-            border-radius: 50%;
         }
         
         .guarantee-text-content {
@@ -544,27 +435,6 @@
             line-height: 1.6;
         }
         
-        .limitation-notice {
-            background-color: #fff8e6;
-            border-left: 4px solid #fbbf24;
-            padding: 20px;
-            margin: 30px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .limitation-notice h4 {
-            color: #92400e;
-            margin-bottom: 10px;
-            font-size: 1.125rem;
-        }
-        
-        .limitation-notice p {
-            color: #92400e;
-            margin-bottom: 0;
-            font-size: 0.9375rem;
-            line-height: 1.6;
-        }
-        
         /* Responsive design improvements */
         @media (max-width: 1024px) {
             .creator-profile {
@@ -587,18 +457,9 @@
         }
         
         @media (max-width: 768px) {
-            .philosophy {
-                padding: 30px;
-            }
-            
             .methodology-steps,
             .project-timeline {
                 padding: 25px;
-            }
-            
-            .timeline-date {
-                width: 80px;
-                font-size: 0.875rem;
             }
             
             .guarantee-content {
@@ -621,10 +482,6 @@
                 width: 40px;
                 height: 40px;
                 font-size: 1.25rem;
-            }
-            
-            .philosophy-points {
-                gap: 20px;
             }
             
             .guarantee-seal {
@@ -676,7 +533,7 @@
                         <path d="M12 2a10 10 0 1 0 10 10 4 4 0 1 1-4-4"/>
                         <path d="M18 2a4 4 0 0 0-4 4"/>
                     </svg>
-                    AI-Powered App Development Enthusiast
+                    Self-Taught AI App Developer
                 </div>
                 
                 <h2>My Journey from Frustration to Solution</h2>
@@ -723,28 +580,28 @@
                         <div class="credential-icon">🎓</div>
                         <div class="credential-text">
                             <strong>Bachelor of Commerce, Economics</strong>
-                            University of Wollongong, 2021
+                            My background is in business, not computer science
                         </div>
                     </div>
                     <div class="credential-item">
                         <div class="credential-icon">📊</div>
                         <div class="credential-text">
-                            <strong>Project Analysis Background</strong>
-                            Experience with resource planning and data analysis
+                            <strong>Project Management Experience</strong>
+                            I approach app development from a practical perspective
                         </div>
                     </div>
                     <div class="credential-item">
                         <div class="credential-icon">📱</div>
                         <div class="credential-text">
-                            <strong>Self-Taught App Development</strong>
-                            Focus on AI-assisted development methods
+                            <strong>7 Completed Applications</strong>
+                            Built using the exact method I teach in this course
                         </div>
                     </div>
                     <div class="credential-item">
                         <div class="credential-icon">🔖</div>
                         <div class="credential-text">
-                            <strong>PRINCE2 Certified</strong>
-                            Foundation, Practitioner, and Agile Practitioner
+                            <strong>Self-Taught Developer</strong>
+                            I learned through experimentation and persistence
                         </div>
                     </div>
                 </div>
@@ -832,61 +689,6 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="project-timeline">
-                <div class="timeline-header">
-                    <h3>My App Development Journey Timeline</h3>
-                    <p>The evolution of my AI-assisted app building methodology</p>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-date">August 2023</div>
-                    <div class="timeline-content">
-                        <h4>First App Attempt</h4>
-                        <p>Built my first simple task tracker app using traditional development. Took 3 weeks and wasn't exactly what I wanted.</p>
-                    </div>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-date">October 2023</div>
-                    <div class="timeline-content">
-                        <h4>AI Experimentation</h4>
-                        <p>Started experimenting with Claude AI for generating code snippets and UI components.</p>
-                    </div>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-date">December 2023</div>
-                    <div class="timeline-content">
-                        <h4>Methodology Development</h4>
-                        <p>Created first version of the prompt engineering framework after extensive trial and error.</p>
-                    </div>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-date">February 2024</div>
-                    <div class="timeline-content">
-                        <h4>First Complete App</h4>
-                        <p>Built my first complete application using only AI assistance — a client management system for my business.</p>
-                    </div>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-date">March 2024</div>
-                    <div class="timeline-content">
-                        <h4>Teaching Others</h4>
-                        <p>Helped three friends build their own apps using my methodology, validating that it works for non-technical people.</p>
-                    </div>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-date">April 2024</div>
-                    <div class="timeline-content">
-                        <h4>AppFoundry Creation</h4>
-                        <p>Founded AppFoundry to share this methodology with others facing the same development challenges.</p>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="portfolio-section">
@@ -927,27 +729,6 @@
                             <span>Complexity: Medium</span>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="philosophy">
-            <h2>My AI-Powered Development Philosophy</h2>
-            <div class="philosophy-points">
-                <div class="philosophy-point">
-                    <div class="philosophy-icon">💡</div>
-                    <h3>Ideas Over Implementation</h3>
-                    <p>Focus on your brilliant app concept while AI handles all the technical implementation details. You don't need to waste time learning coding languages.</p>
-                </div>
-                <div class="philosophy-point">
-                    <div class="philosophy-icon">🤝</div>
-                    <h3>AI as Your Personal Developer</h3>
-                    <p>Learn to direct Claude AI like a personal app developer who works 24/7 and never complains about revisions. This skill is far more valuable than traditional coding.</p>
-                </div>
-                <div class="philosophy-point">
-                    <div class="philosophy-icon">🚀</div>
-                    <h3>Speed to Market</h3>
-                    <p>In today's world, being first matters. My approach focuses on getting your app live as quickly as possible, so you can start gaining users and feedback immediately.</p>
                 </div>
             </div>
         </div>
@@ -1043,7 +824,7 @@
             });
             
             // Intersection Observer for fade-in animations
-            const fadeElements = document.querySelectorAll('.credential-item, .step-item, .timeline-item, .app-item');
+            const fadeElements = document.querySelectorAll('.credential-item, .step-item, .app-item');
             
             const fadeObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
