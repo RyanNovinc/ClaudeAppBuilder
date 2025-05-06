@@ -119,12 +119,17 @@
             font-weight: 600;
         }
         
-        /* Card-based layout for journey milestones */
+        /* Centered journey cards layout */
+        .journey-section {
+            margin: 50px 0;
+        }
+        
         .journey-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
-            margin: 30px 0;
+            max-width: 800px;
+            margin: 0 auto;
         }
         
         .journey-card {
@@ -135,20 +140,11 @@
             transition: transform 0.3s ease;
             position: relative;
             overflow: hidden;
+            border-left: 4px solid var(--primary-color);
         }
         
         .journey-card:hover {
             transform: translateY(-5px);
-        }
-        
-        .journey-card:before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 5px;
-            height: 100%;
-            background-color: var(--primary-color);
         }
         
         .journey-number {
@@ -177,12 +173,17 @@
             line-height: 1.5;
         }
         
-        /* Enhanced credentials */
+        /* Centered credentials */
+        .credentials-section {
+            margin: 50px 0;
+        }
+        
         .creator-credentials {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
-            margin: 30px 0;
+            max-width: 800px;
+            margin: 0 auto;
         }
         
         .credential-item {
@@ -225,7 +226,33 @@
             margin-bottom: 5px;
         }
         
-        /* Enhanced call-out boxes */
+        /* Two-column layout for revelation section */
+        .revelation-section {
+            margin: 50px 0;
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .revelation-content {
+            flex: 1;
+        }
+        
+        .revelation-image {
+            flex: 1;
+            max-width: 450px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .revelation-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        /* Enhanced key insight */
         .key-insight {
             background-color: rgba(0, 112, 243, 0.05);
             border-left: 4px solid var(--primary-color);
@@ -238,26 +265,15 @@
             margin: 0;
             font-size: 1.2rem;
             line-height: 1.6;
-            font-style: italic;
             color: var(--text-dark);
-            position: relative;
+            font-style: italic;
         }
         
         .key-insight p strong {
             color: var(--primary-color);
         }
         
-        .key-insight p:before {
-            content: """;
-            position: absolute;
-            top: -20px;
-            left: -10px;
-            font-size: 4rem;
-            color: var(--primary-color);
-            opacity: 0.2;
-        }
-        
-        /* Limitation notice - keep but enhance */
+        /* Enhanced limitation notice */
         .limitation-notice {
             background-color: #fff8e6;
             border-left: 4px solid #fbbf24;
@@ -561,6 +577,14 @@
             line-height: 1.6;
         }
         
+        /* Section titles */
+        .section-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--text-dark);
+            font-size: 1.5rem;
+        }
+        
         /* Fade-in animation */
         @keyframes fadeIn {
             from {
@@ -593,12 +617,13 @@
                 margin: 0 auto 20px;
             }
             
-            .journey-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .revelation-section {
+                flex-direction: column;
             }
             
-            .creator-credentials {
-                margin: 30px auto;
+            .revelation-image {
+                max-width: 100%;
+                order: -1;
             }
         }
         
@@ -617,7 +642,8 @@
                 padding: 40px 20px;
             }
             
-            .journey-grid {
+            .journey-grid,
+            .creator-credentials {
                 grid-template-columns: 1fr;
             }
         }
@@ -692,69 +718,82 @@
                 <p>When I needed an app for my own business, I explored the traditional route: hiring professional developers. The quotes I received were staggering—thousands of dollars for even basic functionality. Even more frustrating was trying to communicate my vision and seeing the results miss the mark completely.</p>
                 
                 <p>This disconnect led me on a journey of exploration with AI tools, programming concepts, and design platforms. Through persistent experimentation, I discovered a way to harness Claude AI that could generate professional-grade code exactly to my specifications without requiring deep technical knowledge.</p>
-                
-                <!-- Journey cards replacing traditional timeline -->
-                <div class="journey-grid">
-                    <div class="journey-card">
-                        <div class="journey-number">1</div>
-                        <h4 class="journey-title">The Frustration</h4>
-                        <p class="journey-description">Needed an app for my business but found traditional development too expensive and time-consuming</p>
-                    </div>
-                    <div class="journey-card">
-                        <div class="journey-number">2</div>
-                        <h4 class="journey-title">The Exploration</h4>
-                        <p class="journey-description">Started learning basic programming concepts but realized I could leverage AI tools to accelerate my progress</p>
-                    </div>
-                    <div class="journey-card">
-                        <div class="journey-number">3</div>
-                        <h4 class="journey-title">The Breakthrough</h4>
-                        <p class="journey-description">Discovered that Claude AI could generate high-quality code with the right prompts and technical direction</p>
-                    </div>
-                    <div class="journey-card">
-                        <div class="journey-number">4</div>
-                        <h4 class="journey-title">The System</h4>
-                        <p class="journey-description">Developed a repeatable system that allowed me to build complex apps without writing code myself</p>
+            </div>
+        </div>
+        
+        <!-- Journey section - centered cards -->
+        <div class="journey-section">
+            <h3 class="section-title">My Development Journey</h3>
+            <div class="journey-grid">
+                <div class="journey-card">
+                    <div class="journey-number">1</div>
+                    <h4 class="journey-title">The Frustration</h4>
+                    <p class="journey-description">Needed an app for my business but found traditional development too expensive and time-consuming</p>
+                </div>
+                <div class="journey-card">
+                    <div class="journey-number">2</div>
+                    <h4 class="journey-title">The Exploration</h4>
+                    <p class="journey-description">Started learning basic programming concepts but realized I could leverage AI tools to accelerate my progress</p>
+                </div>
+                <div class="journey-card">
+                    <div class="journey-number">3</div>
+                    <h4 class="journey-title">The Breakthrough</h4>
+                    <p class="journey-description">Discovered that Claude AI could generate high-quality code with the right prompts and technical direction</p>
+                </div>
+                <div class="journey-card">
+                    <div class="journey-number">4</div>
+                    <h4 class="journey-title">The System</h4>
+                    <p class="journey-description">Developed a repeatable system that allowed me to build complex apps without writing code myself</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Credentials section - centered cards -->
+        <div class="credentials-section">
+            <h3 class="section-title">My Background</h3>
+            <div class="creator-credentials">
+                <div class="credential-item">
+                    <div class="credential-icon">🎓</div>
+                    <div class="credential-text">
+                        <strong>Bachelor of Commerce, Economics</strong>
+                        My background is in business, not computer science
                     </div>
                 </div>
-                
-                <div class="creator-credentials">
-                    <div class="credential-item">
-                        <div class="credential-icon">🎓</div>
-                        <div class="credential-text">
-                            <strong>Bachelor of Commerce, Economics</strong>
-                            My background is in business, not computer science
-                        </div>
-                    </div>
-                    <div class="credential-item">
-                        <div class="credential-icon">📊</div>
-                        <div class="credential-text">
-                            <strong>Project Management Experience</strong>
-                            I approach app development from a practical perspective
-                        </div>
-                    </div>
-                    <div class="credential-item">
-                        <div class="credential-icon">📱</div>
-                        <div class="credential-text">
-                            <strong>7 Completed Applications</strong>
-                            Built using the exact method I teach in this course
-                        </div>
-                    </div>
-                    <div class="credential-item">
-                        <div class="credential-icon">🔖</div>
-                        <div class="credential-text">
-                            <strong>Self-Taught Developer</strong>
-                            I learned through experimentation and persistence
-                        </div>
+                <div class="credential-item">
+                    <div class="credential-icon">📊</div>
+                    <div class="credential-text">
+                        <strong>Project Management Experience</strong>
+                        I approach app development from a practical perspective
                     </div>
                 </div>
-                
+                <div class="credential-item">
+                    <div class="credential-icon">📱</div>
+                    <div class="credential-text">
+                        <strong>7 Completed Applications</strong>
+                        Built using the exact method I teach in this course
+                    </div>
+                </div>
+                <div class="credential-item">
+                    <div class="credential-icon">🔖</div>
+                    <div class="credential-text">
+                        <strong>Self-Taught Developer</strong>
+                        I learned through experimentation and persistence
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Two-column revelation section -->
+        <div class="revelation-section">
+            <div class="revelation-content">
                 <p>Suddenly, I could create exactly what I envisioned without the technical barriers that had frustrated me for months. The app I built had all the functionality I wanted, looked exactly as I'd imagined, and cost a fraction of the quotes I'd received.</p>
                 
-                <!-- Highlight box for key insight -->
+                <!-- Styled key insight -->
                 <div class="key-insight">
                     <p><strong>This revelation changed everything.</strong> I realized that app development—once gatekept by expensive developers who might still miss your vision—could now be in the hands of anyone with an idea. The flexibility is incredible: you can change anything in your app at any time without paying for revisions or waiting for developer availability.</p>
                 </div>
                 
+                <!-- Styled limitation notice -->
                 <div class="limitation-notice">
                     <h4>Important Note About My Approach</h4>
                     <p>I'm not a seasoned software engineer with years of professional coding experience. What I've created is a practical, streamlined approach that works especially well for entrepreneurs and small businesses who need functional apps without the enterprise-level complexity. If you're looking to build the next Facebook or Uber, this might not be for you—but for most business applications and MVPs, this system works incredibly well.</p>
@@ -764,6 +803,11 @@
                 <div class="summary-box">
                     <p>After seeing how this approach transformed my experience, I knew I had to share it. AppFoundry was born from my desire to help other entrepreneurs and creators bypass the obstacles I faced, so they can bring their visions to life without the technical and financial barriers that once stood in their way.</p>
                 </div>
+            </div>
+            
+            <!-- Creator with code image -->
+            <div class="revelation-image">
+                <img src="images/creator-coding.jpg" alt="Creator working with code in the background" class="creator-coding-image">
             </div>
         </div>
 
