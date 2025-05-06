@@ -9,6 +9,25 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #0070f3;
+            --primary-hover: #0055b3;
+            --secondary-color: #ff4c00;
+            --secondary-hover: #e54400;
+            --success-color: #10b981;
+            --warning-color: #fbbf24;
+            --error-color: #ef4444;
+            --text-dark: #111827;
+            --text-medium: #4b5563;
+            --text-light: #6b7280;
+            --background-white: #ffffff;
+            --background-light: #f9fafb;
+            --border-light: #e5e7eb;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
+            --transition-fast: 0.2s;
+        }
+        
         /* About page specific styles */
         .about-container {
             max-width: 1000px;
@@ -73,157 +92,19 @@
         .creator-bio h2 {
             text-align: left;
             margin-bottom: 25px;
+            font-size: 2rem;
+            color: var(--text-dark);
         }
         
         .creator-bio p {
             margin-bottom: 20px;
             line-height: 1.7;
-        }
-        
-        .creator-credentials {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin: 30px 0;
-        }
-        
-        .credential-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background-color: var(--background-light);
-            padding: 15px;
-            border-radius: 8px;
-            flex: 1 1 calc(50% - 20px);
-            min-width: 200px;
-        }
-        
-        .credential-icon {
-            width: 40px;
-            height: 40px;
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-        }
-        
-        .credential-text {
-            font-size: 0.9375rem;
-            line-height: 1.4;
-        }
-        
-        .credential-text strong {
-            display: block;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-        
-        .philosophy {
-            background-color: var(--background-white);
-            border-radius: var(--border-radius);
-            padding: 50px;
-            margin-bottom: 60px;
-            box-shadow: var(--box-shadow);
-        }
-        
-        .philosophy h2 {
-            margin-bottom: 40px;
-        }
-        
-        .philosophy-points {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-        }
-        
-        .philosophy-point {
-            text-align: center;
-        }
-        
-        .philosophy-icon {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-        }
-        
-        .philosophy-point h3 {
-            margin-bottom: 15px;
-            color: var(--text-dark);
-        }
-        
-        .philosophy-point p {
             color: var(--text-medium);
         }
         
-        .expertise-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 60px;
-        }
-        
-        .expertise-card {
-            background-color: var(--background-white);
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--box-shadow);
-        }
-        
-        .expertise-header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .expertise-header h3 {
-            color: white;
-            margin: 0;
-        }
-        
-        .expertise-content {
-            padding: 25px;
-        }
-        
-        .expertise-list {
-            margin-bottom: 0;
-        }
-        
-        .expertise-list li {
-            position: relative;
-            padding-left: 30px;
-            margin-bottom: 15px;
-        }
-        
-        .expertise-list li::before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: var(--primary-color);
-            font-weight: 700;
-        }
-        
-        .guarantee-content {
-            margin-top: 60px;
-            margin-bottom: 60px;
-        }
-        
-        .cta-section {
-            text-align: center;
-            background-color: var(--background-light);
-            padding: 60px;
-            border-radius: var(--border-radius);
-        }
-        
-        .cta-section h2 {
-            margin-bottom: 20px;
-        }
-        
-        .cta-section p {
-            max-width: 600px;
-            margin: 0 auto 30px;
+        .creator-bio strong {
+            color: var(--text-dark);
+            font-weight: 600;
         }
         
         .journey-container {
@@ -283,6 +164,408 @@
             color: var(--text-medium);
         }
         
+        .creator-credentials {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .credential-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background-color: var(--background-light);
+            padding: 20px;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+        
+        .credential-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .credential-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+        
+        .credential-text {
+            font-size: 0.9375rem;
+            line-height: 1.4;
+        }
+        
+        .credential-text strong {
+            display: block;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+        
+        .philosophy {
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            padding: 50px;
+            margin-bottom: 60px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .philosophy h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 40px;
+            color: var(--text-dark);
+        }
+        
+        .philosophy-points {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+        }
+        
+        .philosophy-point {
+            text-align: center;
+        }
+        
+        .philosophy-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        .philosophy-point h3 {
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            font-size: 1.25rem;
+        }
+        
+        .philosophy-point p {
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+        
+        .methodology-section {
+            margin-bottom: 60px;
+        }
+        
+        .methodology-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 40px;
+            color: var(--text-dark);
+        }
+        
+        .methodology-steps {
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .step-item {
+            display: flex;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-content h3 {
+            margin-bottom: 10px;
+            font-size: 1.25rem;
+            color: var(--text-dark);
+        }
+        
+        .step-content p {
+            color: var(--text-medium);
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .step-content ul {
+            margin-left: 20px;
+            margin-bottom: 0;
+            color: var(--text-medium);
+        }
+        
+        .step-content ul li {
+            margin-bottom: 5px;
+        }
+        
+        .step-content ul li:last-child {
+            margin-bottom: 0;
+        }
+        
+        .project-timeline {
+            background-color: var(--background-light);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            margin-top: 40px;
+        }
+        
+        .timeline-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .timeline-header h3 {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        
+        .timeline-header p {
+            color: var(--text-medium);
+        }
+        
+        .timeline-item {
+            display: flex;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .timeline-date {
+            width: 120px;
+            font-weight: 600;
+            color: var(--primary-color);
+            flex-shrink: 0;
+            padding-right: 20px;
+            position: relative;
+        }
+        
+        .timeline-date::after {
+            content: "";
+            position: absolute;
+            top: 10px;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+        }
+        
+        .timeline-content {
+            flex: 1;
+            padding-left: 20px;
+            border-left: 2px solid var(--border-light);
+            padding-bottom: 20px;
+        }
+        
+        .timeline-item:last-child .timeline-content {
+            padding-bottom: 0;
+        }
+        
+        .timeline-content h4 {
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+        
+        .timeline-content p {
+            color: var(--text-medium);
+            margin-bottom: 0;
+        }
+        
+        .portfolio-section {
+            margin-bottom: 60px;
+        }
+        
+        .portfolio-section h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 40px;
+            color: var(--text-dark);
+        }
+        
+        .app-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .app-item {
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: transform var(--transition-fast);
+        }
+        
+        .app-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .app-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .app-content {
+            padding: 20px;
+        }
+        
+        .app-content h3 {
+            margin-bottom: 10px;
+            font-size: 1.25rem;
+            color: var(--text-dark);
+        }
+        
+        .app-content p {
+            color: var(--text-medium);
+            margin-bottom: 15px;
+            font-size: 0.9375rem;
+            line-height: 1.6;
+        }
+        
+        .app-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        .app-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .guarantee-content {
+            background-color: #f0fdf4;
+            border-radius: var(--border-radius);
+            padding: 40px;
+            margin: 60px 0;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+        
+        .guarantee-seal {
+            width: 120px;
+            height: 120px;
+            background-color: var(--success-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            position: relative;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--success-color);
+        }
+        
+        .guarantee-seal::before {
+            content: "";
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            border: 2px dashed var(--success-color);
+            border-radius: 50%;
+        }
+        
+        .guarantee-text-content {
+            flex: 1;
+        }
+        
+        .guarantee-text-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--success-color);
+        }
+        
+        .guarantee-text-content p {
+            color: #065f46;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .guarantee-text-content .cta-button {
+            background-color: var(--success-color);
+        }
+        
+        .cta-section {
+            text-align: center;
+            background-color: var(--background-light);
+            padding: 60px;
+            border-radius: var(--border-radius);
+            margin-bottom: 60px;
+        }
+        
+        .cta-section h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .cta-section p {
+            max-width: 600px;
+            margin: 0 auto 30px;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+        
+        .limitation-notice {
+            background-color: #fff8e6;
+            border-left: 4px solid #fbbf24;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .limitation-notice h4 {
+            color: #92400e;
+            margin-bottom: 10px;
+            font-size: 1.125rem;
+        }
+        
+        .limitation-notice p {
+            color: #92400e;
+            margin-bottom: 0;
+            font-size: 0.9375rem;
+            line-height: 1.6;
+        }
+        
+        /* Responsive design improvements */
         @media (max-width: 1024px) {
             .creator-profile {
                 flex-direction: column;
@@ -293,19 +576,61 @@
             .creator-bio h2 {
                 text-align: center;
             }
+            
+            .creator-featured {
+                margin: 0 auto 20px;
+            }
+            
+            .creator-credentials {
+                margin: 30px auto;
+            }
         }
         
         @media (max-width: 768px) {
-            .creator-credentials {
-                flex-direction: column;
-            }
-            
-            .credential-item {
-                flex: 1 1 100%;
-            }
-            
             .philosophy {
                 padding: 30px;
+            }
+            
+            .methodology-steps,
+            .project-timeline {
+                padding: 25px;
+            }
+            
+            .timeline-date {
+                width: 80px;
+                font-size: 0.875rem;
+            }
+            
+            .guarantee-content {
+                flex-direction: column;
+                text-align: center;
+                padding: 30px;
+            }
+            
+            .cta-section {
+                padding: 40px 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .credential-item {
+                padding: 15px;
+            }
+            
+            .step-number {
+                width: 40px;
+                height: 40px;
+                font-size: 1.25rem;
+            }
+            
+            .philosophy-points {
+                gap: 20px;
+            }
+            
+            .guarantee-seal {
+                width: 100px;
+                height: 100px;
+                font-size: 2rem;
             }
         }
     </style>
@@ -358,37 +683,37 @@
                 
                 <p>I'm not a traditional app development expert with decades of experience. I'm self-taught, and I discovered a faster way to build apps by combining AI tools with fundamental coding concepts.</p>
                 
-                <p>When I needed an app for my own purposes, I explored the traditional route: hiring professional developers. The quotes I received were staggering—thousands of dollars for even basic functionality. Even more frustrating was trying to communicate my vision and seeing the results miss the mark.</p>
+                <p>When I needed an app for my own business, I explored the traditional route: hiring professional developers. The quotes I received were staggering—thousands of dollars for even basic functionality. Even more frustrating was trying to communicate my vision and seeing the results miss the mark completely.</p>
                 
-                <p>This disconnect led me on a journey of exploration with AI tools, programming concepts, and design platforms. Through persistent experimentation, I discovered a way to harness Claude AI that could generate professional-grade code exactly to my specifications.</p>
+                <p>This disconnect led me on a journey of exploration with AI tools, programming concepts, and design platforms. Through persistent experimentation, I discovered a way to harness Claude AI that could generate professional-grade code exactly to my specifications without requiring deep technical knowledge.</p>
                 
                 <div class="journey-container">
                     <div class="journey-milestone">
                         <div class="journey-icon">1</div>
                         <div class="journey-content">
-                            <h4>The Problem</h4>
-                            <p>Needed an app but found traditional development too expensive and time-consuming</p>
+                            <h4>The Frustration</h4>
+                            <p>Needed an app for my business but found traditional development too expensive and time-consuming</p>
                         </div>
                     </div>
                     <div class="journey-milestone">
                         <div class="journey-icon">2</div>
                         <div class="journey-content">
                             <h4>The Exploration</h4>
-                            <p>Started exploring AI tools and learning basic programming concepts</p>
+                            <p>Started learning basic programming concepts but realized I could leverage AI tools to accelerate my progress</p>
                         </div>
                     </div>
                     <div class="journey-milestone">
                         <div class="journey-icon">3</div>
                         <div class="journey-content">
                             <h4>The Breakthrough</h4>
-                            <p>Discovered that Claude AI could generate high-quality code with the right prompts</p>
+                            <p>Discovered that Claude AI could generate high-quality code with the right prompts and technical direction</p>
                         </div>
                     </div>
                     <div class="journey-milestone">
                         <div class="journey-icon">4</div>
                         <div class="journey-content">
                             <h4>The System</h4>
-                            <p>Developed a repeatable system for creating apps using AI assistance</p>
+                            <p>Developed a repeatable system that allowed me to build complex apps without writing code myself</p>
                         </div>
                     </div>
                 </div>
@@ -411,8 +736,8 @@
                     <div class="credential-item">
                         <div class="credential-icon">📱</div>
                         <div class="credential-text">
-                            <strong>Self-Taught App Developer</strong>
-                            Focused on AI-assisted development methods
+                            <strong>Self-Taught App Development</strong>
+                            Focus on AI-assisted development methods
                         </div>
                     </div>
                     <div class="credential-item">
@@ -428,7 +753,181 @@
                 
                 <p><strong>This revelation changed everything.</strong> I realized that app development—once gatekept by expensive developers who might still miss your vision—could now be in the hands of anyone with an idea. The flexibility is incredible: you can change anything in your app at any time without paying for revisions or waiting for developer availability.</p>
                 
+                <div class="limitation-notice">
+                    <h4>Important Note About My Approach</h4>
+                    <p>I'm not a seasoned software engineer with years of professional coding experience. What I've created is a practical, streamlined approach that works especially well for entrepreneurs and small businesses who need functional apps without the enterprise-level complexity. If you're looking to build the next Facebook or Uber, this might not be for you—but for most business applications and MVPs, this system works incredibly well.</p>
+                </div>
+                
                 <p>After seeing how this approach transformed my experience, I knew I had to share it. AppFoundry was born from my desire to help other entrepreneurs and creators bypass the obstacles I faced, so they can bring their visions to life without the technical and financial barriers that once stood in their way.</p>
+            </div>
+        </div>
+
+        <div class="methodology-section">
+            <h2>My App Building Process</h2>
+            
+            <div class="methodology-steps">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>App Vision Definition</h3>
+                        <p>I start by breaking down exactly what the app needs to do, what problem it solves, and who will use it. This vision becomes the foundation for guiding AI tools effectively.</p>
+                        <p>What makes this different from traditional development:</p>
+                        <ul>
+                            <li>Focus on user experience and practical functionality first</li>
+                            <li>No technical constraints limiting your vision</li>
+                            <li>Rapid iteration on ideas without coding delays</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>AI-Powered Prompt Engineering</h3>
+                        <p>I've developed specific prompting frameworks that tell Claude exactly what to build. These aren't simple requests—they're structured, technical directions that guide the AI toward professional results.</p>
+                        <ul>
+                            <li>Specialized prompts for UI components vs. backend logic</li>
+                            <li>Techniques for describing visual design without technical jargon</li>
+                            <li>Methods to ensure consistent code style and quality</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Component Assembly</h3>
+                        <p>Rather than building everything at once, I break apps into modular components that can be assembled into a complete application. This approach makes development manageable even for complex apps.</p>
+                        <ul>
+                            <li>Building block approach simplifies complexity</li>
+                            <li>Each component is fully tested before integration</li>
+                            <li>Makes changes and updates significantly easier</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Testing & Refinement</h3>
+                        <p>I've created a straightforward testing methodology that doesn't require technical knowledge but catches most issues before they become problems.</p>
+                        <ul>
+                            <li>User-focused testing approach anyone can implement</li>
+                            <li>Rapid feedback loop for continuous improvement</li>
+                            <li>AI-assisted debugging to identify and fix issues</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="step-item">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h3>Deployment & Management</h3>
+                        <p>Getting apps from development to live deployment is often the most intimidating step. I've simplified this into a foolproof process that even non-technical people can follow.</p>
+                        <ul>
+                            <li>Step-by-step deployment guides for various platforms</li>
+                            <li>Maintenance templates for ongoing updates</li>
+                            <li>Scaling strategies as your user base grows</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="project-timeline">
+                <div class="timeline-header">
+                    <h3>My App Development Journey Timeline</h3>
+                    <p>The evolution of my AI-assisted app building methodology</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">August 2023</div>
+                    <div class="timeline-content">
+                        <h4>First App Attempt</h4>
+                        <p>Built my first simple task tracker app using traditional development. Took 3 weeks and wasn't exactly what I wanted.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">October 2023</div>
+                    <div class="timeline-content">
+                        <h4>AI Experimentation</h4>
+                        <p>Started experimenting with Claude AI for generating code snippets and UI components.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">December 2023</div>
+                    <div class="timeline-content">
+                        <h4>Methodology Development</h4>
+                        <p>Created first version of the prompt engineering framework after extensive trial and error.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">February 2024</div>
+                    <div class="timeline-content">
+                        <h4>First Complete App</h4>
+                        <p>Built my first complete application using only AI assistance — a client management system for my business.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">March 2024</div>
+                    <div class="timeline-content">
+                        <h4>Teaching Others</h4>
+                        <p>Helped three friends build their own apps using my methodology, validating that it works for non-technical people.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-date">April 2024</div>
+                    <div class="timeline-content">
+                        <h4>AppFoundry Creation</h4>
+                        <p>Founded AppFoundry to share this methodology with others facing the same development challenges.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="portfolio-section">
+            <h2>Apps I've Built Using This Method</h2>
+            
+            <div class="app-gallery">
+                <div class="app-item">
+                    <img src="images/task-tracker-app.png" alt="Task Management App" class="app-image">
+                    <div class="app-content">
+                        <h3>Task Management System</h3>
+                        <p>A comprehensive project management tool I built for my own business with task assignments, deadlines, and automated reminders.</p>
+                        <div class="app-meta">
+                            <span>Build time: 2 weeks</span>
+                            <span>Complexity: Medium</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="app-item">
+                    <img src="images/recipe-finder-app.png" alt="Client Portal" class="app-image">
+                    <div class="app-content">
+                        <h3>Client Portal</h3>
+                        <p>Secure client dashboard allowing customers to track project progress, approve designs, and make payments.</p>
+                        <div class="app-meta">
+                            <span>Build time: 3 weeks</span>
+                            <span>Complexity: Advanced</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="app-item">
+                    <img src="images/workout-tracker-app.png" alt="Inventory Management App" class="app-image">
+                    <div class="app-content">
+                        <h3>Inventory Tracker</h3>
+                        <p>Real-time inventory management system with barcode scanning, low-stock alerts, and purchase order automation.</p>
+                        <div class="app-meta">
+                            <span>Build time: 2.5 weeks</span>
+                            <span>Complexity: Medium</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -453,57 +952,8 @@
             </div>
         </div>
 
-        <div class="expertise-section">
-            <h2>What You'll Learn</h2>
-            <div class="expertise-grid">
-                <div class="expertise-card">
-                    <div class="expertise-header">
-                        <h3>AI Integration & Prompt Engineering</h3>
-                    </div>
-                    <div class="expertise-content">
-                        <ul class="expertise-list">
-                            <li>Advanced Claude AI prompt engineering</li>
-                            <li>Translating business requirements into AI prompts</li>
-                            <li>Creating reliable, production-ready applications</li>
-                            <li>Systematic debugging of AI-generated code</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="expertise-card">
-                    <div class="expertise-header">
-                        <h3>No-Code App Architecture</h3>
-                    </div>
-                    <div class="expertise-content">
-                        <ul class="expertise-list">
-                            <li>Scalable app architecture design</li>
-                            <li>Database schema planning</li>
-                            <li>UI/UX for maximum user engagement</li>
-                            <li>Performance optimization without coding</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="expertise-card">
-                    <div class="expertise-header">
-                        <h3>App Monetization Strategies</h3>
-                    </div>
-                    <div class="expertise-content">
-                        <ul class="expertise-list">
-                            <li>Subscription model implementation</li>
-                            <li>In-app purchase strategies</li>
-                            <li>Freemium conversion optimization</li>
-                            <li>Business model planning for app entrepreneurs</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="guarantee-content">
-            <div class="guarantee-image">
-                <div class="guarantee-seal">
-                    <div class="seal-content">100%</div>
-                </div>
-            </div>
+            <div class="guarantee-seal">100%</div>
             <div class="guarantee-text-content">
                 <h3>The "Build Your First App" Guarantee</h3>
                 <p>I'm so confident in my AI-powered approach that I offer this ironclad guarantee: If you can't create an app within 60 days of taking this course, I'll give you 100% of your money back.</p>
@@ -555,6 +1005,63 @@
         </div>
     </footer>
 
-    <script src="scripts.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login button functionality
+            document.getElementById('loginButton').addEventListener('click', function() {
+                window.location.href = 'direct-login.html';
+            });
+            
+            // Add smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    
+                    if (targetId === '#') {
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                        return;
+                    }
+                    
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        const headerOffset = 80;
+                        const elementPosition = targetElement.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                        
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+            
+            // Intersection Observer for fade-in animations
+            const fadeElements = document.querySelectorAll('.credential-item, .step-item, .timeline-item, .app-item');
+            
+            const fadeObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.classList.add('fade-in');
+                        }, 100);
+                        fadeObserver.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+            
+            fadeElements.forEach(element => {
+                fadeObserver.observe(element);
+            });
+        });
+    </script>
 </body>
 </html>
