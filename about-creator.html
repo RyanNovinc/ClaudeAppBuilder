@@ -226,6 +226,63 @@
             margin: 0 auto 30px;
         }
         
+        .journey-container {
+            background-color: #f0f7ff;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .journey-milestone {
+            display: flex;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .journey-milestone:last-child {
+            margin-bottom: 0;
+        }
+        
+        .journey-milestone:not(:last-child):before {
+            content: "";
+            position: absolute;
+            top: 40px;
+            left: 15px;
+            width: 2px;
+            height: calc(100% + 10px);
+            background-color: #d1e0ff;
+        }
+        
+        .journey-icon {
+            width: 32px;
+            height: 32px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .journey-content {
+            flex-grow: 1;
+        }
+        
+        .journey-content h4 {
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+        
+        .journey-content p {
+            margin-bottom: 0;
+            color: var(--text-medium);
+        }
+        
         @media (max-width: 1024px) {
             .creator-profile {
                 flex-direction: column;
@@ -291,57 +348,87 @@
             <div class="creator-bio">
                 <div class="creator-featured">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ai-icon">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M12 16v-4"></path>
-                        <path d="M12 8h.01"></path>
+                        <path d="M12 2a10 10 0 1 0 10 10 4 4 0 1 1-4-4"/>
+                        <path d="M18 2a4 4 0 0 0-4 4"/>
                     </svg>
-                    AI App Development Expert
+                    AI-Powered App Development Enthusiast
                 </div>
                 
-                <h2>My Journey from Frustration to Innovation</h2>
+                <h2>My Journey from Frustration to Solution</h2>
                 
-                <p>I never set out to become an app development expert. Like many entrepreneurs, I simply needed an app for my business. What followed was a 9-month odyssey that completely transformed my understanding of app development and led me to discover the power of AI.</p>
+                <p>I'm not a traditional app development expert with decades of experience. I'm self-taught, and I discovered a faster way to build apps by combining AI tools with fundamental coding concepts.</p>
                 
-                <p>When I first needed a prototype app for my business, I explored the traditional route: hiring professional developers. The quotes I received were staggering—<strong>thousands of dollars for even basic functionality</strong>. Even more frustrating was trying to communicate my vision. Despite detailed explanations, the developers would return with something that missed the mark entirely.</p>
+                <p>When I needed an app for my own purposes, I explored the traditional route: hiring professional developers. The quotes I received were staggering—thousands of dollars for even basic functionality. Even more frustrating was trying to communicate my vision and seeing the results miss the mark.</p>
                 
-                <p>This disconnect led me on a journey of trial and error with countless AI tools, programming languages, and design platforms. I was determined to find a better way. Much of this exploration was admittedly a waste of time—until I discovered the breakthrough method I now teach.</p>
+                <p>This disconnect led me on a journey of exploration with AI tools, programming concepts, and design platforms. Through persistent experimentation, I discovered a way to harness Claude AI that could generate professional-grade code exactly to my specifications.</p>
+                
+                <div class="journey-container">
+                    <div class="journey-milestone">
+                        <div class="journey-icon">1</div>
+                        <div class="journey-content">
+                            <h4>The Problem</h4>
+                            <p>Needed an app but found traditional development too expensive and time-consuming</p>
+                        </div>
+                    </div>
+                    <div class="journey-milestone">
+                        <div class="journey-icon">2</div>
+                        <div class="journey-content">
+                            <h4>The Exploration</h4>
+                            <p>Started exploring AI tools and learning basic programming concepts</p>
+                        </div>
+                    </div>
+                    <div class="journey-milestone">
+                        <div class="journey-icon">3</div>
+                        <div class="journey-content">
+                            <h4>The Breakthrough</h4>
+                            <p>Discovered that Claude AI could generate high-quality code with the right prompts</p>
+                        </div>
+                    </div>
+                    <div class="journey-milestone">
+                        <div class="journey-icon">4</div>
+                        <div class="journey-content">
+                            <h4>The System</h4>
+                            <p>Developed a repeatable system for creating apps using AI assistance</p>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="creator-credentials">
                     <div class="credential-item">
-                        <div class="credential-icon">🏆</div>
+                        <div class="credential-icon">🎓</div>
                         <div class="credential-text">
-                            <strong>30+ Apps Built</strong>
-                            Using the AI-driven method
-                        </div>
-                    </div>
-                    <div class="credential-item">
-                        <div class="credential-icon">💼</div>
-                        <div class="credential-text">
-                            <strong>Founder of 3 Tech Startups</strong>
-                            With successful exits
+                            <strong>Bachelor of Commerce, Economics</strong>
+                            University of Wollongong, 2021
                         </div>
                     </div>
                     <div class="credential-item">
                         <div class="credential-icon">📊</div>
                         <div class="credential-text">
-                            <strong>MBA, Product Management</strong>
-                            Focus on digital product development
+                            <strong>Project Analysis Background</strong>
+                            Experience with resource planning and data analysis
                         </div>
                     </div>
                     <div class="credential-item">
                         <div class="credential-icon">📱</div>
                         <div class="credential-text">
-                            <strong>200+ Students</strong>
-                            Now building their own apps
+                            <strong>Self-Taught App Developer</strong>
+                            Focused on AI-assisted development methods
+                        </div>
+                    </div>
+                    <div class="credential-item">
+                        <div class="credential-icon">🔖</div>
+                        <div class="credential-text">
+                            <strong>PRINCE2 Certified</strong>
+                            Foundation, Practitioner, and Agile Practitioner
                         </div>
                     </div>
                 </div>
                 
-                <p>Through persistent experimentation, I discovered a way to harness Claude AI that could generate professional-grade code exactly to my specifications. Suddenly, I could create exactly what I envisioned without the technical barriers that had frustrated me for months. The app I built had all the functionality I wanted, looked exactly as I'd imagined, and cost a fraction of the quotes I'd received.</p>
+                <p>Suddenly, I could create exactly what I envisioned without the technical barriers that had frustrated me for months. The app I built had all the functionality I wanted, looked exactly as I'd imagined, and cost a fraction of the quotes I'd received.</p>
                 
-                <p>This revelation changed everything. I realized that app development—once gatekept by expensive developers who might still miss your vision—could now be in the hands of anyone with an idea. The flexibility this provides is incredible: you can change anything in your app at any time without paying for revisions or waiting for developer availability. You simply request what you want and get it instantly using the right AI tools and guidance.</p>
+                <p><strong>This revelation changed everything.</strong> I realized that app development—once gatekept by expensive developers who might still miss your vision—could now be in the hands of anyone with an idea. The flexibility is incredible: you can change anything in your app at any time without paying for revisions or waiting for developer availability.</p>
                 
-                <p><strong>After seeing how this approach transformed my business, I knew I had to share it.</strong> AppFoundry was born from my desire to help other entrepreneurs and creators bypass the obstacles I faced, so they can bring their visions to life without the technical and financial barriers that once stood in their way.</p>
+                <p>After seeing how this approach transformed my experience, I knew I had to share it. AppFoundry was born from my desire to help other entrepreneurs and creators bypass the obstacles I faced, so they can bring their visions to life without the technical and financial barriers that once stood in their way.</p>
             </div>
         </div>
 
@@ -367,7 +454,7 @@
         </div>
 
         <div class="expertise-section">
-            <h2>Areas of Expertise</h2>
+            <h2>What You'll Learn</h2>
             <div class="expertise-grid">
                 <div class="expertise-card">
                     <div class="expertise-header">
