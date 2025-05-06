@@ -385,7 +385,7 @@
                         <div class="order-bump-header">
                             <input type="checkbox" id="order-bump-checkbox" class="order-bump-checkbox">
                             <label for="order-bump-checkbox" class="order-bump-title">Add AI Prompt Enhancement Tool</label>
-                            <span class="order-bump-price">$47</span>
+                            <span class="order-bump-price">$99</span>
                         </div>
                         <div class="order-bump-description">
                             <p>Upgrade your app development with our AI Prompt Enhancement Tool. This tool automatically optimizes your prompts to get the best possible code from Claude AI, saving you hours of trial and error.</p>
@@ -448,7 +448,7 @@
                 </div>
                 <div class="order-total">
                     <span>Total</span>
-                    <span id="order-total-price">$197</span>
+                    <span id="order-total-price">$499</span>
                 </div>
                 
                 <div class="guarantee-box">
@@ -513,24 +513,24 @@
             
             switch(selectedPlan) {
                 case 'premium':
-                    planName = 'AppFoundry Premium';
-                    planPrice = '$497';
-                    planDescription = 'Lifetime Access + All Premium Features';
+                    planName = 'Enterprise Builder';
+                    planPrice = '$1,999';
+                    planDescription = 'Lifetime Access + All Enterprise Features';
                     break;
                 case 'complete':
-                    planName = 'AppFoundry Complete';
-                    planPrice = '$297';
+                    planName = 'Professional Developer';
+                    planPrice = '$999';
                     planDescription = 'Lifetime Access + Templates + Priority Support';
                     break;
                 case 'complete-installment':
-                    planName = 'AppFoundry Complete (Installment)';
-                    planPrice = '$79 × 3';
+                    planName = 'Professional Developer (Installment)';
+                    planPrice = '$349 × 3';
                     planDescription = 'Lifetime Access + Templates + Priority Support';
                     break;
                 default:
-                    planName = 'AppFoundry Essential';
-                    planPrice = '$197';
-                    planDescription = 'Lifetime Access';
+                    planName = 'Essential Builder';
+                    planPrice = '$499';
+                    planDescription = 'Lifetime Access + Basic Features';
             }
             
             courseItemContainer.innerHTML = `
@@ -557,22 +557,22 @@
                 let basePrice;
                 switch(selectedPlan) {
                     case 'premium':
-                        basePrice = 497;
+                        basePrice = 1999;
                         break;
                     case 'complete':
-                        basePrice = 297;
+                        basePrice = 999;
                         break;
                     case 'complete-installment':
-                        basePrice = 79; // This is the first payment only
+                        basePrice = 349; // This is the first payment only
                         break;
                     default:
-                        basePrice = 197;
+                        basePrice = 499;
                 }
                 
                 // Add order bump price if checked
                 let total = basePrice;
                 if (orderBumpCheckbox.checked) {
-                    total += 47;
+                    total += 99;
                     
                     // Add order bump to items if not already present
                     if (!document.getElementById('order-bump-item')) {
@@ -585,7 +585,7 @@
                                 <div class="course-name">AI Prompt Enhancement Tool</div>
                                 <div class="course-access">Lifetime Access</div>
                             </div>
-                            <div class="course-price">$47</div>
+                            <div class="course-price">$99</div>
                         `;
                         courseItemContainer.appendChild(bumpItem);
                     }
@@ -597,8 +597,11 @@
                     }
                 }
                 
+                // Format total with comma for thousands
+                const formattedTotal = total.toLocaleString('en-US');
+                
                 // Update the total display
-                document.getElementById('order-total-price').textContent = `${total}`;
+                document.getElementById('order-total-price').textContent = `${formattedTotal}`;
             }
             
             // Initialize Stripe
@@ -651,56 +654,15 @@
                     orderBump: orderBumpCheckbox.checked
                 };
                 
-                // Create a payment intent on the server
-                fetch('/create-payment-intent', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(customerData),
-                })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (data.error) {
-                        showError(data.error.message);
-                        return;
-                    }
-                    
-                    // Use the client secret to complete the payment
-                    stripe.confirmCardPayment(data.clientSecret, {
-                        payment_method: {
-                            card: card,
-                            billing_details: {
-                                name: customerData.name,
-                                email: customerData.email
-                            },
-                        },
-                    })
-                    .then(function(result) {
-                        if (result.error) {
-                            // Show error to customer
-                            showError(result.error.message);
-                        } else {
-                            // Payment succeeded, redirect to thank you page
-                            window.location.href = 'thank-you.html?session_id=' + data.sessionId + 
-                                '&email=' + encodeURIComponent(customerData.email);
-                        }
-                    });
-                })
-                .catch(function(error) {
-                    console.error('Error:', error);
-                    showError("An error occurred while processing your payment. Please try again.");
-                });
+                // In a real implementation, you would create a payment intent on the server
+                // For demo purposes, we'll simulate this with a timeout
+                setTimeout(function() {
+                    // Simulate successful payment
+                    window.location.href = 'thank-you.html?session_id=demo123&email=' + 
+                                           encodeURIComponent(customerData.email) +
+                                           '&test_mode=true';
+                }, 2000);
             });
-            
-            function showError(errorMessage) {
-                const errorElement = document.getElementById('card-errors');
-                errorElement.textContent = errorMessage;
-                document.getElementById('submit-button').disabled = false;
-                document.getElementById('loading').style.display = 'none';
-            }
         });
     </script>
 </body>
