@@ -49,13 +49,13 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #0070f3;
-            --primary-hover: #0055b3;
-            --secondary-color: #ff4c00;
-            --secondary-hover: #e54400;
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary-color: #f97316;
+            --secondary-hover: #ea580c;
             --success-color: #10b981;
             --warning-color: #fbbf24;
             --error-color: #ef4444;
@@ -64,50 +64,232 @@
             --text-light: #6b7280;
             --background-white: #ffffff;
             --background-light: #f9fafb;
+            --background-gradient: linear-gradient(135deg, #f3f4f6, #fff);
             --border-light: #e5e7eb;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            --border-radius: 12px;
+            --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            --border-radius: 16px;
             --transition-fast: 0.2s;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+            background-color: var(--background-white);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Typography improvements */
+        h1, h2, h3, h4, h5, h6 {
+            line-height: 1.3;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, var(--text-dark) 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+        }
+        
+        p {
+            margin-bottom: 1.2rem;
+        }
+        
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+        
+        a:hover {
+            color: var(--primary-hover);
+        }
+        
+        ul {
+            list-style: none;
+        }
+        
+        /* Header improvements */
+        header {
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 1rem 0;
+            transition: all var(--transition-fast);
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        
+        nav ul {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        nav ul li a {
+            color: var(--text-medium);
+            font-weight: 500;
+            position: relative;
+        }
+        
+        nav ul li a:hover {
+            color: var(--primary-color);
+        }
+        
+        nav ul li a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--primary-color);
+            transition: width var(--transition-fast);
+        }
+        
+        nav ul li a:hover::after {
+            width: 100%;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .cta-button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+        
+        .cta-button.large {
+            font-size: 1.125rem;
+            padding: 16px 32px;
+        }
+        
+        .cta-button.small {
+            font-size: 0.875rem;
+            padding: 8px 16px;
+        }
+        
+        /* Guarantee banner improvements */
+        .guarantee-banner {
+            background-color: #effdf7;
+            padding: 0.75rem 0;
+        }
+        
+        .guarantee-banner .container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .guarantee-icon {
+            font-size: 1.25rem;
+        }
+        
+        .guarantee-text {
+            color: var(--success-color);
+            font-size: 0.875rem;
+        }
+        
+        .guarantee-link {
+            color: var(--success-color);
+            font-size: 0.875rem;
+            text-decoration: underline;
+            font-weight: 500;
         }
         
         /* Improved floating elements */
         .floating-element {
             position: absolute;
             border-radius: 50%;
-            opacity: 0.6;
+            opacity: 0.4;
             z-index: 0;
-            animation: float 10s ease-in-out infinite;
+            animation: float 18s ease-in-out infinite;
+            backdrop-filter: blur(5px);
         }
         
         .floating-circle {
-            background: linear-gradient(135deg, rgba(0, 112, 243, 0.2), rgba(0, 112, 243, 0.1));
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 0.1));
         }
         
         .floating-square {
             background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
-            border-radius: 20%;
+            border-radius: 30%;
             transform: rotate(45deg);
         }
         
         .element-1 {
-            width: 300px;
-            height: 300px;
-            top: -100px;
-            right: 10%;
+            width: 350px;
+            height: 350px;
+            top: -150px;
+            right: 5%;
             animation-delay: 0s;
         }
         
         .element-2 {
-            width: 200px;
-            height: 200px;
-            bottom: 50px;
+            width: 250px;
+            height: 250px;
+            bottom: 0;
             left: 5%;
             animation-delay: 2s;
         }
         
         .element-3 {
-            width: 150px;
-            height: 150px;
+            width: 180px;
+            height: 180px;
             top: 40%;
             right: 5%;
             animation-delay: 4s;
@@ -118,7 +300,7 @@
                 transform: translateY(0px) rotate(0deg);
             }
             50% {
-                transform: translateY(-20px) rotate(5deg);
+                transform: translateY(-30px) rotate(5deg);
             }
             100% {
                 transform: translateY(0px) rotate(0deg);
@@ -128,16 +310,16 @@
         /* Hero section improvements */
         .hero {
             position: relative;
-            padding: 100px 0 120px;
+            padding: 120px 0 140px;
             overflow: hidden;
-            background-color: var(--background-light);
+            background: var(--background-gradient);
             z-index: 1;
         }
         
         .hero-container {
             display: grid;
             grid-template-columns: 1.2fr 0.8fr;
-            gap: 50px;
+            gap: 60px;
             align-items: center;
             position: relative;
             z-index: 2;
@@ -151,19 +333,19 @@
         .tag-container {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         
         .ai-powered-tag, .no-bs-tag {
             display: flex;
             align-items: center;
             gap: 5px;
-            background-color: rgba(0, 112, 243, 0.1);
+            background-color: rgba(37, 99, 235, 0.1);
             color: var(--primary-color);
             font-size: 0.875rem;
             font-weight: 600;
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 8px 16px;
+            border-radius: 30px;
         }
         
         .no-bs-tag {
@@ -171,51 +353,48 @@
             color: var(--success-color);
         }
         
-        .hero h1 {
-            font-size: 3.5rem;
-            line-height: 1.2;
-            margin-bottom: 20px;
-            color: var(--text-dark);
-            font-weight: 700;
-        }
-        
         .subtitle {
             font-size: 1.25rem;
             color: var(--text-medium);
-            margin-bottom: 30px;
+            margin-bottom: 35px;
             line-height: 1.6;
         }
         
         .primary-cta {
             margin-bottom: 15px;
             font-size: 1.125rem;
-            padding: 16px 32px;
+            padding: 18px 36px;
             background-color: var(--secondary-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(249, 115, 22, 0.2);
         }
         
         .primary-cta:hover {
             background-color: var(--secondary-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(249, 115, 22, 0.3);
         }
         
         .cta-microcopy {
             font-size: 0.875rem;
             color: var(--text-light);
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         
         .guarantee-badge {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             background-color: rgba(16, 185, 129, 0.1);
-            padding: 10px 15px;
-            border-radius: 8px;
+            padding: 12px 20px;
+            border-radius: 12px;
             margin-top: 15px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
         
         .badge-icon {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             background-color: var(--success-color);
             color: white;
             border-radius: 50%;
@@ -223,10 +402,11 @@
             align-items: center;
             justify-content: center;
             font-weight: 700;
+            font-size: 14px;
         }
         
         .badge-text {
-            font-weight: 500;
+            font-weight: 600;
             color: var(--success-color);
         }
         
@@ -241,8 +421,8 @@
         }
         
         .course-preview-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
         
         .video-container {
@@ -253,6 +433,11 @@
         .video-placeholder {
             width: 100%;
             display: block;
+            transition: transform 0.3s ease;
+        }
+        
+        .course-preview-card:hover .video-placeholder {
+            transform: scale(1.05);
         }
         
         .play-button {
@@ -260,39 +445,40 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background-color: rgba(0, 0, 0, 0.6);
+            width: 70px;
+            height: 70px;
+            background-color: rgba(0, 0, 0, 0.7);
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, transform 0.2s;
         }
         
         .play-button:hover {
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: rgba(37, 99, 235, 0.9);
+            transform: translate(-50%, -50%) scale(1.1);
         }
         
         .course-preview-card h3 {
-            padding: 20px 20px 10px;
-            font-size: 20px;
+            padding: 25px 25px 15px;
+            font-size: 22px;
             color: var(--text-dark);
         }
         
         .course-meta {
-            padding: 0 20px 20px;
+            padding: 0 25px 25px;
         }
         
         .meta-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            font-size: 0.875rem;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
             color: var(--text-medium);
         }
         
@@ -302,66 +488,104 @@
         
         /* Improved problem section */
         .problem {
-            padding: 100px 0;
+            padding: 120px 0;
             background-color: var(--background-white);
         }
         
         .problem h2 {
             text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 60px;
+            margin-bottom: 70px;
             color: var(--text-dark);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .problems-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-bottom: 60px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            margin-bottom: 80px;
         }
         
         .problem-item {
             background-color: var(--background-light);
             border-radius: var(--border-radius);
-            padding: 30px;
+            padding: 40px 30px;
             box-shadow: var(--box-shadow);
             transition: transform var(--transition-fast);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
         
         .problem-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-color: rgba(37, 99, 235, 0.1);
         }
         
         .problem-icon {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
+            font-size: 3rem;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+            display: inline-block;
         }
         
         .problem-item h3 {
-            font-size: 1.25rem;
-            margin-bottom: 15px;
+            font-size: 1.4rem;
+            margin-bottom: 18px;
             color: var(--text-dark);
         }
         
         .problem-item p {
             color: var(--text-medium);
-            line-height: 1.6;
+            line-height: 1.7;
+            flex-grow: 1;
         }
         
         .problem-quote {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             text-align: center;
             font-style: italic;
             color: var(--text-medium);
-            font-size: 1.25rem;
-            line-height: 1.6;
+            font-size: 1.4rem;
+            line-height: 1.7;
             position: relative;
-            padding: 0 30px;
+            padding: 30px 40px;
+            background-color: var(--background-light);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
         }
         
         .problem-quote p {
             margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .problem-quote p:before,
+        .problem-quote p:after {
+            content: '"';
+            font-size: 2.5rem;
+            color: rgba(37, 99, 235, 0.2);
+            position: absolute;
+            font-family: Georgia, serif;
+        }
+        
+        .problem-quote p:before {
+            left: -20px;
+            top: -20px;
+        }
+        
+        .problem-quote p:after {
+            right: -20px;
+            bottom: -40px;
         }
         
         .quote-author {
@@ -369,55 +593,646 @@
             font-weight: 600;
             color: var(--text-dark);
         }
-
-        /* Proof section improvements */
-        .proof {
-            padding: 100px 0;
+        
+        .entrepreneur-objections {
+            margin-top: 80px;
+        }
+        
+        .entrepreneur-objections h3 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 40px;
+        }
+        
+        .objections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .objection-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            background-color: #fff1f1;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--error-color);
+        }
+        
+        .objection-icon {
+            color: var(--error-color);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .objection-item p {
+            margin-bottom: 0;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .solution-teaser {
+            text-align: center;
+            background: linear-gradient(135deg, #f3f4ff, #f0f9ff);
+            padding: 50px;
+            border-radius: var(--border-radius);
+            margin-top: 80px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .solution-teaser h4 {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+        
+        /* Improved solution section */
+        .solution {
+            padding: 120px 0;
+            background-color: var(--background-light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-medium);
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 60px;
+            line-height: 1.6;
+        }
+        
+        .solution-showcase {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            margin-bottom: 80px;
+        }
+        
+        .solution-text h3 {
+            font-size: 2rem;
+            margin-bottom: 25px;
+            color: var(--text-dark);
+        }
+        
+        .solution-text p {
+            color: var(--text-medium);
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+        
+        .solution-benefits {
+            margin-bottom: 40px;
+        }
+        
+        .solution-benefits li {
+            margin-bottom: 15px;
+            position: relative;
+            padding-left: 30px;
+            color: var(--text-medium);
+            font-size: 1.05rem;
+        }
+        
+        .solution-benefits li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        .solution-benefits li strong {
+            color: var(--text-dark);
+        }
+        
+        .transformation-blocks {
+            margin-bottom: 40px;
+        }
+        
+        .transformation-item {
+            display: flex;
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .transformation-before, 
+        .transformation-after {
+            flex: 1;
+            padding: 30px;
+        }
+        
+        .transformation-before {
+            background-color: #fff1f1;
+            border-right: 1px solid #f9d7d7;
+        }
+        
+        .transformation-after {
+            background-color: #f0f9ff;
+        }
+        
+        .transformation-before h4,
+        .transformation-after h4 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .transformation-before h4 {
+            color: var(--error-color);
+        }
+        
+        .transformation-after h4 {
+            color: var(--primary-color);
+        }
+        
+        .transformation-before ul,
+        .transformation-after ul {
+            list-style: none;
+        }
+        
+        .transformation-before li,
+        .transformation-after li {
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .transformation-before li:before {
+            content: "✗";
+            position: absolute;
+            left: 0;
+            color: var(--error-color);
+        }
+        
+        .transformation-after li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success-color);
+        }
+        
+        .transformation-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--text-light);
+            padding: 0 15px;
+            background-color: white;
+        }
+        
+        .solution-image img {
+            width: 100%;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s;
+        }
+        
+        .solution-image img:hover {
+            transform: scale(1.02);
+        }
+        
+        .key-steps {
+            margin-top: 80px;
+        }
+        
+        .key-steps h3 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 50px;
+        }
+        
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        
+        .step {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            transition: transform var(--transition-fast);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        .step:hover {
+            transform: translateY(-8px);
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .step h4 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+        
+        .step p {
+            color: var(--text-medium);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        .persona-proof {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 80px;
+        }
+        
+        .persona-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: transform var(--transition-fast);
+        }
+        
+        .persona-card:hover {
+            transform: translateY(-8px);
+        }
+        
+        .persona-image img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .persona-content {
+            padding: 30px;
+        }
+        
+        .persona-quote {
+            font-style: italic;
+            color: var(--text-medium);
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .persona-quote:before {
+            content: '"';
+            font-size: 2.5rem;
+            color: rgba(37, 99, 235, 0.2);
+            position: absolute;
+            left: -15px;
+            top: -15px;
+            font-family: Georgia, serif;
+        }
+        
+        .persona-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        /* Quick wins section improvements */
+        .quick-wins {
+            padding: 120px 0;
+            background-color: white;
+        }
+        
+        .wins-carousel {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        
+        .win-item {
+            text-align: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            position: absolute;
+            width: 100%;
+            left: 0;
+            display: none;
+        }
+        
+        .win-item.active {
+            opacity: 1;
+            position: relative;
+            display: block;
+        }
+        
+        .win-image {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .win-image img {
+            max-width: 100%;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-light);
+        }
+        
+        .win-item h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+        
+        .win-item p {
+            color: var(--text-medium);
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+        
+        .build-time {
+            display: inline-block;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .carousel-controls {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .carousel-prev,
+        .carousel-next {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: white;
+            border: 1px solid var(--border-light);
+            color: var(--text-medium);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all var(--transition-fast);
+        }
+        
+        .carousel-prev:hover,
+        .carousel-next:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .carousel-dots {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--border-light);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .dot.active {
+            background-color: var(--primary-color);
+            transform: scale(1.2);
+        }
+        
+        /* ROI Calculator section improvements */
+        .roi-calculator {
+            padding: 120px 0;
             background-color: var(--background-light);
         }
         
-        .proof h2 {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 60px;
+        .calculator-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .calculator-inputs {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+        
+        .calculator-field {
+            margin-bottom: 15px;
+        }
+        
+        .calculator-field label {
+            display: block;
+            margin-bottom: 8px;
             color: var(--text-dark);
+            font-weight: 500;
+        }
+        
+        .calculator-field select,
+        .calculator-field input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: all var(--transition-fast);
+        }
+        
+        .calculator-field select:focus,
+        .calculator-field input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        #calculate-roi {
+            grid-column: 1 / -1;
+            margin-top: 15px;
+            justify-self: center;
+        }
+        
+        .calculator-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .result-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            height: 100%;
+        }
+        
+        .result-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .result-cost {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--error-color);
+            margin-bottom: 10px;
+        }
+        
+        .result-card.highlight .result-cost {
+            color: var(--success-color);
+        }
+        
+        .result-time {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-medium);
+            margin-bottom: 25px;
+        }
+        
+        .result-breakdown {
+            text-align: left;
+            border-top: 1px solid var(--border-light);
+            padding-top: 20px;
+        }
+        
+        .result-breakdown li {
+            margin-bottom: 12px;
+            padding-left: 20px;
+            position: relative;
+            color: var(--text-medium);
+        }
+        
+        .result-breakdown li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary-color);
+        }
+        
+        .result-card.highlight {
+            border: 2px solid var(--success-color);
+            transform: scale(1.05);
+        }
+        
+        .result-savings {
+            background: linear-gradient(135deg, #f0f9ff, #e6fffa);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            height: 100%;
+        }
+        
+        .result-savings h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .savings-amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--success-color);
+            margin-bottom: 10px;
+        }
+        
+        .savings-time {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-medium);
+            margin-bottom: 25px;
+        }
+        
+        /* Proof section improvements */
+        .proof {
+            padding: 120px 0;
+            background-color: var(--background-white);
         }
         
         .market-metrics {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 30px;
-            margin-bottom: 60px;
+            margin-bottom: 80px;
         }
         
         .metric {
             background-color: white;
             border-radius: var(--border-radius);
-            padding: 30px;
+            padding: 40px 30px;
             text-align: center;
             box-shadow: var(--box-shadow);
+            transition: transform var(--transition-fast);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+        
+        .metric:hover {
+            transform: translateY(-8px);
+            border-color: rgba(37, 99, 235, 0.1);
         }
         
         .metric-number {
             font-size: 3rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 10px;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+            margin-bottom: 15px;
         }
         
         .metric-label {
             color: var(--text-medium);
-            font-size: 1rem;
+            font-size: 1.1rem;
+            font-weight: 500;
         }
         
         .tech-logos {
-            margin-bottom: 60px;
+            margin-bottom: 80px;
             text-align: center;
         }
         
         .tech-logos h3 {
-            margin-bottom: 30px;
-            font-size: 1.5rem;
+            margin-bottom: 40px;
+            font-size: 1.8rem;
             color: var(--text-dark);
         }
         
@@ -426,72 +1241,315 @@
             justify-content: center;
             align-items: center;
             flex-wrap: wrap;
-            gap: 30px;
+            gap: 40px;
         }
         
         .tech-logo {
-            height: 40px;
-            opacity: 0.8;
-            transition: opacity var(--transition-fast);
+            height: 50px;
+            opacity: 0.7;
+            transition: all var(--transition-fast);
+            filter: grayscale(50%);
         }
         
         .tech-logo:hover {
             opacity: 1;
+            transform: scale(1.1);
+            filter: grayscale(0%);
         }
         
-        /* Updated pricing section */
-        .pricing {
-            padding: 100px 0;
-            background-color: white;
-        }
-        
-        .pricing h2 {
+        .launch-examples {
             text-align: center;
-            font-size: 2.5rem;
+            background: linear-gradient(135deg, #f3f4ff, #f0f9ff);
+            padding: 60px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .launch-examples h3 {
+            font-size: 2rem;
             margin-bottom: 20px;
             color: var(--text-dark);
         }
         
-        .section-subtitle {
-            text-align: center;
+        .launch-examples p {
             color: var(--text-medium);
-            font-size: 1.125rem;
+            font-size: 1.1rem;
             max-width: 700px;
+            margin: 0 auto 40px;
+        }
+        
+        .founding-benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .benefit {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+        
+        .benefit-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .benefit h4 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+        
+        .benefit p {
+            color: var(--text-medium);
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+        
+        .spots-remaining {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .spots-meter {
+            height: 10px;
+            background-color: var(--border-light);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .spots-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 10px;
+        }
+        
+        .spots-text {
+            color: var(--text-medium);
+            font-size: 1rem;
+        }
+        
+        .spots-text strong {
+            color: var(--text-dark);
+        }
+        
+        /* Curriculum section improvements */
+        .curriculum {
+            padding: 120px 0;
+            background: linear-gradient(135deg, #f9fafb, #f3f4ff);
+        }
+        
+        .curriculum-visual {
+            position: relative;
+            max-width: 900px;
             margin: 0 auto 60px;
-            line-height: 1.6;
+        }
+        
+        .roadmap-line {
+            position: absolute;
+            top: 0;
+            left: 50px;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+        }
+        
+        .modules {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .module {
+            display: flex;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .module-number {
+            width: 100px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 30px;
+            flex-shrink: 0;
+        }
+        
+        .module-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            flex-grow: 1;
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            transition: transform var(--transition-fast);
+        }
+        
+        .module:hover .module-content {
+            transform: translateX(10px);
+            border-color: rgba(37, 99, 235, 0.1);
+        }
+        
+        .module-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+        
+        .module-content p {
+            color: var(--text-medium);
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+        
+        .module-expand {
+            color: var(--primary-color);
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-block;
+            transition: all var(--transition-fast);
+        }
+        
+        .module-expand:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+        
+        .module-details {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-light);
+        }
+        
+        .module-details ul {
+            list-style: none;
+        }
+        
+        .module-details li {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+            color: var(--text-medium);
+        }
+        
+        .module-details li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        .curriculum-cta {
+            text-align: center;
+            margin-top: 50px;
+        }
+        
+        .cta-note {
+            color: var(--text-medium);
+            font-size: 1rem;
+            margin-top: 15px;
+        }
+        
+        /* Comparison section improvements */
+        .comparison {
+            padding: 120px 0;
+            background-color: white;
+        }
+        
+        .comparison-table-wrapper {
+            overflow-x: auto;
+            margin-bottom: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .comparison-table th {
+            background-color: var(--background-light);
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .comparison-table tr:hover {
+            background-color: rgba(249, 250, 251, 0.5);
+        }
+        
+        .comparison-table th.highlight,
+        .comparison-table td.highlight {
+            background-color: rgba(16, 185, 129, 0.05);
+            color: var(--success-color);
+            font-weight: 600;
+        }
+        
+        /* Pricing section improvements */
+        .pricing {
+            padding: 120px 0;
+            background: linear-gradient(135deg, #f9fafb, #f3f4ff);
         }
         
         .pricing-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 60px;
+            gap: 40px;
+            margin-bottom: 70px;
         }
         
         .price-card {
-            background-color: var(--background-light);
+            background-color: white;
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--box-shadow);
             position: relative;
             transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(0, 0, 0, 0.03);
         }
         
         .price-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            border-color: rgba(37, 99, 235, 0.1);
         }
         
         .price-header {
-            padding: 30px;
+            padding: 40px 30px;
             text-align: center;
-            background-color: white;
+            background: linear-gradient(135deg, #f9fafb, #f3f4ff);
             border-bottom: 1px solid var(--border-light);
         }
         
         .price-header h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
+            font-size: 1.6rem;
+            margin-bottom: 20px;
             color: var(--text-dark);
         }
         
@@ -500,20 +1558,25 @@
         }
         
         .regular-price {
-            font-size: 2.5rem;
-            font-weight: 700;
+            font-size: 3rem;
+            font-weight: 800;
             color: var(--text-dark);
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
         }
         
         .one-time {
             display: block;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             color: var(--text-light);
             margin-top: 5px;
         }
         
         .price-monthly {
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             color: var(--text-medium);
         }
         
@@ -521,14 +1584,20 @@
             list-style: none;
             padding: 30px;
             margin: 0;
+            flex-grow: 1;
         }
         
         .price-features li {
-            padding: 10px 0;
+            padding: 12px 0;
             color: var(--text-medium);
             display: flex;
             align-items: flex-start;
-            gap: 10px;
+            gap: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        }
+        
+        .price-features li:last-child {
+            border-bottom: none;
         }
         
         .feature-check {
@@ -551,21 +1620,21 @@
             right: 0;
             background-color: var(--secondary-color);
             color: white;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            padding: 8px 16px;
-            border-bottom-left-radius: 8px;
+            padding: 10px 20px;
+            border-bottom-left-radius: 10px;
         }
         
         .complete {
             transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             border: 2px solid var(--primary-color);
             z-index: 2;
         }
         
         .complete:hover {
-            transform: translateY(-5px) scale(1.05);
+            transform: translateY(-10px) scale(1.05);
         }
         
         .cta-button-highlighted {
@@ -576,23 +1645,263 @@
             background-color: var(--secondary-hover);
         }
         
-        /* Updated FAQ section */
-        .faq {
-            padding: 100px 0;
-            background-color: var(--background-light);
+        .payment-options {
+            max-width: 700px;
+            margin: 0 auto;
         }
         
-        .faq h2 {
+        .or-divider {
             text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 60px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .or-divider:before,
+        .or-divider:after {
+            content: '';
+            height: 1px;
+            width: calc(50% - 30px);
+            background-color: var(--border-light);
+            position: absolute;
+            top: 50%;
+        }
+        
+        .or-divider:before {
+            left: 0;
+        }
+        
+        .or-divider:after {
+            right: 0;
+        }
+        
+        .or-divider span {
+            background-color: var(--background-light);
+            padding: 10px 20px;
+            border-radius: 30px;
+            color: var(--text-medium);
+            font-weight: 500;
+            display: inline-block;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .installment-plan {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+        
+        .installment-plan h3 {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
             color: var(--text-dark);
+        }
+        
+        .installment-plan p {
+            color: var(--text-medium);
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto 30px;
+        }
+        
+        .installment-details {
+            margin-bottom: 30px;
+        }
+        
+        .installment-price {
+            margin-bottom: 10px;
+        }
+        
+        .installment-amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+        
+        .installment-text {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+        
+        .total-price {
+            color: var(--text-medium);
+            font-size: 0.9rem;
+        }
+        
+        .pricing-comparison {
+            margin-top: 80px;
+        }
+        
+        .pricing-comparison h3 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 40px;
+            color: var(--text-dark);
+        }
+        
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .comparison-item {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .comparison-header {
+            padding: 20px;
+            text-align: center;
+            background-color: var(--background-light);
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .comparison-price {
+            font-size: 2rem;
+            font-weight: 800;
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-dark);
+        }
+        
+        .comparison-item.highlighted .comparison-price {
+            color: var(--success-color);
+        }
+        
+        .comparison-item.highlighted {
+            border: 2px solid var(--success-color);
+        }
+        
+        .comparison-features {
+            list-style: none;
+            padding: 0 20px 20px;
+        }
+        
+        .comparison-features li {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-light);
+            position: relative;
+            padding-left: 25px;
+            color: var(--text-medium);
+        }
+        
+        .comparison-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .comparison-features li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--text-light);
+        }
+        
+        .comparison-item.highlighted .comparison-features li:before {
+            content: "✓";
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        /* Guarantee section improvements */
+        .guarantee-section {
+            padding: 120px 0;
+            background-color: white;
+        }
+        
+        .guarantee-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 60px;
+            align-items: center;
+            background-color: var(--background-light);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .guarantee-image {
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #effdf7, #f0f9ff);
+        }
+        
+        .guarantee-seal {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, var(--success-color), #06d6a0);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+            position: relative;
+            border: 5px solid white;
+        }
+        
+        .guarantee-seal:before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            border: 2px dashed white;
+            border-radius: 50%;
+        }
+        
+        .seal-content {
+            color: white;
+            font-size: 3rem;
+            font-weight: 900;
+        }
+        
+        .guarantee-text-content {
+            padding: 60px;
+        }
+        
+        .guarantee-text-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .guarantee-text-content p {
+            color: var(--text-medium);
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+        
+        .guarantee-text-content p:last-of-type {
+            margin-bottom: 30px;
+        }
+        
+        /* FAQ section improvements */
+        .faq {
+            padding: 120px 0;
+            background: linear-gradient(135deg, #f9fafb, #f3f4ff);
         }
         
         .faq-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
             gap: 30px;
+            margin-bottom: 60px;
         }
         
         .faq-item {
@@ -600,27 +1909,43 @@
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--box-shadow);
+            transition: transform var(--transition-fast);
+        }
+        
+        .faq-item:hover {
+            transform: translateY(-5px);
         }
         
         .faq-question {
-            padding: 20px 30px;
+            padding: 25px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
             border-bottom: 1px solid var(--border-light);
+            transition: all var(--transition-fast);
+        }
+        
+        .faq-question:hover {
+            background-color: var(--background-light);
         }
         
         .faq-question h3 {
-            font-size: 1.125rem;
+            font-size: 1.2rem;
             margin: 0;
             color: var(--text-dark);
+            transition: color var(--transition-fast);
+        }
+        
+        .faq-question:hover h3 {
+            color: var(--primary-color);
         }
         
         .toggle-icon {
             font-size: 1.5rem;
             color: var(--primary-color);
             font-weight: 700;
+            transition: transform var(--transition-fast);
         }
         
         .faq-answer {
@@ -631,18 +1956,158 @@
         }
         
         .faq-answer.show {
-            padding: 20px 30px;
+            padding: 25px 30px;
             max-height: 1000px;
         }
         
         .faq-answer p {
             color: var(--text-medium);
-            line-height: 1.6;
+            line-height: 1.7;
             margin: 0;
+        }
+        
+        .have-more-questions {
+            text-align: center;
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .have-more-questions h3 {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .have-more-questions p {
+            color: var(--text-medium);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+        
+        /* Final CTA section improvements */
+        .cta-section {
+            padding: 120px 0;
+            background: linear-gradient(135deg, #f0f9ff, #effdf7);
+            text-align: center;
+        }
+        
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .cta-section p {
+            color: var(--text-medium);
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+        }
+        
+        .cta-guarantee {
+            margin-top: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1rem;
+            color: var(--success-color);
+        }
+        
+        /* Footer improvements */
+        footer {
+            background-color: var(--text-dark);
+            color: white;
+            padding: 80px 0 40px;
+        }
+        
+        footer .container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 60px;
+        }
+        
+        footer .logo {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, white, #a3bcff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+        }
+        
+        .link-group h4 {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .link-group h4:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -8px;
+            width: 30px;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+        
+        .link-group ul li {
+            margin-bottom: 10px;
+        }
+        
+        .link-group ul li a {
+            color: #d1d5db;
+            transition: all var(--transition-fast);
+        }
+        
+        .link-group ul li a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        .copyright {
+            grid-column: 1 / -1;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 30px;
+            margin-top: 40px;
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+        
+        /* Animation and hover effects */
+        .fade-in {
+            animation: fadeIn 0.8s ease forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         /* Responsive design improvements */
         @media (max-width: 1024px) {
+            h1 {
+                font-size: 2.8rem;
+            }
+            
+            h2 {
+                font-size: 2.2rem;
+            }
+            
             .hero-container {
                 grid-template-columns: 1fr;
                 text-align: center;
@@ -661,18 +2126,40 @@
                 margin: 15px auto 0;
             }
             
-            .hero h1 {
-                font-size: 2.8rem;
+            .solution-showcase {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .solution-benefits li {
+                text-align: left;
+            }
+            
+            .guarantee-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .guarantee-image {
+                padding: 60px 0;
+            }
+            
+            footer .container {
+                grid-template-columns: 1fr;
+                gap: 40px;
             }
         }
         
         @media (max-width: 768px) {
             .hero {
-                padding: 60px 0 80px;
+                padding: 80px 0 100px;
             }
             
-            .hero h1 {
-                font-size: 2.2rem;
+            h1 {
+                font-size: 2.4rem;
+            }
+            
+            h2 {
+                font-size: 2rem;
             }
             
             .faq-grid {
@@ -688,13 +2175,30 @@
             }
             
             .complete:hover {
-                transform: translateY(-5px) scale(1);
+                transform: translateY(-10px) scale(1);
+            }
+            
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .roadmap-line {
+                left: 35px;
+            }
+            
+            .module-number {
+                width: 70px;
+                font-size: 1.2rem;
+            }
+            
+            nav ul {
+                display: none;
             }
         }
         
         @media (max-width: 480px) {
-            .hero h1 {
-                font-size: 1.8rem;
+            h1 {
+                font-size: 2rem;
             }
             
             .subtitle {
@@ -704,7 +2208,20 @@
             .primary-cta {
                 width: 100%;
                 font-size: 1rem;
-                padding: 14px 20px;
+                padding: 16px 24px;
+            }
+            
+            .roadmap-line {
+                display: none;
+            }
+            
+            .module {
+                flex-direction: column;
+            }
+            
+            .module-number {
+                margin-bottom: 15px;
+                margin-right: 0;
             }
         }
     </style>
@@ -972,7 +2489,7 @@
             <p class="section-subtitle">Start with these simple projects to build confidence before tackling your main app idea</p>
             
             <div class="wins-carousel">
-                <div class="win-item">
+                <div class="win-item active">
                     <div class="win-image">
                         <img src="images/task-tracker-app.png" alt="Task Tracker App Screenshot">
                     </div>
@@ -1077,824 +2594,3 @@
             </div>
         </div>
     </section>
-
-    <!-- PROOF SECTION (RESULTS & CREDIBILITY) -->
-    <section class="proof">
-        <div class="container">
-            <h2>Proof This Works for Real People</h2>
-            
-            <div class="market-metrics">
-                <div class="metric">
-                    <div class="metric-number">65B+</div>
-                    <div class="metric-label">No-Code Market Value by 2025</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-number">26%</div>
-                    <div class="metric-label">Annual Growth in AI App Development</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-number">87%</div>
-                    <div class="metric-label">Cost Savings vs Traditional Dev</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-number">14x</div>
-                    <div class="metric-label">Faster Development Time</div>
-                </div>
-            </div>
-            
-            <div class="tech-logos">
-                <h3>Built Using the Latest AI Technology</h3>
-                <div class="logo-grid">
-                    <img src="images/claude-logo.png" alt="Claude AI" class="tech-logo">
-                    <img src="images/anthropic-logo.png" alt="Anthropic" class="tech-logo">
-                    <img src="images/netlify-logo.png" alt="Netlify" class="tech-logo">
-                    <img src="images/supabase-logo.png" alt="Supabase" class="tech-logo">
-                    <img src="images/stripe-logo.png" alt="Stripe" class="tech-logo">
-                </div>
-            </div>
-            
-            <div class="launch-examples">
-                <h3>Founding Members Program</h3>
-                <p>Join our exclusive founding members program and be among the first to create apps with our revolutionary approach.</p>
-                
-                <div class="founding-benefits">
-                    <div class="benefit">
-                        <div class="benefit-icon">💎</div>
-                        <h4>Lifetime Access</h4>
-                        <p>All future course updates included forever at the founding member rate.</p>
-                    </div>
-                    <div class="benefit">
-                        <div class="benefit-icon">📊</div>
-                        <h4>App Gallery Access</h4>
-                        <p>Browse a growing library of successful apps built with our system.</p>
-                    </div>
-                    <div class="benefit">
-                        <div class="benefit-icon">🚀</div>
-                        <h4>Priority Support</h4>
-                        <p>Get your questions answered first with dedicated email support.</p>
-                    </div>
-                </div>
-                
-                <div class="spots-remaining">
-                    <div class="spots-meter">
-                        <div class="spots-fill" style="width: 82%;"></div>
-                    </div>
-                    <div class="spots-text"><strong>Only 18 founding member spots remaining!</strong> (out of 100)</div>
-                </div>
-                
-                <a href="#pricing" class="cta-button large">Claim My Founding Member Spot</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- CURRICULUM SECTION -->
-    <section class="curriculum" id="curriculum">
-        <div class="container">
-            <h2>Your App-Building Roadmap</h2>
-            <p class="section-subtitle">A proven 7-module system to turn your ideas into reality without coding</p>
-            
-            <div class="curriculum-visual">
-                <div class="roadmap-line"></div>
-                <div class="modules">
-                    <div class="module">
-                        <div class="module-number">01</div>
-                        <div class="module-content">
-                            <h3>Setting Up Your AI Development Environment</h3>
-                            <p>Configure Claude and the minimal tools you need to start building without coding</p>
-                            <div class="module-expand" data-module="1">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-1">
-                                <ul>
-                                    <li>Setting up your Claude AI account the right way</li>
-                                    <li>Installing the essential tools (all free)</li>
-                                    <li>Creating your first project workspace</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">02</div>
-                        <div class="module-content">
-                            <h3>Creating Your First AI Project</h3>
-                            <p>Learn how to "speak" to Claude so it creates exactly what you want</p>
-                            <div class="module-expand" data-module="2">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-2">
-                                <ul>
-                                    <li>The exact prompts that get professional results</li>
-                                    <li>How to break down any app idea into AI-friendly components</li>
-                                    <li>Troubleshooting when Claude doesn't understand</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">03</div>
-                        <div class="module-content">
-                            <h3>Testing Your App: From Concept to Phone</h3>
-                            <p>See your app work on your device without writing a single line of code</p>
-                            <div class="module-expand" data-module="3">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-3">
-                                <ul>
-                                    <li>Setting up your testing environment</li>
-                                    <li>Running your app on multiple devices</li>
-                                    <li>Getting feedback from real users</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">04</div>
-                        <div class="module-content">
-                            <h3>Directing Claude: Creating Professional UI</h3>
-                            <p>Learn the exact prompts to get beautiful interfaces from Claude</p>
-                            <div class="module-expand" data-module="4">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-4">
-                                <ul>
-                                    <li>Advanced UI prompt techniques</li>
-                                    <li>Creating consistent design systems</li>
-                                    <li>Implementing animations and transitions</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">05</div>
-                        <div class="module-content">
-                            <h3>Building Your App Structure</h3>
-                            <p>Create a complete app blueprint that Claude can turn into reality</p>
-                            <div class="module-expand" data-module="5">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-5">
-                                <ul>
-                                    <li>Planning app architecture without technical knowledge</li>
-                                    <li>Setting up screens and navigation</li>
-                                    <li>Creating data models and functionality</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">06</div>
-                        <div class="module-content">
-                            <h3>Building Out Your App</h3>
-                            <p>Let Claude do all the technical work while you focus on design and features</p>
-                            <div class="module-expand" data-module="6">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-6">
-                                <ul>
-                                    <li>Implementing complex features with simple prompts</li>
-                                    <li>Adding user authentication and data storage</li>
-                                    <li>Testing and debugging with AI assistance</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">07</div>
-                        <div class="module-content">
-                            <h3>Submitting to the App Store</h3>
-                            <p>Get your AI-built app published quickly and professionally</p>
-                            <div class="module-expand" data-module="7">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-7">
-                                <ul>
-                                    <li>Preparing your app for submission</li>
-                                    <li>Creating screenshots and descriptions</li>
-                                    <li>Navigating the approval process</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="curriculum-cta">
-                <a href="#pricing" class="cta-button large">Start the Course Today</a>
-                <p class="cta-note">Begin building your first app in the next 24 hours</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- COMPARISON SECTION -->
-    <section class="comparison">
-        <div class="container">
-            <h2>How AppFoundry Compares</h2>
-            <p class="section-subtitle">See why our AI-powered approach gives you the best of all worlds</p>
-            
-            <div class="comparison-table-wrapper">
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>Feature</th>
-                            <th>Traditional Development</th>
-                            <th>No-Code Platforms</th>
-                            <th class="highlight">AppFoundry</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Cost</td>
-                            <td>$5,000 - $50,000+</td>
-                            <td>$15 - $200/month ongoing</td>
-                            <td class="highlight">$499 (one-time)</td>
-                        </tr>
-                        <tr>
-                            <td>Development Time</td>
-                            <td>3-6 months</td>
-                            <td>1-4 weeks</td>
-                            <td class="highlight">1-14 days</td>
-                        </tr>
-                        <tr>
-                            <td>Technical Skills Required</td>
-                            <td>Extensive</td>
-                            <td>Moderate</td>
-                            <td class="highlight">None</td>
-                        </tr>
-                        <tr>
-                            <td>Customization</td>
-                            <td>Unlimited (but expensive)</td>
-                            <td>Limited by platform</td>
-                            <td class="highlight">Unlimited</td>
-                        </tr>
-                        <tr>
-                            <td>Ownership</td>
-                            <td>You own the code</td>
-                            <td>Platform-dependent</td>
-                            <td class="highlight">100% yours</td>
-                        </tr>
-                        <tr>
-                            <td>Future Updates</td>
-                            <td>Additional cost</td>
-                            <td>Subscription fees</td>
-                            <td class="highlight">Free (you do it yourself)</td>
-                        </tr>
-                        <tr>
-                            <td>App Complexity</td>
-                            <td>Any complexity</td>
-                            <td>Simple to moderate</td>
-                            <td class="highlight">Simple to advanced</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <!-- PRICING SECTION -->
-<section class="pricing" id="pricing">
-    <div class="container">
-        <h2>Choose Your App Building Journey</h2>
-        <p class="section-subtitle">All plans include our 60-day "Build Your First App" guarantee</p>
-        
-        <div class="pricing-grid">
-            <div class="price-card basic">
-                <div class="price-header">
-                    <h3>Essential Builder</h3>
-                    <div class="price">
-                        <span class="regular-price">$499</span>
-                        <span class="one-time">one-time payment</span>
-                    </div>
-                </div>
-                
-                <ul class="price-features">
-                    <li><span class="feature-check">✓</span> Complete 7-module course</li>
-                    <li><span class="feature-check">✓</span> 30+ project templates</li>
-                    <li><span class="feature-check">✓</span> Community forum access</li>
-                    <li><span class="feature-check">✓</span> 60-day money-back guarantee</li>
-                    <li><span class="feature-check">✓</span> 3-month access to code updates</li>
-                    <li class="feature-missing">✗ Advanced AI implementation techniques</li>
-                    <li class="feature-missing">✗ 1-on-1 app review session</li>
-                    <li class="feature-missing">✗ Lifetime code updates</li>
-                </ul>
-                
-                <div class="price-cta">
-                    <a href="checkout.html?plan=essential" class="cta-button">Start Building Now</a>
-                </div>
-            </div>
-            
-            <div class="price-card complete">
-                <div class="most-popular">Most Popular</div>
-                <div class="price-header">
-                    <h3>Professional Developer</h3>
-                    <div class="price">
-                        <span class="regular-price">$999</span>
-                        <span class="one-time">one-time payment</span>
-                    </div>
-                    <div class="price-monthly">Or $99/month for 12 months</div>
-                </div>
-                
-                <ul class="price-features">
-                    <li><span class="feature-check">✓</span> Everything in Essential Builder</li>
-                    <li><span class="feature-check">✓</span> <strong>Advanced AI implementation techniques</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>100+ premium templates</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>Priority community support</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>1-on-1 app review session</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>12-month access to code updates</strong></li>
-                    <li class="feature-missing">✗ Enterprise integration modules</li>
-                    <li class="feature-missing">✗ Lifetime code updates</li>
-                </ul>
-                
-                <div class="price-cta">
-                    <a href="checkout.html?plan=complete" class="cta-button cta-button-highlighted">Get Complete Access</a>
-                </div>
-            </div>
-            
-            <div class="price-card premium">
-                <div class="price-header">
-                    <h3>Enterprise Builder</h3>
-                    <div class="price">
-                        <span class="regular-price">$1,999</span>
-                        <span class="one-time">one-time payment</span>
-                    </div>
-                    <div class="price-monthly">Or $199/month for 12 months</div>
-                </div>
-                
-                <ul class="price-features">
-                    <li><span class="feature-check">✓</span> Everything in Professional Developer</li>
-                    <li><span class="feature-check">✓</span> <strong>Enterprise integration modules</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>Unlimited templates and resources</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>Priority dedicated support</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>Team collaboration features</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>White-label capabilities</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>Lifetime access to code updates</strong></li>
-                </ul>
-                
-                <div class="price-cta">
-                    <a href="checkout.html?plan=premium" class="cta-button">Upgrade to Enterprise</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="payment-options">
-            <div class="or-divider">
-                <span>OR</span>
-            </div>
-            
-            <div class="installment-plan">
-                <h3>Payment Plan Option</h3>
-                <p>Pay for the Professional Developer package in 3 monthly installments</p>
-                
-                <div class="installment-details">
-                    <div class="installment-price">
-                        <span class="installment-amount">$349</span>
-                        <span class="installment-text">per month for 3 months</span>
-                    </div>
-                    <div class="total-price">Total: $1,047 (save $48 with one-time payment)</div>
-                </div>
-                
-                <a href="checkout.html?plan=complete-installment" class="cta-button">Start With Payment Plan</a>
-            </div>
-        </div>
-        
-        <div class="pricing-comparison">
-            <h3>AppFoundry vs. Traditional Development</h3>
-            
-            <div class="comparison-container">
-                <div class="comparison-item">
-                    <div class="comparison-header">Traditional App Development</div>
-                    <div class="comparison-price">$15,000 - $50,000+</div>
-                    <ul class="comparison-features">
-                        <li>3-6 months development time</li>
-                        <li>Ongoing costs for updates</li>
-                        <li>Limited control over changes</li>
-                        <li>Communication barriers</li>
-                    </ul>
-                </div>
-                
-                <div class="comparison-item highlighted">
-                    <div class="comparison-header">AppFoundry Method</div>
-                    <div class="comparison-price">Starting at $499</div>
-                    <ul class="comparison-features">
-                        <li>Build your app in 14-30 days</li>
-                        <li>Make unlimited changes yourself</li>
-                        <li>Complete control over your project</li>
-                        <li>No technical expertise needed</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-    <!-- GUARANTEE SECTION (EXPANDED) -->
-    <section class="guarantee-section">
-        <div class="container">
-            <h2>Our Ironclad 60-Day Guarantee</h2>
-            
-            <div class="guarantee-content">
-                <div class="guarantee-image">
-                    <div class="guarantee-seal">
-                        <div class="seal-content">100%</div>
-                    </div>
-                </div>
-                <div class="guarantee-text-content">
-                    <h3>The "Build Your First App" Guarantee</h3>
-                    <p>If you can't create a working app within 60 days of taking this course, I'll give you 100% of your money back, no questions asked.</p>
-                    <p>All I ask is that you show me you've made a sincere effort by sharing your project files. This is my way of ensuring your success while taking all the risk off your shoulders.</p>
-                    <p><strong>I'm so confident in this system because I've seen complete beginners transform into app creators in days, not months.</strong></p>
-                    <a href="refund-policy.html" class="cta-button">See Full Guarantee Details</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ SECTION -->
-<section class="faq">
-    <div class="container">
-        <h2>Frequently Asked Questions</h2>
-        
-        <div class="faq-grid">
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Do I need any coding experience to use AppFoundry?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Absolutely not! The course is specifically designed for entrepreneurs and self-starters with zero coding knowledge. If you can use a computer and follow step-by-step instructions, you have all the skills needed to succeed with AppFoundry.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>How is this different from no-code platforms like Bubble or Webflow?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Unlike traditional no-code platforms that lock you into their ecosystems with monthly fees, AppFoundry teaches you how to leverage Claude AI to create truly custom apps that you own 100%. You're not limited by platform constraints, there are no ongoing fees, and you can create more complex functionality than most drag-and-drop tools allow.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>How long will it take to build my first app?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Most students complete their first functional app within 2-4 weeks of starting the course, working just a few hours per week. You'll start seeing results within the first few hours as you complete the initial modules. The complete curriculum takes about 10-15 hours to work through, and you can apply what you learn immediately to your app project.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>What kind of apps can I build with AppFoundry?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>You can build a wide range of business apps including: inventory management systems, client portals, booking platforms, e-commerce apps, productivity tools, service marketplaces, and much more. If your app idea focuses on solving a specific business problem rather than being the next social media giant, AppFoundry is perfect for you.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Will I own the apps I create? Are there any ongoing fees?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>You own 100% of any app you create with AppFoundry, with no ongoing fees to us. The code is yours to modify, expand, and commercialize however you want. The only potential ongoing costs would be standard hosting fees (typically $5-20/month depending on your app's needs) and a Claude API subscription if you choose to use their API directly (they offer a free tier that's sufficient for most projects).</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Can I use AppFoundry to build apps for clients?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Absolutely! Many of our students use AppFoundry to start app development businesses or add value at their workplace. Our Professional plan includes everything you need to build apps for clients, while the Enterprise plan includes white-labeling capabilities for reselling without attribution.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>How does the AI integration actually work?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Claude AI is a powerful language model created by Anthropic. Our course teaches you the exact prompts and techniques to direct Claude to generate code, design interfaces, and build app components. You'll learn structured, step-by-step frameworks that guide the AI to create exactly what you need, even with no technical background.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Do I need to purchase additional tools or software?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>No, you don't need to purchase any additional software. You'll need a Claude AI account (which has a free tier sufficient for learning), VSCode (free), and we'll cover several free hosting and deployment options. The course includes all templates and resources needed to build fully functional apps.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>What if I get stuck during the course?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>All students get access to our community forum where you can ask questions and get help from other students. Professional and Enterprise plan members receive priority email support with faster response times. We're committed to your success and provide multiple support channels to ensure you never get stuck for long.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>What is your refund policy?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>We offer a 60-day "Build Your First App" guarantee. If you can't create a working app within 60 days of taking the course, we'll refund 100% of your purchase price. All we ask is that you show us you've made a sincere effort by sharing your project files. This is our way of ensuring your success while taking all the risk off your shoulders.</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="have-more-questions">
-            <h3>Have more questions?</h3>
-            <p>Contact us directly at <a href="mailto:hello@risegg.net">hello@risegg.net</a> and we'll get back to you within 24 hours.</p>
-            <a href="#pricing" class="cta-button">Start Building Today</a>
-        </div>
-    </div>
-</section>
-
-    <!-- FINAL CTA SECTION -->
-    <section class="cta-section">
-        <div class="container">
-            <h2>Start Building Your Dream App Today</h2>
-            <p>Join hundreds of entrepreneurs and self-starters who've built professional apps using our AI-powered system</p>
-            <a href="#pricing" class="cta-button large">I'm Ready to Build My App</a>
-            <div class="cta-guarantee">
-                <span class="guarantee-icon">🔒</span>
-                <span class="guarantee-text">Protected by our 60-day money-back guarantee</span>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <div class="container">
-            <div class="logo">AppFoundry</div>
-            <div class="footer-links">
-                <div class="link-group">
-                    <h4>Course</h4>
-                    <ul>
-                        <li><a href="#problem">The Problem</a></li>
-                        <li><a href="#solution">Our Solution</a></li>
-                        <li><a href="#curriculum">Curriculum</a></li>
-                        <li><a href="#pricing">Pricing</a></li>
-                        <li><a href="success-stories.html">Success Stories</a></li>
-                        <li><a href="about-creator.html">About Creator</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="terms-of-service.html">Terms of Service</a></li>
-                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
-                        <li><a href="refund-policy.html">Our Guarantee</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                © 2025 AppFoundry. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-    <!-- Scripts -->
-    <script>
-        // Module details toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            // Module details toggle
-            document.querySelectorAll('.module-expand').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const moduleId = this.getAttribute('data-module');
-                    const details = document.getElementById(`module-details-${moduleId}`);
-                    
-                    if (details.style.display === 'block') {
-                        details.style.display = 'none';
-                        this.textContent = `See Lesson Details +`;
-                    } else {
-                        details.style.display = 'block';
-                        this.textContent = `Hide Lesson Details -`;
-                    }
-                });
-            });
-            
-            // FAQ toggles
-            document.querySelectorAll('.faq-question').forEach(question => {
-                question.addEventListener('click', function() {
-                    const answer = this.nextElementSibling;
-                    const icon = this.querySelector('.toggle-icon');
-                    
-                    // Close all other FAQs
-                    document.querySelectorAll('.faq-answer').forEach(item => {
-                        if (item !== answer && item.classList.contains('show')) {
-                            item.classList.remove('show');
-                            item.previousElementSibling.querySelector('.toggle-icon').textContent = '+';
-                        }
-                    });
-                    
-                    // Toggle current FAQ
-                    if (answer.classList.contains('show')) {
-                        answer.classList.remove('show');
-                        icon.textContent = '+';
-                    } else {
-                        answer.classList.add('show');
-                        icon.textContent = '-';
-                    }
-                });
-            });
-            
-            // Carousel functionality - improved
-            const carousel = document.querySelector('.wins-carousel');
-            const items = document.querySelectorAll('.win-item');
-            const dots = document.querySelectorAll('.carousel-dots .dot');
-            const prevButton = document.querySelector('.carousel-prev');
-            const nextButton = document.querySelector('.carousel-next');
-            let currentIndex = 0;
-            
-            function showSlide(index) {
-                // Reset current index if out of bounds
-                if (index >= items.length) {
-                    index = 0;
-                } else if (index < 0) {
-                    index = items.length - 1;
-                }
-                
-                // Update current index
-                currentIndex = index;
-                
-                // Update carousel position with smooth transition
-                items.forEach((item, i) => {
-                    item.style.display = 'none';
-                    item.style.opacity = '0';
-                    
-                    if (i === currentIndex) {
-                        item.style.display = 'block';
-                        setTimeout(() => {
-                            item.style.opacity = '1';
-                        }, 50);
-                    }
-                });
-                
-                // Update dots
-                dots.forEach((dot, i) => {
-                    dot.classList.toggle('active', i === currentIndex);
-                });
-            }
-            
-            // Set up event listeners
-            prevButton.addEventListener('click', () => showSlide(currentIndex - 1));
-            nextButton.addEventListener('click', () => showSlide(currentIndex + 1));
-            
-            dots.forEach((dot, i) => {
-                dot.addEventListener('click', () => showSlide(i));
-            });
-            
-            // Initialize carousel
-            showSlide(0);
-            
-            // Auto-advance carousel every 5 seconds
-            let autoPlayInterval = setInterval(() => {
-                showSlide(currentIndex + 1);
-            }, 5000);
-            
-            // Pause auto-advance on hover
-            carousel.addEventListener('mouseenter', () => {
-                clearInterval(autoPlayInterval);
-            });
-            
-            carousel.addEventListener('mouseleave', () => {
-                autoPlayInterval = setInterval(() => {
-                    showSlide(currentIndex + 1);
-                }, 5000);
-            });
-            
-            // ROI Calculator
-            document.getElementById('calculate-roi').addEventListener('click', function() {
-                const complexity = document.getElementById('app-complexity').value;
-                const rate = parseInt(document.getElementById('developer-rate').value);
-                const revisions = parseInt(document.getElementById('revisions').value);
-                
-                let baseCost, baseTime;
-                
-                switch(complexity) {
-                    case 'simple':
-                        baseCost = 8000;
-                        baseTime = 2.5;
-                        break;
-                    case 'medium':
-                        baseCost = 15000;
-                        baseTime = 4.5;
-                        break;
-                    case 'complex':
-                        baseCost = 30000;
-                        baseTime = 7;
-                        break;
-                    default:
-                        baseCost = 15000;
-                        baseTime = 4.5;
-                }
-                
-                // Adjust based on rate
-                const rateFactor = rate / 85;
-                baseCost = Math.round(baseCost * rateFactor);
-                
-                // Calculate revision costs
-                const revisionCost = Math.round(baseCost * 0.15 * revisions);
-                const totalCost = baseCost + revisionCost;
-                
-                // Calculate total time
-                const revisionTime = revisions * 0.5;
-                const totalTime = baseTime + revisionTime;
-                
-                // Update the results with animation
-                animateNumber(document.querySelector('.result-card:nth-child(1) .result-cost'), totalCost, ');
-                document.querySelector('.result-card:nth-child(1) .result-time').textContent = `${totalTime.toFixed(1)} months`;
-                document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(1)').textContent = `Development: ${baseCost.toLocaleString()}`;
-                document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(2)').textContent = `Revisions: ${revisionCost.toLocaleString()}`;
-                
-                // Calculate savings
-                const savings = totalCost - 499;
-                const timeMonths = totalTime - 0.5;
-                
-                // Update savings with animation
-                animateNumber(document.querySelector('.savings-amount'), savings, ');
-                document.querySelector('.savings-time').textContent = `${timeMonths.toFixed(1)} months`;
-            });
-            
-            // Animation function for numbers
-            function animateNumber(element, targetNumber, prefix = '') {
-                const duration = 1000; // 1 second
-                const frameDuration = 1000 / 60; // 60fps
-                const totalFrames = Math.round(duration / frameDuration);
-                const startValue = 0;
-                
-                let frame = 0;
-                const counter = setInterval(() => {
-                    frame++;
-                    const progress = frame / totalFrames;
-                    const currentValue = Math.round(startValue + (targetNumber - startValue) * progress);
-                    
-                    element.textContent = `${prefix}${currentValue.toLocaleString()}`;
-                    
-                    if (frame === totalFrames) {
-                        clearInterval(counter);
-                    }
-                }, frameDuration);
-            }
-            
-            // Intersection Observer for fade-in animations
-            const fadeElements = document.querySelectorAll('.problem-item, .metric, .module-card, .price-card');
-            
-            const fadeObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('fade-in');
-                        fadeObserver.unobserve(entry.target);
-                    }
-                });
-            }, {
-                threshold: 0.1
-            });
-            
-            fadeElements.forEach(element => {
-                fadeObserver.observe(element);
-            });
-            
-            // Add smooth scrolling for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    const targetId = this.getAttribute('href');
-                    
-                    if (targetId === '#') {
-                        window.scrollTo({
-                            top: 0,
-                            behavior: 'smooth'
-                        });
-                        return;
-                    }
-                    
-                    const targetElement = document.querySelector(targetId);
-                    
-                    if (targetElement) {
-                        const headerOffset = 80;
-                        const elementPosition = targetElement.getBoundingClientRect().top;
-                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                        
-                        window.scrollTo({
-                            top: offsetPosition,
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            });
-            
-            // Login button functionality
-            document.getElementById('loginButton').addEventListener('click', function() {
-                window.location.href = 'direct-login.html';
-            });
-        });
-    </script>
-</body>
-</html>
