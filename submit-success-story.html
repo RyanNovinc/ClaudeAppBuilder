@@ -3,47 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Your Success Story - AppFoundry</title>
+    <title>Success Stories - AppFoundry</title>
     
-    <!-- Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
+    <!-- Supabase.js - Add this for direct Supabase access - MOVED TO TOP -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Enhanced Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
     <script>
-    // Universal Story Manager - ensures stories are consistently available
+    // Enhanced Story Manager - prioritizes loading from Supabase over localStorage
     (function() {
-      // Run on all pages to ensure localStorage data consistency
-      console.log("📊 Story Manager initializing on submission page");
+      // Run on all pages to ensure consistent story loading
+      console.log("📊 Enhanced Story Manager initializing on success stories page");
       
-      // Check if we need to seed the localStorage from our backup
-      function seedStoriesIfNeeded() {
-        // Only run if appfoundry_submissions doesn't exist or is empty
-        if (!localStorage.getItem('appfoundry_submissions')) {
-          console.log("🌱 No stories found in localStorage, checking for seed data");
+      // Initialize necessary variables
+      let storiesLoaded = false;
+      const SUPABASE_URL = "https://vyzsauyekanaxevgxkyh.supabase.co"; 
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c";
+      
+      // Initialize supabase client 
+      let supabaseClient = null;
+      
+      // Initialize Supabase client if possible
+      function initSupabase() {
+        if (typeof supabase !== 'undefined') {
+          try {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log("🔄 Supabase client initialized for public story loading");
+            return supabaseClient;
+          } catch (e) {
+            console.error("❌ Error initializing Supabase client:", e);
+          }
+        }
+        return null;
+      }
+      
+      // Parse Cloudinary images from JSON string or array
+      function parseCloudinaryImages(cloudinaryImages) {
+        if (!cloudinaryImages) return [];
+        
+        try {
+          if (typeof cloudinaryImages === 'string') {
+            return JSON.parse(cloudinaryImages);
+          }
           
-          // Check if we have any stories in our seed
-          if (localStorage.getItem('appfoundry_approved_seed')) {
-            console.log("🔄 Restoring stories from seed");
-            try {
-              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
-              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
-              console.log("✅ Successfully restored", seed.length, "stories from seed");
-            } catch (e) {
-              console.error("❌ Error restoring from seed:", e);
+          if (Array.isArray(cloudinaryImages)) {
+            return cloudinaryImages;
+          }
+        } catch (error) {
+          console.error('Error parsing Cloudinary images:', error);
+        }
+        
+        return [];
+      }
+      
+      // Load approved stories from Supabase with priority
+      async function loadApprovedStories() {
+        try {
+          // Try to load from Supabase first
+          const client = initSupabase();
+          if (client) {
+            console.log("🔍 Attempting to load stories from Supabase");
+            
+            // Fetch featured story first
+            const { data: featuredData, error: featuredError } = await client
+              .from('submissions')
+              .select('*')
+              .eq('status', 'approved')
+              .eq('featured', true)
+              .order('created_at', { ascending: false })
+              .limit(1);
+              
+            if (featuredError) {
+              console.error("Featured story query error:", featuredError);
+              throw featuredError;
+            }
+            
+            console.log("Featured story query result:", featuredData);
+            
+            // Fetch all approved stories
+            const { data, error } = await client
+              .from('submissions')
+              .select('*')
+              .eq('status', 'approved')
+              .order('created_at', { ascending: false });
+              
+            if (error) {
+              console.error("Approved stories query error:", error);
+              throw error;
+            }
+            
+            console.log("Approved stories query result:", data);
+            
+            if (data && data.length > 0) {
+              // Format the data for compatibility with the existing site structure
+              const formattedStories = data.map(item => ({
+                id: item.id,
+                name: item.name,
+                email: item.email || '',
+                appName: item.app_name,
+                appType: item.app_type,
+                experienceLevel: item.experience_level,
+                testimonial: item.testimonial,
+                story: item.story,
+                images: parseCloudinaryImages(item.cloudinary_images),
+                date: item.created_at,
+                status: item.status,
+                featured: item.featured || false
+              }));
+              
+              // Update localStorage for backup
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(formattedStories));
+              localStorage.setItem('appfoundry_approved_seed', JSON.stringify(formattedStories));
+              
+              // Set a flag for the featured story if it exists
+              if (featuredData && featuredData.length > 0) {
+                localStorage.setItem('appfoundry_featured_story', featuredData[0].id);
+              }
+              
+              console.log("✅ Successfully loaded", formattedStories.length, "stories from Supabase");
+              storiesLoaded = true;
+              return formattedStories;
+            } else {
+              console.log("⚠️ No approved stories found in Supabase");
             }
           }
-        } else {
-          // If we have submissions, make sure we have an up-to-date seed
+        } catch (e) {
+          console.error("❌ Error loading from Supabase:", e);
+        }
+        
+        // Fall back to localStorage if Supabase fails or has no data
+        return fallbackToLocalStorage();
+      }
+      
+      // Fallback to localStorage if Supabase loading fails
+      function fallbackToLocalStorage() {
+        console.log("🔄 Falling back to localStorage for stories");
+        
+        const storedStories = localStorage.getItem('appfoundry_submissions');
+        if (storedStories) {
           try {
-            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
-            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-            console.log("💾 Seed updated with", submissions.length, "stories");
+            const stories = JSON.parse(storedStories);
+            const approvedStories = stories.filter(story => story.status === 'approved');
+            
+            if (approvedStories.length > 0) {
+              console.log("✅ Found", approvedStories.length, "approved stories in localStorage");
+              storiesLoaded = true;
+              return approvedStories;
+            }
           } catch (e) {
-            console.error("❌ Error updating seed:", e);
+            console.error("❌ Error parsing stories from localStorage:", e);
           }
+        }
+        
+        console.log("⚠️ No approved stories found in localStorage");
+        return [];
+      }
+      
+      // Initialize story loading - modified to return promise
+      async function init() {
+        // Check if we're on the success stories page
+        if (window.location.pathname.includes('success-stories')) {
+          console.log("On success stories page, loading stories");
+          // Try to load stories
+          const loadedStories = await loadApprovedStories();
+          
+          // Check if any stories were loaded
+          if (loadedStories.length === 0) {
+            console.log("⚠️ No stories could be loaded from any source");
+          }
+          
+          // Dispatch a custom event to notify the page that stories are loaded
+          document.dispatchEvent(new CustomEvent('storiesLoaded', { 
+            detail: { stories: loadedStories } 
+          }));
+          
+          return loadedStories;
+        } else {
+          // On other pages, just ensure localStorage consistency
+          const submissions = localStorage.getItem('appfoundry_submissions');
+          if (submissions) {
+            try {
+              const stories = JSON.parse(submissions);
+              const approvedStories = stories.filter(story => story.status === 'approved');
+              localStorage.setItem('appfoundry_approved_seed', JSON.stringify(approvedStories));
+            } catch (e) {
+              console.error("❌ Error updating approved seed:", e);
+            }
+          }
+          return [];
         }
       }
       
-      // Run the seed check immediately
-      seedStoriesIfNeeded();
+      // Run initialization and make available globally
+      window.StoryManager = {
+        initialize: init,
+        loadApprovedStories: loadApprovedStories,
+        parseCloudinaryImages: parseCloudinaryImages
+      };
+      
+      // Auto initialize
+      init();
     })();
+    </script>
+    
+    <!-- Diagnostic helper function -->
+    <script>
+    function checkSupabaseConnection() {
+      try {
+        const SUPABASE_URL = "https://vyzsauyekanaxevgxkyh.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c";
+        
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        client.from('submissions').select('count', { count: 'exact', head: true }).then(({ count, error }) => {
+          if (error) {
+            console.error('Supabase connection test failed:', error);
+            alert('Supabase connection test failed: ' + error.message);
+          } else {
+            console.log('Supabase connection successful! Found ' + count + ' submissions');
+            alert('Supabase connection successful! Found ' + count + ' submissions');
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing Supabase client:', error);
+        alert('Error initializing Supabase client: ' + error.message);
+      }
+    }
     </script>
     
     <link rel="stylesheet" href="styles.css">
@@ -51,232 +235,826 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .form-container {
-            max-width: 800px;
-            margin: 100px auto;
+        :root {
+            --primary-color: #0070f3;
+            --primary-hover: #0055b3;
+            --secondary-color: #ff4c00;
+            --secondary-hover: #e54400;
+            --success-color: #10b981;
+            --warning-color: #fbbf24;
+            --error-color: #ef4444;
+            --text-dark: #111827;
+            --text-medium: #4b5563;
+            --text-light: #6b7280;
+            --background-white: #ffffff;
+            --background-light: #f9fafb;
+            --border-light: #e5e7eb;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
+            --transition-fast: 0.2s;
+        }
+        
+        /* Success stories specific styles */
+        .success-container {
+            max-width: 1200px;
+            margin: 60px auto;
             padding: 0 20px;
         }
         
-        .form-header {
+        .success-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 60px;
         }
         
-        .form-header p {
+        .success-header h1 {
+            font-size: 3rem;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+        
+        .success-header p {
             max-width: 700px;
             margin: 0 auto;
-            color: #6b7280;
-            font-size: 18px;
-        }
-        
-        .form-content {
-            background-color: white;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #111827;
-        }
-        
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 16px;
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #0070f3;
-            box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
-        }
-        
-        .form-group textarea {
-            min-height: 150px;
-            resize: vertical;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .form-tip {
-            font-size: 14px;
-            color: #6b7280;
-            margin-top: 5px;
-        }
-        
-        .image-upload {
-            border: 2px dashed #d1d5db;
-            border-radius: 6px;
-            padding: 25px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .image-upload:hover {
-            border-color: #0070f3;
-            background-color: rgba(0, 112, 243, 0.05);
-        }
-        
-        .image-upload input {
-            display: none;
-        }
-        
-        .image-upload-icon {
-            font-size: 36px;
-            color: #9ca3af;
-            margin-bottom: 10px;
-        }
-        
-        .image-upload-text {
-            font-size: 16px;
-            color: #6b7280;
-        }
-        
-        .image-preview {
-            margin-top: 15px;
-            display: none;
-        }
-        
-        .image-preview img {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 6px;
-        }
-        
-        .submit-button {
-            background-color: #0070f3;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 14px 28px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            display: block;
-            margin: 30px auto 0;
-        }
-        
-        .submit-button:hover {
-            background-color: #0055b3;
-        }
-        
-        .form-note {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #6b7280;
-        }
-        
-        .status-message {
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .status-message.success {
-            background-color: #ecfdf5;
-            color: #10b981;
-            border: 1px solid #10b981;
-        }
-        
-        .status-message.error {
-            background-color: #fee2e2;
-            color: #dc2626;
-            border: 1px solid #dc2626;
-        }
-        
-        .image-preview-item {
-            display: inline-block;
-            position: relative;
-            margin: 5px;
-        }
-        
-        .return-link {
-            text-align: center;
-            margin-top: 30px;
-        }
-        
-        .link-button {
-            display: inline-block;
-            background-color: #f3f4f6;
-            color: #4b5563;
-            padding: 10px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        
-        .link-button:hover {
-            background-color: #e5e7eb;
-            color: #111827;
-        }
-        
-        /* Added success view styles */
-        .success-view {
-            display: none;
-            text-align: center;
-            padding: 40px 20px;
-            background-color: #f0fdf4;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            border: 1px solid #86efac;
-        }
-        
-        .success-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: #10b981;
-        }
-        
-        .success-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #065f46;
-        }
-        
-        .success-message {
-            color: #047857;
-            margin-bottom: 30px;
+            color: var(--text-medium);
+            font-size: 1.125rem;
             line-height: 1.6;
         }
         
-        @media (max-width: 768px) {
-            .form-container {
-                margin: 60px auto;
+        .success-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            text-align: center;
+            background-color: var(--background-white);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            min-width: 200px;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            color: var(--text-medium);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .app-showcase {
+            margin-bottom: 80px;
+        }
+        
+        .app-showcase h2 {
+            text-align: center;
+            font-size: 2.25rem;
+            margin-bottom: 40px;
+            color: var(--text-dark);
+        }
+        
+        .apps-filter {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-button {
+            background-color: var(--background-light);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-medium);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .filter-button:hover {
+            background-color: var(--border-light);
+        }
+        
+        .filter-button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        
+        .app-card {
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .app-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .app-content {
+            padding: 25px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-category {
+            display: inline-block;
+            background-color: rgba(0, 112, 243, 0.1);
+            color: var(--primary-color);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .app-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+        
+        .creator-name {
+            color: var(--text-medium);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .app-testimonial {
+            font-style: italic;
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            line-height: 1.6;
+            flex: 1;
+        }
+        
+        .app-meta {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-light);
+        }
+        
+        .timeframe {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .experience-level {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .view-story-button {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background-color var(--transition-fast);
+            margin-top: 20px;
+        }
+        
+        .view-story-button:hover {
+            background-color: var(--primary-hover);
+        }
+        
+        .featured-stories {
+            margin-bottom: 80px;
+        }
+        
+        .featured-stories h2 {
+            text-align: center;
+            font-size: 2.25rem;
+            margin-bottom: 40px;
+            color: var(--text-dark);
+        }
+        
+        .stories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        
+        .story-card {
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        
+        .story-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .story-header {
+            padding: 25px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .creator-info {
+            flex: 1;
+        }
+        
+        .creator-info h3 {
+            font-size: 1.125rem;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+        
+        .creator-info .experience {
+            font-size: 0.875rem;
+            color: var(--text-medium);
+        }
+        
+        .story-content {
+            padding: 25px;
+        }
+        
+        .story-testimonial {
+            font-style: italic;
+            color: var(--text-dark);
+            font-size: 1.125rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .story-testimonial::before {
+            content: '"';
+            font-size: 3rem;
+            color: rgba(0, 112, 243, 0.1);
+            position: absolute;
+            top: -20px;
+            left: -10px;
+            font-family: Georgia, serif;
+        }
+        
+        .story-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        .app-type-tag {
+            display: inline-block;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 30px;
+        }
+        
+        .story-date {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        
+        .featured-story {
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 40px;
+        }
+        
+        .featured-story-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+        }
+        
+        .featured-story-content {
+            padding: 40px;
+        }
+        
+        .featured-tag {
+            display: inline-block;
+            background-color: rgba(255, 76, 0, 0.1);
+            color: var(--secondary-color);
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .featured-story-content h3 {
+            font-size: 1.75rem;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+        
+        .featured-story-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .featured-app-info .app-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .featured-app-info .app-category {
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        .featured-story-quote {
+            font-style: italic;
+            font-size: 1.25rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: var(--text-dark);
+            position: relative;
+            padding-left: 20px;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .featured-story-text {
+            color: var(--text-medium);
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .featured-story-image {
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+        }
+        
+        .methodology-section {
+            margin-bottom: 80px;
+        }
+        
+        .methodology-section h2 {
+            text-align: center;
+            font-size: 2.25rem;
+            margin-bottom: 40px;
+            color: var(--text-dark);
+        }
+        
+        .methodology-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        
+        .methodology-step {
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(0, 112, 243, 0.1);
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+        }
+        
+        .methodology-step h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            font-size: 1.25rem;
+        }
+        
+        .methodology-step p {
+            color: var(--text-medium);
+            line-height: 1.6;
+            text-align: center;
+        }
+        
+        .join-community {
+            background-color: var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 60px;
+            color: white;
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        
+        .join-community h2 {
+            font-size: 2.25rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .join-community p {
+            font-size: 1.125rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+        
+        .join-community .cta-button {
+            background-color: white;
+            color: var(--primary-color);
+            padding: 14px 28px;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        
+        .submit-story-section {
+            background-color: var(--background-light);
+            border-radius: var(--border-radius);
+            padding: 60px;
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        
+        .submit-story-section h2 {
+            font-size: 2.25rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .submit-story-section p {
+            font-size: 1.125rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+        
+        .story-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .story-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .story-modal.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin: 0;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color var(--transition-fast);
+        }
+        
+        .close-modal:hover {
+            color: var(--text-dark);
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .modal-story-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .modal-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.75rem;
+        }
+        
+        .modal-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .modal-creator-info h4 {
+            font-size: 1.25rem;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+        
+        .modal-creator-info .experience {
+            font-size: 0.9rem;
+            color: var(--text-medium);
+            margin-bottom: 5px;
+        }
+        
+        .modal-creator-info .app-info {
+            font-size: 0.9rem;
+            color: var(--text-medium);
+        }
+        
+        .modal-creator-info .app-info strong {
+            color: var(--text-dark);
+        }
+        
+        .modal-quote {
+            font-style: italic;
+            font-size: 1.25rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: var(--text-dark);
+            padding: 20px 30px;
+            background-color: rgba(0, 112, 243, 0.05);
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .modal-quote::before,
+        .modal-quote::after {
+            content: '"';
+            font-size: 3rem;
+            position: absolute;
+            color: rgba(0, 112, 243, 0.2);
+            font-family: Georgia, serif;
+        }
+        
+        .modal-quote::before {
+            top: 0;
+            left: 10px;
+        }
+        
+        .modal-quote::after {
+            bottom: -20px;
+            right: 10px;
+            transform: rotate(180deg);
+        }
+        
+        .modal-story-text {
+            color: var(--text-medium);
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+        
+        .modal-app-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .modal-app-images img {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .modal-cta {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            background-color: var(--background-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+        
+        .empty-state p {
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        @media (max-width: 1024px) {
+            .featured-story-grid {
+                grid-template-columns: 1fr;
             }
             
-            .form-content {
+            .featured-story-image {
+                height: 300px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .app-showcase h2,
+            .featured-stories h2,
+            .methodology-section h2,
+            .join-community h2,
+            .submit-story-section h2 {
+                font-size: 1.75rem;
+            }
+            
+            .stat-item {
+                padding: 20px;
+                min-width: 140px;
+            }
+            
+            .stat-number {
+                font-size: 2.25rem;
+            }
+            
+            .stat-label {
+                font-size: 0.875rem;
+            }
+            
+            .stories-grid,
+            .apps-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .join-community,
+            .submit-story-section {
+                padding: 40px 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .success-header h1 {
+                font-size: 2.25rem;
+            }
+            
+            .success-header p {
+                font-size: 1rem;
+            }
+            
+            .featured-story-content {
                 padding: 25px;
             }
             
-            .form-row {
-                grid-template-columns: 1fr;
-                gap: 15px;
+            .featured-story-quote {
+                font-size: 1.125rem;
             }
+            
+            .modal-content {
+                width: 95%;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+        }
+        
+        /* Debug helpers */
+        .debug-panel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 9999;
+        }
+        .debug-button {
+            background: #555;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .debug-button:hover {
+            background: #777;
         }
     </style>
 </head>
@@ -286,10 +1064,11 @@
             <div class="logo"><a href="index.html">AppFoundry</a></div>
             <nav>
                 <ul>
-                    <li><a href="index.html#overview">Overview</a></li>
+                    <li><a href="index.html#problem">The Problem</a></li>
+                    <li><a href="index.html#solution">Our Solution</a></li>
                     <li><a href="index.html#curriculum">Curriculum</a></li>
                     <li><a href="index.html#pricing">Pricing</a></li>
-                    <li><a href="success-stories.html">Success Stories</a></li>
+                    <li><a href="success-stories.html" class="active">Success Stories</a></li>
                     <li><a href="about-creator.html">About</a></li>
                 </ul>
             </nav>
@@ -297,104 +1076,135 @@
         </div>
     </header>
 
-    <div class="form-container">
-        <div class="form-header">
-            <h1>Share Your Success Story</h1>
-            <p>Tell us about the app you built with AppFoundry and inspire others to bring their ideas to life!</p>
+    <div class="guarantee-banner">
+        <div class="container">
+            <span class="guarantee-icon">🔒</span>
+            <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 60 days or get 100% of your money back</span>
+            <a href="refund-policy.html" class="guarantee-link">Learn More</a>
+        </div>
+    </div>
+
+    <div class="success-container">
+        <div class="success-header">
+            <h1>Real People, Real Apps, Zero Coding</h1>
+            <p>See the amazing apps our students have built without writing a single line of code using our AI-powered approach</p>
         </div>
         
-        <div class="form-content">
-            <!-- Success view that appears after form submission -->
-            <div id="success-view" class="success-view">
-                <div class="success-icon">✓</div>
-                <h2 class="success-title">Your Story Has Been Submitted!</h2>
-                <p class="success-message">Thank you for sharing your success story with us! After review, it will be featured on our success stories page to inspire others.</p>
-                <a href="success-stories.html" class="cta-button">View Success Stories</a>
+        <div class="success-stats">
+            <div class="stat-item">
+                <div class="stat-number">300+</div>
+                <div class="stat-label">Apps Created</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">87%</div>
+                <div class="stat-label">Cost Savings</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">14x</div>
+                <div class="stat-label">Faster Development</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">97%</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+        </div>
+        
+        <div class="featured-story">
+            <div class="featured-story-grid">
+                <div class="featured-story-content">
+                    <!-- Featured story content will be dynamically loaded -->
+                    <div id="featured-story-loading" style="text-align: center; padding: 40px;">
+                        <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(0, 112, 243, 0.3); border-radius: 50%; border-top-color: #0070f3; animation: spin 1s ease-in-out infinite;"></div>
+                        <p style="margin-top: 10px; color: #6b7280;">Loading featured stories...</p>
+                    </div>
+                </div>
+                <img src="images/app-placeholder.jpg" alt="Featured App" class="featured-story-image" id="featured-story-image">
+            </div>
+        </div>
+        
+        <div class="app-showcase">
+            <h2>App Showcase</h2>
+            <div class="apps-filter">
+                <button class="filter-button active" data-filter="all">All Apps</button>
+                <button class="filter-button" data-filter="Business">Business</button>
+                <button class="filter-button" data-filter="Productivity">Productivity</button>
+                <button class="filter-button" data-filter="Health & Fitness">Health & Fitness</button>
+                <button class="filter-button" data-filter="Lifestyle">Lifestyle</button>
+                <button class="filter-button" data-filter="Education">Education</button>
             </div>
             
-            <div id="status-message" class="status-message"></div>
-            
-            <!-- Form will be hidden after successful submission -->
-            <div id="form-section">
-                <form id="success-story-form" name="success-story" method="POST">
-                    <!-- Hidden field for Netlify form handling -->
-                    <input type="hidden" name="form-name" value="success-story" />
-                    
-                    <div class="form-group">
-                        <label for="name">Your Name</label>
-                        <input type="text" id="name" name="name" required>
+            <div class="apps-grid" id="apps-grid">
+                <!-- App cards will be dynamically loaded here -->
+                <div class="app-card" style="display: flex; justify-content: center; align-items: center; padding: 40px; text-align: center;">
+                    <div>
+                        <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(0, 112, 243, 0.3); border-radius: 50%; border-top-color: #0070f3; animation: spin 1s ease-in-out infinite;"></div>
+                        <p style="margin-top: 10px; color: #6b7280;">Loading apps...</p>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="email">Email Address</label>
-                            <input type="email" id="email" name="email" required>
-                            <div class="form-tip">Your email won't be displayed publicly.</div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="app-type">Type of App</label>
-                            <select id="app-type" name="app-type" required>
-                                <option value="" disabled selected>Select app category</option>
-                                <option value="Health & Fitness">Health & Fitness</option>
-                                <option value="Productivity">Productivity</option>
-                                <option value="Lifestyle">Lifestyle</option>
-                                <option value="Business">Business</option>
-                                <option value="Education">Education</option>
-                                <option value="Entertainment">Entertainment</option>
-                                <option value="Social">Social</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="experience-level">Your Experience Level</label>
-                        <select id="experience-level" name="experience-level" required>
-                            <option value="" disabled selected>Select your coding experience</option>
-                            <option value="No experience">No coding experience</option>
-                            <option value="Beginner">Beginner (less than 1 year)</option>
-                            <option value="Intermediate">Intermediate (1-3 years)</option>
-                            <option value="Advanced">Advanced (3+ years)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="app-name">Your App Name</label>
-                        <input type="text" id="app-name" name="app-name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="story">Your Success Story</label>
-                        <textarea id="story" name="story" required placeholder="Tell us about your experience building your app with AppFoundry. What challenges did you overcome? How has it impacted you or your business?"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>App Screenshots (Optional)</label>
-                        <div class="image-upload" id="image-upload">
-                            <input type="file" id="app-screenshots" name="app-screenshots" accept="image/*" multiple>
-                            <div class="image-upload-icon">📷</div>
-                            <div class="image-upload-text">Click to upload screenshots of your app</div>
-                            <div class="form-tip">You can select multiple images. Max 5 images total, 5MB per image.</div>
-                        </div>
-                        <div id="image-preview" class="image-preview"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="testimonial">Short Testimonial (for display)</label>
-                        <textarea id="testimonial" name="testimonial" required placeholder="Write a brief testimonial (1-2 sentences) that we can feature on our success stories page."></textarea>
-                    </div>
-                    
-                    <button type="submit" class="submit-button">Submit Your Story</button>
-                    
-                    <div class="form-note">
-                        <p>By submitting this form, you agree to let us feature your story and app screenshots on our website.</p>
-                    </div>
-                </form>
+                </div>
             </div>
-            
-            <div class="return-link">
-                <a href="success-stories.html" class="link-button" onclick="localStorage.setItem('appfoundry_navigation', 'from_submission');">Back to Success Stories</a>
+        </div>
+        
+        <div class="methodology-section">
+            <h2>How Our Students Build Apps Without Coding</h2>
+            <div class="methodology-steps">
+                <div class="methodology-step">
+                    <div class="step-number">1</div>
+                    <h3>Define App Structure</h3>
+                    <p>Using our structured templates, students define exactly what they want their app to do - without any technical jargon.</p>
+                </div>
+                <div class="methodology-step">
+                    <div class="step-number">2</div>
+                    <h3>AI Prompt Engineering</h3>
+                    <p>Our proven prompting framework tells Claude AI exactly what to build, producing professional code that matches your vision.</p>
+                </div>
+                <div class="methodology-step">
+                    <div class="step-number">3</div>
+                    <h3>Component Assembly</h3>
+                    <p>Following our step-by-step guide, students assemble app components created by AI into a complete, functional application.</p>
+                </div>
+                <div class="methodology-step">
+                    <div class="step-number">4</div>
+                    <h3>Testing & Deployment</h3>
+                    <p>Students test their apps on real devices and deploy them using our simple deployment process - all without technical knowledge.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="featured-stories">
+            <h2>More Success Stories</h2>
+            <div class="stories-grid" id="stories-grid">
+                <!-- Story cards will be dynamically loaded here -->
+                <div class="story-card" style="display: flex; justify-content: center; align-items: center; padding: 40px; text-align: center;">
+                    <div>
+                        <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(0, 112, 243, 0.3); border-radius: 50%; border-top-color: #0070f3; animation: spin 1s ease-in-out infinite;"></div>
+                        <p style="margin-top: 10px; color: #6b7280;">Loading stories...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="join-community">
+            <h2>Join 300+ Students Building Amazing Apps</h2>
+            <p>Stop letting technical barriers hold you back. Our students are proving that anyone can build professional apps with the right guidance and AI-powered tools.</p>
+            <a href="index.html#pricing" class="cta-button">Start Building Your App Today</a>
+        </div>
+        
+        <div class="submit-story-section">
+            <h2>Share Your AppFoundry Success Story</h2>
+            <p>Have you built an app using our method? We'd love to hear about it and share your achievement with others to inspire them.</p>
+            <a href="submit-success-story.html" class="cta-button">Submit Your Story</a>
+        </div>
+    </div>
+    
+    <!-- Story Modal -->
+    <div class="story-modal" id="story-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Success Story</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Modal content will be loaded dynamically -->
             </div>
         </div>
     </div>
@@ -406,7 +1216,8 @@
                 <div class="link-group">
                     <h4>Course</h4>
                     <ul>
-                        <li><a href="index.html#overview">Overview</a></li>
+                        <li><a href="index.html#problem">The Problem</a></li>
+                        <li><a href="index.html#solution">Our Solution</a></li>
                         <li><a href="index.html#curriculum">Curriculum</a></li>
                         <li><a href="index.html#pricing">Pricing</a></li>
                         <li><a href="success-stories.html">Success Stories</a></li>
@@ -425,6 +1236,7 @@
                     <h4>Contact</h4>
                     <ul>
                         <li><a href="mailto:hello@risegg.net">Email Support</a></li>
+                        <li><button onclick="checkSupabaseConnection()" class="text-xs text-gray-500" style="background:none; border:none; cursor:pointer; text-decoration:underline;">Check DB</button></li>
                     </ul>
                 </div>
             </div>
@@ -434,264 +1246,598 @@
         </div>
     </footer>
 
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Track that this page was visited
-            localStorage.setItem('appfoundry_visited_submission', 'true');
+            console.log('DOM Content loaded - initializing success stories page');
             
-            // Handle image upload preview
-            const imageUpload = document.getElementById('image-upload');
-            const fileInput = document.getElementById('app-screenshots');
-            const imagePreview = document.getElementById('image-preview');
-            let selectedFiles = []; // Track selected files
-            const MAX_IMAGES = 5;
-            
-            imageUpload.addEventListener('click', function() {
-                fileInput.click();
+            // Login button functionality
+            document.getElementById('loginButton').addEventListener('click', function() {
+                window.location.href = 'direct-login.html';
             });
             
-            fileInput.addEventListener('change', function() {
-                if (this.files && this.files.length > 0) {
-                    // Add new files to the existing selection, up to the maximum
-                    const newFiles = Array.from(this.files);
-                    
-                    // Add new files up to the maximum
-                    for (let i = 0; i < newFiles.length && selectedFiles.length < MAX_IMAGES; i++) {
-                        if (newFiles[i].type.startsWith('image/')) {
-                            selectedFiles.push(newFiles[i]);
-                        }
-                    }
-                    
-                    // Reset the file input to allow selecting more files later
-                    this.value = '';
-                    
-                    // Update preview
-                    updateImagePreview();
+            // Listen for stories to be loaded by the StoryManager
+            document.addEventListener('storiesLoaded', function(e) {
+                console.log('Received storiesLoaded event');
+                if (e.detail && e.detail.stories) {
+                    displayStoriesAndApps(e.detail.stories);
+                } else {
+                    // Force reload if event doesn't have stories
+                    console.log('Event didn\'t contain stories, will try to load directly');
+                    initializeStories();
                 }
             });
             
-            // Function to update image preview
-            function updateImagePreview() {
-                // Show preview container if we have files
-                imagePreview.style.display = selectedFiles.length > 0 ? 'block' : 'none';
-                
-                // Clear existing preview
-                imagePreview.innerHTML = '';
-                
-                // Create preview for each file
-                selectedFiles.forEach((file, index) => {
-                    const previewContainer = document.createElement('div');
-                    previewContainer.className = 'image-preview-item';
-                    previewContainer.style.display = 'inline-block';
-                    previewContainer.style.position = 'relative';
-                    previewContainer.style.margin = '5px';
-                    
-                    // Create image preview
-                    const reader = new FileReader();
-                    
-                    reader.onload = function(e) {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.maxHeight = '100px';
-                        img.style.maxWidth = '100px';
-                        img.style.borderRadius = '4px';
-                        previewContainer.appendChild(img);
-                    };
-                    
-                    reader.readAsDataURL(file);
-                    
-                    // Create remove button
-                    const removeBtn = document.createElement('button');
-                    removeBtn.innerHTML = '&times;';
-                    removeBtn.style.position = 'absolute';
-                    removeBtn.style.top = '-8px';
-                    removeBtn.style.right = '-8px';
-                    removeBtn.style.borderRadius = '50%';
-                    removeBtn.style.background = '#ef4444';
-                    removeBtn.style.color = 'white';
-                    removeBtn.style.width = '20px';
-                    removeBtn.style.height = '20px';
-                    removeBtn.style.border = 'none';
-                    removeBtn.style.cursor = 'pointer';
-                    removeBtn.style.display = 'flex';
-                    removeBtn.style.alignItems = 'center';
-                    removeBtn.style.justifyContent = 'center';
-                    
-                    removeBtn.addEventListener('click', function(e) {
-                        e.stopPropagation(); // Prevent triggering imageUpload click
-                        selectedFiles.splice(index, 1);
-                        updateImagePreview();
+            // Check if stories are already loaded or need to be loaded
+            function initializeStories() {
+                console.log('Initializing stories manually');
+                // If StoryManager is available, use it
+                if (window.StoryManager) {
+                    window.StoryManager.loadApprovedStories().then(stories => {
+                        console.log('Stories loaded from StoryManager:', stories);
+                        displayStoriesAndApps(stories);
+                    }).catch(error => {
+                        console.error('Error loading stories from StoryManager:', error);
+                        fallbackToLocalStorage();
                     });
-                    
-                    previewContainer.appendChild(removeBtn);
-                    imagePreview.appendChild(previewContainer);
-                });
-                
-                // Add information about remaining slots
-                const infoText = document.createElement('p');
-                infoText.style.margin = '10px 0 0 0';
-                infoText.style.fontSize = '0.8rem';
-                infoText.style.color = '#6b7280';
-                infoText.textContent = `${selectedFiles.length}/${MAX_IMAGES} images selected`;
-                imagePreview.appendChild(infoText);
+                } else {
+                    console.error('StoryManager not available, falling back to localStorage');
+                    fallbackToLocalStorage();
+                }
             }
             
-            // Handle form submission - UPDATED to use GitHub storage
-            const form = document.getElementById('success-story-form');
-            const statusMessage = document.getElementById('status-message');
-            const formSection = document.getElementById('form-section');
-            const successView = document.getElementById('success-view');
-            
-            form.addEventListener('submit', async function(e) {
-                // Prevent default form submission
-                e.preventDefault();
+            // Display both stories and apps
+            function displayStoriesAndApps(stories) {
+                if (!stories || stories.length === 0) {
+                    showEmptyState();
+                    return;
+                }
                 
-                // Show loading state
-                const submitButton = document.querySelector('.submit-button');
-                submitButton.disabled = true;
-                submitButton.textContent = 'Submitting...';
+                // Get the featured story
+                const featuredStoryId = localStorage.getItem('appfoundry_featured_story');
+                let featuredStory = null;
+                let regularStories = stories;
+                
+                if (featuredStoryId) {
+                    featuredStory = stories.find(story => story.id === featuredStoryId);
+                    regularStories = stories.filter(story => story.id !== featuredStoryId);
+                } else if (stories.length > 0) {
+                    // Find first featured story
+                    featuredStory = stories.find(story => story.featured);
+                    if (featuredStory) {
+                        regularStories = stories.filter(story => story.id !== featuredStory.id);
+                    } else {
+                        // If no explicitly featured story, use the first one
+                        featuredStory = stories[0];
+                        regularStories = stories.slice(1);
+                    }
+                }
+                
+                // Update featured story section
+                updateFeaturedStorySection(featuredStory);
+                
+                // Load regular stories
+                loadStoryCards(regularStories);
+                
+                // Also load app cards
+                loadAppCards(stories);
+                
+                // Set up filter buttons
+                setupFilterButtons();
+            }
+            
+            // Fall back to localStorage if API loading fails
+            function fallbackToLocalStorage() {
+                console.log('Falling back to localStorage for stories');
                 
                 try {
-                    // Process images first - convert all selected files to base64
-                    let processedImages = [];
+                    const storedStories = localStorage.getItem('appfoundry_submissions');
                     
-                    if (selectedFiles.length > 0) {
-                        // Create an array of promises for image processing
-                        const imagePromises = selectedFiles.map(file => {
-                            return new Promise((resolve, reject) => {
-                                const reader = new FileReader();
-                                reader.onload = e => resolve(e.target.result);
-                                reader.onerror = reject;
-                                reader.readAsDataURL(file);
-                            });
+                    if (storedStories) {
+                        const stories = JSON.parse(storedStories);
+                        const approvedStories = stories.filter(story => story.status === 'approved');
+                        
+                        if (approvedStories.length > 0) {
+                            console.log('Found approved stories in localStorage');
+                            displayStoriesAndApps(approvedStories);
+                            return;
+                        }
+                    }
+                    
+                    // Try approved seed as backup
+                    const approvedSeed = localStorage.getItem('appfoundry_approved_seed');
+                    if (approvedSeed) {
+                        const seedStories = JSON.parse(approvedSeed);
+                        
+                        if (seedStories.length > 0) {
+                            console.log('Found stories in approved seed');
+                            displayStoriesAndApps(seedStories);
+                            return;
+                        }
+                    }
+                    
+                    console.log('No stories found in localStorage');
+                    showEmptyState();
+                } catch (error) {
+                    console.error('Error getting stories from localStorage:', error);
+                    showEmptyState();
+                }
+            }
+            
+            // Helper to update the featured story section
+            function updateFeaturedStorySection(featuredStory) {
+                const featuredStoryContent = document.querySelector('.featured-story-content');
+                const featuredStoryImage = document.querySelector('.featured-story-image');
+                
+                // Remove loading indicator
+                const loadingEl = document.getElementById('featured-story-loading');
+                if (loadingEl) {
+                    loadingEl.remove();
+                }
+                
+                if (!featuredStory) {
+                    featuredStoryContent.innerHTML = `
+                        <div class="text-center py-8">
+                            <div class="text-4xl text-gray-300 mb-3">📱</div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-1">No Featured Story Yet</h3>
+                            <p class="text-gray-500 mb-4">Submit your success story to be featured here!</p>
+                            <a href="submit-success-story.html" class="cta-button">Submit Your Story</a>
+                        </div>
+                    `;
+                    featuredStoryImage.src = 'images/app-placeholder.jpg';
+                    return;
+                }
+                
+                if (featuredStoryContent && featuredStoryImage) {
+                    // Format story date
+                    const storyDate = new Date(featuredStory.date);
+                    const formattedDate = storyDate.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
+                    // Update content
+                    featuredStoryContent.innerHTML = `
+                        <div class="featured-tag">Featured Success Story</div>
+                        <h3>${featuredStory.appName || 'Amazing App'}</h3>
+                        <div class="featured-story-meta">
+                            <div class="modal-avatar">
+                                ${getInitial(featuredStory.name)}
+                            </div>
+                            <div class="featured-app-info">
+                                <div>${featuredStory.name || 'Anonymous'}</div>
+                                <div class="app-name">${featuredStory.appName || 'App'}</div>
+                                <div>
+                                    <span class="app-category">${featuredStory.appType || 'App'}</span>
+                                    <span class="experience-level">${featuredStory.experienceLevel || 'Beginner'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="featured-story-quote">
+                            "${featuredStory.testimonial || 'Amazing experience building with AppFoundry!'}"
+                        </div>
+                        <div class="featured-story-text">
+                            ${(featuredStory.story || 'No detailed story provided.').split('\n').map(paragraph => `<p>${paragraph}</p>`).join('')}
+                        </div>
+                        <div class="text-sm text-gray-500 mt-4">Submitted on ${formattedDate}</div>
+                        <a href="#" class="cta-button view-story-button" data-story-id="${featuredStory.id}">Read Full Story</a>
+                    `;
+                    
+                    // Update image if available
+                    if (featuredStory.images && featuredStory.images.length > 0 && featuredStory.images[0]) {
+                        featuredStoryImage.src = featuredStory.images[0];
+                        featuredStoryImage.alt = `${featuredStory.appName} App`;
+                    } else {
+                        featuredStoryImage.src = 'images/app-placeholder.jpg';
+                        featuredStoryImage.alt = `${featuredStory.appName} App`;
+                    }
+                    
+                    // Add event listener to the "Read Full Story" button
+                    const viewStoryButton = featuredStoryContent.querySelector('.view-story-button');
+                    if (viewStoryButton) {
+                        viewStoryButton.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            openStoryModal(featuredStory.id);
+                        });
+                    }
+                }
+            }
+            
+            // Load story cards
+            function loadStoryCards(stories) {
+                const storiesGrid = document.getElementById('stories-grid');
+                
+                if (!storiesGrid) {
+                    console.error('Stories grid element not found');
+                    return;
+                }
+                
+                // Clear current content
+                storiesGrid.innerHTML = '';
+                
+                if (stories.length === 0) {
+                    storiesGrid.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <div class="text-4xl text-gray-300 mb-3">📱</div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-1">No Success Stories Yet</h3>
+                            <p class="text-gray-500 mb-4">Be the first to share your app building success!</p>
+                            <a href="submit-success-story.html" class="cta-button">Submit Your Story</a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Add story cards
+                stories.forEach(story => {
+                    const storyCard = createStoryCard(story);
+                    storiesGrid.appendChild(storyCard);
+                });
+            }
+            
+            // Load app cards
+            function loadAppCards(stories) {
+                const appsGrid = document.getElementById('apps-grid');
+                
+                if (!appsGrid) {
+                    console.error('Apps grid element not found');
+                    return;
+                }
+                
+                // Clear current content
+                appsGrid.innerHTML = '';
+                
+                if (stories.length === 0) {
+                    appsGrid.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <div class="text-4xl text-gray-300 mb-3">📱</div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-1">No Apps Showcase Yet</h3>
+                            <p class="text-gray-500 mb-4">Be the first to showcase your app!</p>
+                            <a href="submit-success-story.html" class="cta-button">Submit Your App</a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Add app cards
+                stories.forEach(story => {
+                    const appCard = createAppCard(story);
+                    appsGrid.appendChild(appCard);
+                });
+            }
+            
+            // Helper to get initial letter for avatar
+            function getInitial(name) {
+                return name ? name.charAt(0).toUpperCase() : 'A';
+            }
+            
+            // Format date for display
+            function formatDate(dateString) {
+                try {
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                } catch (e) {
+                    console.error('Error formatting date:', e);
+                    return 'Unknown date';
+                }
+            }
+            
+            // Create a story card
+            function createStoryCard(story) {
+                const card = document.createElement('div');
+                card.className = 'story-card';
+                card.setAttribute('data-story-id', story.id);
+                
+                // Create story card content
+                card.innerHTML = `
+                    <div class="story-header">
+                        <div class="avatar">
+                            ${getInitial(story.name)}
+                        </div>
+                        <div class="creator-info">
+                            <h3>${story.name || 'Anonymous'}</h3>
+                            <div class="experience">${story.experienceLevel || 'Beginner'}</div>
+                        </div>
+                    </div>
+                    <div class="story-content">
+                        <div class="story-testimonial">${story.testimonial || 'Great experience!'}</div>
+                        <div class="story-info">
+                            <div class="app-type-tag">${story.appType || 'App'}</div>
+                            <div class="story-date">${formatDate(story.date)}</div>
+                        </div>
+                        <a href="#" class="view-story-button" data-story-id="${story.id}">Read Full Story</a>
+                    </div>
+                `;
+                
+                // Add event listener to the "Read Full Story" button
+                const viewStoryButton = card.querySelector('.view-story-button');
+                if (viewStoryButton) {
+                    viewStoryButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        openStoryModal(story.id);
+                    });
+                }
+                
+                return card;
+            }
+            
+            // Create an app card
+            function createAppCard(story) {
+                const card = document.createElement('div');
+                card.className = 'app-card';
+                card.setAttribute('data-category', story.appType || 'Other');
+                card.setAttribute('data-story-id', story.id);
+                
+                // Get image URL
+                const appImage = story.images && story.images.length > 0 && story.images[0] 
+                    ? story.images[0] 
+                    : 'images/app-placeholder.jpg';
+                
+                // Create app card content
+                card.innerHTML = `
+                    <img src="${appImage}" alt="${story.appName || 'App'}" class="app-image">
+                    <div class="app-content">
+                        <div class="app-category">${story.appType || 'App'}</div>
+                        <div class="app-name">${story.appName || 'App'}</div>
+                        <div class="creator-name">by ${story.name || 'Anonymous'}</div>
+                        <div class="app-testimonial">${story.testimonial || 'Great experience!'}</div>
+                        <div class="app-meta">
+                            <div class="timeframe">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                ${formatDate(story.date)}
+                            </div>
+                            <div class="experience-level">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                ${story.experienceLevel || 'Beginner'}
+                            </div>
+                        </div>
+                        <a href="#" class="view-story-button" data-story-id="${story.id}">View Details</a>
+                    </div>
+                `;
+                
+                // Add event listener to the "View Details" button
+                const viewDetailsButton = card.querySelector('.view-story-button');
+                if (viewDetailsButton) {
+                    viewDetailsButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        openStoryModal(story.id);
+                    });
+                }
+                
+                return card;
+            }
+            
+            // Set up filter buttons
+            function setupFilterButtons() {
+                const filterButtons = document.querySelectorAll('.filter-button');
+                const appCards = document.querySelectorAll('.app-card');
+                
+                filterButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        // Remove active class from all buttons
+                        filterButtons.forEach(btn => btn.classList.remove('active'));
+                        
+                        // Add active class to clicked button
+                        this.classList.add('active');
+                        
+                        // Get filter value
+                        const filter = this.getAttribute('data-filter');
+                        
+                        // Filter app cards
+                        appCards.forEach(card => {
+                            if (filter === 'all' || card.getAttribute('data-category') === filter) {
+                                card.style.display = 'block';
+                            } else {
+                                card.style.display = 'none';
+                            }
+                        });
+                    });
+                });
+            }
+            
+            // Show empty state when no stories found
+            function showEmptyState() {
+                // Update both grids
+                const storiesGrid = document.getElementById('stories-grid');
+                const appsGrid = document.getElementById('apps-grid');
+                
+                const emptyStateHTML = `
+                    <div class="col-span-full empty-state">
+                        <div class="empty-state-icon">📱</div>
+                        <h3>No Success Stories Yet</h3>
+                        <p>Be the first to share your app building success!</p>
+                        <a href="submit-success-story.html" class="cta-button">Submit Your Story</a>
+                    </div>
+                `;
+                
+                if (storiesGrid) storiesGrid.innerHTML = emptyStateHTML;
+                if (appsGrid) appsGrid.innerHTML = emptyStateHTML;
+            }
+            
+            // Open story modal
+            function openStoryModal(storyId) {
+                // Find the story by ID in localStorage
+                let story = null;
+                try {
+                    const stories = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                    story = stories.find(s => s.id === storyId);
+                } catch (error) {
+                    console.error('Error finding story:', error);
+                }
+                
+                if (!story) {
+                    console.error('Story not found:', storyId);
+                    return;
+                }
+                
+                // Create modal content
+                let modalContent = `
+                    <div class="modal-story-header">
+                        <div class="modal-avatar">${getInitial(story.name)}</div>
+                        <div class="modal-creator-info">
+                            <h4>${story.name || 'Anonymous'}</h4>
+                            <div class="experience">${story.experienceLevel || 'Beginner'}</div>
+                            <div class="app-info"><strong>${story.appName || 'App'}</strong> - ${story.appType || 'App'}</div>
+                        </div>
+                    </div>
+                    <div class="modal-quote">${story.testimonial || 'Great experience!'}</div>
+                    <div class="modal-story-text">
+                        ${(story.story || 'No detailed story provided.').split('\n').map(paragraph => `<p>${paragraph}</p>`).join('')}
+                    </div>
+                    <div class="text-sm text-gray-500 mt-4">Submitted on ${formatDate(story.date)}</div>
+                `;
+                
+                document.getElementById('modal-body').innerHTML = modalContent;
+                
+                // Add images if available
+                const imagesContainer = document.createElement('div');
+                imagesContainer.className = 'modal-app-images mt-6';
+                
+                if (story.images && story.images.length > 0) {
+                    const hasImages = story.images.some(img => img !== null && img !== '');
+                    
+                    if (hasImages) {
+                        const imagesTitle = document.createElement('h5');
+                        imagesTitle.className = 'text-lg font-medium mb-3';
+                        imagesTitle.textContent = 'App Screenshots';
+                        imagesContainer.appendChild(imagesTitle);
+                        
+                        story.images.forEach((imageUrl, index) => {
+                            if (imageUrl) {
+                                const img = document.createElement('img');
+                                img.src = imageUrl;
+                                img.alt = `${story.appName} Screenshot ${index + 1}`;
+                                img.className = 'rounded shadow-sm';
+                                imagesContainer.appendChild(img);
+                            }
                         });
                         
-                        // Wait for all images to be processed
-                        try {
-                            processedImages = await Promise.all(imagePromises);
-                            console.log(`✅ Successfully processed ${processedImages.length} images`);
-                        } catch (imgError) {
-                            console.error('❌ Error processing images:', imgError);
-                            // Continue with empty images array
-                        }
+                        document.getElementById('modal-body').appendChild(imagesContainer);
                     }
-                    
-                    // Get form data
-                    const name = document.getElementById('name').value;
-                    const email = document.getElementById('email').value;
-                    const appType = document.getElementById('app-type').value;
-                    const appName = document.getElementById('app-name').value;
-                    const story = document.getElementById('story').value;
-                    const testimonial = document.getElementById('testimonial').value;
-                    const experienceLevel = document.getElementById('experience-level').value;
-                    
-                    // Create submission payload
-                    const submissionData = {
-                        name,
-                        email,
-                        appType,
-                        appName,
-                        experienceLevel,
-                        testimonial,
-                        story,
-                        images: processedImages
-                    };
-                    
-                    // Submit to Netlify function
-                    const response = await fetch('/.netlify/functions/submit-testimonial', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(submissionData)
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (!response.ok) {
-                        throw new Error(result.error || 'Error submitting story');
-                    }
-                    
-                    // For backwards compatibility, also store in localStorage
-                    try {
-                        // Create submission object
-                        const newSubmission = {
-                            id: result.submissionId || 'story_' + Date.now(),
-                            name,
-                            email,
-                            appName,
-                            appType,
-                            experienceLevel,
-                            testimonial,
-                            story,
-                            images: processedImages,
-                            date: new Date().toISOString(),
-                            status: 'pending'
-                        };
-                        
-                        // Save to localStorage (as a fallback and for compatibility)
-                        let existingSubmissions = [];
-                        try {
-                            const storedSubmissions = localStorage.getItem('appfoundry_submissions');
-                            if (storedSubmissions) {
-                                existingSubmissions = JSON.parse(storedSubmissions);
-                            }
-                        } catch (parseError) {
-                            console.error('❌ Error parsing existing submissions:', parseError);
-                        }
-                        
-                        // Add new submission to beginning of array
-                        existingSubmissions.unshift(newSubmission);
-                        
-                        // Save back to localStorage
-                        localStorage.setItem('appfoundry_submissions', JSON.stringify(existingSubmissions));
-                        
-                        // Also update backup seed
-                        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(existingSubmissions));
-                        
-                        console.log('💾 Successfully saved submission to localStorage (as backup)');
-                    } catch (localStorageError) {
-                        console.warn('⚠️ Could not save to localStorage, but server submission succeeded:', localStorageError);
-                    }
-                    
-                    // Success! Hide form and show success view
-                    formSection.style.display = 'none';
-                    successView.style.display = 'block';
-                    
-                    // Scroll to top of success view
-                    window.scrollTo({
-                        top: successView.offsetTop - 100,
-                        behavior: 'smooth'
-                    });
-                    
-                } catch (error) {
-                    console.error('❌ Error submitting form:', error);
-                    
-                    // Show error message
-                    statusMessage.textContent = error.message || 'An error occurred while submitting your story. Please try again.';
-                    statusMessage.className = 'status-message error';
-                    statusMessage.style.display = 'block';
-                    
-                    // Scroll to top to show error message
-                    window.scrollTo({
-                        top: statusMessage.offsetTop - 100,
-                        behavior: 'smooth'
-                    });
-                } finally {
-                    // Reset button regardless of outcome
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Submit Your Story';
+                }
+                
+                // Add CTA
+                const ctaDiv = document.createElement('div');
+                ctaDiv.className = 'modal-cta mt-6 text-center';
+                ctaDiv.innerHTML = `<a href="index.html#pricing" class="cta-button">Build Your Own App</a>`;
+                document.getElementById('modal-body').appendChild(ctaDiv);
+                
+                // Show modal
+                document.getElementById('story-modal').classList.add('active');
+                
+                // Prevent body scrolling
+                document.body.style.overflow = 'hidden';
+            }
+            
+            // Close story modal
+            function closeStoryModal() {
+                document.getElementById('story-modal').classList.remove('active');
+                
+                // Re-enable body scrolling
+                document.body.style.overflow = 'auto';
+            }
+            
+            // Add modal close functionality
+            document.querySelector('.close-modal').addEventListener('click', closeStoryModal);
+            
+            // Close modal on click outside content
+            const modal = document.getElementById('story-modal');
+            const modalContent = modal.querySelector('.modal-content');
+            
+            modal.addEventListener('click', function(e) {
+                if (!modalContent.contains(e.target)) {
+                    closeStoryModal();
                 }
             });
             
-            // Check for success parameter in URL (for redirects from Netlify)
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('success') && urlParams.get('success') === 'true') {
-                // Hide form and show success view
-                formSection.style.display = 'none';
-                successView.style.display = 'block';
+            // Close modal on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeStoryModal();
+                }
+            });
+            
+            // Start the process - initiate story loading
+            setTimeout(initializeStories, 100);
+            
+            // Add a debug panel
+            function addDebugPanel() {
+                const debugPanel = document.createElement('div');
+                debugPanel.className = 'debug-panel';
+                debugPanel.innerHTML = `
+                    <h3>Debug Panel</h3>
+                    <button class="debug-button" onclick="forceReload()">Force Reload Stories</button>
+                    <button class="debug-button" onclick="checkSupabaseConnection()">Check Supabase</button>
+                    <button class="debug-button" onclick="checkLocalStorage()">Check localStorage</button>
+                    <button class="debug-button" onclick="resetLocalStorage()">Reset localStorage</button>
+                    <div id="debug-output" style="margin-top: 10px; font-size: 11px; max-height: 200px; overflow-y: auto;"></div>
+                `;
+                document.body.appendChild(debugPanel);
+                
+                // Add global functions for debug panel
+                window.forceReload = function() {
+                    initializeStories();
+                    logDebug('Forced reload of stories');
+                };
+                
+                window.checkLocalStorage = function() {
+                    try {
+                        const stories = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+                        const approvedStories = stories.filter(s => s.status === 'approved');
+                        const featuredStoryId = localStorage.getItem('appfoundry_featured_story');
+                        
+                        logDebug(`Found ${stories.length} total stories, ${approvedStories.length} approved`);
+                        logDebug(`Featured story ID: ${featuredStoryId || 'none'}`);
+                        
+                        if (approvedStories.length > 0) {
+                            logDebug(`First approved story: ${approvedStories[0].appName} by ${approvedStories[0].name}`);
+                        }
+                    } catch (error) {
+                        logDebug(`Error checking localStorage: ${error.message}`);
+                    }
+                };
+                
+                window.resetLocalStorage = function() {
+                    if (confirm('This will clear all stories from localStorage. Are you sure?')) {
+                        localStorage.removeItem('appfoundry_submissions');
+                        localStorage.removeItem('appfoundry_approved_seed');
+                        localStorage.removeItem('appfoundry_featured_story');
+                        logDebug('localStorage reset');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    }
+                };
+                
+                function logDebug(message) {
+                    const debugOutput = document.getElementById('debug-output');
+                    if (debugOutput) {
+                        const timestamp = new Date().toLocaleTimeString();
+                        debugOutput.innerHTML = `[${timestamp}] ${message}<br>` + debugOutput.innerHTML;
+                    }
+                }
+                
+                // Add global logDebug function
+                window.logDebug = logDebug;
             }
+            
+            // Uncomment to enable debug panel
+            // addDebugPanel();
         });
-    </script>
-</body>
-</html>
