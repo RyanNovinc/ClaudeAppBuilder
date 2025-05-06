@@ -50,6 +50,664 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0070f3;
+            --primary-hover: #0055b3;
+            --secondary-color: #ff4c00;
+            --secondary-hover: #e54400;
+            --success-color: #10b981;
+            --warning-color: #fbbf24;
+            --error-color: #ef4444;
+            --text-dark: #111827;
+            --text-medium: #4b5563;
+            --text-light: #6b7280;
+            --background-white: #ffffff;
+            --background-light: #f9fafb;
+            --border-light: #e5e7eb;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
+            --transition-fast: 0.2s;
+        }
+        
+        /* Improved floating elements */
+        .floating-element {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.6;
+            z-index: 0;
+            animation: float 10s ease-in-out infinite;
+        }
+        
+        .floating-circle {
+            background: linear-gradient(135deg, rgba(0, 112, 243, 0.2), rgba(0, 112, 243, 0.1));
+        }
+        
+        .floating-square {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+            border-radius: 20%;
+            transform: rotate(45deg);
+        }
+        
+        .element-1 {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            right: 10%;
+            animation-delay: 0s;
+        }
+        
+        .element-2 {
+            width: 200px;
+            height: 200px;
+            bottom: 50px;
+            left: 5%;
+            animation-delay: 2s;
+        }
+        
+        .element-3 {
+            width: 150px;
+            height: 150px;
+            top: 40%;
+            right: 5%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+        }
+        
+        /* Hero section improvements */
+        .hero {
+            position: relative;
+            padding: 100px 0 120px;
+            overflow: hidden;
+            background-color: var(--background-light);
+            z-index: 1;
+        }
+        
+        .hero-container {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 50px;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 3;
+        }
+        
+        .tag-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .ai-powered-tag, .no-bs-tag {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: rgba(0, 112, 243, 0.1);
+            color: var(--primary-color);
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+        
+        .no-bs-tag {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-medium);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .primary-cta {
+            margin-bottom: 15px;
+            font-size: 1.125rem;
+            padding: 16px 32px;
+            background-color: var(--secondary-color);
+        }
+        
+        .primary-cta:hover {
+            background-color: var(--secondary-hover);
+        }
+        
+        .cta-microcopy {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+        
+        .guarantee-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background-color: rgba(16, 185, 129, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .badge-icon {
+            width: 24px;
+            height: 24px;
+            background-color: var(--success-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        
+        .badge-text {
+            font-weight: 500;
+            color: var(--success-color);
+        }
+        
+        .course-preview-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+            position: relative;
+            z-index: 3;
+        }
+        
+        .course-preview-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .video-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .video-placeholder {
+            width: 100%;
+            display: block;
+        }
+        
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .play-button:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .course-preview-card h3 {
+            padding: 20px 20px 10px;
+            font-size: 20px;
+            color: var(--text-dark);
+        }
+        
+        .course-meta {
+            padding: 0 20px 20px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 0.875rem;
+            color: var(--text-medium);
+        }
+        
+        .meta-icon {
+            color: var(--primary-color);
+        }
+        
+        /* Improved problem section */
+        .problem {
+            padding: 100px 0;
+            background-color: var(--background-white);
+        }
+        
+        .problem h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: var(--text-dark);
+        }
+        
+        .problems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .problem-item {
+            background-color: var(--background-light);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            transition: transform var(--transition-fast);
+        }
+        
+        .problem-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .problem-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .problem-item h3 {
+            font-size: 1.25rem;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+        
+        .problem-item p {
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+        
+        .problem-quote {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            font-style: italic;
+            color: var(--text-medium);
+            font-size: 1.25rem;
+            line-height: 1.6;
+            position: relative;
+            padding: 0 30px;
+        }
+        
+        .problem-quote p {
+            margin-bottom: 20px;
+        }
+        
+        .quote-author {
+            font-style: normal;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Proof section improvements */
+        .proof {
+            padding: 100px 0;
+            background-color: var(--background-light);
+        }
+        
+        .proof h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: var(--text-dark);
+        }
+        
+        .market-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .metric {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .metric-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .metric-label {
+            color: var(--text-medium);
+            font-size: 1rem;
+        }
+        
+        .tech-logos {
+            margin-bottom: 60px;
+            text-align: center;
+        }
+        
+        .tech-logos h3 {
+            margin-bottom: 30px;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+        }
+        
+        .logo-grid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .tech-logo {
+            height: 40px;
+            opacity: 0.8;
+            transition: opacity var(--transition-fast);
+        }
+        
+        .tech-logo:hover {
+            opacity: 1;
+        }
+        
+        /* Updated pricing section */
+        .pricing {
+            padding: 100px 0;
+            background-color: white;
+        }
+        
+        .pricing h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-medium);
+            font-size: 1.125rem;
+            max-width: 700px;
+            margin: 0 auto 60px;
+            line-height: 1.6;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .price-card {
+            background-color: var(--background-light);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            position: relative;
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        
+        .price-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .price-header {
+            padding: 30px;
+            text-align: center;
+            background-color: white;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .price-header h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+        
+        .price {
+            margin-bottom: 10px;
+        }
+        
+        .regular-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        .one-time {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+        
+        .price-monthly {
+            font-size: 0.875rem;
+            color: var(--text-medium);
+        }
+        
+        .price-features {
+            list-style: none;
+            padding: 30px;
+            margin: 0;
+        }
+        
+        .price-features li {
+            padding: 10px 0;
+            color: var(--text-medium);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .feature-check {
+            color: var(--success-color);
+            font-weight: 700;
+        }
+        
+        .feature-missing {
+            color: var(--text-light);
+        }
+        
+        .price-cta {
+            padding: 0 30px 30px;
+            text-align: center;
+        }
+        
+        .most-popular {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: var(--secondary-color);
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-bottom-left-radius: 8px;
+        }
+        
+        .complete {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--primary-color);
+            z-index: 2;
+        }
+        
+        .complete:hover {
+            transform: translateY(-5px) scale(1.05);
+        }
+        
+        .cta-button-highlighted {
+            background-color: var(--secondary-color);
+        }
+        
+        .cta-button-highlighted:hover {
+            background-color: var(--secondary-hover);
+        }
+        
+        /* Updated FAQ section */
+        .faq {
+            padding: 100px 0;
+            background-color: var(--background-light);
+        }
+        
+        .faq h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: var(--text-dark);
+        }
+        
+        .faq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+        }
+        
+        .faq-item {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .faq-question {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .faq-question h3 {
+            font-size: 1.125rem;
+            margin: 0;
+            color: var(--text-dark);
+        }
+        
+        .toggle-icon {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        
+        .faq-answer {
+            padding: 0 30px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition-fast), padding var(--transition-fast);
+        }
+        
+        .faq-answer.show {
+            padding: 20px 30px;
+            max-height: 1000px;
+        }
+        
+        .faq-answer p {
+            color: var(--text-medium);
+            line-height: 1.6;
+            margin: 0;
+        }
+        
+        /* Responsive design improvements */
+        @media (max-width: 1024px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .course-preview-card {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            
+            .tag-container {
+                justify-content: center;
+            }
+            
+            .guarantee-badge {
+                margin: 15px auto 0;
+            }
+            
+            .hero h1 {
+                font-size: 2.8rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero {
+                padding: 60px 0 80px;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .faq-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-grid {
+                gap: 40px;
+            }
+            
+            .complete {
+                transform: scale(1);
+            }
+            
+            .complete:hover {
+                transform: translateY(-5px) scale(1);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .primary-cta {
+                width: 100%;
+                font-size: 1rem;
+                padding: 14px 20px;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -289,10 +947,10 @@
                     
                     <div class="result-card highlight">
                         <h3>With AppFoundry</h3>
-                        <div class="result-cost">$197</div>
+                        <div class="result-cost">$499</div>
                         <div class="result-time">2 weeks</div>
                         <ul class="result-breakdown">
-                            <li>Course: $197 (one-time)</li>
+                            <li>Course: $499 (one-time)</li>
                             <li>Revisions: $0 (you make them)</li>
                             <li>Initial development: 1-2 weeks</li>
                             <li>Revision time: Minutes to hours</li>
@@ -301,7 +959,7 @@
                     
                     <div class="result-savings">
                         <h3>Your Total Savings</h3>
-                        <div class="savings-amount">$15,003</div>
+                        <div class="savings-amount">$14,701</div>
                         <div class="savings-time">4 months</div>
                         <a href="#pricing" class="cta-button">Start Saving Today</a>
                     </div>
@@ -588,7 +1246,7 @@
                         <li><span class="feature-check">✓</span> Complete 7-module course</li>
                         <li><span class="feature-check">✓</span> 30+ project templates</li>
                         <li><span class="feature-check">✓</span> Community forum access</li>
-                        <li><span class="feature-check">✓</span> 90-day money-back guarantee</li>
+                        <li><span class="feature-check">✓</span> 60-day money-back guarantee</li>
                         <li><span class="feature-check">✓</span> 3-month access to code updates</li>
                         <li class="feature-missing">✗ Advanced AI implementation techniques</li>
                         <li class="feature-missing">✗ 1-on-1 app review session</li>
@@ -746,11 +1404,11 @@
                 
                 <div class="faq-item">
                     <div class="faq-question">
-                        <h3>Will I receive certification?</h3>
+                        <h3>Do I get direct access to the instructor?</h3>
                         <div class="toggle-icon">+</div>
                     </div>
                     <div class="faq-answer">
-                        <p>Yes, upon completing the course, you'll receive an AppFoundry certification that demonstrates your ability to build apps using AI. More importantly, you'll have actual apps you've built that showcase your skills far better than any certificate.</p>
+                        <p>All students have access to community support where your questions will be answered promptly. Professional and Enterprise plan members get priority support with faster response times. Enterprise members also receive dedicated 1-on-1 support sessions.</p>
                     </div>
                 </div>
                 
@@ -857,144 +1515,242 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="scripts.js"></script>
-    <script src="auth-implementation.js"></script>
-    
     <script>
         // Module details toggle
-        document.querySelectorAll('.module-expand').forEach(toggle => {
-            toggle.addEventListener('click', function() {
-                const moduleId = this.getAttribute('data-module');
-                const details = document.getElementById(`module-details-${moduleId}`);
-                
-                if (details.style.display === 'block') {
-                    details.style.display = 'none';
-                    this.textContent = `See Lesson Details +`;
-                } else {
-                    details.style.display = 'block';
-                    this.textContent = `Hide Lesson Details -`;
-                }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Module details toggle
+            document.querySelectorAll('.module-expand').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const moduleId = this.getAttribute('data-module');
+                    const details = document.getElementById(`module-details-${moduleId}`);
+                    
+                    if (details.style.display === 'block') {
+                        details.style.display = 'none';
+                        this.textContent = `See Lesson Details +`;
+                    } else {
+                        details.style.display = 'block';
+                        this.textContent = `Hide Lesson Details -`;
+                    }
+                });
             });
-        });
-        
-        // FAQ toggles
-        document.querySelectorAll('.faq-question').forEach(question => {
-            question.addEventListener('click', function() {
-                const answer = this.nextElementSibling;
-                const icon = this.querySelector('.toggle-icon');
-                
-                if (answer.style.display === 'block') {
-                    answer.style.display = 'none';
-                    icon.textContent = '+';
-                } else {
-                    answer.style.display = 'block';
-                    icon.textContent = '-';
-                }
+            
+            // FAQ toggles
+            document.querySelectorAll('.faq-question').forEach(question => {
+                question.addEventListener('click', function() {
+                    const answer = this.nextElementSibling;
+                    const icon = this.querySelector('.toggle-icon');
+                    
+                    // Close all other FAQs
+                    document.querySelectorAll('.faq-answer').forEach(item => {
+                        if (item !== answer && item.classList.contains('show')) {
+                            item.classList.remove('show');
+                            item.previousElementSibling.querySelector('.toggle-icon').textContent = '+';
+                        }
+                    });
+                    
+                    // Toggle current FAQ
+                    if (answer.classList.contains('show')) {
+                        answer.classList.remove('show');
+                        icon.textContent = '+';
+                    } else {
+                        answer.classList.add('show');
+                        icon.textContent = '-';
+                    }
+                });
             });
-        });
-        
-        // ROI Calculator
-        document.getElementById('calculate-roi').addEventListener('click', function() {
-            const complexity = document.getElementById('app-complexity').value;
-            const rate = parseInt(document.getElementById('developer-rate').value);
-            const revisions = parseInt(document.getElementById('revisions').value);
             
-            let baseCost, baseTime;
+            // Carousel functionality - improved
+            const carousel = document.querySelector('.wins-carousel');
+            const items = document.querySelectorAll('.win-item');
+            const dots = document.querySelectorAll('.carousel-dots .dot');
+            const prevButton = document.querySelector('.carousel-prev');
+            const nextButton = document.querySelector('.carousel-next');
+            let currentIndex = 0;
             
-            switch(complexity) {
-                case 'simple':
-                    baseCost = 8000;
-                    baseTime = 2.5;
-                    break;
-                case 'medium':
-                    baseCost = 15000;
-                    baseTime = 4.5;
-                    break;
-                case 'complex':
-                    baseCost = 30000;
-                    baseTime = 7;
-                    break;
-                default:
-                    baseCost = 15000;
-                    baseTime = 4.5;
+            function showSlide(index) {
+                // Reset current index if out of bounds
+                if (index >= items.length) {
+                    index = 0;
+                } else if (index < 0) {
+                    index = items.length - 1;
+                }
+                
+                // Update current index
+                currentIndex = index;
+                
+                // Update carousel position with smooth transition
+                items.forEach((item, i) => {
+                    item.style.display = 'none';
+                    item.style.opacity = '0';
+                    
+                    if (i === currentIndex) {
+                        item.style.display = 'block';
+                        setTimeout(() => {
+                            item.style.opacity = '1';
+                        }, 50);
+                    }
+                });
+                
+                // Update dots
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === currentIndex);
+                });
             }
             
-            // Adjust based on rate
-            const rateFactor = rate / 85;
-            baseCost = Math.round(baseCost * rateFactor);
+            // Set up event listeners
+            prevButton.addEventListener('click', () => showSlide(currentIndex - 1));
+            nextButton.addEventListener('click', () => showSlide(currentIndex + 1));
             
-            // Calculate revision costs
-            const revisionCost = Math.round(baseCost * 0.15 * revisions);
-            const totalCost = baseCost + revisionCost;
-            
-            // Calculate total time
-            const revisionTime = revisions * 0.5;
-            const totalTime = baseTime + revisionTime;
-            
-            // Update the results
-            document.querySelector('.result-card:nth-child(1) .result-cost').textContent = `$${totalCost.toLocaleString()}`;
-            document.querySelector('.result-card:nth-child(1) .result-time').textContent = `${totalTime.toFixed(1)} months`;
-            document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(1)').textContent = `Development: $${baseCost.toLocaleString()}`;
-            document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(2)').textContent = `Revisions: $${revisionCost.toLocaleString()}`;
-            
-            // Calculate savings
-            const savings = totalCost - 499;
-            const timeMonths = totalTime - 0.5;
-            
-            document.querySelector('.savings-amount').textContent = `$${savings.toLocaleString()}`;
-            document.querySelector('.savings-time').textContent = `${timeMonths.toFixed(1)} months`;
-            
-            // Update AppFoundry side
-            document.querySelector('.result-card:nth-child(2) .result-cost').textContent = `$499`;
-            document.querySelector('.result-card:nth-child(2) .result-breakdown li:nth-child(1)').textContent = `Course: $499 (one-time)`;
-        });
-        
-        // Carousel functionality
-        const carousel = document.querySelector('.wins-carousel');
-        const items = document.querySelectorAll('.win-item');
-        const dots = document.querySelectorAll('.carousel-dots .dot');
-        const prevButton = document.querySelector('.carousel-prev');
-        const nextButton = document.querySelector('.carousel-next');
-        let currentIndex = 0;
-        
-        function showSlide(index) {
-            // Reset current index if out of bounds
-            if (index >= items.length) {
-                index = 0;
-            } else if (index < 0) {
-                index = items.length - 1;
-            }
-            
-            // Update current index
-            currentIndex = index;
-            
-            // Update carousel position
-            items.forEach((item, i) => {
-                item.style.display = i === currentIndex ? 'block' : 'none';
-            });
-            
-            // Update dots
             dots.forEach((dot, i) => {
-                dot.classList.toggle('active', i === currentIndex);
+                dot.addEventListener('click', () => showSlide(i));
             });
-        }
-        
-        // Set up event listeners
-        prevButton.addEventListener('click', () => showSlide(currentIndex - 1));
-        nextButton.addEventListener('click', () => showSlide(currentIndex + 1));
-        
-        dots.forEach((dot, i) => {
-            dot.addEventListener('click', () => showSlide(i));
+            
+            // Initialize carousel
+            showSlide(0);
+            
+            // Auto-advance carousel every 5 seconds
+            let autoPlayInterval = setInterval(() => {
+                showSlide(currentIndex + 1);
+            }, 5000);
+            
+            // Pause auto-advance on hover
+            carousel.addEventListener('mouseenter', () => {
+                clearInterval(autoPlayInterval);
+            });
+            
+            carousel.addEventListener('mouseleave', () => {
+                autoPlayInterval = setInterval(() => {
+                    showSlide(currentIndex + 1);
+                }, 5000);
+            });
+            
+            // ROI Calculator
+            document.getElementById('calculate-roi').addEventListener('click', function() {
+                const complexity = document.getElementById('app-complexity').value;
+                const rate = parseInt(document.getElementById('developer-rate').value);
+                const revisions = parseInt(document.getElementById('revisions').value);
+                
+                let baseCost, baseTime;
+                
+                switch(complexity) {
+                    case 'simple':
+                        baseCost = 8000;
+                        baseTime = 2.5;
+                        break;
+                    case 'medium':
+                        baseCost = 15000;
+                        baseTime = 4.5;
+                        break;
+                    case 'complex':
+                        baseCost = 30000;
+                        baseTime = 7;
+                        break;
+                    default:
+                        baseCost = 15000;
+                        baseTime = 4.5;
+                }
+                
+                // Adjust based on rate
+                const rateFactor = rate / 85;
+                baseCost = Math.round(baseCost * rateFactor);
+                
+                // Calculate revision costs
+                const revisionCost = Math.round(baseCost * 0.15 * revisions);
+                const totalCost = baseCost + revisionCost;
+                
+                // Calculate total time
+                const revisionTime = revisions * 0.5;
+                const totalTime = baseTime + revisionTime;
+                
+                // Update the results with animation
+                animateNumber(document.querySelector('.result-card:nth-child(1) .result-cost'), totalCost, ');
+                document.querySelector('.result-card:nth-child(1) .result-time').textContent = `${totalTime.toFixed(1)} months`;
+                document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(1)').textContent = `Development: ${baseCost.toLocaleString()}`;
+                document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(2)').textContent = `Revisions: ${revisionCost.toLocaleString()}`;
+                
+                // Calculate savings
+                const savings = totalCost - 499;
+                const timeMonths = totalTime - 0.5;
+                
+                // Update savings with animation
+                animateNumber(document.querySelector('.savings-amount'), savings, ');
+                document.querySelector('.savings-time').textContent = `${timeMonths.toFixed(1)} months`;
+            });
+            
+            // Animation function for numbers
+            function animateNumber(element, targetNumber, prefix = '') {
+                const duration = 1000; // 1 second
+                const frameDuration = 1000 / 60; // 60fps
+                const totalFrames = Math.round(duration / frameDuration);
+                const startValue = 0;
+                
+                let frame = 0;
+                const counter = setInterval(() => {
+                    frame++;
+                    const progress = frame / totalFrames;
+                    const currentValue = Math.round(startValue + (targetNumber - startValue) * progress);
+                    
+                    element.textContent = `${prefix}${currentValue.toLocaleString()}`;
+                    
+                    if (frame === totalFrames) {
+                        clearInterval(counter);
+                    }
+                }, frameDuration);
+            }
+            
+            // Intersection Observer for fade-in animations
+            const fadeElements = document.querySelectorAll('.problem-item, .metric, .module-card, .price-card');
+            
+            const fadeObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fade-in');
+                        fadeObserver.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+            
+            fadeElements.forEach(element => {
+                fadeObserver.observe(element);
+            });
+            
+            // Add smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    
+                    if (targetId === '#') {
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                        return;
+                    }
+                    
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        const headerOffset = 80;
+                        const elementPosition = targetElement.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                        
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+            
+            // Login button functionality
+            document.getElementById('loginButton').addEventListener('click', function() {
+                window.location.href = 'direct-login.html';
+            });
         });
-        
-        // Initialize carousel
-        showSlide(0);
-        
-        // Auto-advance carousel every 5 seconds
-        setInterval(() => {
-            showSlide(currentIndex + 1);
-        }, 5000);
     </script>
-</head>
 </body>
 </html>
