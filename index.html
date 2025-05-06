@@ -54,8 +54,9 @@
         :root {
             --primary-color: #0070f3;
             --primary-hover: #0055b3;
-            --secondary-color: #ff4c00;
-            --secondary-hover: #e54400;
+            --secondary-color: #FF5722;
+            --secondary-hover: #E64A19;
+            --accent-color: #7e22ce;
             --success-color: #10b981;
             --warning-color: #fbbf24;
             --error-color: #ef4444;
@@ -64,10 +65,200 @@
             --text-light: #6b7280;
             --background-white: #ffffff;
             --background-light: #f9fafb;
+            --background-gradient: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
             --border-light: #e5e7eb;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            --border-radius: 12px;
+            --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            --box-shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.1);
+            --border-radius: 16px;
             --transition-fast: 0.2s;
+            --section-spacing: 120px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+            color: var(--text-medium);
+            background-color: var(--background-white);
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Global Typography */
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-dark);
+            font-weight: 700;
+            line-height: 1.3;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, #111827, #4b5563);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        h3 {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        p {
+            margin-bottom: 1.5rem;
+        }
+        
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+        
+        a:hover {
+            color: var(--primary-hover);
+        }
+        
+        /* Header & Navigation */
+        header {
+            background-color: var(--background-white);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo::before {
+            content: '';
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-color: var(--secondary-color);
+            margin-right: 8px;
+            border-radius: 6px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+        
+        nav a {
+            color: var(--text-medium);
+            font-weight: 500;
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+        
+        nav a:hover {
+            color: var(--text-dark);
+        }
+        
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--secondary-color);
+            transition: width var(--transition-fast);
+        }
+        
+        nav a:hover::after {
+            width: 100%;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all var(--transition-fast);
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .cta-button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            color: white;
+            box-shadow: 0 6px 15px rgba(0, 112, 243, 0.3);
+        }
+        
+        .cta-button.small {
+            padding: 8px 16px;
+            font-size: 0.875rem;
+        }
+        
+        .cta-button.large {
+            padding: 16px 32px;
+            font-size: 1.125rem;
+        }
+        
+        .guarantee-banner {
+            background-color: rgba(16, 185, 129, 0.1);
+            padding: 12px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .guarantee-banner .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .guarantee-icon {
+            font-size: 1.25rem;
+        }
+        
+        .guarantee-text {
+            font-size: 0.9375rem;
+            color: var(--text-dark);
+        }
+        
+        .guarantee-link {
+            color: var(--success-color);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            text-decoration: underline;
         }
         
         /* Improved floating elements */
@@ -125,12 +316,12 @@
             }
         }
         
-        /* Hero section improvements */
+        /* Enhanced Hero section */
         .hero {
             position: relative;
-            padding: 100px 0 120px;
+            padding: 120px 0 160px;
             overflow: hidden;
-            background-color: var(--background-light);
+            background: var(--background-gradient);
             z-index: 1;
         }
         
@@ -150,8 +341,8 @@
         
         .tag-container {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 24px;
         }
         
         .ai-powered-tag, .no-bs-tag {
@@ -162,8 +353,9 @@
             color: var(--primary-color);
             font-size: 0.875rem;
             font-weight: 600;
-            padding: 6px 12px;
+            padding: 8px 14px;
             border-radius: 20px;
+            backdrop-filter: blur(10px);
         }
         
         .no-bs-tag {
@@ -174,48 +366,57 @@
         .hero h1 {
             font-size: 3.5rem;
             line-height: 1.2;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             color: var(--text-dark);
-            font-weight: 700;
+            font-weight: 800;
         }
         
         .subtitle {
             font-size: 1.25rem;
             color: var(--text-medium);
-            margin-bottom: 30px;
+            margin-bottom: 36px;
             line-height: 1.6;
         }
         
         .primary-cta {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             font-size: 1.125rem;
-            padding: 16px 32px;
+            padding: 18px 36px;
             background-color: var(--secondary-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(255, 87, 34, 0.25);
         }
         
         .primary-cta:hover {
             background-color: var(--secondary-hover);
+            box-shadow: 0 12px 30px rgba(255, 87, 34, 0.35);
         }
         
         .cta-microcopy {
             font-size: 0.875rem;
-            color: var(--text-light);
-            margin-bottom: 20px;
+            color: var(--text-medium);
+            margin-bottom: 24px;
         }
         
         .guarantee-badge {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             background-color: rgba(16, 185, 129, 0.1);
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-top: 15px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            margin-top: 18px;
+            transition: all var(--transition-fast);
+        }
+        
+        .guarantee-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
         }
         
         .badge-icon {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             background-color: var(--success-color);
             color: white;
             border-radius: 50%;
@@ -226,7 +427,7 @@
         }
         
         .badge-text {
-            font-weight: 500;
+            font-weight: 600;
             color: var(--success-color);
         }
         
@@ -242,7 +443,7 @@
         
         .course-preview-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--box-shadow-hover);
         }
         
         .video-container {
@@ -253,6 +454,11 @@
         .video-placeholder {
             width: 100%;
             display: block;
+            transition: transform 0.5s;
+        }
+        
+        .video-container:hover .video-placeholder {
+            transform: scale(1.05);
         }
         
         .play-button {
@@ -260,9 +466,9 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background-color: rgba(0, 0, 0, 0.6);
+            width: 70px;
+            height: 70px;
+            background-color: rgba(255, 87, 34, 0.9);
             color: white;
             border-radius: 50%;
             display: flex;
@@ -270,82 +476,125 @@
             justify-content: center;
             font-size: 24px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
         
         .play-button:hover {
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: rgba(255, 87, 34, 1);
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
         }
         
         .course-preview-card h3 {
-            padding: 20px 20px 10px;
-            font-size: 20px;
+            padding: 24px 24px 16px;
+            font-size: 22px;
             color: var(--text-dark);
         }
         
         .course-meta {
-            padding: 0 20px 20px;
+            padding: 0 24px 24px;
         }
         
         .meta-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            font-size: 0.875rem;
+            gap: 12px;
+            margin-bottom: 14px;
+            font-size: 0.9375rem;
             color: var(--text-medium);
         }
         
         .meta-icon {
             color: var(--primary-color);
+            font-size: 1.25rem;
+        }
+        
+        /* Section Styling */
+        section {
+            padding: var(--section-spacing) 0;
+            position: relative;
+        }
+        
+        section:nth-child(even) {
+            background-color: var(--background-light);
+        }
+        
+        section h2 {
+            text-align: center;
+            font-size: 2.75rem;
+            margin-bottom: 24px;
+            color: var(--text-dark);
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-medium);
+            font-size: 1.25rem;
+            max-width: 700px;
+            margin: 0 auto 60px;
+            line-height: 1.6;
         }
         
         /* Improved problem section */
         .problem {
-            padding: 100px 0;
+            padding: var(--section-spacing) 0;
             background-color: var(--background-white);
-        }
-        
-        .problem h2 {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 60px;
-            color: var(--text-dark);
         }
         
         .problems-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-bottom: 60px;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 40px;
+            margin-bottom: 80px;
         }
         
         .problem-item {
             background-color: var(--background-light);
             border-radius: var(--border-radius);
-            padding: 30px;
+            padding: 40px 30px;
             box-shadow: var(--box-shadow);
-            transition: transform var(--transition-fast);
+            transition: all var(--transition-fast);
+            border-top: 5px solid transparent;
+        }
+        
+        .problem-item:nth-child(1) {
+            border-top-color: var(--error-color);
+        }
+        
+        .problem-item:nth-child(2) {
+            border-top-color: var(--warning-color);
+        }
+        
+        .problem-item:nth-child(3) {
+            border-top-color: var(--primary-color);
+        }
+        
+        .problem-item:nth-child(4) {
+            border-top-color: var(--secondary-color);
         }
         
         .problem-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-10px);
+            box-shadow: var(--box-shadow-hover);
         }
         
         .problem-icon {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
+            font-size: 3rem;
+            margin-bottom: 24px;
+            display: inline-block;
         }
         
         .problem-item h3 {
-            font-size: 1.25rem;
-            margin-bottom: 15px;
+            font-size: 1.5rem;
+            margin-bottom: 16px;
             color: var(--text-dark);
         }
         
         .problem-item p {
             color: var(--text-medium);
-            line-height: 1.6;
+            line-height: 1.7;
+            font-size: 1.0625rem;
         }
         
         .problem-quote {
@@ -354,10 +603,23 @@
             text-align: center;
             font-style: italic;
             color: var(--text-medium);
-            font-size: 1.25rem;
-            line-height: 1.6;
+            font-size: 1.375rem;
+            line-height: 1.7;
             position: relative;
-            padding: 0 30px;
+            padding: 30px 40px;
+            background-color: rgba(16, 185, 129, 0.05);
+            border-radius: var(--border-radius);
+            margin-bottom: 60px;
+        }
+        
+        .problem-quote::before {
+            content: '"';
+            position: absolute;
+            top: 0;
+            left: 0;
+            font-size: 5rem;
+            color: rgba(16, 185, 129, 0.2);
+            line-height: 1;
         }
         
         .problem-quote p {
@@ -368,56 +630,763 @@
             font-style: normal;
             font-weight: 600;
             color: var(--text-dark);
-        }
-
-        /* Proof section improvements */
-        .proof {
-            padding: 100px 0;
-            background-color: var(--background-light);
+            font-size: 1.125rem;
         }
         
-        .proof h2 {
+        .entrepreneur-objections {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .entrepreneur-objections h3 {
             text-align: center;
-            font-size: 2.5rem;
+            font-size: 1.75rem;
+            margin-bottom: 40px;
+        }
+        
+        .objections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
             margin-bottom: 60px;
+        }
+        
+        .objection-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            background-color: white;
+            padding: 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: all var(--transition-fast);
+        }
+        
+        .objection-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-hover);
+        }
+        
+        .objection-icon {
+            color: var(--error-color);
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .objection-item p {
+            margin: 0;
+            font-size: 1.0625rem;
+            color: var(--text-medium);
+        }
+        
+        .solution-teaser {
+            text-align: center;
+            padding: 50px;
+            background: linear-gradient(135deg, rgba(0, 112, 243, 0.07) 0%, rgba(255, 87, 34, 0.07) 100%);
+            border-radius: var(--border-radius);
+            margin-top: 60px;
+        }
+        
+        .solution-teaser h4 {
+            font-size: 1.75rem;
+            margin-bottom: 30px;
             color: var(--text-dark);
+        }
+        
+        /* Enhanced Solution Section */
+        .solution {
+            background-color: var(--background-light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .solution::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 112, 243, 0.03) 0%, rgba(255, 87, 34, 0.03) 100%);
+            z-index: 0;
+        }
+        
+        .solution-showcase {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            margin-bottom: 80px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .solution-text h3 {
+            font-size: 2rem;
+            margin-bottom: 24px;
+            color: var(--text-dark);
+        }
+        
+        .solution-text p {
+            font-size: 1.125rem;
+            color: var(--text-medium);
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+        
+        .solution-benefits {
+            list-style: none;
+            margin-bottom: 40px;
+        }
+        
+        .solution-benefits li {
+            position: relative;
+            padding-left: 32px;
+            margin-bottom: 16px;
+            font-size: 1.0625rem;
+            color: var(--text-medium);
+        }
+        
+        .solution-benefits li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        
+        .transformation-blocks {
+            margin-bottom: 40px;
+        }
+        
+        .transformation-item {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            padding: 30px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .transformation-before, .transformation-after {
+            flex: 1;
+            padding: 24px;
+            border-radius: 12px;
+        }
+        
+        .transformation-before {
+            background-color: rgba(239, 68, 68, 0.05);
+        }
+        
+        .transformation-after {
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+        
+        .transformation-before h4, .transformation-after h4 {
+            margin-bottom: 16px;
+            font-size: 1.25rem;
+        }
+        
+        .transformation-before h4 {
+            color: var(--error-color);
+        }
+        
+        .transformation-after h4 {
+            color: var(--success-color);
+        }
+        
+        .transformation-before ul, .transformation-after ul {
+            list-style: none;
+        }
+        
+        .transformation-before li, .transformation-after li {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 24px;
+        }
+        
+        .transformation-before li::before {
+            content: '✕';
+            position: absolute;
+            left: 0;
+            color: var(--error-color);
+        }
+        
+        .transformation-after li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success-color);
+        }
+        
+        .transformation-arrow {
+            font-size: 2rem;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        
+        .solution-cta {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .solution-image img {
+            width: 100%;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: transform var(--transition-fast);
+        }
+        
+        .solution-image:hover img {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-hover);
+        }
+        
+        /* Key Steps */
+        .key-steps {
+            margin-top: 100px;
+        }
+        
+        .key-steps h3 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 60px;
+        }
+        
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            position: relative;
+        }
+        
+        .steps-container::before {
+            content: '';
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--border-light);
+            z-index: 0;
+        }
+        
+        .step {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 40px 30px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            transition: all var(--transition-fast);
+            border-bottom: 4px solid var(--primary-color);
+        }
+        
+        .step:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--box-shadow-hover);
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+        
+        .step:nth-child(2) .step-number {
+            background-color: var(--secondary-color);
+        }
+        
+        .step:nth-child(2) {
+            border-bottom-color: var(--secondary-color);
+        }
+        
+        .step:nth-child(3) .step-number {
+            background-color: var(--success-color);
+        }
+        
+        .step:nth-child(3) {
+            border-bottom-color: var(--success-color);
+        }
+        
+        .step:nth-child(4) .step-number {
+            background-color: var(--accent-color);
+        }
+        
+        .step:nth-child(4) {
+            border-bottom-color: var(--accent-color);
+        }
+        
+        .step h4 {
+            font-size: 1.25rem;
+            margin-bottom: 16px;
+        }
+        
+        .step p {
+            color: var(--text-medium);
+            margin-bottom: 0;
+        }
+        
+        /* Persona Proof */
+        .persona-proof {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 40px;
+            margin-top: 80px;
+        }
+        
+        .persona-card {
+            display: flex;
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: all var(--transition-fast);
+        }
+        
+        .persona-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-hover);
+        }
+        
+        .persona-image {
+            width: 35%;
+            min-width: 150px;
+            overflow: hidden;
+        }
+        
+        .persona-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .persona-card:hover .persona-image img {
+            transform: scale(1.05);
+        }
+        
+        .persona-content {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .persona-quote {
+            font-size: 1.0625rem;
+            line-height: 1.7;
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            position: relative;
+            padding-left: 24px;
+        }
+        
+        .persona-quote::before {
+            content: '"';
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-size: 2rem;
+            color: var(--primary-color);
+            line-height: 1;
+        }
+        
+        .persona-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        /* Quick Wins Section */
+        .quick-wins {
+            background-color: var(--background-white);
+            position: relative;
+        }
+        
+        .wins-carousel {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .win-item {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            margin: 10px;
+            opacity: 0;
+            display: none;
+            transition: opacity 0.5s;
+        }
+        
+        .win-item.active {
+            opacity: 1;
+            display: block;
+        }
+        
+        .win-image {
+            position: relative;
+            overflow: hidden;
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+        }
+        
+        .win-image img {
+            width: 100%;
+            transition: transform 0.5s;
+        }
+        
+        .win-item:hover .win-image img {
+            transform: scale(1.05);
+        }
+        
+        .win-item h3 {
+            padding: 24px 24px 12px;
+            font-size: 1.5rem;
+        }
+        
+        .win-item p {
+            padding: 0 24px;
+            color: var(--text-medium);
+            line-height: 1.7;
+        }
+        
+        .build-time {
+            padding: 12px 24px 24px;
+            color: var(--primary-color);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .build-time::before {
+            content: '⏱️';
+            font-size: 1.25rem;
+        }
+        
+        .carousel-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 40px;
+            gap: 20px;
+        }
+        
+        .carousel-prev, .carousel-next {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+        
+        .carousel-prev:hover, .carousel-next:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.1);
+        }
+        
+        .carousel-dots {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--border-light);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .dot.active {
+            background-color: var(--primary-color);
+            transform: scale(1.2);
+        }
+        
+        /* ROI Calculator Section */
+        .roi-calculator {
+            background-color: var(--background-light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .roi-calculator::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('images/pattern-bg.svg') center/cover no-repeat;
+            opacity: 0.05;
+            z-index: 0;
+        }
+        
+        .calculator-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .calculator-inputs {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            align-items: end;
+        }
+        
+        .calculator-field {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .calculator-field label {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9375rem;
+        }
+        
+        .calculator-field select, .calculator-field input {
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--text-dark);
+            background-color: var(--background-light);
+            transition: all var(--transition-fast);
+        }
+        
+        .calculator-field select:focus, .calculator-field input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
+        }
+        
+        #calculate-roi {
+            margin-top: 20px;
+            background-color: var(--secondary-color);
+            height: 48px;
+        }
+        
+        #calculate-roi:hover {
+            background-color: var(--secondary-hover);
+        }
+        
+        .calculator-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .result-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            transition: all var(--transition-fast);
+        }
+        
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-hover);
+        }
+        
+        .result-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .result-cost {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        
+        .result-time {
+            font-size: 1.25rem;
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .result-breakdown {
+            list-style: none;
+            text-align: left;
+        }
+        
+        .result-breakdown li {
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-light);
+            color: var(--text-medium);
+            font-size: 0.9375rem;
+        }
+        
+        .result-card.highlight {
+            background-color: rgba(0, 112, 243, 0.02);
+            border: 2px solid var(--primary-color);
+            position: relative;
+        }
+        
+        .result-card.highlight h3 {
+            color: var(--primary-color);
+        }
+        
+        .result-card.highlight .result-cost {
+            color: var(--primary-color);
+        }
+        
+        .result-savings {
+            background-color: rgba(16, 185, 129, 0.05);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            transition: all var(--transition-fast);
+            grid-column: span 2;
+        }
+        
+        .result-savings:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-hover);
+        }
+        
+        .result-savings h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--success-color);
+        }
+        
+        .savings-amount {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--success-color);
+            margin-bottom: 10px;
+        }
+        
+        .savings-time {
+            font-size: 1.5rem;
+            color: var(--text-medium);
+            margin-bottom: 30px;
+        }
+        
+        .result-savings .cta-button {
+            background-color: var(--success-color);
+        }
+        
+        .result-savings .cta-button:hover {
+            background-color: #0da271;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        /* Proof Section */
+        .proof {
+            padding: var(--section-spacing) 0;
+            background-color: var(--background-white);
+            position: relative;
         }
         
         .market-metrics {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 30px;
-            margin-bottom: 60px;
+            margin-bottom: 80px;
         }
         
         .metric {
             background-color: white;
             border-radius: var(--border-radius);
-            padding: 30px;
+            padding: 40px 30px;
             text-align: center;
             box-shadow: var(--box-shadow);
+            transition: all var(--transition-fast);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .metric:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--box-shadow-hover);
         }
         
         .metric-number {
             font-size: 3rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 10px;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+            line-height: 1;
         }
         
         .metric-label {
             color: var(--text-medium);
-            font-size: 1rem;
+            font-size: 1.0625rem;
+            line-height: 1.6;
         }
         
         .tech-logos {
-            margin-bottom: 60px;
+            margin-bottom: 80px;
             text-align: center;
+            padding: 40px;
+            background-color: rgba(0, 0, 0, 0.02);
+            border-radius: var(--border-radius);
         }
         
         .tech-logos h3 {
-            margin-bottom: 30px;
-            font-size: 1.5rem;
+            margin-bottom: 40px;
+            font-size: 1.75rem;
             color: var(--text-dark);
         }
         
@@ -426,118 +1395,412 @@
             justify-content: center;
             align-items: center;
             flex-wrap: wrap;
-            gap: 30px;
+            gap: 40px;
         }
         
         .tech-logo {
             height: 40px;
-            opacity: 0.8;
-            transition: opacity var(--transition-fast);
+            opacity: 0.7;
+            transition: all var(--transition-fast);
+            filter: grayscale(100%);
         }
         
         .tech-logo:hover {
             opacity: 1;
+            filter: grayscale(0%);
+            transform: scale(1.1);
         }
         
-        /* Updated pricing section */
-        .pricing {
-            padding: 100px 0;
-            background-color: white;
-        }
-        
-        .pricing h2 {
+        .launch-examples {
             text-align: center;
-            font-size: 2.5rem;
+            padding: 60px 40px;
+            background: linear-gradient(135deg, rgba(0, 112, 243, 0.05) 0%, rgba(255, 87, 34, 0.05) 100%);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .launch-examples h3 {
+            font-size: 2rem;
             margin-bottom: 20px;
             color: var(--text-dark);
         }
         
-        .section-subtitle {
-            text-align: center;
-            color: var(--text-medium);
+        .launch-examples p {
             font-size: 1.125rem;
+            color: var(--text-medium);
             max-width: 700px;
-            margin: 0 auto 60px;
+            margin: 0 auto 40px;
+        }
+        
+        .founding-benefits {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .benefit {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 30px 24px;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            transition: all var(--transition-fast);
+        }
+        
+        .benefit:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--box-shadow-hover);
+        }
+        
+        .benefit-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .benefit h4 {
+            font-size: 1.25rem;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+        
+        .benefit p {
+            color: var(--text-medium);
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+        
+        .spots-remaining {
+            margin-bottom: 40px;
+        }
+        
+        .spots-meter {
+            height: 12px;
+            background-color: var(--border-light);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        
+        .spots-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 6px;
+        }
+        
+        .spots-text {
+            font-size: 1.125rem;
+            color: var(--text-dark);
+        }
+        
+        /* Curriculum Section */
+        .curriculum {
+            background-color: var(--background-light);
+            position: relative;
+        }
+        
+        .curriculum-visual {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            padding: 40px 0;
+        }
+        
+        .roadmap-line {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 100%;
+            background-color: rgba(0, 112, 243, 0.1);
+            border-radius: 3px;
+            z-index: 0;
+        }
+        
+        .modules {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .module {
+            display: flex;
+            align-items: flex-start;
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .module-number {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #5c6bc0 100%);
+            color: white;
+            font-size: 1.75rem;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 8px 20px rgba(0, 112, 243, 0.2);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .module:nth-child(even) .module-number {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #ff9800 100%);
+            box-shadow: 0 8px 20px rgba(255, 87, 34, 0.2);
+        }
+        
+        .module-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            flex: 1;
+            transition: all var(--transition-fast);
+        }
+        
+        .module-content:hover {
+            transform: translateX(8px);
+            box-shadow: var(--box-shadow-hover);
+        }
+        
+        .module:nth-child(even) .module-content:hover {
+            transform: translateX(-8px);
+        }
+        
+        .module-content h3 {
+            font-size: 1.375rem;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+        
+        .module-content p {
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            font-size: 1rem;
             line-height: 1.6;
+        }
+        
+        .module-expand {
+            display: inline-block;
+            color: var(--primary-color);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .module-expand:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+        
+        .module-details {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: var(--background-light);
+            border-radius: 8px;
+        }
+        
+        .module-details ul {
+            padding-left: 20px;
+        }
+        
+        .module-details li {
+            margin-bottom: 10px;
+            color: var(--text-medium);
+        }
+        
+        .curriculum-cta {
+            text-align: center;
+            margin-top: 60px;
+        }
+        
+        .cta-note {
+            margin-top: 12px;
+            font-size: 0.9375rem;
+            color: var(--text-medium);
+        }
+        
+        /* Comparison Section */
+        .comparison {
+            background-color: var(--background-white);
+        }
+        
+        .comparison-table-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            overflow-x: auto;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            padding: 16px 24px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .comparison-table th {
+            background-color: var(--background-light);
+            font-weight: 600;
+            color: var(--text-dark);
+            white-space: nowrap;
+        }
+        
+        .comparison-table th.highlight {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .comparison-table td.highlight {
+            background-color: rgba(0, 112, 243, 0.05);
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .comparison-table tr:hover td {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Enhanced Pricing Section */
+        .pricing {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            position: relative;
+        }
+        
+        .pricing::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 30%;
+            height: 30%;
+            background: radial-gradient(circle, rgba(0, 112, 243, 0.05) 0%, rgba(0, 112, 243, 0) 70%);
+            z-index: 0;
+        }
+        
+        .pricing::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40%;
+            height: 40%;
+            background: radial-gradient(circle, rgba(255, 87, 34, 0.05) 0%, rgba(255, 87, 34, 0) 70%);
+            z-index: 0;
         }
         
         .pricing-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 60px;
+            gap: 40px;
+            margin-bottom: 80px;
+            position: relative;
+            z-index: 1;
         }
         
         .price-card {
-            background-color: var(--background-light);
+            background-color: white;
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--box-shadow);
             position: relative;
-            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+            transition: all var(--transition-fast);
+            display: flex;
+            flex-direction: column;
         }
         
         .price-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-10px);
+            box-shadow: var(--box-shadow-hover);
         }
         
         .price-header {
-            padding: 30px;
+            padding: 40px 30px 30px;
             text-align: center;
-            background-color: white;
+            background-color: var(--background-light);
             border-bottom: 1px solid var(--border-light);
         }
         
         .price-header h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
+            font-size: 1.75rem;
+            margin-bottom: 20px;
             color: var(--text-dark);
         }
         
         .price {
-            margin-bottom: 10px;
+            margin-bottom: 16px;
         }
         
         .regular-price {
-            font-size: 2.5rem;
-            font-weight: 700;
+            font-size: 3rem;
+            font-weight: 800;
             color: var(--text-dark);
+            line-height: 1;
         }
         
         .one-time {
             display: block;
-            font-size: 0.875rem;
+            font-size: 0.9375rem;
             color: var(--text-light);
-            margin-top: 5px;
+            margin-top: 8px;
         }
         
         .price-monthly {
-            font-size: 0.875rem;
+            font-size: 0.9375rem;
             color: var(--text-medium);
+            padding: 8px 16px;
+            background-color: rgba(0, 0, 0, 0.02);
+            border-radius: 20px;
+            display: inline-block;
         }
         
         .price-features {
             list-style: none;
             padding: 30px;
             margin: 0;
+            flex: 1;
         }
         
         .price-features li {
-            padding: 10px 0;
+            padding: 12px 0;
             color: var(--text-medium);
             display: flex;
             align-items: flex-start;
-            gap: 10px;
+            gap: 12px;
+            border-bottom: 1px dashed var(--border-light);
+        }
+        
+        .price-features li:last-child {
+            border-bottom: none;
         }
         
         .feature-check {
             color: var(--success-color);
             font-weight: 700;
+            font-size: 1.25rem;
+            line-height: 1;
+            flex-shrink: 0;
         }
         
         .feature-missing {
             color: var(--text-light);
+            font-size: 1.25rem;
+            line-height: 1;
+            flex-shrink: 0;
         }
         
         .price-cta {
@@ -547,52 +1810,320 @@
         
         .most-popular {
             position: absolute;
-            top: 0;
-            right: 0;
+            top: 20px;
+            right: -32px;
             background-color: var(--secondary-color);
             color: white;
             font-size: 0.875rem;
             font-weight: 600;
-            padding: 8px 16px;
-            border-bottom-left-radius: 8px;
+            padding: 8px 40px;
+            transform: rotate(45deg);
+            z-index: 10;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         }
         
         .complete {
             transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             border: 2px solid var(--primary-color);
             z-index: 2;
         }
         
         .complete:hover {
-            transform: translateY(-5px) scale(1.05);
+            transform: translateY(-10px) scale(1.05);
         }
         
         .cta-button-highlighted {
             background-color: var(--secondary-color);
+            box-shadow: 0 8px 20px rgba(255, 87, 34, 0.25);
         }
         
         .cta-button-highlighted:hover {
             background-color: var(--secondary-hover);
+            box-shadow: 0 12px 30px rgba(255, 87, 34, 0.35);
         }
         
-        /* Updated FAQ section */
-        .faq {
-            padding: 100px 0;
-            background-color: var(--background-light);
+        .payment-options {
+            max-width: 700px;
+            margin: 0 auto 60px;
+            position: relative;
+            z-index: 1;
         }
         
-        .faq h2 {
+        .or-divider {
             text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 60px;
+            margin: 40px 0;
+            position: relative;
+        }
+        
+        .or-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: var(--border-light);
+            z-index: 0;
+        }
+        
+        .or-divider span {
+            background-color: var(--background-light);
+            padding: 0 20px;
+            font-weight: 600;
+            color: var(--text-medium);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .installment-plan {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 40px;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            transition: all var(--transition-fast);
+        }
+        
+        .installment-plan:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-hover);
+        }
+        
+        .installment-plan h3 {
+            font-size: 1.75rem;
+            margin-bottom: 16px;
             color: var(--text-dark);
+        }
+        
+        .installment-plan p {
+            color: var(--text-medium);
+            margin-bottom: 30px;
+            font-size: 1.125rem;
+        }
+        
+        .installment-details {
+            margin-bottom: 30px;
+        }
+        
+        .installment-price {
+            margin-bottom: 10px;
+        }
+        
+        .installment-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .installment-text {
+            font-size: 1.125rem;
+            color: var(--text-medium);
+            margin-left: 10px;
+        }
+        
+        .total-price {
+            font-size: 0.9375rem;
+            color: var(--text-light);
+        }
+        
+        .pricing-comparison {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .pricing-comparison h3 {
+            text-align: center;
+            font-size: 1.75rem;
+            margin-bottom: 40px;
+            color: var(--text-dark);
+        }
+        
+        .comparison-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+        }
+        
+        .comparison-item {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: all var(--transition-fast);
+            padding-bottom: 30px;
+        }
+        
+        .comparison-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-hover);
+        }
+        
+        .comparison-header {
+            background-color: var(--background-light);
+            padding: 20px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .comparison-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .comparison-features {
+            list-style: none;
+            padding: 20px 30px;
+        }
+        
+        .comparison-features li {
+            padding: 12px 0;
+            position: relative;
+            padding-left: 30px;
+            border-bottom: 1px dashed var(--border-light);
+        }
+        
+        .comparison-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .comparison-features li::before {
+            content: '✕';
+            position: absolute;
+            left: 0;
+            color: var(--error-color);
+            font-weight: 700;
+        }
+        
+        .comparison-item.highlighted .comparison-header {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .comparison-item.highlighted .comparison-price {
+            color: var(--primary-color);
+        }
+        
+        .comparison-item.highlighted .comparison-features li::before {
+            content: '✓';
+            color: var(--success-color);
+        }
+        
+        /* Guarantee Section */
+        .guarantee-section {
+            background-color: var(--background-white);
+            position: relative;
+        }
+        
+        .guarantee-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.03) 0%, rgba(0, 112, 243, 0.03) 100%);
+            z-index: 0;
+        }
+        
+        .guarantee-content {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .guarantee-image {
+            flex: 0 0 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .guarantee-seal {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+            position: relative;
+        }
+        
+        .guarantee-seal::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border: 2px dashed white;
+            border-radius: 50%;
+            animation: spin 30s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .seal-content {
+            font-size: 3rem;
+            font-weight: 800;
+        }
+        
+        .guarantee-text-content {
+            flex: 1;
+        }
+        
+        .guarantee-text-content h3 {
+            font-size: 2rem;
+            margin-bottom: 24px;
+            color: var(--success-color);
+        }
+        
+        .guarantee-text-content p {
+            color: var(--text-medium);
+            font-size: 1.125rem;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+        
+        .guarantee-text-content strong {
+            color: var(--text-dark);
+        }
+        
+        /* FAQ Section */
+        .faq {
+            background-color: var(--background-light);
+            position: relative;
         }
         
         .faq-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
             gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
         }
         
         .faq-item {
@@ -600,10 +2131,16 @@
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--box-shadow);
+            transition: all var(--transition-fast);
+        }
+        
+        .faq-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--box-shadow-hover);
         }
         
         .faq-question {
-            padding: 20px 30px;
+            padding: 24px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -615,30 +2152,198 @@
             font-size: 1.125rem;
             margin: 0;
             color: var(--text-dark);
+            padding-right: 20px;
         }
         
         .toggle-icon {
             font-size: 1.5rem;
             color: var(--primary-color);
             font-weight: 700;
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 112, 243, 0.1);
+            border-radius: 50%;
         }
         
         .faq-answer {
-            padding: 0 30px;
+            padding: 0;
             max-height: 0;
             overflow: hidden;
-            transition: max-height var(--transition-fast), padding var(--transition-fast);
+            transition: all 0.3s ease-in-out;
         }
         
         .faq-answer.show {
-            padding: 20px 30px;
+            padding: 24px 30px;
             max-height: 1000px;
         }
         
         .faq-answer p {
             color: var(--text-medium);
-            line-height: 1.6;
+            line-height: 1.7;
             margin: 0;
+            font-size: 1.0625rem;
+        }
+        
+        .have-more-questions {
+            text-align: center;
+            margin-top: 60px;
+        }
+        
+        .have-more-questions h3 {
+            font-size: 1.75rem;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+        
+        .have-more-questions p {
+            color: var(--text-medium);
+            font-size: 1.125rem;
+            margin-bottom: 30px;
+        }
+        
+        /* Final CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('images/pattern-bg.svg') center/cover no-repeat;
+            opacity: 0.1;
+            z-index: 0;
+        }
+        
+        .cta-section .container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cta-section h2 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .cta-section p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.25rem;
+            max-width: 700px;
+            margin: 0 auto 40px;
+        }
+        
+        .cta-section .cta-button {
+            background-color: white;
+            color: var(--primary-color);
+            font-size: 1.25rem;
+            padding: 18px 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .cta-section .cta-button:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .cta-guarantee {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 12px 24px;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .cta-guarantee .guarantee-icon {
+            font-size: 1.25rem;
+        }
+        
+        .cta-guarantee .guarantee-text {
+            font-size: 1rem;
+            color: white;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: #111827;
+            color: white;
+            padding: 80px 0 40px;
+        }
+        
+        footer .container {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        footer .logo {
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+        
+        .link-group h4 {
+            color: white;
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .link-group h4::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+        
+        .link-group ul {
+            list-style: none;
+        }
+        
+        .link-group li {
+            margin-bottom: 12px;
+        }
+        
+        .link-group a {
+            color: rgba(255, 255, 255, 0.7);
+            transition: all var(--transition-fast);
+        }
+        
+        .link-group a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        .copyright {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9375rem;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         /* Responsive design improvements */
@@ -646,6 +2351,11 @@
             .hero-container {
                 grid-template-columns: 1fr;
                 text-align: center;
+                gap: 60px;
+            }
+            
+            .hero h1 {
+                font-size: 3rem;
             }
             
             .course-preview-card {
@@ -661,18 +2371,62 @@
                 margin: 15px auto 0;
             }
             
-            .hero h1 {
-                font-size: 2.8rem;
+            .solution-showcase {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .solution-benefits li {
+                text-align: left;
+            }
+            
+            .guarantee-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .module-number {
+                margin-right: auto;
+                margin-left: auto;
+            }
+            
+            .module {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .module-content:hover {
+                transform: translateY(-8px) !important;
+            }
+            
+            .roadmap-line {
+                left: 50%;
+            }
+            
+            .complete {
+                transform: scale(1);
+            }
+            
+            .complete:hover {
+                transform: translateY(-10px);
             }
         }
         
         @media (max-width: 768px) {
+            :root {
+                --section-spacing: 80px;
+            }
+            
             .hero {
-                padding: 60px 0 80px;
+                padding: 80px 0 100px;
             }
             
             .hero h1 {
-                font-size: 2.2rem;
+                font-size: 2.5rem;
+            }
+            
+            h2 {
+                font-size: 2rem;
             }
             
             .faq-grid {
@@ -683,18 +2437,43 @@
                 gap: 40px;
             }
             
-            .complete {
-                transform: scale(1);
+            .problems-grid {
+                grid-template-columns: 1fr;
             }
             
-            .complete:hover {
-                transform: translateY(-5px) scale(1);
+            .transformation-item {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .transformation-arrow {
+                transform: rotate(90deg);
+            }
+            
+            .transformation-before, .transformation-after {
+                width: 100%;
+            }
+            
+            .calculator-inputs {
+                grid-template-columns: 1fr;
+            }
+            
+            .calculator-results {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-savings {
+                grid-column: span 1;
+            }
+            
+            .comparison-container {
+                grid-template-columns: 1fr;
             }
         }
         
         @media (max-width: 480px) {
             .hero h1 {
-                font-size: 1.8rem;
+                font-size: 2rem;
             }
             
             .subtitle {
@@ -706,1195 +2485,67 @@
                 font-size: 1rem;
                 padding: 14px 20px;
             }
+            
+            .section-subtitle {
+                font-size: 1rem;
+            }
+            
+            .tag-container {
+                flex-wrap: wrap;
+            }
+            
+            .faq-question h3 {
+                font-size: 1rem;
+            }
+            
+            .cta-section h2 {
+                font-size: 2rem;
+            }
         }
-    </style>
-</head>
-<body>
-    <header>
-        <div class="container">
-            <div class="logo">AppFoundry</div>
-            <nav>
-                <ul>
-                    <li><a href="#problem">The Problem</a></li>
-                    <li><a href="#solution">Our Solution</a></li>
-                    <li><a href="#curriculum">Curriculum</a></li>
-                    <li><a href="#pricing">Pricing</a></li>
-                    <li><a href="success-stories.html">Success Stories</a></li>
-                    <li><a href="about-creator.html">About</a></li>
-                </ul>
-            </nav>
-            <button class="cta-button small" id="loginButton">Log in</button>
-        </div>
-    </header>
-
-    <div class="guarantee-banner">
-        <div class="container">
-            <span class="guarantee-icon">🔒</span>
-            <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 60 days or get 100% of your money back</span>
-            <a href="refund-policy.html" class="guarantee-link">Learn More</a>
-        </div>
-    </div>
-
-    <!-- HERO SECTION (Z-PATTERN) -->
-<section class="hero">
-    <div class="floating-element floating-circle element-1"></div>
-    <div class="floating-element floating-square element-2"></div>
-    <div class="floating-element floating-circle element-3"></div>
-    
-    <div class="container hero-container">
-        <div class="hero-content">
-            <div class="tag-container">
-                <div class="ai-powered-tag">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2a10 10 0 1 0 10 10 4 4 0 1 1-4-4"/>
-                        <path d="M18 2a4 4 0 0 0-4 4"/>
-                    </svg>
-                    AI-Powered
-                </div>
-                <div class="no-bs-tag">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M5 12h14"/>
-                        <path d="m12 5-7 7 7 7"/>
-                    </svg>
-                    No-Code Required
-                </div>
-            </div>
-            <h1>Build AI-Powered Apps Without Code in 30 Days</h1>
-            <p class="subtitle">Learn to create functional, professional apps using VSCode, React Native, and AI prompting—even if you've never written a line of code before.</p>
-            <a href="#pricing" class="cta-button large primary-cta">Start Building My First App Today</a>
-            <div class="cta-microcopy">No technical skills required. Perfect for entrepreneurs and self-starters.</div>
-            <div class="guarantee-badge">
-                <div class="badge-icon">✓</div>
-                <div class="badge-text">60-Day App Building Guarantee</div>
-            </div>
-        </div>
-        <div class="course-preview-card">
-            <div class="video-container">
-                <img src="images/demo-video-thumbnail.jpg" alt="See how easy it is to build apps with Claude AI" class="video-placeholder">
-                <div class="play-button">▶</div>
-            </div>
-            <h3>App Building with Claude</h3>
-            <div class="course-meta">
-                <div class="meta-item">
-                    <span class="meta-icon">📘</span>
-                    <span>7 Comprehensive Modules</span>
-                </div>
-                <div class="meta-item">
-                    <span class="meta-icon">📝</span>
-                    <span>15 Practical Lessons</span>
-                </div>
-                <div class="meta-item">
-                    <span class="meta-icon">⏱️</span>
-                    <span>Build Your First App in 14 Days</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-    <!-- PROBLEM SECTION -->
-<section class="problem" id="problem">
-    <div class="container">
-        <h2>The Painful Reality of App Development for Entrepreneurs</h2>
         
-        <div class="problems-grid">
-            <div class="problem-item">
-                <div class="problem-icon">💰</div>
-                <h3>Absurd Costs</h3>
-                <p>Traditional app development costs $15,000 to $50,000+ for even simple MVPs. Each revision means another invoice, draining your startup budget fast.</p>
-            </div>
-            <div class="problem-item">
-                <div class="problem-icon">⏳</div>
-                <h3>Endless Delays</h3>
-                <p>Most apps take 3-6 months to build, delaying your market entry and giving competitors time to move ahead while you're stuck waiting on developers.</p>
-            </div>
-            <div class="problem-item">
-                <div class="problem-icon">🔄</div>
-                <h3>Communication Nightmares</h3>
-                <p>Explaining your vision to developers is exhausting. What you describe is rarely what you get, forcing you to compromise on features your business needs.</p>
-            </div>
-            <div class="problem-item">
-                <div class="problem-icon">🔒</div>
-                <h3>Dependency Trap</h3>
-                <p>Once developers build your app, you're locked in. Every small change requires going back to them (and paying again), keeping you from iterating quickly.</p>
-            </div>
-        </div>
+        /* Animations and Transitions */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s ease-out forwards;
+        }
         
-        <div class="problem-quote">
-            <p>"I never set out to become an app development expert. Like many entrepreneurs, I simply needed an app for my business. The traditional development path was expensive and frustrating, which led me to discover a better way..."</p>
-            <div class="quote-author">— AppFoundry Creator</div>
-        </div>
-        
-        <div class="entrepreneur-objections">
-            <h3>Sound Familiar?</h3>
-            <div class="objections-grid">
-                <div class="objection-item">
-                    <div class="objection-icon">❌</div>
-                    <p>"I've been quoted $20,000+ for a simple app that should only take a few weeks to build."</p>
-                </div>
-                <div class="objection-item">
-                    <div class="objection-icon">❌</div>
-                    <p>"The developer didn't understand my vision, and now I'm stuck with something that doesn't work how I need it to."</p>
-                </div>
-                <div class="objection-item">
-                    <div class="objection-icon">❌</div>
-                    <p>"I need to make changes to my app, but the developer wants to charge me almost as much as the initial build!"</p>
-                </div>
-                <div class="objection-item">
-                    <div class="objection-icon">❌</div>
-                    <p>"I can't afford to wait 4+ months for my app - I need to start getting customer feedback now."</p>
-                </div>
-            </div>
-            
-            <div class="solution-teaser">
-                <h4>What if you could build your app yourself in just 30 days, with zero coding experience?</h4>
-                <a href="#solution" class="cta-button">See How It Works</a>
-            </div>
-        </div>
-    </div>
-</section>
-
-    <!-- SOLUTION SECTION -->
-<section class="solution" id="solution">
-    <div class="container">
-        <h2>The AppFoundry Solution: AI-Powered App Development for Entrepreneurs</h2>
-        <p class="section-subtitle">Build your app yourself without writing a single line of code</p>
-        
-        <div class="solution-showcase">
-            <div class="solution-text">
-                <h3>From Idea to Functional App in 30 Days</h3>
-                <p>AppFoundry gives you a proven system to harness the power of Claude AI for building professional apps—without coding experience or technical knowledge.</p>
-                
-                <ul class="solution-benefits">
-                    <li><strong>Direct your personal AI developer</strong> using our proven prompt frameworks</li>
-                    <li><strong>Create exactly what you envision</strong> without technical limitations</li>
-                    <li><strong>Make unlimited changes yourself</strong> instead of paying developers</li>
-                    <li><strong>Launch in days, not months</strong> with our streamlined process</li>
-                    <li><strong>Own 100% of your creation</strong> with no ongoing dependencies</li>
-                </ul>
-                
-                <div class="transformation-blocks">
-                    <div class="transformation-item">
-                        <div class="transformation-before">
-                            <h4>Before AppFoundry</h4>
-                            <ul>
-                                <li>$20,000+ development costs</li>
-                                <li>3-6 month waiting periods</li>
-                                <li>Frustrating revision cycles</li>
-                                <li>Dependency on developers</li>
-                            </ul>
-                        </div>
-                        <div class="transformation-arrow">→</div>
-                        <div class="transformation-after">
-                            <h4>After AppFoundry</h4>
-                            <ul>
-                                <li>One-time $499 investment</li>
-                                <li>Build apps in 2-4 weeks</li>
-                                <li>Make changes yourself instantly</li>
-                                <li>Complete independence</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="solution-cta">
-                    <a href="#pricing" class="cta-button">Start Building My App Today</a>
-                </div>
-            </div>
-            
-            <div class="solution-image">
-                <img src="images/app-building-process.png" alt="The AppFoundry process transforms your ideas into working apps using Claude AI">
-            </div>
-        </div>
-        
-        <div class="key-steps">
-            <h3>How It Works: The AppFoundry Method</h3>
-            
-            <div class="steps-container">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <h4>Define Your App Vision</h4>
-                    <p>Use our templated frameworks to clearly define your app's features, without any technical jargon.</p>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <h4>Generate Code with AI</h4>
-                    <p>Our proven prompt templates tell Claude AI exactly what to build, producing professional code automatically.</p>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <h4>Assemble Components</h4>
-                    <p>Follow our step-by-step guide to combine the AI-generated components into a complete app.</p>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <h4>Test & Launch</h4>
-                    <p>Verify your app works as expected and deploy it to the world using our simplified publishing process.</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="persona-proof">
-            <div class="persona-card">
-                <div class="persona-image">
-                    <img src="images/entrepreneur-persona.jpg" alt="Entrepreneur using AppFoundry">
-                </div>
-                <div class="persona-content">
-                    <div class="persona-quote">
-                        "I needed an inventory management app for my business but couldn't afford the $25,000 quote I received. With AppFoundry, I built it myself in just 3 weeks for a fraction of the cost."
-                    </div>
-                    <div class="persona-name">Michael, E-commerce Entrepreneur</div>
-                </div>
-            </div>
-            
-            <div class="persona-card">
-                <div class="persona-image">
-                    <img src="images/startups-persona.jpg" alt="Startup founder using AppFoundry">
-                </div>
-                <div class="persona-content">
-                    <div class="persona-quote">
-                        "As a non-technical founder, I needed an MVP to validate my idea before seeking funding. AppFoundry helped me build a fully functional prototype in weeks instead of months."
-                    </div>
-                    <div class="persona-name">Sarah, SaaS Startup Founder</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-    <!-- QUICK WINS SECTION -->
-    <section class="quick-wins">
-        <div class="container">
-            <h2>What You'll Build in Your First 14 Days</h2>
-            <p class="section-subtitle">Start with these simple projects to build confidence before tackling your main app idea</p>
-            
-            <div class="wins-carousel">
-                <div class="win-item">
-                    <div class="win-image">
-                        <img src="images/task-tracker-app.png" alt="Task Tracker App Screenshot">
-                    </div>
-                    <h3>Task Tracker App</h3>
-                    <p>A simple but powerful task management app with categories, due dates, and notifications.</p>
-                    <div class="build-time">Build time: 4 hours</div>
-                </div>
-                
-                <div class="win-item">
-                    <div class="win-image">
-                        <img src="images/recipe-finder-app.png" alt="Recipe Finder App Screenshot">
-                    </div>
-                    <h3>Recipe Finder App</h3>
-                    <p>Search recipes by ingredients you already have at home with filtering and favorites.</p>
-                    <div class="build-time">Build time: 6 hours</div>
-                </div>
-                
-                <div class="win-item">
-                    <div class="win-image">
-                        <img src="images/workout-tracker-app.png" alt="Workout Tracker App Screenshot">
-                    </div>
-                    <h3>Workout Tracker App</h3>
-                    <p>Track your exercises, sets, reps, and progress with visual progress charts.</p>
-                    <div class="build-time">Build time: 8 hours</div>
-                </div>
-                
-                <div class="carousel-controls">
-                    <button class="carousel-prev">&lt;</button>
-                    <div class="carousel-dots">
-                        <span class="dot active"></span>
-                        <span class="dot"></span>
-                        <span class="dot"></span>
-                    </div>
-                    <button class="carousel-next">&gt;</button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ROI CALCULATOR SECTION -->
-    <section class="roi-calculator">
-        <div class="container">
-            <h2>Calculate Your Savings</h2>
-            <p class="section-subtitle">See exactly how much time and money AppFoundry will save you</p>
-            
-            <div class="calculator-container">
-                <div class="calculator-inputs">
-                    <div class="calculator-field">
-                        <label for="app-complexity">App Complexity Level</label>
-                        <select id="app-complexity">
-                            <option value="simple">Simple (5-8 screens)</option>
-                            <option value="medium" selected>Medium (9-15 screens)</option>
-                            <option value="complex">Complex (16+ screens)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="calculator-field">
-                        <label for="developer-rate">Average Developer Rate ($/hour)</label>
-                        <input type="number" id="developer-rate" value="85" min="50" max="200">
-                    </div>
-                    
-                    <div class="calculator-field">
-                        <label for="revisions">Expected Number of Revisions</label>
-                        <input type="number" id="revisions" value="3" min="1" max="10">
-                    </div>
-                    
-                    <button id="calculate-roi" class="cta-button">Calculate My Savings</button>
-                </div>
-                
-                <div class="calculator-results">
-                    <div class="result-card">
-                        <h3>Traditional Development</h3>
-                        <div class="result-cost">$15,200</div>
-                        <div class="result-time">4.5 months</div>
-                        <ul class="result-breakdown">
-                            <li>Development: $12,500</li>
-                            <li>Revisions: $2,700</li>
-                            <li>Initial wait time: 2-3 weeks</li>
-                            <li>Revision wait times: 1-2 weeks each</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="result-card highlight">
-                        <h3>With AppFoundry</h3>
-                        <div class="result-cost">$499</div>
-                        <div class="result-time">2 weeks</div>
-                        <ul class="result-breakdown">
-                            <li>Course: $499 (one-time)</li>
-                            <li>Revisions: $0 (you make them)</li>
-                            <li>Initial development: 1-2 weeks</li>
-                            <li>Revision time: Minutes to hours</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="result-savings">
-                        <h3>Your Total Savings</h3>
-                        <div class="savings-amount">$14,701</div>
-                        <div class="savings-time">4 months</div>
-                        <a href="#pricing" class="cta-button">Start Saving Today</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- PROOF SECTION (RESULTS & CREDIBILITY) -->
-    <section class="proof">
-        <div class="container">
-            <h2>Proof This Works for Real People</h2>
-            
-            <div class="market-metrics">
-                <div class="metric">
-                    <div class="metric-number">65B+</div>
-                    <div class="metric-label">No-Code Market Value by 2025</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-number">26%</div>
-                    <div class="metric-label">Annual Growth in AI App Development</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-number">87%</div>
-                    <div class="metric-label">Cost Savings vs Traditional Dev</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-number">14x</div>
-                    <div class="metric-label">Faster Development Time</div>
-                </div>
-            </div>
-            
-            <div class="tech-logos">
-                <h3>Built Using the Latest AI Technology</h3>
-                <div class="logo-grid">
-                    <img src="images/claude-logo.png" alt="Claude AI" class="tech-logo">
-                    <img src="images/anthropic-logo.png" alt="Anthropic" class="tech-logo">
-                    <img src="images/netlify-logo.png" alt="Netlify" class="tech-logo">
-                    <img src="images/supabase-logo.png" alt="Supabase" class="tech-logo">
-                    <img src="images/stripe-logo.png" alt="Stripe" class="tech-logo">
-                </div>
-            </div>
-            
-            <div class="launch-examples">
-                <h3>Founding Members Program</h3>
-                <p>Join our exclusive founding members program and be among the first to create apps with our revolutionary approach.</p>
-                
-                <div class="founding-benefits">
-                    <div class="benefit">
-                        <div class="benefit-icon">💎</div>
-                        <h4>Lifetime Access</h4>
-                        <p>All future course updates included forever at the founding member rate.</p>
-                    </div>
-                    <div class="benefit">
-                        <div class="benefit-icon">📊</div>
-                        <h4>App Gallery Access</h4>
-                        <p>Browse a growing library of successful apps built with our system.</p>
-                    </div>
-                    <div class="benefit">
-                        <div class="benefit-icon">🚀</div>
-                        <h4>Priority Support</h4>
-                        <p>Get your questions answered first with dedicated email support.</p>
-                    </div>
-                </div>
-                
-                <div class="spots-remaining">
-                    <div class="spots-meter">
-                        <div class="spots-fill" style="width: 82%;"></div>
-                    </div>
-                    <div class="spots-text"><strong>Only 18 founding member spots remaining!</strong> (out of 100)</div>
-                </div>
-                
-                <a href="#pricing" class="cta-button large">Claim My Founding Member Spot</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- CURRICULUM SECTION -->
-    <section class="curriculum" id="curriculum">
-        <div class="container">
-            <h2>Your App-Building Roadmap</h2>
-            <p class="section-subtitle">A proven 7-module system to turn your ideas into reality without coding</p>
-            
-            <div class="curriculum-visual">
-                <div class="roadmap-line"></div>
-                <div class="modules">
-                    <div class="module">
-                        <div class="module-number">01</div>
-                        <div class="module-content">
-                            <h3>Setting Up Your AI Development Environment</h3>
-                            <p>Configure Claude and the minimal tools you need to start building without coding</p>
-                            <div class="module-expand" data-module="1">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-1">
-                                <ul>
-                                    <li>Setting up your Claude AI account the right way</li>
-                                    <li>Installing the essential tools (all free)</li>
-                                    <li>Creating your first project workspace</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">02</div>
-                        <div class="module-content">
-                            <h3>Creating Your First AI Project</h3>
-                            <p>Learn how to "speak" to Claude so it creates exactly what you want</p>
-                            <div class="module-expand" data-module="2">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-2">
-                                <ul>
-                                    <li>The exact prompts that get professional results</li>
-                                    <li>How to break down any app idea into AI-friendly components</li>
-                                    <li>Troubleshooting when Claude doesn't understand</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">03</div>
-                        <div class="module-content">
-                            <h3>Testing Your App: From Concept to Phone</h3>
-                            <p>See your app work on your device without writing a single line of code</p>
-                            <div class="module-expand" data-module="3">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-3">
-                                <ul>
-                                    <li>Setting up your testing environment</li>
-                                    <li>Running your app on multiple devices</li>
-                                    <li>Getting feedback from real users</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">04</div>
-                        <div class="module-content">
-                            <h3>Directing Claude: Creating Professional UI</h3>
-                            <p>Learn the exact prompts to get beautiful interfaces from Claude</p>
-                            <div class="module-expand" data-module="4">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-4">
-                                <ul>
-                                    <li>Advanced UI prompt techniques</li>
-                                    <li>Creating consistent design systems</li>
-                                    <li>Implementing animations and transitions</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">05</div>
-                        <div class="module-content">
-                            <h3>Building Your App Structure</h3>
-                            <p>Create a complete app blueprint that Claude can turn into reality</p>
-                            <div class="module-expand" data-module="5">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-5">
-                                <ul>
-                                    <li>Planning app architecture without technical knowledge</li>
-                                    <li>Setting up screens and navigation</li>
-                                    <li>Creating data models and functionality</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">06</div>
-                        <div class="module-content">
-                            <h3>Building Out Your App</h3>
-                            <p>Let Claude do all the technical work while you focus on design and features</p>
-                            <div class="module-expand" data-module="6">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-6">
-                                <ul>
-                                    <li>Implementing complex features with simple prompts</li>
-                                    <li>Adding user authentication and data storage</li>
-                                    <li>Testing and debugging with AI assistance</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="module">
-                        <div class="module-number">07</div>
-                        <div class="module-content">
-                            <h3>Submitting to the App Store</h3>
-                            <p>Get your AI-built app published quickly and professionally</p>
-                            <div class="module-expand" data-module="7">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-7">
-                                <ul>
-                                    <li>Preparing your app for submission</li>
-                                    <li>Creating screenshots and descriptions</li>
-                                    <li>Navigating the approval process</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="curriculum-cta">
-                <a href="#pricing" class="cta-button large">Start the Course Today</a>
-                <p class="cta-note">Begin building your first app in the next 24 hours</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- COMPARISON SECTION -->
-    <section class="comparison">
-        <div class="container">
-            <h2>How AppFoundry Compares</h2>
-            <p class="section-subtitle">See why our AI-powered approach gives you the best of all worlds</p>
-            
-            <div class="comparison-table-wrapper">
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>Feature</th>
-                            <th>Traditional Development</th>
-                            <th>No-Code Platforms</th>
-                            <th class="highlight">AppFoundry</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Cost</td>
-                            <td>$5,000 - $50,000+</td>
-                            <td>$15 - $200/month ongoing</td>
-                            <td class="highlight">$499 (one-time)</td>
-                        </tr>
-                        <tr>
-                            <td>Development Time</td>
-                            <td>3-6 months</td>
-                            <td>1-4 weeks</td>
-                            <td class="highlight">1-14 days</td>
-                        </tr>
-                        <tr>
-                            <td>Technical Skills Required</td>
-                            <td>Extensive</td>
-                            <td>Moderate</td>
-                            <td class="highlight">None</td>
-                        </tr>
-                        <tr>
-                            <td>Customization</td>
-                            <td>Unlimited (but expensive)</td>
-                            <td>Limited by platform</td>
-                            <td class="highlight">Unlimited</td>
-                        </tr>
-                        <tr>
-                            <td>Ownership</td>
-                            <td>You own the code</td>
-                            <td>Platform-dependent</td>
-                            <td class="highlight">100% yours</td>
-                        </tr>
-                        <tr>
-                            <td>Future Updates</td>
-                            <td>Additional cost</td>
-                            <td>Subscription fees</td>
-                            <td class="highlight">Free (you do it yourself)</td>
-                        </tr>
-                        <tr>
-                            <td>App Complexity</td>
-                            <td>Any complexity</td>
-                            <td>Simple to moderate</td>
-                            <td class="highlight">Simple to advanced</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <!-- PRICING SECTION -->
-<section class="pricing" id="pricing">
-    <div class="container">
-        <h2>Choose Your App Building Journey</h2>
-        <p class="section-subtitle">All plans include our 60-day "Build Your First App" guarantee</p>
-        
-        <div class="pricing-grid">
-            <div class="price-card basic">
-                <div class="price-header">
-                    <h3>Essential Builder</h3>
-                    <div class="price">
-                        <span class="regular-price">$499</span>
-                        <span class="one-time">one-time payment</span>
-                    </div>
-                </div>
-                
-                <ul class="price-features">
-                    <li><span class="feature-check">✓</span> Complete 7-module course</li>
-                    <li><span class="feature-check">✓</span> 30+ project templates</li>
-                    <li><span class="feature-check">✓</span> Community forum access</li>
-                    <li><span class="feature-check">✓</span> 60-day money-back guarantee</li>
-                    <li><span class="feature-check">✓</span> 3-month access to code updates</li>
-                    <li class="feature-missing">✗ Advanced AI implementation techniques</li>
-                    <li class="feature-missing">✗ 1-on-1 app review session</li>
-                    <li class="feature-missing">✗ Lifetime code updates</li>
-                </ul>
-                
-                <div class="price-cta">
-                    <a href="checkout.html?plan=essential" class="cta-button">Start Building Now</a>
-                </div>
-            </div>
-            
-            <div class="price-card complete">
-                <div class="most-popular">Most Popular</div>
-                <div class="price-header">
-                    <h3>Professional Developer</h3>
-                    <div class="price">
-                        <span class="regular-price">$999</span>
-                        <span class="one-time">one-time payment</span>
-                    </div>
-                    <div class="price-monthly">Or $99/month for 12 months</div>
-                </div>
-                
-                <ul class="price-features">
-                    <li><span class="feature-check">✓</span> Everything in Essential Builder</li>
-                    <li><span class="feature-check">✓</span> <strong>Advanced AI implementation techniques</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>100+ premium templates</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>Priority community support</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>1-on-1 app review session</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>12-month access to code updates</strong></li>
-                    <li class="feature-missing">✗ Enterprise integration modules</li>
-                    <li class="feature-missing">✗ Lifetime code updates</li>
-                </ul>
-                
-                <div class="price-cta">
-                    <a href="checkout.html?plan=complete" class="cta-button cta-button-highlighted">Get Complete Access</a>
-                </div>
-            </div>
-            
-            <div class="price-card premium">
-                <div class="price-header">
-                    <h3>Enterprise Builder</h3>
-                    <div class="price">
-                        <span class="regular-price">$1,999</span>
-                        <span class="one-time">one-time payment</span>
-                    </div>
-                    <div class="price-monthly">Or $199/month for 12 months</div>
-                </div>
-                
-                <ul class="price-features">
-                    <li><span class="feature-check">✓</span> Everything in Professional Developer</li>
-                    <li><span class="feature-check">✓</span> <strong>Enterprise integration modules</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>Unlimited templates and resources</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>Priority dedicated support</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>Team collaboration features</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>White-label capabilities</strong></li>
-                    <li><span class="feature-check">✓</span> <strong>Lifetime access to code updates</strong></li>
-                </ul>
-                
-                <div class="price-cta">
-                    <a href="checkout.html?plan=premium" class="cta-button">Upgrade to Enterprise</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="payment-options">
-            <div class="or-divider">
-                <span>OR</span>
-            </div>
-            
-            <div class="installment-plan">
-                <h3>Payment Plan Option</h3>
-                <p>Pay for the Professional Developer package in 3 monthly installments</p>
-                
-                <div class="installment-details">
-                    <div class="installment-price">
-                        <span class="installment-amount">$349</span>
-                        <span class="installment-text">per month for 3 months</span>
-                    </div>
-                    <div class="total-price">Total: $1,047 (save $48 with one-time payment)</div>
-                </div>
-                
-                <a href="checkout.html?plan=complete-installment" class="cta-button">Start With Payment Plan</a>
-            </div>
-        </div>
-        
-        <div class="pricing-comparison">
-            <h3>AppFoundry vs. Traditional Development</h3>
-            
-            <div class="comparison-container">
-                <div class="comparison-item">
-                    <div class="comparison-header">Traditional App Development</div>
-                    <div class="comparison-price">$15,000 - $50,000+</div>
-                    <ul class="comparison-features">
-                        <li>3-6 months development time</li>
-                        <li>Ongoing costs for updates</li>
-                        <li>Limited control over changes</li>
-                        <li>Communication barriers</li>
-                    </ul>
-                </div>
-                
-                <div class="comparison-item highlighted">
-                    <div class="comparison-header">AppFoundry Method</div>
-                    <div class="comparison-price">Starting at $499</div>
-                    <ul class="comparison-features">
-                        <li>Build your app in 14-30 days</li>
-                        <li>Make unlimited changes yourself</li>
-                        <li>Complete control over your project</li>
-                        <li>No technical expertise needed</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-    <!-- GUARANTEE SECTION (EXPANDED) -->
-    <section class="guarantee-section">
-        <div class="container">
-            <h2>Our Ironclad 60-Day Guarantee</h2>
-            
-            <div class="guarantee-content">
-                <div class="guarantee-image">
-                    <div class="guarantee-seal">
-                        <div class="seal-content">100%</div>
-                    </div>
-                </div>
-                <div class="guarantee-text-content">
-                    <h3>The "Build Your First App" Guarantee</h3>
-                    <p>If you can't create a working app within 60 days of taking this course, I'll give you 100% of your money back, no questions asked.</p>
-                    <p>All I ask is that you show me you've made a sincere effort by sharing your project files. This is my way of ensuring your success while taking all the risk off your shoulders.</p>
-                    <p><strong>I'm so confident in this system because I've seen complete beginners transform into app creators in days, not months.</strong></p>
-                    <a href="refund-policy.html" class="cta-button">See Full Guarantee Details</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ SECTION -->
-<section class="faq">
-    <div class="container">
-        <h2>Frequently Asked Questions</h2>
-        
-        <div class="faq-grid">
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Do I need any coding experience to use AppFoundry?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Absolutely not! The course is specifically designed for entrepreneurs and self-starters with zero coding knowledge. If you can use a computer and follow step-by-step instructions, you have all the skills needed to succeed with AppFoundry.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>How is this different from no-code platforms like Bubble or Webflow?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Unlike traditional no-code platforms that lock you into their ecosystems with monthly fees, AppFoundry teaches you how to leverage Claude AI to create truly custom apps that you own 100%. You're not limited by platform constraints, there are no ongoing fees, and you can create more complex functionality than most drag-and-drop tools allow.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>How long will it take to build my first app?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Most students complete their first functional app within 2-4 weeks of starting the course, working just a few hours per week. You'll start seeing results within the first few hours as you complete the initial modules. The complete curriculum takes about 10-15 hours to work through, and you can apply what you learn immediately to your app project.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>What kind of apps can I build with AppFoundry?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>You can build a wide range of business apps including: inventory management systems, client portals, booking platforms, e-commerce apps, productivity tools, service marketplaces, and much more. If your app idea focuses on solving a specific business problem rather than being the next social media giant, AppFoundry is perfect for you.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Will I own the apps I create? Are there any ongoing fees?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>You own 100% of any app you create with AppFoundry, with no ongoing fees to us. The code is yours to modify, expand, and commercialize however you want. The only potential ongoing costs would be standard hosting fees (typically $5-20/month depending on your app's needs) and a Claude API subscription if you choose to use their API directly (they offer a free tier that's sufficient for most projects).</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Can I use AppFoundry to build apps for clients?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Absolutely! Many of our students use AppFoundry to start app development businesses or add value at their workplace. Our Professional plan includes everything you need to build apps for clients, while the Enterprise plan includes white-labeling capabilities for reselling without attribution.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>How does the AI integration actually work?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Claude AI is a powerful language model created by Anthropic. Our course teaches you the exact prompts and techniques to direct Claude to generate code, design interfaces, and build app components. You'll learn structured, step-by-step frameworks that guide the AI to create exactly what you need, even with no technical background.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Do I need to purchase additional tools or software?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>No, you don't need to purchase any additional software. You'll need a Claude AI account (which has a free tier sufficient for learning), VSCode (free), and we'll cover several free hosting and deployment options. The course includes all templates and resources needed to build fully functional apps.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>What if I get stuck during the course?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>All students get access to our community forum where you can ask questions and get help from other students. Professional and Enterprise plan members receive priority email support with faster response times. We're committed to your success and provide multiple support channels to ensure you never get stuck for long.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>What is your refund policy?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>We offer a 60-day "Build Your First App" guarantee. If you can't create a working app within 60 days of taking the course, we'll refund 100% of your purchase price. All we ask is that you show us you've made a sincere effort by sharing your project files. This is our way of ensuring your success while taking all the risk off your shoulders.</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="have-more-questions">
-            <h3>Have more questions?</h3>
-            <p>Contact us directly at <a href="mailto:hello@risegg.net">hello@risegg.net</a> and we'll get back to you within 24 hours.</p>
-            <a href="#pricing" class="cta-button">Start Building Today</a>
-        </div>
-    </div>
-</section>
-
-    <!-- FINAL CTA SECTION -->
-    <section class="cta-section">
-        <div class="container">
-            <h2>Start Building Your Dream App Today</h2>
-            <p>Join hundreds of entrepreneurs and self-starters who've built professional apps using our AI-powered system</p>
-            <a href="#pricing" class="cta-button large">I'm Ready to Build My App</a>
-            <div class="cta-guarantee">
-                <span class="guarantee-icon">🔒</span>
-                <span class="guarantee-text">Protected by our 60-day money-back guarantee</span>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <div class="container">
-            <div class="logo">AppFoundry</div>
-            <div class="footer-links">
-                <div class="link-group">
-                    <h4>Course</h4>
-                    <ul>
-                        <li><a href="#problem">The Problem</a></li>
-                        <li><a href="#solution">Our Solution</a></li>
-                        <li><a href="#curriculum">Curriculum</a></li>
-                        <li><a href="#pricing">Pricing</a></li>
-                        <li><a href="success-stories.html">Success Stories</a></li>
-                        <li><a href="about-creator.html">About Creator</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="terms-of-service.html">Terms of Service</a></li>
-                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
-                        <li><a href="refund-policy.html">Our Guarantee</a></li>
-                    </ul>
-                </div>
-                <div class="link-group">
-                    <h4>Contact</h4>
-                    <ul>
-                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                © 2025 AppFoundry. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-    <!-- Scripts -->
-    <script>
-        // Module details toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            // Module details toggle
-            document.querySelectorAll('.module-expand').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const moduleId = this.getAttribute('data-module');
-                    const details = document.getElementById(`module-details-${moduleId}`);
-                    
-                    if (details.style.display === 'block') {
-                        details.style.display = 'none';
-                        this.textContent = `See Lesson Details +`;
-                    } else {
-                        details.style.display = 'block';
-                        this.textContent = `Hide Lesson Details -`;
-                    }
-                });
-            });
-            
-            // FAQ toggles
-            document.querySelectorAll('.faq-question').forEach(question => {
-                question.addEventListener('click', function() {
-                    const answer = this.nextElementSibling;
-                    const icon = this.querySelector('.toggle-icon');
-                    
-                    // Close all other FAQs
-                    document.querySelectorAll('.faq-answer').forEach(item => {
-                        if (item !== answer && item.classList.contains('show')) {
-                            item.classList.remove('show');
-                            item.previousElementSibling.querySelector('.toggle-icon').textContent = '+';
-                        }
-                    });
-                    
-                    // Toggle current FAQ
-                    if (answer.classList.contains('show')) {
-                        answer.classList.remove('show');
-                        icon.textContent = '+';
-                    } else {
-                        answer.classList.add('show');
-                        icon.textContent = '-';
-                    }
-                });
-            });
-            
-            // Carousel functionality - improved
-            const carousel = document.querySelector('.wins-carousel');
-            const items = document.querySelectorAll('.win-item');
-            const dots = document.querySelectorAll('.carousel-dots .dot');
-            const prevButton = document.querySelector('.carousel-prev');
-            const nextButton = document.querySelector('.carousel-next');
-            let currentIndex = 0;
-            
-            function showSlide(index) {
-                // Reset current index if out of bounds
-                if (index >= items.length) {
-                    index = 0;
-                } else if (index < 0) {
-                    index = items.length - 1;
-                }
-                
-                // Update current index
-                currentIndex = index;
-                
-                // Update carousel position with smooth transition
-                items.forEach((item, i) => {
-                    item.style.display = 'none';
-                    item.style.opacity = '0';
-                    
-                    if (i === currentIndex) {
-                        item.style.display = 'block';
-                        setTimeout(() => {
-                            item.style.opacity = '1';
-                        }, 50);
-                    }
-                });
-                
-                // Update dots
-                dots.forEach((dot, i) => {
-                    dot.classList.toggle('active', i === currentIndex);
-                });
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
-            
-            // Set up event listeners
-            prevButton.addEventListener('click', () => showSlide(currentIndex - 1));
-            nextButton.addEventListener('click', () => showSlide(currentIndex + 1));
-            
-            dots.forEach((dot, i) => {
-                dot.addEventListener('click', () => showSlide(i));
-            });
-            
-            // Initialize carousel
-            showSlide(0);
-            
-            // Auto-advance carousel every 5 seconds
-            let autoPlayInterval = setInterval(() => {
-                showSlide(currentIndex + 1);
-            }, 5000);
-            
-            // Pause auto-advance on hover
-            carousel.addEventListener('mouseenter', () => {
-                clearInterval(autoPlayInterval);
-            });
-            
-            carousel.addEventListener('mouseleave', () => {
-                autoPlayInterval = setInterval(() => {
-                    showSlide(currentIndex + 1);
-                }, 5000);
-            });
-            
-            // ROI Calculator
-            document.getElementById('calculate-roi').addEventListener('click', function() {
-                const complexity = document.getElementById('app-complexity').value;
-                const rate = parseInt(document.getElementById('developer-rate').value);
-                const revisions = parseInt(document.getElementById('revisions').value);
-                
-                let baseCost, baseTime;
-                
-                switch(complexity) {
-                    case 'simple':
-                        baseCost = 8000;
-                        baseTime = 2.5;
-                        break;
-                    case 'medium':
-                        baseCost = 15000;
-                        baseTime = 4.5;
-                        break;
-                    case 'complex':
-                        baseCost = 30000;
-                        baseTime = 7;
-                        break;
-                    default:
-                        baseCost = 15000;
-                        baseTime = 4.5;
-                }
-                
-                // Adjust based on rate
-                const rateFactor = rate / 85;
-                baseCost = Math.round(baseCost * rateFactor);
-                
-                // Calculate revision costs
-                const revisionCost = Math.round(baseCost * 0.15 * revisions);
-                const totalCost = baseCost + revisionCost;
-                
-                // Calculate total time
-                const revisionTime = revisions * 0.5;
-                const totalTime = baseTime + revisionTime;
-                
-                // Update the results with animation
-                animateNumber(document.querySelector('.result-card:nth-child(1) .result-cost'), totalCost, ');
-                document.querySelector('.result-card:nth-child(1) .result-time').textContent = `${totalTime.toFixed(1)} months`;
-                document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(1)').textContent = `Development: ${baseCost.toLocaleString()}`;
-                document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(2)').textContent = `Revisions: ${revisionCost.toLocaleString()}`;
-                
-                // Calculate savings
-                const savings = totalCost - 499;
-                const timeMonths = totalTime - 0.5;
-                
-                // Update savings with animation
-                animateNumber(document.querySelector('.savings-amount'), savings, ');
-                document.querySelector('.savings-time').textContent = `${timeMonths.toFixed(1)} months`;
-            });
-            
-            // Animation function for numbers
-            function animateNumber(element, targetNumber, prefix = '') {
-                const duration = 1000; // 1 second
-                const frameDuration = 1000 / 60; // 60fps
-                const totalFrames = Math.round(duration / frameDuration);
-                const startValue = 0;
-                
-                let frame = 0;
-                const counter = setInterval(() => {
-                    frame++;
-                    const progress = frame / totalFrames;
-                    const currentValue = Math.round(startValue + (targetNumber - startValue) * progress);
-                    
-                    element.textContent = `${prefix}${currentValue.toLocaleString()}`;
-                    
-                    if (frame === totalFrames) {
-                        clearInterval(counter);
-                    }
-                }, frameDuration);
-            }
-            
-            // Intersection Observer for fade-in animations
-            const fadeElements = document.querySelectorAll('.problem-item, .metric, .module-card, .price-card');
-            
-            const fadeObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('fade-in');
-                        fadeObserver.unobserve(entry.target);
-                    }
-                });
-            }, {
-                threshold: 0.1
-            });
-            
-            fadeElements.forEach(element => {
-                fadeObserver.observe(element);
-            });
-            
-            // Add smooth scrolling for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    const targetId = this.getAttribute('href');
-                    
-                    if (targetId === '#') {
-                        window.scrollTo({
-                            top: 0,
-                            behavior: 'smooth'
-                        });
-                        return;
-                    }
-                    
-                    const targetElement = document.querySelector(targetId);
-                    
-                    if (targetElement) {
-                        const headerOffset = 80;
-                        const elementPosition = targetElement.getBoundingClientRect().top;
-                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                        
-                        window.scrollTo({
-                            top: offsetPosition,
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            });
-            
-            // Login button functionality
-            document.getElementById('loginButton').addEventListener('click', function() {
-                window.location.href = 'direct-login.html';
-            });
-        });
-    </script>
-</body>
-</html>
+        }
+        
+        /* Animation Delays */
+        .problems-grid .problem-item:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+        
+        .problems-grid .problem-item:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .problems-grid .problem-item:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+        
+        .problems-grid .problem-item:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+        
+        .market-metrics .metric:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+        
+        .market-metrics .metric:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .market-metrics .metric:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+        
+        .market-metrics .metric:nth-child(4) {
+            animation-delay: 0.4s;
+        }
