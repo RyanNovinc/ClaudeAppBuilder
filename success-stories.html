@@ -5,97 +5,171 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Success Stories - AppFoundry</title>
     
-    <!-- Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
+    <!-- Enhanced Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
     <script>
-    // Universal Story Manager - ensures stories are consistently available
+    // Enhanced Story Manager - prioritizes loading from Supabase over localStorage
     (function() {
-      // Run on all pages to ensure localStorage data consistency
-      console.log("📊 Story Manager initializing on success stories page");
+      // Run on all pages to ensure consistent story loading
+      console.log("📊 Enhanced Story Manager initializing on success stories page");
       
-      // Check if we need to seed the localStorage from our backup
-      function seedStoriesIfNeeded() {
-        // Only run if appfoundry_submissions doesn't exist or is empty
-        if (!localStorage.getItem('appfoundry_submissions')) {
-          console.log("🌱 No stories found in localStorage, checking for seed data");
-          
-          // Check if we have any stories in our seed
-          if (localStorage.getItem('appfoundry_approved_seed')) {
-            console.log("🔄 Restoring stories from seed");
-            try {
-              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
-              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
-              console.log("✅ Successfully restored", seed.length, "stories from seed");
-            } catch (e) {
-              console.error("❌ Error restoring from seed:", e);
-            }
-          } else {
-            // Initialize with default seed data if no backup exists
-            initializeWithDefaultSeed();
-          }
-        } else {
-          // If we have submissions, make sure we have an up-to-date seed
+      // Initialize necessary variables
+      let storiesLoaded = false;
+      const SUPABASE_URL = "https://your-project-id.supabase.co"; // Update with your actual Supabase URL
+      const SUPABASE_ANON_KEY = "your-supabase-anon-key"; // Update with your actual Supabase anon key
+      
+      // Initialize Supabase client if possible
+      function initSupabase() {
+        if (typeof supabase !== 'undefined') {
           try {
-            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
-            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-            console.log("💾 Seed updated with", submissions.length, "stories");
+            const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log("🔄 Supabase client initialized for public story loading");
+            return client;
           } catch (e) {
-            console.error("❌ Error updating seed:", e);
+            console.error("❌ Error initializing Supabase client:", e);
+          }
+        }
+        return null;
+      }
+      
+      // Load approved stories from Supabase with priority
+      async function loadApprovedStories() {
+        try {
+          // Try to load from Supabase first
+          const client = initSupabase();
+          if (client) {
+            console.log("🔍 Attempting to load stories from Supabase");
+            
+            // Fetch featured story first
+            const { data: featuredData, error: featuredError } = await client
+              .from('submissions')
+              .select('*')
+              .eq('status', 'approved')
+              .eq('featured', true)
+              .order('created_at', { ascending: false })
+              .limit(1);
+              
+            if (featuredError) throw featuredError;
+            
+            // Fetch all approved stories
+            const { data, error } = await client
+              .from('submissions')
+              .select('*')
+              .eq('status', 'approved')
+              .order('created_at', { ascending: false });
+              
+            if (error) throw error;
+            
+            if (data && data.length > 0) {
+              // Format the data for compatibility with the existing site structure
+              const formattedStories = data.map(item => ({
+                id: item.id,
+                name: item.name,
+                email: item.email || '',
+                appName: item.app_name,
+                appType: item.app_type,
+                experienceLevel: item.experience_level,
+                testimonial: item.testimonial,
+                story: item.story,
+                images: parseCloudinaryImages(item.cloudinary_images),
+                date: item.created_at,
+                status: item.status,
+                featured: item.featured || false
+              }));
+              
+              // Update localStorage for backup
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(formattedStories));
+              localStorage.setItem('appfoundry_approved_seed', JSON.stringify(formattedStories));
+              
+              // Set a flag for the featured story if it exists
+              if (featuredData && featuredData.length > 0) {
+                localStorage.setItem('appfoundry_featured_story', featuredData[0].id);
+              }
+              
+              console.log("✅ Successfully loaded", formattedStories.length, "stories from Supabase");
+              storiesLoaded = true;
+              return true;
+            } else {
+              console.log("⚠️ No approved stories found in Supabase");
+            }
+          }
+        } catch (e) {
+          console.error("❌ Error loading from Supabase:", e);
+        }
+        
+        // Fall back to localStorage if Supabase fails or has no data
+        return fallbackToLocalStorage();
+      }
+      
+      // Parse Cloudinary images from JSON string or array
+      function parseCloudinaryImages(cloudinaryImages) {
+        if (!cloudinaryImages) return [];
+        
+        try {
+          if (typeof cloudinaryImages === 'string') {
+            return JSON.parse(cloudinaryImages);
+          }
+          
+          if (Array.isArray(cloudinaryImages)) {
+            return cloudinaryImages;
+          }
+        } catch (error) {
+          console.error('Error parsing Cloudinary images:', error);
+        }
+        
+        return [];
+      }
+      
+      // Fallback to localStorage if Supabase loading fails
+      function fallbackToLocalStorage() {
+        console.log("🔄 Falling back to localStorage for stories");
+        
+        const storedStories = localStorage.getItem('appfoundry_submissions');
+        if (storedStories) {
+          try {
+            const stories = JSON.parse(storedStories);
+            const approvedStories = stories.filter(story => story.status === 'approved');
+            
+            if (approvedStories.length > 0) {
+              console.log("✅ Found", approvedStories.length, "approved stories in localStorage");
+              storiesLoaded = true;
+              return true;
+            }
+          } catch (e) {
+            console.error("❌ Error parsing stories from localStorage:", e);
+          }
+        }
+        
+        console.log("⚠️ No approved stories found in localStorage");
+        return false;
+      }
+      
+      // Initialize story loading
+      function init() {
+        // Check if we're on the success stories page
+        if (window.location.pathname.includes('success-stories')) {
+          // Try to load stories asynchronously
+          loadApprovedStories().then(success => {
+            if (!success) {
+              console.log("⚠️ No stories could be loaded from any source");
+            }
+          });
+        } else {
+          // On other pages, just ensure localStorage consistency
+          const submissions = localStorage.getItem('appfoundry_submissions');
+          if (submissions) {
+            try {
+              const stories = JSON.parse(submissions);
+              const approvedStories = stories.filter(story => story.status === 'approved');
+              localStorage.setItem('appfoundry_approved_seed', JSON.stringify(approvedStories));
+            } catch (e) {
+              console.error("❌ Error updating approved seed:", e);
+            }
           }
         }
       }
       
-      // Default seed data for demonstration purposes
-      function initializeWithDefaultSeed() {
-        console.log("📋 Creating default success stories");
-        const defaultStories = [
-          {
-            id: 'story_1',
-            name: "Michael Chen",
-            email: "demo@example.com",
-            appName: "TaskMaster Pro",
-            appType: "Productivity",
-            experienceLevel: "No experience",
-            testimonial: ""AppFoundry changed everything for me. I went from zero coding knowledge to a functional task management app in just 2 weeks. The Claude AI prompting system is genius!"",
-            story: "I tried learning to code for months but kept hitting roadblocks. Traditional courses were too technical and no-code platforms were too limiting. With AppFoundry, I built a task management app with features I specifically wanted - custom categories, time tracking, and project dependencies. Now I'm working on version 2.0 with even more features!",
-            images: ["images/success-story-1.jpg"],
-            date: "2025-01-15T14:32:00Z",
-            status: "approved"
-          },
-          {
-            id: 'story_2',
-            name: "Amara Johnson",
-            email: "demo2@example.com",
-            appName: "FitJourney",
-            appType: "Health & Fitness",
-            experienceLevel: "Beginner",
-            testimonial: ""I saved over $12,000 by building my fitness app myself instead of hiring developers. The app is exactly what I envisioned, and I can update it anytime without ongoing costs."",
-            story: "As a personal trainer, I needed a custom app for my clients to track workouts and nutrition. I got quotes from developers ranging from $15,000 to $25,000 - way beyond my budget. With AppFoundry, I built it myself for a fraction of the cost. The best part is how easy it is to make updates based on client feedback - something that would have cost me hundreds each time with traditional development.",
-            images: ["images/success-story-2.jpg"],
-            date: "2025-02-03T09:45:00Z",
-            status: "approved"
-          },
-          {
-            id: 'story_3',
-            name: "Carlos Rodriguez",
-            email: "demo3@example.com",
-            appName: "LocalVendorHub",
-            appType: "Business",
-            experienceLevel: "No experience",
-            testimonial: ""From idea to App Store in 30 days. I never thought I'd be capable of building something this complex, but the step-by-step system made it achievable even for a non-technical person like me."",
-            story: "I manage a farmer's market and wanted an app connecting local vendors with customers. After watching traditional development drag on for months at a previous job, I was amazed at how quickly I could iterate using AppFoundry's method. The Claude AI prompting framework is incredible - it's like having a developer who perfectly understands what you're asking for. The app now has over 200 vendors and 3,000 customers using it weekly.",
-            images: ["images/success-story-3.jpg"],
-            date: "2025-02-28T16:20:00Z",
-            status: "approved"
-          }
-        ];
-        
-        localStorage.setItem('appfoundry_submissions', JSON.stringify(defaultStories));
-        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(defaultStories));
-        console.log("✅ Successfully created default seed data");
-      }
-      
-      // Run the seed check immediately
-      seedStoriesIfNeeded();
+      // Run initialization
+      init();
     })();
     </script>
     
@@ -955,32 +1029,9 @@
         <div class="featured-story">
             <div class="featured-story-grid">
                 <div class="featured-story-content">
-                    <div class="featured-tag">Featured Success Story</div>
-                    <h3>From Zero Coding to App Store in 30 Days</h3>
-                    <div class="featured-story-meta">
-                        <div class="modal-avatar">
-                            <!-- First letter of the person's name -->
-                            C
-                        </div>
-                        <div class="featured-app-info">
-                            <div>Carlos Rodriguez</div>
-                            <div class="app-name">LocalVendorHub</div>
-                            <div>
-                                <span class="app-category">Business</span>
-                                <span class="experience-level">No coding experience</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="featured-story-quote">
-                        "From idea to App Store in 30 days. I never thought I'd be capable of building something this complex, but the step-by-step system made it achievable even for a non-technical person like me."
-                    </div>
-                    <div class="featured-story-text">
-                        <p>I manage a farmer's market and wanted an app connecting local vendors with customers. After watching traditional development drag on for months at a previous job, I was amazed at how quickly I could iterate using AppFoundry's method.</p>
-                        <p>The Claude AI prompting framework is incredible - it's like having a developer who perfectly understands what you're asking for. The app now has over 200 vendors and 3,000 customers using it weekly.</p>
-                    </div>
-                    <a href="#" class="cta-button view-story-button" data-story-id="story_3">Read Full Story</a>
+                    <!-- Featured story content will be dynamically loaded -->
                 </div>
-                <img src="images/success-story-3.jpg" alt="LocalVendorHub App" class="featured-story-image">
+                <img src="images/app-placeholder.jpg" alt="Featured App" class="featured-story-image">
             </div>
         </div>
         
@@ -1102,18 +1153,19 @@
                 window.location.href = 'direct-login.html';
             });
             
-            // Get stored stories or use defaults
-            function getStories() {
-                try {
-                    const storedStories = localStorage.getItem('appfoundry_submissions');
-                    if (storedStories) {
-                        return JSON.parse(storedStories).filter(story => story.status === 'approved');
-                    }
-                } catch (error) {
-                    console.error('Error retrieving stories:', error);
+            // Helper function to get approved stories
+            function getApprovedStories() {
+              try {
+                const storedStories = localStorage.getItem('appfoundry_submissions');
+                if (storedStories) {
+                  const stories = JSON.parse(storedStories);
+                  return stories.filter(story => story.status === 'approved');
                 }
-                
-                return []; // Return empty array if no stories found or error
+              } catch (error) {
+                console.error('Error retrieving stories:', error);
+              }
+              
+              return []; // Return empty array if no stories found or error
             }
             
             // Format date for display
@@ -1125,88 +1177,50 @@
             
             // Get initial letter for avatar
             function getInitial(name) {
-                return name.charAt(0).toUpperCase();
+                return name ? name.charAt(0).toUpperCase() : 'A';
             }
             
             // Load stories into grid
             function loadStories() {
                 const storiesGrid = document.getElementById('stories-grid');
                 const appsGrid = document.getElementById('apps-grid');
-                const stories = getStories();
+                const stories = getApprovedStories();
                 
                 if (stories.length === 0) {
                     // Show empty state
-                    storiesGrid.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📱</div>
-                            <h3>No Stories Yet</h3>
-                            <p>Be the first to share your app building success story with our community!</p>
-                            <a href="submit-success-story.html" class="cta-button">Submit Your Story</a>
-                        </div>
-                    `;
-                    appsGrid.innerHTML = storiesGrid.innerHTML;
+                    showEmptyState(storiesGrid, appsGrid);
                     return;
                 }
                 
-                // Load stories
+                // Get featured story ID
+                const featuredStoryId = localStorage.getItem('appfoundry_featured_story');
+                
+                // Filter out the featured story from the regular stories
+                let regularStories = stories;
+                let featuredStory = null;
+                
+                if (featuredStoryId) {
+                    featuredStory = stories.find(story => story.id === featuredStoryId);
+                    regularStories = stories.filter(story => story.id !== featuredStoryId);
+                } else if (stories.length > 0) {
+                    // If no explicitly featured story, use the first one for the featured section
+                    featuredStory = stories[0];
+                    regularStories = stories.slice(1);
+                }
+                
+                // Update featured story section
+                updateFeaturedStorySection(featuredStory);
+                
+                // Load regular stories
                 let storiesHTML = '';
                 let appsHTML = '';
                 
-                stories.forEach(story => {
+                regularStories.forEach(story => {
                     // Create story card
-                    storiesHTML += `
-                        <div class="story-card">
-                            <div class="story-header">
-                                <div class="avatar">
-                                    ${getInitial(story.name)}
-                                </div>
-                                <div class="creator-info">
-                                    <h3>${story.name}</h3>
-                                    <div class="experience">${story.experienceLevel}</div>
-                                </div>
-                            </div>
-                            <div class="story-content">
-                                <div class="story-testimonial">${story.testimonial}</div>
-                                <div class="story-info">
-                                    <div class="app-type-tag">${story.appType}</div>
-                                    <div class="story-date">${formatDate(story.date)}</div>
-                                </div>
-                                <a href="#" class="view-story-button" data-story-id="${story.id}">Read Full Story</a>
-                            </div>
-                        </div>
-                    `;
+                    storiesHTML += createStoryCard(story);
                     
                     // Create app card
-                    appsHTML += `
-                        <div class="app-card" data-category="${story.appType}">
-                            <img src="${story.images[0] || 'images/app-placeholder.jpg'}" alt="${story.appName}" class="app-image">
-                            <div class="app-content">
-                                <div class="app-category">${story.appType}</div>
-                                <div class="app-name">${story.appName}</div>
-                                <div class="creator-name">by ${story.name}</div>
-                                <div class="app-testimonial">${story.testimonial}</div>
-                                <div class="app-meta">
-                                    <div class="timeframe">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <polyline points="12 6 12 12 16 14"></polyline>
-                                        </svg>
-                                        2-4 weeks
-                                    </div>
-                                    <div class="experience-level">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                            <circle cx="9" cy="7" r="4"></circle>
-                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                        </svg>
-                                        ${story.experienceLevel}
-                                    </div>
-                                </div>
-                                <a href="#" class="view-story-button" data-story-id="${story.id}">View Details</a>
-                            </div>
-                        </div>
-                    `;
+                    appsHTML += createAppCard(story);
                 });
                 
                 storiesGrid.innerHTML = storiesHTML;
@@ -1220,6 +1234,130 @@
                         openStoryModal(storyId);
                     });
                 });
+            }
+            
+            // Helper to update the featured story section
+            function updateFeaturedStorySection(featuredStory) {
+                if (!featuredStory) return;
+                
+                const featuredStoryContent = document.querySelector('.featured-story-content');
+                const featuredStoryImage = document.querySelector('.featured-story-image');
+                
+                if (featuredStoryContent && featuredStoryImage) {
+                    // Update content
+                    featuredStoryContent.innerHTML = `
+                        <div class="featured-tag">Featured Success Story</div>
+                        <h3>${featuredStory.appName || 'Amazing App'}</h3>
+                        <div class="featured-story-meta">
+                            <div class="modal-avatar">
+                                ${getInitial(featuredStory.name)}
+                            </div>
+                            <div class="featured-app-info">
+                                <div>${featuredStory.name || 'Anonymous'}</div>
+                                <div class="app-name">${featuredStory.appName || 'App'}</div>
+                                <div>
+                                    <span class="app-category">${featuredStory.appType || 'App'}</span>
+                                    <span class="experience-level">${featuredStory.experienceLevel || 'Beginner'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="featured-story-quote">
+                            "${featuredStory.testimonial || 'Amazing experience building with AppFoundry!'}"
+                        </div>
+                        <div class="featured-story-text">
+                            ${(featuredStory.story || 'No detailed story provided.').split('\n').map(paragraph => `<p>${paragraph}</p>`).join('')}
+                        </div>
+                        <div class="text-sm text-gray-500 mt-4">Submitted on ${formatDate(featuredStory.date)}</div>
+                        <a href="#" class="cta-button view-story-button" data-story-id="${featuredStory.id}">Read Full Story</a>
+                    `;
+                    
+                    // Update image if available
+                    if (featuredStory.images && featuredStory.images.length > 0 && featuredStory.images[0]) {
+                        featuredStoryImage.src = featuredStory.images[0];
+                        featuredStoryImage.alt = `${featuredStory.appName} App`;
+                    } else {
+                        featuredStoryImage.src = 'images/app-placeholder.jpg';
+                        featuredStoryImage.alt = `${featuredStory.appName} App`;
+                    }
+                }
+            }
+            
+            // Helper to create a story card with timestamp
+            function createStoryCard(story) {
+                return `
+                    <div class="story-card">
+                        <div class="story-header">
+                            <div class="avatar">
+                                ${getInitial(story.name)}
+                            </div>
+                            <div class="creator-info">
+                                <h3>${story.name || 'Anonymous'}</h3>
+                                <div class="experience">${story.experienceLevel || 'Beginner'}</div>
+                            </div>
+                        </div>
+                        <div class="story-content">
+                            <div class="story-testimonial">${story.testimonial || 'Great experience!'}</div>
+                            <div class="story-info">
+                                <div class="app-type-tag">${story.appType || 'App'}</div>
+                                <div class="story-date">${formatDate(story.date)}</div>
+                            </div>
+                            <a href="#" class="view-story-button" data-story-id="${story.id}">Read Full Story</a>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Helper to create an app card with timestamp
+            function createAppCard(story) {
+                const appImage = story.images && story.images.length > 0 && story.images[0] 
+                    ? story.images[0] 
+                    : 'images/app-placeholder.jpg';
+                    
+                return `
+                    <div class="app-card" data-category="${story.appType || 'Other'}">
+                        <img src="${appImage}" alt="${story.appName || 'App'}" class="app-image">
+                        <div class="app-content">
+                            <div class="app-category">${story.appType || 'App'}</div>
+                            <div class="app-name">${story.appName || 'App'}</div>
+                            <div class="creator-name">by ${story.name || 'Anonymous'}</div>
+                            <div class="app-testimonial">${story.testimonial || 'Great experience!'}</div>
+                            <div class="app-meta">
+                                <div class="timeframe">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    ${formatDate(story.date)}
+                                </div>
+                                <div class="experience-level">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
+                                    ${story.experienceLevel || 'Beginner'}
+                                </div>
+                            </div>
+                            <a href="#" class="view-story-button" data-story-id="${story.id}">View Details</a>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Helper to show empty state
+            function showEmptyState(storiesGrid, appsGrid) {
+                const emptyState = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📱</div>
+                        <h3>No Stories Yet</h3>
+                        <p>Be the first to share your app building success story with our community!</p>
+                        <a href="submit-success-story.html" class="cta-button">Submit Your Story</a>
+                    </div>
+                `;
+                
+                storiesGrid.innerHTML = emptyState;
+                appsGrid.innerHTML = emptyState;
             }
             
             // App filtering functionality
@@ -1255,7 +1393,7 @@
             function openStoryModal(storyId) {
                 const modal = document.getElementById('story-modal');
                 const modalBody = document.getElementById('modal-body');
-                const stories = getStories();
+                const stories = getApprovedStories();
                 
                 // Find story by ID
                 const story = stories.find(s => s.id === storyId);
@@ -1270,37 +1408,49 @@
                     <div class="modal-story-header">
                         <div class="modal-avatar">${getInitial(story.name)}</div>
                         <div class="modal-creator-info">
-                            <h4>${story.name}</h4>
-                            <div class="experience">${story.experienceLevel}</div>
-                            <div class="app-info"><strong>${story.appName}</strong> - ${story.appType}</div>
+                            <h4>${story.name || 'Anonymous'}</h4>
+                            <div class="experience">${story.experienceLevel || 'Beginner'}</div>
+                            <div class="app-info"><strong>${story.appName || 'App'}</strong> - ${story.appType || 'App'}</div>
                         </div>
                     </div>
-                    <div class="modal-quote">${story.testimonial}</div>
+                    <div class="modal-quote">${story.testimonial || 'Great experience!'}</div>
                     <div class="modal-story-text">
-                        ${story.story.split('\n').map(paragraph => `<p>${paragraph}</p>`).join('')}
+                        ${(story.story || 'No detailed story provided.').split('\n').map(paragraph => `<p>${paragraph}</p>`).join('')}
                     </div>
+                    <div class="text-sm text-gray-500 mt-4">Submitted on ${formatDate(story.date)}</div>
                 `;
                 
+                modalBody.innerHTML = modalContent;
+                
                 // Add images if available
+                const imagesContainer = document.createElement('div');
+                imagesContainer.className = 'modal-app-images mt-4';
+                
                 if (story.images && story.images.length > 0) {
-                    modalContent += '<div class="modal-app-images">';
-                    story.images.forEach(image => {
-                        modalContent += `<img src="${image}" alt="${story.appName}">`;
-                    });
-                    modalContent += '</div>';
+                    const hasImages = story.images.some(img => img !== null && img !== '');
+                    
+                    if (hasImages) {
+                        story.images.forEach((imageUrl, index) => {
+                            if (imageUrl) {
+                                const img = document.createElement('img');
+                                img.src = imageUrl;
+                                img.alt = `${story.appName} Screenshot ${index + 1}`;
+                                img.className = 'rounded shadow';
+                                imagesContainer.appendChild(img);
+                            }
+                        });
+                        
+                        modalBody.appendChild(imagesContainer);
+                    }
                 }
                 
                 // Add CTA
-                modalContent += `
-                    <div class="modal-cta">
-                        <a href="index.html#pricing" class="cta-button">Start Building Your App</a>
-                    </div>
-                `;
+                const ctaDiv = document.createElement('div');
+                ctaDiv.className = 'modal-cta mt-6 text-center';
+                ctaDiv.innerHTML = `<a href="index.html#pricing" class="cta-button">Build Your Own App</a>`;
+                modalBody.appendChild(ctaDiv);
                 
-                // Update modal content
-                modalBody.innerHTML = modalContent;
-                
-                // Show modal with animation
+                // Show modal
                 modal.classList.add('active');
                 
                 // Prevent body scrolling
@@ -1341,5 +1491,8 @@
             });
         });
     </script>
+
+    <!-- Supabase.js - Add this for direct Supabase access -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </body>
 </html>
