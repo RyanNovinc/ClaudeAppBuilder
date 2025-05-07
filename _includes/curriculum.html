@@ -5,165 +5,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AppFoundry Curriculum - Build AI-Powered Apps Without Coding</title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="images/favicon.png">
+    <!-- Story Manager Script - IMPORTANT: This must be the first script in the head -->
+    <script>
+    // Universal Story Manager - ensures stories are consistently available
+    (function() {
+      // Run on all pages to ensure localStorage data consistency
+      console.log("📊 Story Manager initializing on curriculum page");
+      
+      // Check if we need to seed the localStorage from our backup
+      function seedStoriesIfNeeded() {
+        // Only run if appfoundry_submissions doesn't exist or is empty
+        if (!localStorage.getItem('appfoundry_submissions')) {
+          console.log("🌱 No stories found in localStorage, checking for seed data");
+          
+          // Check if we have any stories in our seed
+          if (localStorage.getItem('appfoundry_approved_seed')) {
+            console.log("🔄 Restoring stories from seed");
+            try {
+              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+              console.log("✅ Successfully restored", seed.length, "stories from seed");
+            } catch (e) {
+              console.error("❌ Error restoring from seed:", e);
+            }
+          }
+        } else {
+          // If we have submissions, make sure we have an up-to-date seed
+          try {
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log("💾 Seed updated with", submissions.length, "stories");
+          } catch (e) {
+            console.error("❌ Error updating seed:", e);
+          }
+        }
+      }
+      
+      // Run the seed check immediately
+      seedStoriesIfNeeded();
+    })();
+    </script>
     
-    <!-- Fonts -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="custom-styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Styles -->
-    <link rel="stylesheet" href="styles.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Curriculum Page Specific Styles */
-        .page-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #005ff0 100%);
-            padding: 80px 0;
-            color: white;
+        /* Page specific styles */
+        .curriculum-hero {
             text-align: center;
+            padding: 80px 0;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0055b3 100%);
+            color: white;
+            margin-bottom: 0;
         }
         
-        .page-header h1 {
+        .curriculum-hero h1 {
             font-size: 3rem;
             margin-bottom: 20px;
+            color: white;
         }
         
-        .page-header p {
+        .curriculum-hero p {
             font-size: 1.25rem;
             max-width: 800px;
             margin: 0 auto;
             color: rgba(255, 255, 255, 0.9);
         }
         
-        .curriculum-section {
+        .full-curriculum {
             padding: 80px 0;
-            background: var(--background-light);
+            background-color: var(--background-light);
         }
         
-        .curriculum-visual {
-            position: relative;
-            padding: 40px 0;
-        }
-        
-        .roadmap-line {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            width: 6px;
-            background: var(--primary-color);
-            opacity: 0.2;
-            transform: translateX(-50%);
-        }
-        
-        .modules {
-            position: relative;
-            z-index: 2;
-        }
-        
-        .module {
-            display: flex;
-            align-items: center;
+        .module-wrapper {
             margin-bottom: 60px;
-        }
-        
-        .module:last-child {
-            margin-bottom: 0;
-        }
-        
-        .module-number {
-            flex-shrink: 0;
-            width: 60px;
-            height: 60px;
-            background: var(--primary-color);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: 700;
-            position: relative;
-            z-index: 2;
-            box-shadow: 0 8px 20px rgba(0, 112, 243, 0.2);
-        }
-        
-        .module-content {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            margin-left: 30px;
-            flex-grow: 1;
             position: relative;
         }
         
-        .module-content:before {
-            content: "";
-            position: absolute;
-            left: -15px;
-            top: 50%;
-            transform: translateY(-50%);
-            border-width: 15px 15px 15px 0;
-            border-style: solid;
-            border-color: transparent white transparent transparent;
-        }
-        
-        .module-content h3 {
-            margin-top: 0;
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-        
-        .module-content p {
-            margin: 0 0 15px;
-            color: var(--text-medium);
-        }
-        
-        .module-details {
-            display: none;
-            background: var(--background-light);
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 15px;
-        }
-        
-        .module-details ul {
-            margin: 0;
-            padding-left: 20px;
-        }
-        
-        .module-details li {
-            margin-bottom: 8px;
-            color: var(--text-medium);
-        }
-        
-        .module-details li:last-child {
+        .module-wrapper:last-child {
             margin-bottom: 0;
         }
         
-        .module-expand {
-            display: inline-block;
-            color: var(--primary-color);
-            font-weight: 600;
-            cursor: pointer;
-            transition: color 0.2s ease;
+        .module-wrapper .module {
+            margin-bottom: 0;
         }
         
-        .module-expand:hover {
-            color: var(--primary-hover);
-        }
-        
-        .curriculum-cta {
+        .curriculum-description {
+            max-width: 800px;
+            margin: 0 auto 60px;
             text-align: center;
+        }
+        
+        .curriculum-description p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--text-medium);
+        }
+        
+        .curriculum-footer {
             margin-top: 60px;
+            text-align: center;
+        }
+        
+        .curriculum-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-item {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: var(--text-medium);
         }
         
         .testimonials-section {
             padding: 80px 0;
-            background: white;
+            background-color: white;
         }
         
         .testimonials-grid {
@@ -174,46 +149,28 @@
         }
         
         @media (max-width: 768px) {
-            .page-header {
-                padding: 60px 0;
+            .curriculum-hero h1 {
+                font-size: 2.5rem;
             }
             
-            .page-header h1 {
-                font-size: 2.25rem;
-            }
-            
-            .module {
+            .curriculum-stats {
                 flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .module-content {
-                margin-left: 0;
-                margin-top: 20px;
-                width: 100%;
-            }
-            
-            .module-content:before {
-                left: 30px;
-                top: -15px;
-                transform: none;
-                border-width: 0 15px 15px 15px;
-                border-color: transparent transparent white transparent;
-            }
-            
-            .roadmap-line {
-                left: 30px;
+                gap: 20px;
+                max-width: 300px;
+                margin-left: auto;
+                margin-right: auto;
             }
         }
     </style>
 </head>
 <body>
     <!-- Header -->
-    <header class="site-header">
+    <header>
         <div class="container">
             <div class="logo">AppFoundry</div>
-            <nav class="main-nav">
+            <nav>
                 <ul>
+                    <li><a href="index.html#problem">The Problem</a></li>
                     <li><a href="index.html#how-it-works">How It Works</a></li>
                     <li><a href="index.html#examples">Examples</a></li>
                     <li><a href="curriculum.html" class="active">Curriculum</a></li>
@@ -222,167 +179,186 @@
                 </ul>
             </nav>
             <button class="cta-button small" id="loginButton">Log in</button>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
         </div>
     </header>
 
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-        <nav>
-            <ul>
-                <li><a href="index.html#how-it-works">How It Works</a></li>
-                <li><a href="index.html#examples">Examples</a></li>
-                <li><a href="curriculum.html">Curriculum</a></li>
-                <li><a href="index.html#pricing">Pricing</a></li>
-                <li><a href="success-stories.html">Success Stories</a></li>
-                <li><a href="#" class="mobile-login">Log in</a></li>
-            </ul>
-        </nav>
-    </div>
-
-    <!-- Page Header -->
-    <div class="page-header">
+    <!-- Hero Banner -->
+    <section class="curriculum-hero">
         <div class="container">
-            <h1>Your App-Building Roadmap</h1>
-            <p>A proven 7-module system to turn your ideas into reality without coding</p>
+            <h1>Your Complete App-Building Roadmap</h1>
+            <p>A proven 7-module system to turn your ideas into reality without writing a single line of code</p>
         </div>
-    </div>
+    </section>
 
-    <!-- Curriculum Section -->
-    <section class="curriculum-section">
+    <!-- Full Curriculum Section -->
+    <section class="full-curriculum">
         <div class="container">
+            <div class="curriculum-description">
+                <p>The AppFoundry curriculum is designed to take you from zero to launching your own custom app in just 30 days. Each module builds on the previous one, walking you through the entire process step-by-step. No coding experience is required - just follow along and let Claude AI do the technical work for you.</p>
+            </div>
+            
             <div class="curriculum-visual">
                 <div class="roadmap-line"></div>
                 <div class="modules">
-                    <div class="module">
-                        <div class="module-number">01</div>
-                        <div class="module-content">
-                            <h3>Setting Up Your AI Development Environment</h3>
-                            <p>Configure Claude and the minimal tools you need to start building without coding</p>
-                            <div class="module-expand" data-module="1">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-1">
-                                <ul>
-                                    <li>Setting up your Claude AI account the right way</li>
-                                    <li>Installing the essential tools (all free)</li>
-                                    <li>Creating your first project workspace</li>
-                                    <li>Understanding the AI-powered development workflow</li>
-                                    <li>Configuring VSCode for optimal use with Claude</li>
-                                </ul>
+                    <div class="module-wrapper">
+                        <div class="module">
+                            <div class="module-number">01</div>
+                            <div class="module-content">
+                                <h3>Setting Up Your AI Development Environment</h3>
+                                <p>Configure Claude and the minimal tools you need to start building without coding</p>
+                                <div class="module-expand" data-module="1">See Lesson Details +</div>
+                                <div class="module-details" id="module-details-1">
+                                    <ul>
+                                        <li>Setting up your Claude AI account the right way</li>
+                                        <li>Installing the essential tools (all free)</li>
+                                        <li>Creating your first project workspace</li>
+                                        <li>Understanding the AI-powered development workflow</li>
+                                        <li>Configuring VSCode for optimal use with Claude</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="module">
-                        <div class="module-number">02</div>
-                        <div class="module-content">
-                            <h3>Creating Your First AI Project</h3>
-                            <p>Learn how to "speak" to Claude so it creates exactly what you want</p>
-                            <div class="module-expand" data-module="2">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-2">
-                                <ul>
-                                    <li>The exact prompts that get professional results</li>
-                                    <li>How to break down any app idea into AI-friendly components</li>
-                                    <li>Troubleshooting when Claude doesn't understand</li>
-                                    <li>Prompt templates for different app components</li>
-                                    <li>Creating a project specification from your idea</li>
-                                </ul>
+                    
+                    <div class="module-wrapper">
+                        <div class="module">
+                            <div class="module-number">02</div>
+                            <div class="module-content">
+                                <h3>Creating Your First AI Project</h3>
+                                <p>Learn how to "speak" to Claude so it creates exactly what you want</p>
+                                <div class="module-expand" data-module="2">See Lesson Details +</div>
+                                <div class="module-details" id="module-details-2">
+                                    <ul>
+                                        <li>The exact prompts that get professional results</li>
+                                        <li>How to break down any app idea into AI-friendly components</li>
+                                        <li>Troubleshooting when Claude doesn't understand</li>
+                                        <li>Prompt templates for different app components</li>
+                                        <li>Creating a project specification from your idea</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="module">
-                        <div class="module-number">03</div>
-                        <div class="module-content">
-                            <h3>Testing Your App: From Concept to Phone</h3>
-                            <p>See your app work on your device without writing a single line of code</p>
-                            <div class="module-expand" data-module="3">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-3">
-                                <ul>
-                                    <li>Setting up your testing environment</li>
-                                    <li>Running your app on multiple devices</li>
-                                    <li>Getting feedback from real users</li>
-                                    <li>Using Expo Go for instant previews</li>
-                                    <li>Debugging common issues without coding knowledge</li>
-                                </ul>
+                    
+                    <div class="module-wrapper">
+                        <div class="module">
+                            <div class="module-number">03</div>
+                            <div class="module-content">
+                                <h3>Testing Your App: From Concept to Phone</h3>
+                                <p>See your app work on your device without writing a single line of code</p>
+                                <div class="module-expand" data-module="3">See Lesson Details +</div>
+                                <div class="module-details" id="module-details-3">
+                                    <ul>
+                                        <li>Setting up your testing environment</li>
+                                        <li>Running your app on multiple devices</li>
+                                        <li>Getting feedback from real users</li>
+                                        <li>Using Expo Go for instant previews</li>
+                                        <li>Debugging common issues without coding knowledge</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="module">
-                        <div class="module-number">04</div>
-                        <div class="module-content">
-                            <h3>Directing Claude: Creating Professional UI</h3>
-                            <p>Learn the exact prompts to get beautiful interfaces from Claude</p>
-                            <div class="module-expand" data-module="4">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-4">
-                                <ul>
-                                    <li>Advanced UI prompt techniques</li>
-                                    <li>Creating consistent design systems</li>
-                                    <li>Implementing animations and transitions</li>
-                                    <li>Building responsive layouts that look great on all devices</li>
-                                    <li>Accessibility considerations for your app</li>
-                                </ul>
+                    
+                    <div class="module-wrapper">
+                        <div class="module">
+                            <div class="module-number">04</div>
+                            <div class="module-content">
+                                <h3>Directing Claude: Creating Professional UI</h3>
+                                <p>Learn the exact prompts to get beautiful interfaces from Claude</p>
+                                <div class="module-expand" data-module="4">See Lesson Details +</div>
+                                <div class="module-details" id="module-details-4">
+                                    <ul>
+                                        <li>Advanced UI prompt techniques</li>
+                                        <li>Creating consistent design systems</li>
+                                        <li>Implementing animations and transitions</li>
+                                        <li>Building responsive layouts that look great on all devices</li>
+                                        <li>Accessibility considerations for your app</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="module">
-                        <div class="module-number">05</div>
-                        <div class="module-content">
-                            <h3>Building Your App Structure</h3>
-                            <p>Create a complete app blueprint that Claude can turn into reality</p>
-                            <div class="module-expand" data-module="5">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-5">
-                                <ul>
-                                    <li>Planning app architecture without technical knowledge</li>
-                                    <li>Setting up screens and navigation</li>
-                                    <li>Creating data models and functionality</li>
-                                    <li>Integrating authentication systems</li>
-                                    <li>Setting up backend services with Supabase</li>
-                                </ul>
+                    
+                    <div class="module-wrapper">
+                        <div class="module">
+                            <div class="module-number">05</div>
+                            <div class="module-content">
+                                <h3>Building Your App Structure</h3>
+                                <p>Create a complete app blueprint that Claude can turn into reality</p>
+                                <div class="module-expand" data-module="5">See Lesson Details +</div>
+                                <div class="module-details" id="module-details-5">
+                                    <ul>
+                                        <li>Planning app architecture without technical knowledge</li>
+                                        <li>Setting up screens and navigation</li>
+                                        <li>Creating data models and functionality</li>
+                                        <li>Integrating authentication systems</li>
+                                        <li>Setting up backend services with Supabase</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="module">
-                        <div class="module-number">06</div>
-                        <div class="module-content">
-                            <h3>Building Out Your App</h3>
-                            <p>Let Claude do all the technical work while you focus on design and features</p>
-                            <div class="module-expand" data-module="6">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-6">
-                                <ul>
-                                    <li>Implementing complex features with simple prompts</li>
-                                    <li>Adding user authentication and data storage</li>
-                                    <li>Testing and debugging with AI assistance</li>
-                                    <li>Integrating third-party services and APIs</li>
-                                    <li>Creating offline functionality and data synchronization</li>
-                                </ul>
+                    
+                    <div class="module-wrapper">
+                        <div class="module">
+                            <div class="module-number">06</div>
+                            <div class="module-content">
+                                <h3>Building Out Your App</h3>
+                                <p>Let Claude do all the technical work while you focus on design and features</p>
+                                <div class="module-expand" data-module="6">See Lesson Details +</div>
+                                <div class="module-details" id="module-details-6">
+                                    <ul>
+                                        <li>Implementing complex features with simple prompts</li>
+                                        <li>Adding user authentication and data storage</li>
+                                        <li>Testing and debugging with AI assistance</li>
+                                        <li>Integrating third-party services and APIs</li>
+                                        <li>Creating offline functionality and data synchronization</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="module">
-                        <div class="module-number">07</div>
-                        <div class="module-content">
-                            <h3>Submitting to the App Store</h3>
-                            <p>Get your AI-built app published quickly and professionally</p>
-                            <div class="module-expand" data-module="7">See Lesson Details +</div>
-                            <div class="module-details" id="module-details-7">
-                                <ul>
-                                    <li>Preparing your app for submission</li>
-                                    <li>Creating screenshots and descriptions</li>
-                                    <li>Navigating the approval process</li>
-                                    <li>Marketing your app effectively</li>
-                                    <li>Planning future updates and maintenance</li>
-                                </ul>
+                    
+                    <div class="module-wrapper">
+                        <div class="module">
+                            <div class="module-number">07</div>
+                            <div class="module-content">
+                                <h3>Submitting to the App Store</h3>
+                                <p>Get your AI-built app published quickly and professionally</p>
+                                <div class="module-expand" data-module="7">See Lesson Details +</div>
+                                <div class="module-details" id="module-details-7">
+                                    <ul>
+                                        <li>Preparing your app for submission</li>
+                                        <li>Creating screenshots and descriptions</li>
+                                        <li>Navigating the approval process</li>
+                                        <li>Marketing your app effectively</li>
+                                        <li>Planning future updates and maintenance</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="curriculum-cta">
-                <a href="index.html#pricing" class="cta-button large">Start the Course Today</a>
-                <p style="margin-top: 15px; color: var(--text-medium);">Begin building your first app in the next 24 hours</p>
+            <div class="curriculum-footer">
+                <div class="curriculum-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">15+</div>
+                        <div class="stat-label">Hands-On Exercises</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">30+</div>
+                        <div class="stat-label">App Templates</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Community Support</div>
+                    </div>
+                </div>
+                
+                <a href="index.html#pricing" class="cta-button large">Enroll Now & Start Building</a>
             </div>
         </div>
     </section>
@@ -390,7 +366,7 @@
     <!-- Testimonials Section -->
     <section class="testimonials-section">
         <div class="container">
-            <h2 style="text-align: center;">What Our Students Say</h2>
+            <h2>What Our Students Say</h2>
             
             <div class="testimonials-grid">
                 <div class="testimonial">
@@ -483,6 +459,7 @@
                 <div class="link-group">
                     <h4>Course</h4>
                     <ul>
+                        <li><a href="index.html#problem">The Problem</a></li>
                         <li><a href="index.html#how-it-works">How It Works</a></li>
                         <li><a href="curriculum.html">Curriculum</a></li>
                         <li><a href="index.html#pricing">Pricing</a></li>
@@ -510,26 +487,9 @@
         </div>
     </footer>
 
-    <!-- Scripts -->
+    <!-- Component loader script -->
+    <script src="loader.js"></script>
+    <!-- Main scripts -->
     <script src="scripts.js"></script>
-    <script>
-        // Module details toggle specific to this page
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.module-expand').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const moduleId = this.getAttribute('data-module');
-                    const details = document.getElementById(`module-details-${moduleId}`);
-                    
-                    if (details.style.display === 'block') {
-                        details.style.display = 'none';
-                        this.textContent = `See Lesson Details +`;
-                    } else {
-                        details.style.display = 'block';
-                        this.textContent = `Hide Lesson Details -`;
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 </html>
