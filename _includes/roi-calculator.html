@@ -1,0 +1,65 @@
+<!-- ROI CALCULATOR SECTION -->
+<section class="roi-calculator">
+    <div class="container">
+        <h2>Calculate Your Savings</h2>
+        <p class="section-subtitle">See exactly how much time and money AppFoundry will save you</p>
+        
+        <div class="calculator-container">
+            <div class="calculator-inputs">
+                <div class="calculator-field">
+                    <label for="app-complexity">App Complexity Level</label>
+                    <select id="app-complexity">
+                        <option value="simple">Simple (5-8 screens)</option>
+                        <option value="medium" selected>Medium (9-15 screens)</option>
+                        <option value="complex">Complex (16+ screens)</option>
+                    </select>
+                </div>
+                
+                <div class="calculator-field">
+                    <label for="developer-rate">Average Developer Rate ($/hour)</label>
+                    <input type="number" id="developer-rate" value="85" min="50" max="200">
+                </div>
+                
+                <div class="calculator-field">
+                    <label for="revisions">Expected Number of Revisions</label>
+                    <input type="number" id="revisions" value="3" min="1" max="10">
+                </div>
+                
+                <button id="calculate-roi" class="cta-button">Calculate My Savings</button>
+            </div>
+            
+            <div class="calculator-results">
+                <div class="result-card">
+                    <h3>Traditional Development</h3>
+                    <div class="result-cost">$15,200</div>
+                    <div class="result-time">4.5 months</div>
+                    <ul class="result-breakdown">
+                        <li>Development: $12,500</li>
+                        <li>Revisions: $2,700</li>
+                        <li>Initial wait time: 2-3 weeks</li>
+                        <li>Revision wait times: 1-2 weeks each</li>
+                    </ul>
+                </div>
+                
+                <div class="result-card highlight">
+                    <h3>With AppFoundry</h3>
+                    <div class="result-cost">$499</div>
+                    <div class="result-time">2 weeks</div>
+                    <ul class="result-breakdown">
+                        <li>Course: $499 (one-time)</li>
+                        <li>Revisions: $0 (you make them)</li>
+                        <li>Initial development: 1-2 weeks</li>
+                        <li>Revision time: Minutes to hours</li>
+                    </ul>
+                </div>
+                
+                <div class="result-savings">
+                    <h3>Your Total Savings</h3>
+                    <div class="savings-amount">$14,701</div>
+                    <div class="savings-time">4 months</div>
+                    <a href="#pricing" class="cta-button">Start Saving Today</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
