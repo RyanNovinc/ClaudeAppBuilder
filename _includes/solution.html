@@ -1,50 +1,386 @@
 <!-- SOLUTION SECTION -->
 <section class="solution" id="solution">
     <div class="container">
-        <h2>The AppFoundry Solution: AI-Powered App Development for Entrepreneurs</h2>
-        <p class="section-subtitle">Build your app yourself without writing a single line of code</p>
+        <div class="solution-header">
+            <h2>The AppFoundry Solution: AI-Powered App Development for Entrepreneurs</h2>
+            <p class="section-subtitle">Build your app yourself without writing a single line of code</p>
+        </div>
         
-        <div class="solution-showcase">
+        <div class="solution-content">
             <div class="solution-text">
-                <h3>From Idea to Functional App in 30 Days</h3>
-                <p>AppFoundry gives you a proven system to harness the power of Claude AI for building professional apps—without coding experience or technical knowledge.</p>
+                <h3 class="feature-heading">From Idea to Functional App in 30 Days</h3>
+                <p class="feature-description">AppFoundry gives you a proven system to harness the power of Claude AI for building professional apps—without coding experience or technical knowledge.</p>
                 
-                <ul class="solution-benefits">
-                    <li><strong>Direct your personal AI developer</strong> using our proven prompt frameworks</li>
-                    <li><strong>Create exactly what you envision</strong> without technical limitations</li>
-                    <li><strong>Make unlimited changes yourself</strong> instead of paying developers</li>
-                    <li><strong>Launch in days, not months</strong> with our streamlined process</li>
-                    <li><strong>Own 100% of your creation</strong> with no ongoing dependencies</li>
-                </ul>
+                <div class="benefits-container">
+                    <ul class="solution-benefits">
+                        <li class="benefit-item">
+                            <div class="benefit-icon">🎯</div>
+                            <div class="benefit-content">
+                                <strong>Direct your personal AI developer</strong> using our proven prompt frameworks
+                            </div>
+                        </li>
+                        <li class="benefit-item">
+                            <div class="benefit-icon">💡</div>
+                            <div class="benefit-content">
+                                <strong>Create exactly what you envision</strong> without technical limitations
+                            </div>
+                        </li>
+                        <li class="benefit-item">
+                            <div class="benefit-icon">🔄</div>
+                            <div class="benefit-content">
+                                <strong>Make unlimited changes yourself</strong> instead of paying developers
+                            </div>
+                        </li>
+                        <li class="benefit-item">
+                            <div class="benefit-icon">⚡</div>
+                            <div class="benefit-content">
+                                <strong>Launch in days, not months</strong> with our streamlined process
+                            </div>
+                        </li>
+                        <li class="benefit-item">
+                            <div class="benefit-icon">🛡️</div>
+                            <div class="benefit-content">
+                                <strong>Own 100% of your creation</strong> with no ongoing dependencies
+                            </div>
+                        </li>
+                    </ul>
+                </div>
                 
-                <div class="transformation-blocks">
-                    <div class="transformation-item">
-                        <div class="transformation-before">
-                            <h4>Before AppFoundry</h4>
-                            <ul>
-                                <li>$20,000+ development costs</li>
-                                <li>3-6 month waiting periods</li>
-                                <li>Frustrating revision cycles</li>
-                                <li>Dependency on developers</li>
-                            </ul>
-                        </div>
-                        <div class="transformation-arrow">→</div>
-                        <div class="transformation-after">
-                            <h4>After AppFoundry</h4>
-                            <ul>
-                                <li>One-time $499 investment</li>
-                                <li>Build apps in 2-4 weeks</li>
-                                <li>Make changes yourself instantly</li>
-                                <li>Complete independence</li>
-                            </ul>
+                <div class="transformation-card">
+                    <div class="transformation-header">
+                        <span class="transform-badge">The AppFoundry Transformation</span>
+                    </div>
+                    <div class="transformation-blocks">
+                        <div class="transformation-item">
+                            <div class="transformation-before">
+                                <h4>Before AppFoundry</h4>
+                                <ul>
+                                    <li>$20,000+ development costs</li>
+                                    <li>3-6 month waiting periods</li>
+                                    <li>Frustrating revision cycles</li>
+                                    <li>Dependency on developers</li>
+                                </ul>
+                            </div>
+                            <div class="transformation-arrow">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            </div>
+                            <div class="transformation-after">
+                                <h4>After AppFoundry</h4>
+                                <ul>
+                                    <li>One-time $499 investment</li>
+                                    <li>Build apps in 2-4 weeks</li>
+                                    <li>Make changes yourself instantly</li>
+                                    <li>Complete independence</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="solution-cta">
-                    <a href="#pricing" class="cta-button">Start Building My App Today</a>
+                    <a href="#pricing" class="cta-button glow-button">Start Building My App Today</a>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<style>
+.solution {
+    padding: 100px 0;
+    background-color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.solution:before {
+    content: "";
+    position: absolute;
+    right: -150px;
+    top: -150px;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 112, 243, 0.05) 0%, rgba(0, 112, 243, 0) 70%);
+    z-index: 0;
+}
+
+.solution:after {
+    content: "";
+    position: absolute;
+    left: -150px;
+    bottom: -150px;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 76, 0, 0.05) 0%, rgba(255, 76, 0, 0) 70%);
+    z-index: 0;
+}
+
+.solution-header {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 60px;
+    position: relative;
+    z-index: 2;
+}
+
+.solution h2 {
+    font-size: 2.75rem;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--text-dark) 0%, #45505e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+    display: inline-block;
+}
+
+.section-subtitle {
+    font-size: 1.35rem;
+    color: var(--text-medium);
+    line-height: 1.6;
+}
+
+.solution-content {
+    position: relative;
+    z-index: 2;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.feature-heading {
+    font-size: 2.2rem;
+    margin-bottom: 25px;
+    position: relative;
+    color: var(--text-dark);
+}
+
+.feature-heading:after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -12px;
+    width: 80px;
+    height: 4px;
+    background: var(--secondary-color);
+    border-radius: 2px;
+}
+
+.feature-description {
+    font-size: 1.25rem;
+    margin-bottom: 40px;
+    color: var(--text-medium);
+    line-height: 1.6;
+}
+
+.benefits-container {
+    margin-bottom: 50px;
+}
+
+.solution-benefits {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: var(--background-light);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.benefit-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.benefit-icon {
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-right: 20px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.benefit-content {
+    font-size: 1.15rem;
+    line-height: 1.5;
+}
+
+.benefit-content strong {
+    color: var(--text-dark);
+}
+
+.transformation-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    margin-bottom: 50px;
+    overflow: hidden;
+    position: relative;
+}
+
+.transformation-header {
+    padding: 20px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #0055b3 100%);
+    text-align: center;
+}
+
+.transform-badge {
+    color: white;
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: 0.5px;
+}
+
+.transformation-blocks {
+    padding: 30px;
+}
+
+.transformation-item {
+    display: flex;
+    align-items: stretch;
+    background: var(--background-light);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.transformation-before, .transformation-after {
+    flex: 1;
+    padding: 30px;
+}
+
+.transformation-before {
+    background-color: rgba(239, 68, 68, 0.08);
+    border-right: 1px solid var(--border-light);
+}
+
+.transformation-after {
+    background-color: rgba(16, 185, 129, 0.08);
+}
+
+.transformation-before h4, .transformation-after h4 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid;
+}
+
+.transformation-before h4 {
+    color: var(--error-color);
+    border-color: var(--error-color);
+}
+
+.transformation-after h4 {
+    color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.transformation-before ul, .transformation-after ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.transformation-before li, .transformation-after li {
+    padding: 12px 0;
+    position: relative;
+    padding-left: 30px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    font-size: 1.1rem;
+}
+
+.transformation-before li:last-child, .transformation-after li:last-child {
+    border-bottom: none;
+}
+
+.transformation-before li:before {
+    content: "✗";
+    position: absolute;
+    left: 0;
+    color: var(--error-color);
+    font-weight: bold;
+}
+
+.transformation-after li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+.transformation-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 15px;
+    color: var(--primary-color);
+    background-color: white;
+}
+
+.solution-cta {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.solution-cta .cta-button {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-hover) 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
+    padding: 18px 40px;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 10px 25px rgba(255, 76, 0, 0.25);
+}
+
+.solution-cta .cta-button:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(255, 76, 0, 0.35);
+}
+
+.glow-button {
+    position: relative;
+}
+
+.glow-button:after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-hover) 100%);
+    border-radius: 55px;
+    z-index: -1;
+    opacity: 0.5;
+    animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    0% {
+        opacity: 0.5;
+        transform: scale(0.95);
+    }
+    100% {
+        opacity: 0.2;
+        transform: scale(1.05);
+    }
+}
+</style>
