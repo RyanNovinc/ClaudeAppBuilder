@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Companion App Details - AppFoundry</title>
+    
+    <script>
+    // Story Manager Script - IMPORTANT: This must be the first script in the head
+    (function() {
+      // Run on all pages to ensure localStorage data consistency
+      console.log("📊 Story Manager initializing on app details page");
+      
+      // Check if we need to seed the localStorage from our backup
+      function seedStoriesIfNeeded() {
+        // Only run if appfoundry_submissions doesn't exist or is empty
+        if (!localStorage.getItem('appfoundry_submissions')) {
+          console.log("🌱 No stories found in localStorage, checking for seed data");
+          
+          // Check if we have any stories in our seed
+          if (localStorage.getItem('appfoundry_approved_seed')) {
+            console.log("🔄 Restoring stories from seed");
+            try {
+              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+              console.log("✅ Successfully restored", seed.length, "stories from seed");
+            } catch (e) {
+              console.error("❌ Error restoring from seed:", e);
+            }
+          }
+        } else {
+          // If we have submissions, make sure we have an up-to-date seed
+          try {
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log("💾 Seed updated with", submissions.length, "stories");
+          } catch (e) {
+            console.error("❌ Error updating seed:", e);
+          }
+        }
+      }
+      
+      // Run the seed check immediately
+      seedStoriesIfNeeded();
+    })();
+    </script>
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* App details specific styles */
+        .app-details-container {
+            max-width: 1000px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+        
+        .app-details-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .app-details-header h1 {
+            font-size: 2.8rem;
+            color: var(--text-dark);
+            margin-bottom: 15px;
+        }
+        
+        .app-details-header p {
+            font-size: 1.25rem;
+            color: var(--text-medium);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .app-preview {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 60px;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .app-screenshot {
+            flex: 1;
+            position: relative;
+        }
+        
+        .app-screenshot img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .app-overview {
+            flex: 1;
+        }
+        
+        .app-overview h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .app-overview p {
+            margin-bottom: 20px;
+            line-height: 1.7;
+            color: var(--text-medium);
+        }
+        
+        .app-feature-list {
+            margin-bottom: 30px;
+        }
+        
+        .app-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .app-feature-icon {
+            width: 30px;
+            height: 30px;
+            background-color: rgba(0, 112, 243, 0.1);
+            color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .app-feature-text {
+            flex: 1;
+        }
+        
+        .app-feature-text h4 {
+            font-size: 1.15rem;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+        
+        .app-feature-text p {
+            font-size: 0.95rem;
+            margin-bottom: 0;
+            color: var(--text-medium);
+        }
+        
+        .download-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .download-button {
+            display: inline-block;
+            height: 50px;
+            transition: transform 0.3s ease;
+        }
+        
+        .download-button:hover {
+            transform: translateY(-3px);
+        }
+        
+        .download-button img {
+            height: 100%;
+            width: auto;
+        }
+        
+        .technical-details {
+            margin-bottom: 60px;
+        }
+        
+        .technical-details h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--text-dark);
+            text-align: center;
+        }
+        
+        .details-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-light);
+            margin-bottom: 30px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .details-tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-medium);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+        
+        .details-tab.active {
+            color: var(--primary-color);
+        }
+        
+        .details-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .tab-content p {
+            margin-bottom: 20px;
+            line-height: 1.7;
+            color: var(--text-medium);
+        }
+        
+        .code-block {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            color: #334155;
+        }
+        
+        .file-structure {
+            margin-bottom: 20px;
+        }
+        
+        .file-structure code {
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+            display: block;
+            background-color: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            color: #334155;
+        }
+        
+        .tech-stack {
+            margin-bottom: 40px;
+        }
+        
+        .tech-stack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .tech-item {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tech-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+        
+        .tech-item span {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+        
+        .challenges-section {
+            margin-bottom: 40px;
+        }
+        
+        .challenge-item {
+            background-color: #fff8e6;
+            border-left: 4px solid var(--warning-color);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .challenge-item h4 {
+            font-size: 1.15rem;
+            margin-bottom: 10px;
+            color: #92400e;
+        }
+        
+        .challenge-item p {
+            font-size: 0.95rem;
+            margin-bottom: 0;
+            color: #92400e;
+        }
+        
+        .cta-section {
+            text-align: center;
+            background-color: var(--background-light);
+            padding: 60px;
+            border-radius: 16px;
+            margin-bottom: 60px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .cta-section h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+        
+        .cta-section p {
+            max-width: 600px;
+            margin: 0 auto 30px;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 1024px) {
+            .app-preview {
+                flex-direction: column;
+                padding: 30px;
+            }
+            
+            .app-screenshot {
+                max-width: 500px;
+                margin: 0 auto;
+            }
+            
+            .cta-section {
+                padding: 40px 30px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .app-details-header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .app-details-header p {
+                font-size: 1.1rem;
+            }
+            
+            .app-overview h2 {
+                font-size: 1.75rem;
+            }
+            
+            .tech-stack-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+            
+            .download-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo"><a href="index.html">AppFoundry</a></div>
+            <nav>
+                <ul>
+                    <li><a href="index.html#problem">The Problem</a></li>
+                    <li><a href="index.html#solution">Our Solution</a></li>
+                    <li><a href="index.html#curriculum">Curriculum</a></li>
+                    <li><a href="index.html#pricing">Pricing</a></li>
+                    <li><a href="success-stories.html">Success Stories</a></li>
+                    <li><a href="about-creator.html">About</a></li>
+                </ul>
+            </nav>
+            <button class="cta-button small" id="loginButton">Log in</button>
+        </div>
+    </header>
+
+    <div class="guarantee-banner">
+        <div class="container">
+            <span class="guarantee-icon">🔒</span>
+            <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 60 days or get 100% of your money back</span>
+            <a href="refund-policy.html" class="guarantee-link">Learn More</a>
+        </div>
+    </div>
+
+    <div class="app-details-container">
+        <div class="app-details-header">
+            <h1>AppFoundry Companion App</h1>
+            <p>Experience the technology you'll be learning through our React Native app with Supabase authentication</p>
+        </div>
+        
+        <div class="app-preview">
+            <div class="app-screenshot">
+                <img src="images/app-screenshot.jpg" alt="AppFoundry Mobile App Screenshot">
+            </div>
+            
+            <div class="app-overview">
+                <h2>Learn on the Go</h2>
+                <p>Our companion mobile app isn't just a convenient way to access your course materials—it's a living example of the exact technology you'll learn to build in the course.</p>
+                
+                <div class="app-feature-list">
+                    <div class="app-feature">
+                        <div class="app-feature-icon">✓</div>
+                        <div class="app-feature-text">
+                            <h4>Course Content Access</h4>
+                            <p>Access all modules, lessons, and resources from your mobile device, even offline.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="app-feature">
+                        <div class="app-feature-icon">✓</div>
+                        <div class="app-feature-text">
+                            <h4>Progress Tracking</h4>
+                            <p>Track your course progress and resume where you left off across devices.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="app-feature">
+                        <div class="app-feature-icon">✓</div>
+                        <div class="app-feature-text">
+                            <h4>Community Integration</h4>
+                            <p>Connect with the Discord community directly through the app.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <p>Download the app now and start exploring what you'll learn to build:</p>
+                
+                <div class="download-buttons">
+                    <a href="#" class="download-button">
+                        <img src="images/app-store-badge.png" alt="Download on the App Store">
+                    </a>
+                    <a href="#" class="download-button">
+                        <img src="images/google-play-badge.png" alt="Get it on Google Play">
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="technical-details">
+            <h2>Technical Architecture</h2>
+            
+            <div class="details-tabs">
+                <button class="details-tab active" data-tab="overview">Overview</button>
+                <button class="details-tab" data-tab="architecture">Architecture</button>
+                <button class="details-tab" data-tab="authentication">Authentication</button>
+                <button class="details-tab" data-tab="file-structure">File Structure</button>
+                <button class="details-tab" data-tab="challenges">Development Challenges</button>
+            </div>
+            
+            <div class="tab-content active" id="overview">
+                <h3>Project Overview</h3>
+                <p>The AppFoundry companion app is a React Native mobile application built with Expo SDK 53, integrated with Supabase for authentication and data storage. The app serves as both a practical learning tool and a real-world example of the technologies taught in the course.</p>
+                
+                <div class="tech-stack">
+                    <h3>Technology Stack</h3>
+                    <div class="tech-stack-grid">
+                        <div class="tech-item">
+                            <img src="images/react-native-logo.png" alt="React Native">
+                            <span>React Native</span>
+                        </div>
+                        <div class="tech-item">
+                            <img src="images/expo-logo.png" alt="Expo">
+                            <span>Expo SDK 53</span>
+                        </div>
+                        <div class="tech-item">
+                            <img src="images/supabase-logo.png" alt="Supabase">
+                            <span>Supabase</span>
+                        </div>
+                        <div class="tech-item">
+                            <img src="images/javascript-logo.png" alt="JavaScript">
+                            <span>JavaScript</span>
+                        </div>
+                    </div>
+                    
+                    <p>The app demonstrates the effective use of these technologies in a production environment, providing students with a practical reference as they build their own applications.</p>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="architecture">
+                <h3>Core Architecture</h3>
+                <p>The project consists of a React Native mobile application with a website companion, both sharing authentication and data through Supabase as the backend service. The implementation uses Expo SDK 53 with specific modifications to ensure compatibility with Supabase authentication.</p>
+                
+                <h4>Key Components</h4>
+                <ol>
+                    <li>
+                        <strong>Mobile Application</strong>
+                        <ul>
+                            <li>Built with React Native using Expo SDK 53</li>
+                            <li>Bottom tab navigation with five main sections:
+                                <ul>
+                                    <li>Home: Main dashboard</li>
+                                    <li>Courses: Educational content with modules and lessons</li>
+                                    <li>Resources: Additional learning materials</li>
+                                    <li>Community: User interaction features</li>
+                                    <li>Profile: User information and settings</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Backend Infrastructure</strong>
+                        <ul>
+                            <li>Supabase provides:
+                                <ul>
+                                    <li>User authentication and management</li>
+                                    <li>PostgreSQL database for content and user data</li>
+                                    <li>Row-level security for data protection</li>
+                                    <li>Compatibility layer with website authentication</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+            
+            <div class="tab-content" id="authentication">
+                <h3>Authentication System</h3>
+                <p>The app implements a comprehensive authentication system using Supabase, providing secure user management and session persistence.</p>
+                
+                <h4>Key Authentication Features:</h4>
+                <ul>
+                    <li>Email/password authentication with secure password hashing</li>
+                    <li>Test mode login for course exercises</li>
+                    <li>Session persistence across app restarts using AsyncStorage</li>
+                    <li>Profile management with user details and course progress</li>
+                </ul>
+                
+                <h4>Authentication Implementation</h4>
+                <div class="code-block">
+                // Authentication Context Example
+
+// AuthContext.js
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../lib/supabase';
+
+const AuthContext = createContext({});
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check for existing session
+    checkUser();
+    
+    // Set up auth state listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN') {
+          setUser(session?.user ?? null);
+          await AsyncStorage.setItem('supabase-session', JSON.stringify(session));
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          await AsyncStorage.removeItem('supabase-session');
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, []);
+
+  async function checkUser() {
+    try {
+      const sessionString = await AsyncStorage.getItem('supabase-session');
+      
+      if (sessionString) {
+        const session = JSON.parse(sessionString);
+        setUser(session?.user ?? null);
+      }
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    } catch (error) {
+      console.error('Error checking user:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
+                </div>
+            </div>
+            
+            <div class="tab-content" id="file-structure">
+                <h3>File Structure</h3>
+                <p>The app follows a clean, organized file structure that makes it easy to understand and maintain:</p>
+                
+                <div class="file-structure">
+                    <code>
+/
+├── App.js                    # Main application entry point with navigation
+├── metro.config.js           # Modified Metro bundler configuration
+├── src/
+│   ├── contexts/
+│   │   └── AuthContext.js    # Authentication state management
+│   ├── lib/
+│   │   └── supabase.js       # Supabase client configuration
+│   └── screens/
+│       ├── HomeScreen.js     # Main app screens
+│       ├── CourseScreen.js
+│       ├── ResourcesScreen.js
+│       ├── CommunityScreen.js
+│       ├── ProfileScreen.js  # User profile with logout functionality
+│       └── LoginScreen.js    # Authentication screen</code>
+                </div>
+                
+                <p>This structure separates concerns and makes the codebase more maintainable as the app grows over time.</p>
+            </div>
+            
+            <div class="tab-content" id="challenges">
+                <h3>Development Challenges</h3>
+                <p>During development, we encountered several technical challenges that provided valuable learning experiences:</p>
+                
+                <div class="challenges-section">
+                    <div class="challenge-item">
+                        <h4>Supabase Compatibility with Expo SDK 53</h4>
+                        <p>The latest Expo SDK had compatibility issues with Supabase's WebSocket dependencies, requiring custom Metro configuration adjustments.</p>
+                    </div>
+                    
+                    <div class="challenge-item">
+                        <h4>Cross-Platform Authentication</h4>
+                        <p>Implementing a unified authentication flow that works seamlessly across both mobile and web platforms required careful session management.</p>
+                    </div>
+                    
+                    <div class="challenge-item">
+                        <h4>Realtime Features</h4>
+                        <p>Handling realtime features without creating dependency conflicts required strategic implementation and platform-specific optimizations.</p>
+                    </div>
+                </div>
+                
+                <p>These challenges and their solutions are covered in detail in the course, providing students with real-world problem-solving experience.</p>
+            </div>
+        </div>
+        
+        <div class="cta-section">
+            <h2>Ready to Build Your Own App?</h2>
+            <p>The AppFoundry companion app demonstrates exactly what you'll learn to build in our course. Join now to get full access to the app, its source code, and step-by-step guidance on creating your own app!</p>
+            <a href="index.html#pricing" class="cta-button large">Enroll in AppFoundry Today</a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="logo">AppFoundry</div>
+            <div class="footer-links">
+                <div class="link-group">
+                    <h4>Course</h4>
+                    <ul>
+                        <li><a href="index.html#problem">The Problem</a></li>
+                        <li><a href="index.html#solution">Our Solution</a></li>
+                        <li><a href="index.html#curriculum">Curriculum</a></li>
+                        <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="success-stories.html">Success Stories</a></li>
+                        <li><a href="about-creator.html">About Creator</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="refund-policy.html">Our Guarantee</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 AppFoundry. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login button functionality
+            document.getElementById('loginButton').addEventListener('click', function() {
+                window.location.href = 'direct-login.html';
+            });
+            
+            // Tab functionality
+            const tabs = document.querySelectorAll('.details-tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs and contents
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to selected tab and content
+                    tab.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
