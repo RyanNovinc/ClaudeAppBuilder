@@ -51,13 +51,36 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* All your CSS styles here */
         :root {
             --primary-color: #0070f3;
             --primary-hover: #0055b3;
-            /* ... rest of your CSS ... */
+            --secondary-color: #ff4c00;
+            --secondary-hover: #e54400;
+            --success-color: #10b981;
+            --warning-color: #fbbf24;
+            --error-color: #ef4444;
+            --text-dark: #111827;
+            --text-medium: #4b5563;
+            --text-light: #6b7280;
+            --background-white: #ffffff;
+            --background-light: #f9fafb;
+            --border-light: #e5e7eb;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
+            --transition-fast: 0.2s;
         }
-        /* ... rest of your CSS ... */
+        
+        /* Improved floating elements */
+        .floating-element {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.6;
+            z-index: 0;
+            animation: float 10s ease-in-out infinite;
+        }
+        
+        /* All your other CSS styles would go here */
+        /* Copy and paste the rest of your CSS from your original index.html */
     </style>
     
     <!-- Component loader script -->
@@ -77,7 +100,6 @@
     <div id="hero-container"></div>
     <div id="problem-container"></div>
     <div id="solution-container"></div>
-    <div id="tools-resources-container"></div>
     <div id="quick-wins-container"></div>
     <div id="roi-calculator-container"></div>
     <div id="proof-container"></div>
@@ -95,23 +117,271 @@
         document.addEventListener('DOMContentLoaded', function() {
             // This code will run after the components are loaded
             
-            // Module details toggle
-            document.querySelectorAll('.module-expand').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const moduleId = this.getAttribute('data-module');
-                    const details = document.getElementById(`module-details-${moduleId}`);
-                    
-                    if (details.style.display === 'block') {
-                        details.style.display = 'none';
-                        this.textContent = `See Lesson Details +`;
-                    } else {
-                        details.style.display = 'block';
-                        this.textContent = `Hide Lesson Details -`;
-                    }
+            // Wait for components to fully load
+            setTimeout(function() {
+                console.log("Initializing interactive components...");
+                
+                // Module details toggle
+                document.querySelectorAll('.module-expand').forEach(toggle => {
+                    toggle.addEventListener('click', function() {
+                        const moduleId = this.getAttribute('data-module');
+                        const details = document.getElementById(`module-details-${moduleId}`);
+                        
+                        if (details.style.display === 'block') {
+                            details.style.display = 'none';
+                            this.textContent = `See Lesson Details +`;
+                        } else {
+                            details.style.display = 'block';
+                            this.textContent = `Hide Lesson Details -`;
+                        }
+                    });
                 });
-            });
-            
-            // Rest of your original JavaScript code...
+                
+                // FAQ toggles
+                document.querySelectorAll('.faq-question').forEach(question => {
+                    question.addEventListener('click', function() {
+                        const answer = this.nextElementSibling;
+                        const icon = this.querySelector('.toggle-icon');
+                        
+                        // Close all other FAQs
+                        document.querySelectorAll('.faq-answer').forEach(item => {
+                            if (item !== answer && item.classList.contains('show')) {
+                                item.classList.remove('show');
+                                item.previousElementSibling.querySelector('.toggle-icon').textContent = '+';
+                            }
+                        });
+                        
+                        // Toggle current FAQ
+                        if (answer.classList.contains('show')) {
+                            answer.classList.remove('show');
+                            icon.textContent = '+';
+                        } else {
+                            answer.classList.add('show');
+                            icon.textContent = '-';
+                        }
+                    });
+                });
+                
+                // Carousel functionality - improved
+                const carousel = document.querySelector('.wins-carousel');
+                const items = document.querySelectorAll('.win-item');
+                const dots = document.querySelectorAll('.carousel-dots .dot');
+                const prevButton = document.querySelector('.carousel-prev');
+                const nextButton = document.querySelector('.carousel-next');
+                let currentIndex = 0;
+                
+                function showSlide(index) {
+                    // Reset current index if out of bounds
+                    if (index >= items.length) {
+                        index = 0;
+                    } else if (index < 0) {
+                        index = items.length - 1;
+                    }
+                    
+                    // Update current index
+                    currentIndex = index;
+                    
+                    // Update carousel position with smooth transition
+                    items.forEach((item, i) => {
+                        item.style.display = 'none';
+                        item.style.opacity = '0';
+                        
+                        if (i === currentIndex) {
+                            item.style.display = 'block';
+                            setTimeout(() => {
+                                item.style.opacity = '1';
+                            }, 50);
+                        }
+                    });
+                    
+                    // Update dots
+                    if (dots && dots.length) {
+                        dots.forEach((dot, i) => {
+                            dot.classList.toggle('active', i === currentIndex);
+                        });
+                    }
+                }
+                
+                // Set up event listeners for carousel
+                if (carousel && prevButton && nextButton) {
+                    prevButton.addEventListener('click', () => showSlide(currentIndex - 1));
+                    nextButton.addEventListener('click', () => showSlide(currentIndex + 1));
+                    
+                    if (dots && dots.length) {
+                        dots.forEach((dot, i) => {
+                            dot.addEventListener('click', () => showSlide(i));
+                        });
+                    }
+                    
+                    // Initialize carousel
+                    if (items && items.length) {
+                        showSlide(0);
+                        
+                        // Auto-advance carousel every 5 seconds
+                        let autoPlayInterval = setInterval(() => {
+                            showSlide(currentIndex + 1);
+                        }, 5000);
+                        
+                        // Pause auto-advance on hover
+                        carousel.addEventListener('mouseenter', () => {
+                            clearInterval(autoPlayInterval);
+                        });
+                        
+                        carousel.addEventListener('mouseleave', () => {
+                            autoPlayInterval = setInterval(() => {
+                                showSlide(currentIndex + 1);
+                            }, 5000);
+                        });
+                    }
+                }
+                
+                // ROI Calculator - Updated implementation
+                const calculateRoiButton = document.getElementById('calculate-roi');
+                if (calculateRoiButton) {
+                    console.log('ROI Calculator found, initializing event listener');
+                    
+                    calculateRoiButton.addEventListener('click', function() {
+                        console.log('Calculate button clicked');
+                        
+                        const complexity = document.getElementById('app-complexity').value;
+                        const rate = parseInt(document.getElementById('developer-rate').value) || 85;
+                        const revisions = parseInt(document.getElementById('revisions').value) || 3;
+                        
+                        console.log('Inputs:', {complexity, rate, revisions});
+                        
+                        let baseCost, baseTime;
+                        
+                        switch(complexity) {
+                            case 'simple':
+                                baseCost = 8000;
+                                baseTime = 2.5;
+                                break;
+                            case 'medium':
+                                baseCost = 15000;
+                                baseTime = 4.5;
+                                break;
+                            case 'complex':
+                                baseCost = 30000;
+                                baseTime = 7;
+                                break;
+                            default:
+                                baseCost = 15000;
+                                baseTime = 4.5;
+                        }
+                        
+                        // Adjust based on rate
+                        const rateFactor = rate / 85;
+                        baseCost = Math.round(baseCost * rateFactor);
+                        
+                        // Calculate revision costs
+                        const revisionCost = Math.round(baseCost * 0.15 * revisions);
+                        const totalCost = baseCost + revisionCost;
+                        
+                        // Calculate total time
+                        const revisionTime = revisions * 0.5;
+                        const totalTime = baseTime + revisionTime;
+                        
+                        console.log('Calculated values:', {
+                            baseCost,
+                            revisionCost,
+                            totalCost,
+                            baseTime,
+                            revisionTime,
+                            totalTime
+                        });
+                        
+                        // Update traditional development results
+                        const resultCost = document.querySelector('.result-card.traditional .result-cost');
+                        if (resultCost) {
+                            resultCost.textContent = '$' + totalCost.toLocaleString();
+                        }
+                        
+                        const resultTime = document.querySelector('.result-card.traditional .result-time');
+                        if (resultTime) {
+                            resultTime.textContent = `${totalTime.toFixed(1)} months`;
+                        }
+                        
+                        // Update the breakdown items
+                        const breakdownDev = document.querySelector('.result-card.traditional .result-breakdown li:nth-child(1)');
+                        if (breakdownDev) {
+                            const label = breakdownDev.querySelector('.breakdown-label');
+                            if (label) {
+                                breakdownDev.innerHTML = `<span class="breakdown-label">Development:</span> $${baseCost.toLocaleString()}`;
+                            } else {
+                                breakdownDev.textContent = `Development: $${baseCost.toLocaleString()}`;
+                            }
+                        }
+                        
+                        const breakdownRev = document.querySelector('.result-card.traditional .result-breakdown li:nth-child(2)');
+                        if (breakdownRev) {
+                            const label = breakdownRev.querySelector('.breakdown-label');
+                            if (label) {
+                                breakdownRev.innerHTML = `<span class="breakdown-label">Revisions:</span> $${revisionCost.toLocaleString()}`;
+                            } else {
+                                breakdownRev.textContent = `Revisions: $${revisionCost.toLocaleString()}`;
+                            }
+                        }
+                        
+                        // Calculate and update savings
+                        const savings = totalCost - 499;
+                        const timeMonths = totalTime - 0.5;
+                        
+                        const savingsAmount = document.querySelector('.savings-amount');
+                        if (savingsAmount) {
+                            savingsAmount.textContent = '$' + savings.toLocaleString();
+                        }
+                        
+                        const savingsTime = document.querySelector('.savings-time');
+                        if (savingsTime) {
+                            savingsTime.textContent = `${timeMonths.toFixed(1)} months`;
+                        }
+                        
+                        console.log('ROI calculation complete and results updated');
+                    });
+                } else {
+                    console.warn('ROI Calculator button not found. Calculator may not be loaded yet.');
+                }
+                
+                // Login button functionality
+                const loginButton = document.getElementById('loginButton');
+                if (loginButton) {
+                    loginButton.addEventListener('click', function() {
+                        window.location.href = 'direct-login.html';
+                    });
+                }
+                
+                // Add smooth scrolling for anchor links
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        const targetId = this.getAttribute('href');
+                        
+                        if (targetId === '#') {
+                            window.scrollTo({
+                                top: 0,
+                                behavior: 'smooth'
+                            });
+                            return;
+                        }
+                        
+                        const targetElement = document.querySelector(targetId);
+                        
+                        if (targetElement) {
+                            const headerOffset = 80;
+                            const elementPosition = targetElement.getBoundingClientRect().top;
+                            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                            
+                            window.scrollTo({
+                                top: offsetPosition,
+                                behavior: 'smooth'
+                            });
+                        }
+                    });
+                });
+                
+                console.log("All interactive components initialized");
+            }, 1500); // Wait 1.5 seconds for all components to fully load
         });
     </script>
 </body>
