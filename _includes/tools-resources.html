@@ -1,0 +1,192 @@
+<!-- TOOLS & RESOURCES SECTION -->
+<section class="tools-resources">
+    <div class="container">
+        <h2>Tools & Resources Included With Your Purchase</h2>
+        <p class="section-subtitle">Everything you need to succeed in your app building journey</p>
+        
+        <div class="resources-grid">
+            <div class="resource-card">
+                <div class="resource-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1 0 4H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8Z"/>
+                    </svg>
+                </div>
+                <h3>Private Discord Community</h3>
+                <p>Get direct access to me and connect with fellow app builders in our exclusive Discord community. Ask questions, share your progress, and get feedback in real-time.</p>
+                <div class="resource-feature">
+                    <div class="feature-icon">✓</div>
+                    <div class="feature-text">Direct support from instructor</div>
+                </div>
+                <div class="resource-feature">
+                    <div class="feature-icon">✓</div>
+                    <div class="feature-text">Network with other students</div>
+                </div>
+                <div class="resource-feature">
+                    <div class="feature-icon">✓</div>
+                    <div class="feature-text">Share and receive project feedback</div>
+                </div>
+            </div>
+            
+            <div class="resource-card">
+                <div class="resource-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
+                        <path d="M12 18h.01"/>
+                    </svg>
+                </div>
+                <h3>Companion Mobile App</h3>
+                <p>Access your course materials anytime, anywhere with our React Native companion app. Built with the same technology you'll learn in the course, it's both a learning resource and a practical example.</p>
+                <div class="resource-feature">
+                    <div class="feature-icon">✓</div>
+                    <div class="feature-text">Built with React Native + Supabase</div>
+                </div>
+                <div class="resource-feature">
+                    <div class="feature-icon">✓</div>
+                    <div class="feature-text">Synchronized course progress</div>
+                </div>
+                <div class="resource-feature">
+                    <div class="feature-icon">✓</div>
+                    <div class="feature-text">Study on the go with offline access</div>
+                </div>
+            </div>
+            
+            <div class="resource-card">
+                <div class="resource-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+                    </svg>
+                </div>
+                <h3>Complete Resource Library</h3>
+                <p>Get access to our extensive library of templates, prompt frameworks, and code snippets that make app development faster and more efficient.</p>
+                <div class="resource-feature">
+                    <div class="feature-icon">✓</div>
+                    <div class="feature-text">30+ Claude prompt templates</div>
+                </div>
+                <div class="resource-feature">
+                    <div class="feature-icon">✓</div>
+                    <div class="feature-text">Code component library</div>
+                </div>
+                <div class="resource-feature">
+                    <div class="feature-icon">✓</div>
+                    <div class="feature-text">Design assets and UI templates</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.tools-resources {
+    padding: 80px 0;
+    background: linear-gradient(to bottom, #ffffff, #f8fafc);
+    position: relative;
+}
+
+.tools-resources h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+}
+
+.section-subtitle {
+    text-align: center;
+    font-size: 1.25rem;
+    color: var(--text-medium);
+    max-width: 700px;
+    margin: 0 auto 60px;
+}
+
+.resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.resource-card {
+    background: white;
+    border-radius: 16px;
+    padding: 35px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-top: 4px solid var(--primary-color);
+}
+
+.resource-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.resource-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 112, 243, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 25px;
+}
+
+.resource-icon svg {
+    stroke: var(--primary-color);
+    width: 30px;
+    height: 30px;
+}
+
+.resource-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+}
+
+.resource-card p {
+    color: var(--text-medium);
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.resource-feature {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.resource-feature:last-child {
+    margin-bottom: 0;
+}
+
+.feature-icon {
+    width: 24px;
+    height: 24px;
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.feature-text {
+    font-size: 0.95rem;
+    color: var(--text-medium);
+}
+
+@media (max-width: 768px) {
+    .tools-resources h2 {
+        font-size: 2rem;
+    }
+    
+    .section-subtitle {
+        font-size: 1.1rem;
+    }
+    
+    .resource-card {
+        padding: 25px;
+    }
+}
+</style>
