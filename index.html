@@ -5,24 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AppFoundry - Build AI-Powered Apps Without Coding | No-Code App Development</title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="images/favicon.png">
+    <!-- Story Manager Script - IMPORTANT: This must be the first script in the head -->
+    <script>
+    // Universal Story Manager - ensures stories are consistently available
+    (function() {
+      // Run on all pages to ensure localStorage data consistency
+      console.log("📊 Story Manager initializing on index page");
+      
+      // Check if we need to seed the localStorage from our backup
+      function seedStoriesIfNeeded() {
+        // Only run if appfoundry_submissions doesn't exist or is empty
+        if (!localStorage.getItem('appfoundry_submissions')) {
+          console.log("🌱 No stories found in localStorage, checking for seed data");
+          
+          // Check if we have any stories in our seed
+          if (localStorage.getItem('appfoundry_approved_seed')) {
+            console.log("🔄 Restoring stories from seed");
+            try {
+              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+              console.log("✅ Successfully restored", seed.length, "stories from seed");
+            } catch (e) {
+              console.error("❌ Error restoring from seed:", e);
+            }
+          }
+        } else {
+          // If we have submissions, make sure we have an up-to-date seed
+          try {
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log("💾 Seed updated with", submissions.length, "stories");
+          } catch (e) {
+            console.error("❌ Error updating seed:", e);
+          }
+        }
+      }
+      
+      // Run the seed check immediately
+      seedStoriesIfNeeded();
+    })();
+    </script>
     
-    <!-- Fonts -->
+    <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Styles -->
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Header -->
-    <header class="site-header">
+    <header>
         <div class="container">
             <div class="logo">AppFoundry</div>
-            <nav class="main-nav">
+            <nav>
                 <ul>
+                    <li><a href="#problem">The Problem</a></li>
                     <li><a href="#how-it-works">How It Works</a></li>
                     <li><a href="#examples">Examples</a></li>
                     <li><a href="curriculum.html">Curriculum</a></li>
@@ -31,37 +67,28 @@
                 </ul>
             </nav>
             <button class="cta-button small" id="loginButton">Log in</button>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
         </div>
     </header>
 
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-        <nav>
-            <ul>
-                <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="#examples">Examples</a></li>
-                <li><a href="curriculum.html">Curriculum</a></li>
-                <li><a href="#pricing">Pricing</a></li>
-                <li><a href="success-stories.html">Success Stories</a></li>
-                <li><a href="#" class="mobile-login">Log in</a></li>
-            </ul>
-        </nav>
+    <!-- Guarantee Banner -->
+    <div class="guarantee-banner">
+        <div class="container">
+            <span class="guarantee-icon">🔒</span>
+            <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 60 days or get 100% of your money back</span>
+            <a href="refund-policy.html" class="guarantee-link">Learn More</a>
+        </div>
     </div>
 
     <!-- Hero Section -->
     <section class="hero">
+        <!-- Animated background elements -->
         <div class="floating-element floating-circle element-1"></div>
         <div class="floating-element floating-square element-2"></div>
         <div class="floating-element floating-triangle element-3"></div>
-        <div class="hero-glow"></div>
         
         <div class="container hero-container">
             <div class="hero-content">
+                <!-- Tech tags -->
                 <div class="tag-container">
                     <div class="ai-powered-tag">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -79,12 +106,14 @@
                     </div>
                 </div>
                 
+                <!-- Main headline with dynamic gradient -->
                 <h1 class="hero-headline">
                     <span class="gradient-text">Build AI-Powered Apps</span> Without Code in 30 Days
                 </h1>
                 
                 <p class="subtitle">Learn to create functional, professional apps using VSCode, React Native, and AI prompting—even if you've never written a line of code before.</p>
                 
+                <!-- Enhanced CTA button -->
                 <a href="#pricing" class="cta-button large primary-cta">
                     <span class="cta-icon">🚀</span>
                     <span class="cta-text">Start Building My First App Today</span>
@@ -92,12 +121,14 @@
                 
                 <div class="cta-microcopy">No technical skills required. Perfect for entrepreneurs and self-starters.</div>
                 
+                <!-- Enhanced guarantee badge -->
                 <div class="guarantee-badge">
                     <div class="badge-icon">✓</div>
                     <div class="badge-text">60-Day App Building Guarantee</div>
                 </div>
             </div>
             
+            <!-- Enhanced preview card -->
             <div class="course-preview-card">
                 <div class="video-container" id="video-container">
                     <video id="hero-video" poster="images/demo-video-thumbnail.jpg" controls>
@@ -132,7 +163,7 @@
         </div>
     </section>
 
-    <!-- Tech Logos Section -->
+    <!-- Built with technology section -->
     <div class="tech-section">
         <div class="container">
             <h3 class="tech-heading">BUILT WITH THE LATEST TECHNOLOGY</h3>
@@ -156,9 +187,10 @@
         </div>
     </div>
 
-    <!-- Problem Section -->
+    <!-- PROBLEM SECTION -->
     <section class="problem" id="problem">
         <div class="container">
+            <!-- UPDATED SOUND FAMILIAR SECTION -->
             <div class="entrepreneur-objections">
                 <h3 class="section-heading">Sound Familiar?</h3>
                 <div class="objections-grid">
@@ -184,7 +216,7 @@
         </div>
     </section>
 
-    <!-- Solution Section -->
+    <!-- SOLUTION SECTION -->
     <section class="solution" id="how-it-works">
         <div class="container">
             <div class="solution-header">
@@ -260,13 +292,13 @@
         </div>
     </section>
 
-    <!-- Quick Wins Section -->
+    <!-- QUICK WINS SECTION -->
     <section class="quick-wins" id="examples">
         <div class="container">
             <h2>What You'll Build in Your First 14 Days</h2>
             <p class="section-subtitle">Start with these simple projects to build confidence before tackling your main app idea</p>
             
-            <div class="wins-grid">
+            <div class="wins-carousel">
                 <div class="win-item">
                     <div class="win-image">
                         <img src="images/task-tracker-app.png" alt="Task Tracker App Screenshot">
@@ -293,11 +325,21 @@
                     <p>Track your exercises, sets, reps, and progress with visual progress charts.</p>
                     <div class="build-time">Build time: 8 hours</div>
                 </div>
+                
+                <div class="carousel-controls">
+                    <button class="carousel-prev">&lt;</button>
+                    <div class="carousel-dots">
+                        <span class="dot active"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                    <button class="carousel-next">&gt;</button>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Proof Section -->
+    <!-- PROOF SECTION -->
     <section class="proof">
         <div class="container">
             <h2>Proof This Works for Real People</h2>
@@ -310,6 +352,32 @@
                 <div class="metric">
                     <div class="metric-number">87%</div>
                     <div class="metric-label">Cost Savings vs Traditional Dev</div>
+                </div>
+            </div>
+            
+            <div class="tech-logos">
+                <h3>Built Using the Latest AI Technology</h3>
+                <div class="logo-grid">
+                    <div class="tech-logo-item">
+                        <img src="images/claude-logo.png" alt="Claude AI" class="tech-logo">
+                        <span class="tech-name">Claude AI</span>
+                    </div>
+                    <div class="tech-logo-item">
+                        <img src="images/vscode-logo.png" alt="Visual Studio Code" class="tech-logo">
+                        <span class="tech-name">VS Code</span>
+                    </div>
+                    <div class="tech-logo-item">
+                        <img src="images/react-native-logo.png" alt="React Native" class="tech-logo">
+                        <span class="tech-name">React Native</span>
+                    </div>
+                    <div class="tech-logo-item">
+                        <img src="images/expo-logo.png" alt="Expo Go" class="tech-logo">
+                        <span class="tech-name">Expo Go</span>
+                    </div>
+                    <div class="tech-logo-item">
+                        <img src="images/supabase-logo.png" alt="Supabase" class="tech-logo">
+                        <span class="tech-name">Supabase</span>
+                    </div>
                 </div>
             </div>
             
@@ -341,36 +409,61 @@
         </div>
     </section>
 
-    <!-- Curriculum Preview -->
+    <!-- CURRICULUM PREVIEW SECTION -->
     <section class="curriculum-preview">
         <div class="container">
             <h2>Your App-Building Roadmap</h2>
             <p class="section-subtitle">A proven 7-module system to turn your ideas into reality without coding</p>
             
-            <div class="curriculum-roadmap">
+            <div class="curriculum-visual">
                 <div class="roadmap-line"></div>
-                
-                <div class="module module-left">
-                    <div class="module-number">01</div>
-                    <div class="module-content">
-                        <h3>Setting Up Your AI Development Environment</h3>
-                        <p>Configure Claude and the minimal tools you need to start building without coding</p>
+                <div class="modules">
+                    <div class="module">
+                        <div class="module-number">01</div>
+                        <div class="module-content">
+                            <h3>Setting Up Your AI Development Environment</h3>
+                            <p>Configure Claude and the minimal tools you need to start building without coding</p>
+                            <div class="module-expand" data-module="1">See Lesson Details +</div>
+                            <div class="module-details" id="module-details-1">
+                                <ul>
+                                    <li>Setting up your Claude AI account the right way</li>
+                                    <li>Installing the essential tools (all free)</li>
+                                    <li>Creating your first project workspace</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="module module-right">
-                    <div class="module-number">03</div>
-                    <div class="module-content">
-                        <h3>Testing Your App: From Concept to Phone</h3>
-                        <p>See your app work on your device without writing a single line of code</p>
+                    
+                    <div class="module">
+                        <div class="module-number">04</div>
+                        <div class="module-content">
+                            <h3>Directing Claude: Creating Professional UI</h3>
+                            <p>Learn the exact prompts to get beautiful interfaces from Claude</p>
+                            <div class="module-expand" data-module="4">See Lesson Details +</div>
+                            <div class="module-details" id="module-details-4">
+                                <ul>
+                                    <li>Advanced UI prompt techniques</li>
+                                    <li>Creating consistent design systems</li>
+                                    <li>Implementing animations and transitions</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="module module-left">
-                    <div class="module-number">07</div>
-                    <div class="module-content">
-                        <h3>Submitting to the App Store</h3>
-                        <p>Get your AI-built app published quickly and professionally</p>
+                    
+                    <div class="module">
+                        <div class="module-number">07</div>
+                        <div class="module-content">
+                            <h3>Submitting to the App Store</h3>
+                            <p>Get your AI-built app published quickly and professionally</p>
+                            <div class="module-expand" data-module="7">See Lesson Details +</div>
+                            <div class="module-details" id="module-details-7">
+                                <ul>
+                                    <li>Preparing your app for submission</li>
+                                    <li>Creating screenshots and descriptions</li>
+                                    <li>Navigating the approval process</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -381,7 +474,7 @@
         </div>
     </section>
 
-    <!-- Pricing Section -->
+    <!-- PRICING SECTION -->
     <section class="pricing" id="pricing">
         <div class="container">
             <h2>Choose Your App Building Journey</h2>
@@ -465,7 +558,7 @@
         </div>
     </section>
 
-    <!-- FAQ Preview Section -->
+    <!-- FAQ PREVIEW SECTION -->
     <section class="faq-preview">
         <div class="container">
             <h2>Frequently Asked Questions</h2>
@@ -518,7 +611,7 @@
         </div>
     </section>
 
-    <!-- Final CTA Section -->
+    <!-- FINAL CTA SECTION -->
     <section class="cta-section">
         <div class="container">
             <h2>Start Building Your Dream App Today</h2>
@@ -539,7 +632,8 @@
                 <div class="link-group">
                     <h4>Course</h4>
                     <ul>
-                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#problem">The Problem</a></li>
+                        <li><a href="#solution">Our Solution</a></li>
                         <li><a href="curriculum.html">Curriculum</a></li>
                         <li><a href="#pricing">Pricing</a></li>
                         <li><a href="success-stories.html">Success Stories</a></li>
@@ -566,7 +660,9 @@
         </div>
     </footer>
 
-    <!-- Scripts -->
+    <!-- Component loader script -->
+    <script src="loader.js"></script>
+    <!-- Main scripts -->
     <script src="scripts.js"></script>
 </body>
 </html>
