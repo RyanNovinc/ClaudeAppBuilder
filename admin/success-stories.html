@@ -359,7 +359,7 @@
         }
       },
       
-      // Set a story as featured - UPDATED FUNCTION
+      // Set a story as featured - FIXED VERSION
       async setFeaturedStory(id) {
         try {
           logActivity('info', `Setting submission ${id} as featured`);
@@ -370,59 +370,59 @@
             throw new Error("Supabase client not available");
           }
           
-          // First, get the list of all currently featured stories
-          const { data: featuredData, error: featuredError } = await supabase
+          // STEP 1: First, clear featured status from ALL stories (not just the currently featured ones)
+          // This ensures we don't have multiple featured stories
+          logActivity('info', `Clearing featured status from all stories before setting new featured story`);
+          
+          const { error: clearError } = await supabase
             .from('submissions')
-            .select('id')
-            .eq('featured', true);
+            .update({ featured: false })
+            .not('id', 'is', null); // Update all records
             
-          if (featuredError) throw featuredError;
-          
-          // Log how many featured stories were found
-          logActivity('info', `Found ${featuredData.length} currently featured stories`);
-          
-          // Unmark all currently featured stories
-          if (featuredData.length > 0) {
-            const { error: clearError } = await supabase
-              .from('submissions')
-              .update({ featured: false })
-              .in('id', featuredData.map(item => item.id));
-              
-            if (clearError) throw clearError;
-            
-            logActivity('info', `Cleared ${featuredData.length} previously featured stories`);
+          if (clearError) {
+            logActivity('error', `Error clearing featured status: ${clearError.message}`);
+            throw clearError;
           }
           
-          // Now mark the selected story as featured
+          // STEP 2: Now mark the selected story as featured
+          logActivity('info', `Setting submission ${id} as featured`);
+          
           const { data, error } = await supabase
             .from('submissions')
             .update({ featured: true })
             .eq('id', id)
-            .select()
-            .single();
+            .select();
             
-          if (error) throw error;
+          if (error) {
+            logActivity('error', `Error setting featured story: ${error.message}`);
+            throw error;
+          }
+          
+          if (!data || data.length === 0) {
+            logActivity('error', `No story found with ID: ${id}`);
+            throw new Error(`No story found with ID: ${id}`);
+          }
+          
+          // STEP 3: Update localStorage to match database
+          const formattedSubmission = {
+            id: data[0].id,
+            name: data[0].name,
+            email: data[0].email,
+            appName: data[0].app_name,
+            appType: data[0].app_type,
+            experienceLevel: data[0].experience_level,
+            testimonial: data[0].testimonial,
+            story: data[0].story,
+            status: data[0].status,
+            date: data[0].created_at,
+            images: this.parseCloudinaryImages(data[0].cloudinary_images),
+            featured: data[0].featured || false
+          };
           
           // Update localStorage
           this.updateFeaturedInLocalStorage(id);
           
           logActivity('success', `Successfully set submission ${id} as featured in Supabase`);
-          
-          // Format the result
-          const formattedSubmission = {
-            id: data.id,
-            name: data.name,
-            email: data.email,
-            appName: data.app_name,
-            appType: data.app_type,
-            experienceLevel: data.experience_level,
-            testimonial: data.testimonial,
-            story: data.story,
-            status: data.status,
-            date: data.created_at,
-            images: this.parseCloudinaryImages(data.cloudinary_images),
-            featured: data.featured || false
-          };
           
           return {
             success: true,
@@ -433,16 +433,20 @@
           logActivity('error', `Error setting featured story: ${error.message}`);
           
           // Try to update localStorage at least
-          const success = this.updateFeaturedInLocalStorage(id);
-          
-          if (success) {
-            logActivity('info', `Set submission ${id} as featured in localStorage only`);
+          try {
+            const success = this.updateFeaturedInLocalStorage(id);
             
-            return {
-              success: true,
-              message: "Submission set as featured in localStorage only",
-              offline: true
-            };
+            if (success) {
+              logActivity('info', `Set submission ${id} as featured in localStorage only`);
+              
+              return {
+                success: true,
+                message: "Submission set as featured in localStorage only",
+                offline: true
+              };
+            }
+          } catch (localStorageError) {
+            logActivity('error', `Error updating localStorage: ${localStorageError.message}`);
           }
           
           throw error;
@@ -465,10 +469,13 @@
             .from('submissions')
             .update({ featured: false })
             .eq('id', id)
-            .select()
-            .single();
+            .select();
             
           if (error) throw error;
+          
+          if (!data || data.length === 0) {
+            throw new Error(`No story found with ID: ${id}`);
+          }
           
           // Update localStorage by removing the featured story reference
           localStorage.removeItem('appfoundry_featured_story');
@@ -491,18 +498,18 @@
           
           // Format the result
           const formattedSubmission = {
-            id: data.id,
-            name: data.name,
-            email: data.email,
-            appName: data.app_name,
-            appType: data.app_type,
-            experienceLevel: data.experience_level,
-            testimonial: data.testimonial,
-            story: data.story,
-            status: data.status,
-            date: data.created_at,
-            images: this.parseCloudinaryImages(data.cloudinary_images),
-            featured: data.featured || false
+            id: data[0].id,
+            name: data[0].name,
+            email: data[0].email,
+            appName: data[0].app_name,
+            appType: data[0].app_type,
+            experienceLevel: data[0].experience_level,
+            testimonial: data[0].testimonial,
+            story: data[0].story,
+            status: data[0].status,
+            date: data[0].created_at,
+            images: this.parseCloudinaryImages(data[0].cloudinary_images),
+            featured: data[0].featured || false
           };
           
           return {
@@ -516,7 +523,7 @@
         }
       },
       
-      // Update featured flag in localStorage
+      // Update featured flag in localStorage - FIXED VERSION
       updateFeaturedInLocalStorage(id) {
         try {
           // Find the submission
@@ -541,7 +548,7 @@
             // Also store the featured story ID separately for easier access
             localStorage.setItem('appfoundry_featured_story', id);
             
-            // Update seed immediately too
+            // Update approved seed immediately too
             localStorage.setItem('appfoundry_approved_seed', JSON.stringify(
               submissions.filter(s => s.status === 'approved')
             ));
@@ -936,6 +943,9 @@
           const featuredStory = formattedSubmissions.find(story => story.featured);
           if (featuredStory) {
             localStorage.setItem('appfoundry_featured_story', featuredStory.id);
+          } else {
+            // Clear featured story if none found
+            localStorage.removeItem('appfoundry_featured_story');
           }
           
           logActivity('success', `Successfully synced ${formattedSubmissions.length} submissions from Supabase`);
