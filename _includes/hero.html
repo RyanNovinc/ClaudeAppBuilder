@@ -117,16 +117,17 @@
 </div>
 
 <style>
-/* Hero section styling */
+/* Hero section styling - UPDATED */
 .hero {
     position: relative;
-    padding: 120px 0 50px; /* Reduced bottom padding to accommodate tech section */
-    overflow: hidden;
+    padding: 80px 0 0; /* Reduced top padding, removed bottom padding */
+    overflow: visible; /* Allow elements to flow outside the container */
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     z-index: 1;
+    margin-bottom: 0; /* Remove any bottom margin */
 }
 
-/* Animated background elements */
+/* Animated background elements - UPDATED */
 .floating-element {
     position: absolute;
     opacity: 0.5;
@@ -148,15 +149,15 @@
 .floating-triangle {
     width: 0;
     height: 0;
-    border-left: 150px solid transparent;
-    border-right: 150px solid transparent;
-    border-bottom: 250px solid rgba(255, 76, 0, 0.05);
+    border-left: 180px solid transparent; /* Larger triangle */
+    border-right: 180px solid transparent;
+    border-bottom: 350px solid rgba(255, 76, 0, 0.05);
     border-radius: 5px;
 }
 
 .element-1 {
     width: 350px;
-    height: 350px;
+    height: 450px; /* Increased height */
     top: -100px;
     right: 5%;
     animation-delay: 0s;
@@ -164,8 +165,8 @@
 
 .element-2 {
     width: 250px;
-    height: 250px;
-    bottom: -50px;
+    height: 350px; /* Increased height */
+    bottom: -150px; /* Moved down to reach the blue line */
     left: 5%;
     animation-delay: 2s;
 }
@@ -185,6 +186,18 @@
     height: 100%;
     background: radial-gradient(circle at 70% 30%, rgba(0, 112, 243, 0.06) 0%, rgba(0, 112, 243, 0) 50%);
     z-index: 0;
+}
+
+/* Add a seamless transition between hero and tech section */
+.hero:after {
+    content: "";
+    position: absolute;
+    bottom: -1px; /* Ensure no gap */
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background: linear-gradient(to bottom, rgba(248, 250, 252, 1) 0%, rgba(248, 250, 252, 0) 100%);
+    z-index: 2;
 }
 
 @keyframes float {
@@ -207,6 +220,8 @@
     align-items: center;
     position: relative;
     z-index: 2;
+    margin-bottom: 0; /* Reduced bottom margin */
+    padding-bottom: 10px;
 }
 
 .hero-content {
@@ -457,12 +472,26 @@
     border-radius: 50%;
 }
 
-/* Tech section styling */
+/* Tech section styling - UPDATED */
 .tech-section {
     position: relative;
-    margin-top: -20px; /* Pull up the section to overlap with hero */
+    margin-top: 0; /* Removed negative margin */
+    padding-top: 30px; /* Added padding at the top */
     margin-bottom: 60px;
     z-index: 10;
+    background: transparent; /* Make background transparent */
+}
+
+/* Ensure the blue line is visible below the floating elements */
+.tech-section:before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, var(--primary-color), var(--primary-hover));
+    z-index: 5;
 }
 
 .tech-heading {
@@ -485,6 +514,8 @@
     align-items: center;
     gap: 50px;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 15; /* Ensure it's above the floating elements */
 }
 
 .tech-logo {
@@ -547,7 +578,7 @@
 
 @media (max-width: 768px) {
     .hero {
-        padding: 80px 0 60px;
+        padding: 60px 0 0; /* Further reduced padding for mobile */
     }
     
     .hero-headline {
