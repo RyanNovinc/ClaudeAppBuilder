@@ -5,43 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Success Stories - AppFoundry</title>
     
-    <!-- Enhanced Story Manager Script - IMPORTANT: This must be the first script loaded in the head -->
+    <!-- Supabase JS Client - Load this first -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Direct Database Connection Script -->
     <script>
-    // Enhanced Story Manager - prioritizes loading directly from Supabase
-    (function() {
-      // Run on all pages to ensure consistent story loading
-      console.log("📊 Enhanced Story Manager initializing on success stories page");
+    // Story Manager with direct Supabase connection
+    const StoryManager = {
+      // Supabase configuration - using correct values
+      supabaseUrl: 'https://vyzsauyekanaxevgxkyh.supabase.co',
+      supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c',
+      supabaseClient: null,
       
-      // Initialize necessary variables
-      let storiesLoaded = false;
-      const SUPABASE_URL = "https://vyzsauyekanaxevgxkyh.supabase.co"; // Update with your actual Supabase URL
-      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5enNhdXlla2FuYXhldmd4a3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMjgzOTIsImV4cCI6MjA2MTkwNDM5Mn0.VPs_JhAkoCUediOP4_0flNF9AURcQDH-Hfj8T0vi5_c"; // Your actual Supabase anon key
-      let supabaseClient = null;
-      
-      // Initialize Supabase client if possible
-      function initSupabase() {
-        if (typeof supabase !== 'undefined') {
+      // Initialize Supabase client
+      initSupabase() {
+        if (!this.supabaseClient) {
           try {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log("🔄 Supabase client initialized for public story loading");
-            return supabaseClient;
+            console.log("🔄 Initializing Supabase client...");
+            this.supabaseClient = supabase.createClient(this.supabaseUrl, this.supabaseAnonKey);
+            console.log("✅ Supabase client initialized successfully");
+            return this.supabaseClient;
           } catch (e) {
             console.error("❌ Error initializing Supabase client:", e);
+            return null;
           }
         }
-        return null;
-      }
+        return this.supabaseClient;
+      },
       
       // Get the featured story directly from Supabase
-      async function getFeaturedStory() {
+      async getFeaturedStory() {
         try {
-          const client = initSupabase();
+          console.log("🔍 Fetching featured story from Supabase...");
+          
+          // Make sure Supabase client is initialized
+          const client = this.initSupabase();
           if (!client) {
-            throw new Error("Supabase client not available");
+            throw new Error("Failed to initialize Supabase client");
           }
           
-          console.log("🔍 Fetching featured story from Supabase");
-          
+          // Query for the featured story
           const { data, error } = await client
             .from('submissions')
             .select('*')
@@ -49,66 +52,82 @@
             .eq('featured', true)
             .limit(1);
             
-          if (error) throw error;
+          if (error) {
+            console.error("❌ Supabase query error:", error);
+            throw error;
+          }
           
           if (data && data.length > 0) {
             console.log("✅ Found featured story:", data[0].app_name);
-            return formatSubmission(data[0]);
+            return this.formatSubmission(data[0]);
           } else {
-            console.log("ℹ️ No featured story found in database");
+            console.log("⚠️ No featured story found in database. Checking for any approved story...");
+            
+            // If no featured story, try to get any approved story
+            const { data: approvedData, error: approvedError } = await client
+              .from('submissions')
+              .select('*')
+              .eq('status', 'approved')
+              .order('created_at', { ascending: false })
+              .limit(1);
+              
+            if (approvedError) {
+              console.error("❌ Supabase query error:", approvedError);
+              throw approvedError;
+            }
+            
+            if (approvedData && approvedData.length > 0) {
+              console.log("✅ Using first approved story as featured:", approvedData[0].app_name);
+              return this.formatSubmission(approvedData[0]);
+            }
+            
+            console.log("⚠️ No approved stories found in database");
             return null;
           }
         } catch (e) {
           console.error("❌ Error fetching featured story:", e);
           return null;
         }
-      }
+      },
       
-      // Load approved stories from Supabase with priority
-      async function loadApprovedStories() {
+      // Get all approved stories
+      async getApprovedStories() {
         try {
-          // Try to load from Supabase first
-          const client = initSupabase();
+          console.log("🔍 Fetching all approved stories from Supabase...");
+          
+          // Make sure Supabase client is initialized
+          const client = this.initSupabase();
           if (!client) {
-            throw new Error("Supabase client not available");
+            throw new Error("Failed to initialize Supabase client");
           }
           
-          console.log("🔍 Loading all approved stories from Supabase");
-          
-          // Fetch all approved stories
+          // Query for all approved stories
           const { data, error } = await client
             .from('submissions')
             .select('*')
             .eq('status', 'approved')
             .order('created_at', { ascending: false });
-              
-          if (error) throw error;
+            
+          if (error) {
+            console.error("❌ Supabase query error:", error);
+            throw error;
+          }
           
           if (data && data.length > 0) {
-            // Format the data for compatibility with the existing site structure
-            const formattedStories = data.map(formatSubmission);
-            
-            // Update localStorage for backup
-            localStorage.setItem('appfoundry_submissions', JSON.stringify(formattedStories));
-            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(formattedStories));
-            
-            console.log("✅ Successfully loaded", formattedStories.length, "stories from Supabase");
-            storiesLoaded = true;
-            return formattedStories;
+            console.log(`✅ Found ${data.length} approved stories`);
+            return data.map(item => this.formatSubmission(item));
           } else {
-            console.log("⚠️ No approved stories found in Supabase");
+            console.log("⚠️ No approved stories found in database");
             return [];
           }
         } catch (e) {
-          console.error("❌ Error loading from Supabase:", e);
-          
-          // Fall back to localStorage if Supabase fails or has no data
-          return fallbackToLocalStorage();
+          console.error("❌ Error fetching approved stories:", e);
+          return [];
         }
-      }
+      },
       
       // Format a submission from Supabase to match the expected structure
-      function formatSubmission(item) {
+      formatSubmission(item) {
         return {
           id: item.id,
           name: item.name,
@@ -118,15 +137,15 @@
           experienceLevel: item.experience_level,
           testimonial: item.testimonial,
           story: item.story,
-          images: parseCloudinaryImages(item.cloudinary_images),
+          images: this.parseCloudinaryImages(item.cloudinary_images),
           date: item.created_at,
           status: item.status,
           featured: item.featured || false
         };
-      }
+      },
       
       // Parse Cloudinary images from JSON string or array
-      function parseCloudinaryImages(cloudinaryImages) {
+      parseCloudinaryImages(cloudinaryImages) {
         if (!cloudinaryImages) return [];
         
         try {
@@ -142,46 +161,44 @@
         }
         
         return [];
-      }
+      },
       
-      // Fallback to localStorage if Supabase loading fails
-      function fallbackToLocalStorage() {
-        console.log("🔄 Falling back to localStorage for stories");
-        
-        const storedStories = localStorage.getItem('appfoundry_submissions');
-        if (storedStories) {
-          try {
-            const stories = JSON.parse(storedStories);
-            const approvedStories = stories.filter(story => story.status === 'approved');
-            
-            if (approvedStories.length > 0) {
-              console.log("✅ Found", approvedStories.length, "approved stories in localStorage");
-              return approvedStories;
-            }
-          } catch (e) {
-            console.error("❌ Error parsing stories from localStorage:", e);
+      // Get a specific story by ID
+      async getStoryById(id) {
+        try {
+          console.log(`🔍 Fetching story with ID: ${id}`);
+          
+          // Make sure Supabase client is initialized
+          const client = this.initSupabase();
+          if (!client) {
+            throw new Error("Failed to initialize Supabase client");
           }
+          
+          // Query for the specific story
+          const { data, error } = await client
+            .from('submissions')
+            .select('*')
+            .eq('id', id)
+            .limit(1);
+            
+          if (error) {
+            console.error("❌ Supabase query error:", error);
+            throw error;
+          }
+          
+          if (data && data.length > 0) {
+            console.log("✅ Found story:", data[0].app_name);
+            return this.formatSubmission(data[0]);
+          } else {
+            console.log(`⚠️ No story found with ID: ${id}`);
+            return null;
+          }
+        } catch (e) {
+          console.error("❌ Error fetching story by ID:", e);
+          return null;
         }
-        
-        console.log("⚠️ No approved stories found in localStorage");
-        return [];
       }
-      
-      // Make functions globally available
-      window.StoryManager = {
-        loadApprovedStories,
-        getFeaturedStory,
-        initSupabase,
-        formatSubmission,
-        parseCloudinaryImages
-      };
-      
-      // Initialize Supabase on page load
-      document.addEventListener('DOMContentLoaded', function() {
-        initSupabase();
-      });
-      
-    })();
+    };
     </script>
     
     <link rel="stylesheet" href="styles.css">
@@ -232,37 +249,6 @@
             color: var(--text-medium);
             font-size: 1.125rem;
             line-height: 1.6;
-        }
-        
-        .success-stats {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin: 40px 0;
-            flex-wrap: wrap;
-        }
-        
-        .stat-item {
-            text-align: center;
-            background-color: var(--background-white);
-            padding: 30px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            min-width: 200px;
-        }
-        
-        .stat-number {
-            font-size: 3rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-            line-height: 1;
-        }
-        
-        .stat-label {
-            color: var(--text-medium);
-            font-size: 1rem;
-            font-weight: 500;
         }
         
         .app-showcase {
@@ -413,126 +399,6 @@
         
         .view-story-button:hover {
             background-color: var(--primary-hover);
-        }
-        
-        .featured-stories {
-            margin-bottom: 80px;
-        }
-        
-        .featured-stories h2 {
-            text-align: center;
-            font-size: 2.25rem;
-            margin-bottom: 40px;
-            color: var(--text-dark);
-        }
-        
-        .stories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 30px;
-        }
-        
-        .story-card {
-            background-color: var(--background-white);
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--box-shadow);
-            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-        }
-        
-        .story-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-        }
-        
-        .story-header {
-            padding: 25px;
-            border-bottom: 1px solid var(--border-light);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            overflow: hidden;
-            background-color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 1.25rem;
-        }
-        
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .creator-info {
-            flex: 1;
-        }
-        
-        .creator-info h3 {
-            font-size: 1.125rem;
-            margin-bottom: 5px;
-            color: var(--text-dark);
-        }
-        
-        .creator-info .experience {
-            font-size: 0.875rem;
-            color: var(--text-medium);
-        }
-        
-        .story-content {
-            padding: 25px;
-        }
-        
-        .story-testimonial {
-            font-style: italic;
-            color: var(--text-dark);
-            font-size: 1.125rem;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            position: relative;
-        }
-        
-        .story-testimonial::before {
-            content: '"';
-            font-size: 3rem;
-            color: rgba(0, 112, 243, 0.1);
-            position: absolute;
-            top: -20px;
-            left: -10px;
-            font-family: Georgia, serif;
-        }
-        
-        .story-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-            font-size: 0.875rem;
-            color: var(--text-light);
-        }
-        
-        .app-type-tag {
-            display: inline-block;
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 30px;
-        }
-        
-        .story-date {
-            font-size: 0.875rem;
-            color: var(--text-light);
         }
         
         .featured-story {
@@ -915,6 +781,29 @@
             margin-left: auto;
             margin-right: auto;
         }
+
+        /* Loading spinner styles */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(0, 112, 243, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         
         @media (max-width: 1024px) {
             .featured-story-grid {
@@ -928,29 +817,10 @@
         
         @media (max-width: 768px) {
             .app-showcase h2,
-            .featured-stories h2,
             .methodology-section h2,
             .join-community h2,
             .submit-story-section h2 {
                 font-size: 1.75rem;
-            }
-            
-            .stat-item {
-                padding: 20px;
-                min-width: 140px;
-            }
-            
-            .stat-number {
-                font-size: 2.25rem;
-            }
-            
-            .stat-label {
-                font-size: 0.875rem;
-            }
-            
-            .stories-grid,
-            .apps-grid {
-                grid-template-columns: 1fr;
             }
             
             .join-community,
@@ -1018,31 +888,11 @@
             <p>See the amazing apps our students have built without writing a single line of code using our AI-powered approach</p>
         </div>
         
-        <div class="success-stats">
-            <div class="stat-item">
-                <div class="stat-number">300+</div>
-                <div class="stat-label">Apps Created</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">87%</div>
-                <div class="stat-label">Cost Savings</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">14x</div>
-                <div class="stat-label">Faster Development</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">97%</div>
-                <div class="stat-label">Success Rate</div>
-            </div>
-        </div>
-        
-        <div class="featured-story">
-            <div class="featured-story-grid">
-                <div class="featured-story-content">
-                    <!-- Featured story content will be dynamically loaded -->
-                </div>
-                <img src="images/app-placeholder.jpg" alt="Featured App" class="featured-story-image">
+        <!-- Featured Story - Loading state -->
+        <div id="featured-story-container" class="featured-story">
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <div>Loading featured story...</div>
             </div>
         </div>
         
@@ -1058,7 +908,11 @@
             </div>
             
             <div class="apps-grid" id="apps-grid">
-                <!-- App cards will be dynamically loaded here -->
+                <!-- Loading state -->
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div>Loading stories...</div>
+                </div>
             </div>
         </div>
         
@@ -1088,13 +942,6 @@
             </div>
         </div>
         
-        <div class="featured-stories">
-            <h2>More Success Stories</h2>
-            <div class="stories-grid" id="stories-grid">
-                <!-- Story cards will be dynamically loaded here -->
-            </div>
-        </div>
-        
         <div class="join-community">
             <h2>Join 300+ Students Building Amazing Apps</h2>
             <p>Stop letting technical barriers hold you back. Our students are proving that anyone can build professional apps with the right guidance and AI-powered tools.</p>
@@ -1116,7 +963,11 @@
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body" id="modal-body">
-                <!-- Modal content will be loaded dynamically -->
+                <!-- Modal loading state -->
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div>Loading story details...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -1157,258 +1008,299 @@
         </div>
     </footer>
 
-    <!-- Supabase.js - Add this for direct Supabase access -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the page
+            initPage();
+            
             // Login button functionality
             document.getElementById('loginButton').addEventListener('click', function() {
                 window.location.href = 'direct-login.html';
             });
             
-            // Format date for display
-            function formatDate(dateString) {
-                const date = new Date(dateString);
-                const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                return date.toLocaleDateString('en-US', options);
-            }
+            // Close modal on click
+            document.querySelector('.close-modal').addEventListener('click', closeStoryModal);
             
-            // Get initial letter for avatar
-            function getInitial(name) {
-                return name ? name.charAt(0).toUpperCase() : 'A';
-            }
+            // Close modal on click outside content
+            const modal = document.getElementById('story-modal');
+            const modalContent = modal.querySelector('.modal-content');
             
-            // Load stories - Now with direct Supabase approach
-            async function loadStories() {
-                const storiesGrid = document.getElementById('stories-grid');
-                const appsGrid = document.getElementById('apps-grid');
-                
-                try {
-                    // First, try to get the featured story directly from Supabase
-                    const featuredStory = await window.StoryManager.getFeaturedStory();
-                    
-                    // Then get all approved stories
-                    const stories = await window.StoryManager.loadApprovedStories();
-                    
-                    if (stories.length === 0) {
-                        // Show empty state
-                        showEmptyState(storiesGrid, appsGrid);
-                        return;
-                    }
-                    
-                    // Filter out the featured story from the regular stories
-                    let regularStories = stories;
-                    
-                    if (featuredStory) {
-                        regularStories = stories.filter(story => story.id !== featuredStory.id);
-                        
-                        // Update featured story section
-                        updateFeaturedStorySection(featuredStory);
-                    } else if (stories.length > 0) {
-                        // If no explicitly featured story, use the first one for the featured section
-                        updateFeaturedStorySection(stories[0]);
-                        regularStories = stories.slice(1);
-                    }
-                    
-                    // Load regular stories
-                    let storiesHTML = '';
-                    let appsHTML = '';
-                    
-                    regularStories.forEach(story => {
-                        // Create story card
-                        storiesHTML += createStoryCard(story);
-                        
-                        // Create app card
-                        appsHTML += createAppCard(story);
-                    });
-                    
-                    storiesGrid.innerHTML = storiesHTML;
-                    appsGrid.innerHTML = appsHTML;
-                    
-                    // Add event listeners to view story buttons
-                    document.querySelectorAll('.view-story-button').forEach(button => {
-                        button.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            const storyId = this.getAttribute('data-story-id');
-                            openStoryModal(storyId);
-                        });
-                    });
-                } catch (error) {
-                    console.error('Error loading stories:', error);
-                    showEmptyState(storiesGrid, appsGrid);
+            modal.addEventListener('click', function(e) {
+                if (!modalContent.contains(e.target)) {
+                    closeStoryModal();
                 }
-            }
+            });
             
-            // Helper to update the featured story section
-            function updateFeaturedStorySection(featuredStory) {
-                if (!featuredStory) return;
+            // Close modal on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeStoryModal();
+                }
+            });
+            
+            // Set up app filtering
+            setupFilters();
+        });
+        
+        // Initialize the page
+        async function initPage() {
+            console.log("Initializing page...");
+            
+            try {
+                // Load the featured story
+                await loadFeaturedStory();
                 
-                const featuredStoryContent = document.querySelector('.featured-story-content');
-                const featuredStoryImage = document.querySelector('.featured-story-image');
+                // Load all approved stories
+                await loadApprovedStories();
+            } catch (error) {
+                console.error("Error initializing page:", error);
+                showEmptyState();
+            }
+        }
+        
+        // Load the featured story
+        async function loadFeaturedStory() {
+            const featuredStoryContainer = document.getElementById('featured-story-container');
+            
+            try {
+                console.log("Loading featured story...");
                 
-                if (featuredStoryContent && featuredStoryImage) {
-                    // Update content
-                    featuredStoryContent.innerHTML = `
-                        <div class="featured-tag">Featured Success Story</div>
-                        <h3>${featuredStory.appName || 'Amazing App'}</h3>
-                        <div class="featured-story-meta">
-                            <div class="modal-avatar">
-                                ${getInitial(featuredStory.name)}
-                            </div>
-                            <div class="featured-app-info">
-                                <div>${featuredStory.name || 'Anonymous'}</div>
-                                <div class="app-name">${featuredStory.appName || 'App'}</div>
-                                <div>
-                                    <span class="app-category">${featuredStory.appType || 'App'}</span>
-                                    <span class="experience-level">${featuredStory.experienceLevel || 'Beginner'}</span>
+                // Get the featured story from Supabase
+                const featuredStory = await StoryManager.getFeaturedStory();
+                
+                if (featuredStory) {
+                    console.log("Featured story loaded:", featuredStory.appName);
+                    
+                    // Update the featured story section
+                    featuredStoryContainer.innerHTML = `
+                        <div class="featured-story-grid">
+                            <div class="featured-story-content">
+                                <div class="featured-tag">Featured Success Story</div>
+                                <h3>${featuredStory.appName || 'Amazing App'}</h3>
+                                <div class="featured-story-meta">
+                                    <div class="modal-avatar">
+                                        ${getInitial(featuredStory.name)}
+                                    </div>
+                                    <div class="featured-app-info">
+                                        <div>${featuredStory.name || 'Anonymous'}</div>
+                                        <div class="app-name">${featuredStory.appName || 'App'}</div>
+                                        <div>
+                                            <span class="app-category">${featuredStory.appType || 'App'}</span>
+                                            <span class="experience-level">${featuredStory.experienceLevel || 'Beginner'}</span>
+                                        </div>
+                                    </div>
                                 </div>
+                                <div class="featured-story-quote">
+                                    "${featuredStory.testimonial || 'Amazing experience building with AppFoundry!'}"
+                                </div>
+                                <div class="featured-story-text">
+                                    ${(featuredStory.story || 'No detailed story provided.').split('\n').map(paragraph => `<p>${paragraph}</p>`).join('')}
+                                </div>
+                                <div class="text-sm text-gray-500 mt-4">Submitted on ${formatDate(featuredStory.date)}</div>
+                                <a href="#" class="cta-button view-story-button" data-story-id="${featuredStory.id}">Read Full Story</a>
                             </div>
+                            <img src="${featuredStory.images && featuredStory.images.length > 0 && featuredStory.images[0] ? featuredStory.images[0] : 'images/app-placeholder.jpg'}" 
+                                alt="${featuredStory.appName} App" class="featured-story-image">
                         </div>
-                        <div class="featured-story-quote">
-                            "${featuredStory.testimonial || 'Amazing experience building with AppFoundry!'}"
-                        </div>
-                        <div class="featured-story-text">
-                            ${(featuredStory.story || 'No detailed story provided.').split('\n').map(paragraph => `<p>${paragraph}</p>`).join('')}
-                        </div>
-                        <div class="text-sm text-gray-500 mt-4">Submitted on ${formatDate(featuredStory.date)}</div>
-                        <a href="#" class="cta-button view-story-button" data-story-id="${featuredStory.id}">Read Full Story</a>
                     `;
                     
-                    // Update image if available
-                    if (featuredStory.images && featuredStory.images.length > 0 && featuredStory.images[0]) {
-                        featuredStoryImage.src = featuredStory.images[0];
-                        featuredStoryImage.alt = `${featuredStory.appName} App`;
-                    } else {
-                        featuredStoryImage.src = 'images/app-placeholder.jpg';
-                        featuredStoryImage.alt = `${featuredStory.appName} App`;
-                    }
+                    // Add event listener to the story button
+                    featuredStoryContainer.querySelector('.view-story-button').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const storyId = this.getAttribute('data-story-id');
+                        openStoryModal(storyId);
+                    });
+                } else {
+                    console.log("No featured story found.");
+                    featuredStoryContainer.style.display = 'none';
                 }
-            }
-            
-            // Helper to create a story card with timestamp
-            function createStoryCard(story) {
-                return `
-                    <div class="story-card">
-                        <div class="story-header">
-                            <div class="avatar">
-                                ${getInitial(story.name)}
-                            </div>
-                            <div class="creator-info">
-                                <h3>${story.name || 'Anonymous'}</h3>
-                                <div class="experience">${story.experienceLevel || 'Beginner'}</div>
-                            </div>
-                        </div>
-                        <div class="story-content">
-                            <div class="story-testimonial">${story.testimonial || 'Great experience!'}</div>
-                            <div class="story-info">
-                                <div class="app-type-tag">${story.appType || 'App'}</div>
-                                <div class="story-date">${formatDate(story.date)}</div>
-                            </div>
-                            <a href="#" class="view-story-button" data-story-id="${story.id}">Read Full Story</a>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Helper to create an app card with timestamp
-            function createAppCard(story) {
-                const appImage = story.images && story.images.length > 0 && story.images[0] 
-                    ? story.images[0] 
-                    : 'images/app-placeholder.jpg';
-                    
-                return `
-                    <div class="app-card" data-category="${story.appType || 'Other'}">
-                        <img src="${appImage}" alt="${story.appName || 'App'}" class="app-image">
-                        <div class="app-content">
-                            <div class="app-category">${story.appType || 'App'}</div>
-                            <div class="app-name">${story.appName || 'App'}</div>
-                            <div class="creator-name">by ${story.name || 'Anonymous'}</div>
-                            <div class="app-testimonial">${story.testimonial || 'Great experience!'}</div>
-                            <div class="app-meta">
-                                <div class="timeframe">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12 6 12 12 16 14"></polyline>
-                                    </svg>
-                                    ${formatDate(story.date)}
-                                </div>
-                                <div class="experience-level">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="9" cy="7" r="4"></circle>
-                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                    </svg>
-                                    ${story.experienceLevel || 'Beginner'}
-                                </div>
-                            </div>
-                            <a href="#" class="view-story-button" data-story-id="${story.id}">View Details</a>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Helper to show empty state
-            function showEmptyState(storiesGrid, appsGrid) {
-                const emptyState = `
+            } catch (error) {
+                console.error("Error loading featured story:", error);
+                featuredStoryContainer.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📱</div>
-                        <h3>No Stories Yet</h3>
-                        <p>Be the first to share your app building success story with our community!</p>
-                        <a href="submit-success-story.html" class="cta-button">Submit Your Story</a>
+                        <h3>No Featured Story Yet</h3>
+                        <p>Check back soon for our featured success story!</p>
                     </div>
                 `;
-                
-                storiesGrid.innerHTML = emptyState;
-                appsGrid.innerHTML = emptyState;
             }
+        }
+        
+        // Load all approved stories
+        async function loadApprovedStories() {
+            const appsGrid = document.getElementById('apps-grid');
             
-            // App filtering functionality
-            function setupFilters() {
-                const filterButtons = document.querySelectorAll('.filter-button');
+            try {
+                console.log("Loading approved stories...");
                 
-                filterButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        // Remove active class from all buttons
-                        filterButtons.forEach(btn => btn.classList.remove('active'));
-                        
-                        // Add active class to clicked button
-                        this.classList.add('active');
-                        
-                        // Get filter value
-                        const filter = this.getAttribute('data-filter');
-                        
-                        // Filter app cards
-                        const appCards = document.querySelectorAll('.app-card');
-                        
-                        appCards.forEach(card => {
-                            if (filter === 'all' || card.getAttribute('data-category') === filter) {
-                                card.style.display = 'block';
-                            } else {
-                                card.style.display = 'none';
-                            }
+                // Get all approved stories from Supabase
+                const stories = await StoryManager.getApprovedStories();
+                
+                if (stories && stories.length > 0) {
+                    console.log(`${stories.length} approved stories loaded`);
+                    
+                    // Check if we have a featured story
+                    const featuredStory = await StoryManager.getFeaturedStory();
+                    let storiesToDisplay = stories;
+                    
+                    // If there's a featured story, filter it out
+                    if (featuredStory) {
+                        storiesToDisplay = stories.filter(story => story.id !== featuredStory.id);
+                    }
+                    
+                    // Clear the loading state
+                    appsGrid.innerHTML = '';
+                    
+                    // Create HTML for app cards
+                    if (storiesToDisplay.length > 0) {
+                        storiesToDisplay.forEach(story => {
+                            const appCard = createAppCard(story);
+                            appsGrid.innerHTML += appCard;
                         });
+                        
+                        // Add event listeners to view buttons
+                        appsGrid.querySelectorAll('.view-story-button').forEach(button => {
+                            button.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const storyId = this.getAttribute('data-story-id');
+                                openStoryModal(storyId);
+                            });
+                        });
+                    } else {
+                        // If no non-featured stories, show empty state
+                        appsGrid.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📱</div>
+                                <h3>No Additional Stories Yet</h3>
+                                <p>Check out our featured story above!</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    console.log("No approved stories found");
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error("Error loading approved stories:", error);
+                showEmptyState();
+            }
+        }
+        
+        // Show empty state
+        function showEmptyState() {
+            const appsGrid = document.getElementById('apps-grid');
+            const featuredStoryContainer = document.getElementById('featured-story-container');
+            
+            featuredStoryContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📱</div>
+                    <h3>No Featured Story Yet</h3>
+                    <p>Check back soon for our featured success story!</p>
+                </div>
+            `;
+            
+            appsGrid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📱</div>
+                    <h3>No Stories Yet</h3>
+                    <p>Be the first to share your app building success story with our community!</p>
+                    <a href="submit-success-story.html" class="cta-button">Submit Your Story</a>
+                </div>
+            `;
+        }
+        
+        // Create app card HTML
+        function createAppCard(story) {
+            const appImage = story.images && story.images.length > 0 && story.images[0] 
+                ? story.images[0] 
+                : 'images/app-placeholder.jpg';
+                
+            return `
+                <div class="app-card" data-category="${story.appType || 'Other'}">
+                    <img src="${appImage}" alt="${story.appName || 'App'}" class="app-image">
+                    <div class="app-content">
+                        <div class="app-category">${story.appType || 'App'}</div>
+                        <div class="app-name">${story.appName || 'App'}</div>
+                        <div class="creator-name">by ${story.name || 'Anonymous'}</div>
+                        <div class="app-testimonial">${story.testimonial || 'Great experience!'}</div>
+                        <div class="app-meta">
+                            <div class="timeframe">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                ${formatDate(story.date)}
+                            </div>
+                            <div class="experience-level">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                ${story.experienceLevel || 'Beginner'}
+                            </div>
+                        </div>
+                        <a href="#" class="view-story-button" data-story-id="${story.id}">View Details</a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Set up app filtering
+        function setupFilters() {
+            const filterButtons = document.querySelectorAll('.filter-button');
+            
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Get filter value
+                    const filter = this.getAttribute('data-filter');
+                    
+                    // Filter app cards
+                    const appCards = document.querySelectorAll('.app-card');
+                    
+                    appCards.forEach(card => {
+                        if (filter === 'all' || card.getAttribute('data-category') === filter) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
                     });
                 });
-            }
+            });
+        }
+        
+        // Open story modal
+        async function openStoryModal(storyId) {
+            const modal = document.getElementById('story-modal');
+            const modalBody = document.getElementById('modal-body');
             
-            // Open story modal
-            async function openStoryModal(storyId) {
-                const modal = document.getElementById('story-modal');
-                const modalBody = document.getElementById('modal-body');
+            // Show loading state
+            modalBody.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div>Loading story details...</div>
+                </div>
+            `;
+            
+            // Show modal
+            modal.classList.add('active');
+            
+            // Prevent body scrolling
+            document.body.style.overflow = 'hidden';
+            
+            try {
+                // Get the story directly from Supabase
+                const story = await StoryManager.getStoryById(storyId);
                 
-                try {
-                    // Get all stories
-                    const stories = await window.StoryManager.loadApprovedStories();
-                    
-                    // Find story by ID
-                    const story = stories.find(s => s.id === storyId);
-                    
-                    if (!story) {
-                        console.error('Story not found:', storyId);
-                        return;
-                    }
+                if (story) {
+                    console.log("Story loaded:", story.appName);
                     
                     // Create modal content
                     let modalContent = `
@@ -1456,50 +1348,49 @@
                     ctaDiv.className = 'modal-cta mt-6 text-center';
                     ctaDiv.innerHTML = `<a href="index.html#pricing" class="cta-button">Build Your Own App</a>`;
                     modalBody.appendChild(ctaDiv);
+                } else {
+                    console.log("Story not found");
                     
-                    // Show modal
-                    modal.classList.add('active');
-                    
-                    // Prevent body scrolling
-                    document.body.style.overflow = 'hidden';
-                } catch (error) {
-                    console.error('Error opening story modal:', error);
+                    modalBody.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">❌</div>
+                            <h3>Story Not Found</h3>
+                            <p>Sorry, this story could not be found. It may have been removed or is no longer available.</p>
+                        </div>
+                    `;
                 }
-            }
-            
-            // Close story modal
-            function closeStoryModal() {
-                const modal = document.getElementById('story-modal');
-                modal.classList.remove('active');
+            } catch (error) {
+                console.error("Error opening story modal:", error);
                 
-                // Re-enable body scrolling
-                document.body.style.overflow = 'auto';
+                modalBody.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <h3>Error Loading Story</h3>
+                        <p>Sorry, there was an error loading this story. Please try again later.</p>
+                    </div>
+                `;
             }
-            
-            // Initialize
-            await loadStories(); // Changed to await since it's async now
-            setupFilters();
-            
-            // Modal close button
-            document.querySelector('.close-modal').addEventListener('click', closeStoryModal);
-            
-            // Close modal on click outside content
+        }
+        
+        // Close story modal
+        function closeStoryModal() {
             const modal = document.getElementById('story-modal');
-            const modalContent = modal.querySelector('.modal-content');
+            modal.classList.remove('active');
             
-            modal.addEventListener('click', function(e) {
-                if (!modalContent.contains(e.target)) {
-                    closeStoryModal();
-                }
-            });
-            
-            // Close modal on escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeStoryModal();
-                }
-            });
-        });
+            // Re-enable body scrolling
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Helper functions
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+        
+        function getInitial(name) {
+            return name ? name.charAt(0).toUpperCase() : 'A';
+        }
     </script>
 </body>
 </html>
