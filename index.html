@@ -5,384 +5,568 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AppFoundry - Build AI-Powered Apps Without Coding | No-Code App Development</title>
     
-    <!-- Story Manager Script - IMPORTANT: This must be the first script in the head -->
-    <script>
-    // Universal Story Manager - ensures stories are consistently available
-    (function() {
-      // Run on all pages to ensure localStorage data consistency
-      console.log("📊 Story Manager initializing on index page");
-      
-      // Check if we need to seed the localStorage from our backup
-      function seedStoriesIfNeeded() {
-        // Only run if appfoundry_submissions doesn't exist or is empty
-        if (!localStorage.getItem('appfoundry_submissions')) {
-          console.log("🌱 No stories found in localStorage, checking for seed data");
-          
-          // Check if we have any stories in our seed
-          if (localStorage.getItem('appfoundry_approved_seed')) {
-            console.log("🔄 Restoring stories from seed");
-            try {
-              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
-              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
-              console.log("✅ Successfully restored", seed.length, "stories from seed");
-            } catch (e) {
-              console.error("❌ Error restoring from seed:", e);
-            }
-          }
-        } else {
-          // If we have submissions, make sure we have an up-to-date seed
-          try {
-            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
-            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
-            console.log("💾 Seed updated with", submissions.length, "stories");
-          } catch (e) {
-            console.error("❌ Error updating seed:", e);
-          }
-        }
-      }
-      
-      // Run the seed check immediately
-      seedStoriesIfNeeded();
-    })();
-    </script>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
     
-    <link rel="stylesheet" href="styles.css">
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #0070f3;
-            --primary-hover: #0055b3;
-            --secondary-color: #ff4c00;
-            --secondary-hover: #e54400;
-            --success-color: #10b981;
-            --warning-color: #fbbf24;
-            --error-color: #ef4444;
-            --text-dark: #111827;
-            --text-medium: #4b5563;
-            --text-light: #6b7280;
-            --background-white: #ffffff;
-            --background-light: #f9fafb;
-            --border-light: #e5e7eb;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            --border-radius: 12px;
-            --transition-fast: 0.2s;
-        }
-        
-        /* Improved floating elements */
-        .floating-element {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.6;
-            z-index: 0;
-            animation: float 10s ease-in-out infinite;
-        }
-        
-        /* All your other CSS styles would go here */
-        /* Copy and paste the rest of your CSS from your original index.html */
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Component loader script -->
-    <script src="loader.js"></script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="header-container"></div>
-
-    <div class="guarantee-banner">
+    <!-- Header -->
+    <header class="site-header">
         <div class="container">
-            <span class="guarantee-icon">🔒</span>
-            <span class="guarantee-text"><strong>The "Build Your First App" Guarantee:</strong> Create an app in 60 days or get 100% of your money back</span>
-            <a href="refund-policy.html" class="guarantee-link">Learn More</a>
+            <div class="logo">AppFoundry</div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#examples">Examples</a></li>
+                    <li><a href="curriculum.html">Curriculum</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="success-stories.html">Success Stories</a></li>
+                </ul>
+            </nav>
+            <button class="cta-button small" id="loginButton">Log in</button>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <nav>
+            <ul>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#examples">Examples</a></li>
+                <li><a href="curriculum.html">Curriculum</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="success-stories.html">Success Stories</a></li>
+                <li><a href="#" class="mobile-login">Log in</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="floating-element floating-circle element-1"></div>
+        <div class="floating-element floating-square element-2"></div>
+        <div class="floating-element floating-triangle element-3"></div>
+        <div class="hero-glow"></div>
+        
+        <div class="container hero-container">
+            <div class="hero-content">
+                <div class="tag-container">
+                    <div class="ai-powered-tag">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a10 10 0 1 0 10 10 4 4 0 1 1-4-4"/>
+                            <path d="M18 2a4 4 0 0 0-4 4"/>
+                        </svg>
+                        AI-Powered
+                    </div>
+                    <div class="no-code-tag">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14"/>
+                            <path d="m12 5-7 7 7 7"/>
+                        </svg>
+                        No-Code Required
+                    </div>
+                </div>
+                
+                <h1 class="hero-headline">
+                    <span class="gradient-text">Build AI-Powered Apps</span> Without Code in 30 Days
+                </h1>
+                
+                <p class="subtitle">Learn to create functional, professional apps using VSCode, React Native, and AI prompting—even if you've never written a line of code before.</p>
+                
+                <a href="#pricing" class="cta-button large primary-cta">
+                    <span class="cta-icon">🚀</span>
+                    <span class="cta-text">Start Building My First App Today</span>
+                </a>
+                
+                <div class="cta-microcopy">No technical skills required. Perfect for entrepreneurs and self-starters.</div>
+                
+                <div class="guarantee-badge">
+                    <div class="badge-icon">✓</div>
+                    <div class="badge-text">60-Day App Building Guarantee</div>
+                </div>
+            </div>
+            
+            <div class="course-preview-card">
+                <div class="video-container" id="video-container">
+                    <video id="hero-video" poster="images/demo-video-thumbnail.jpg" controls>
+                        <source src="videos/appfoundry-demo.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="card-content">
+                    <h3>App Building with Claude</h3>
+                    <div class="course-meta">
+                        <div class="meta-item">
+                            <div class="meta-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                </svg>
+                            </div>
+                            <span>7 Comprehensive Modules</span>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                            </div>
+                            <span>Build Your First App in 14 Days</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Logos Section -->
+    <div class="tech-section">
+        <div class="container">
+            <h3 class="tech-heading">BUILT WITH THE LATEST TECHNOLOGY</h3>
+            <div class="tech-logo-container">
+                <div class="tech-logo">
+                    <img src="images/claude-logo.png" alt="Claude AI" width="80">
+                </div>
+                <div class="tech-logo">
+                    <img src="images/vscode-logo.png" alt="VS Code" width="80">
+                </div>
+                <div class="tech-logo">
+                    <img src="images/react-native-logo.png" alt="React Native" width="80">
+                </div>
+                <div class="tech-logo">
+                    <img src="images/expo-logo.png" alt="Expo" width="80">
+                </div>
+                <div class="tech-logo">
+                    <img src="images/supabase-logo.png" alt="Supabase" width="80">
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="hero-container"></div>
-    <div id="problem-container"></div>
-    <div id="solution-container"></div>
-    <div id="quick-wins-container"></div>
-    <div id="roi-calculator-container"></div>
-    <div id="proof-container"></div>
-    <div id="curriculum-container"></div>
-    <div id="comparison-container"></div>
-    <div id="pricing-container"></div>
-    <div id="guarantee-container"></div>
-    <div id="faq-container"></div>
-    <div id="cta-container"></div>
-    <div id="footer-container"></div>
+    <!-- Problem Section -->
+    <section class="problem" id="problem">
+        <div class="container">
+            <div class="entrepreneur-objections">
+                <h3 class="section-heading">Sound Familiar?</h3>
+                <div class="objections-grid">
+                    <div class="objection-item">
+                        <div class="objection-icon">❌</div>
+                        <p class="objection-text">"I've been quoted $20,000+ for a simple app that should only take a few weeks to build."</p>
+                    </div>
+                    <div class="objection-item">
+                        <div class="objection-icon">❌</div>
+                        <p class="objection-text">"The developer didn't understand my vision, and now I'm stuck with something that doesn't work how I need it to."</p>
+                    </div>
+                    <div class="objection-item">
+                        <div class="objection-icon">❌</div>
+                        <p class="objection-text">"I can't afford to wait 4+ months for my app - I need to start getting customer feedback now."</p>
+                    </div>
+                </div>
+                
+                <div class="solution-teaser">
+                    <h4>What if you could build your app yourself in just 30 days, with zero coding experience?</h4>
+                    <a href="#how-it-works" class="cta-button pulse-button">See How It Works</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="solution" id="how-it-works">
+        <div class="container">
+            <div class="solution-header">
+                <h2>The AppFoundry Solution: AI-Powered App Development</h2>
+                <p class="section-subtitle">Build your app yourself without writing a single line of code</p>
+                <div class="header-underline"></div>
+            </div>
+            
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#FF4C00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 16L16 12L12 8" stroke="#FF4C00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 12H16" stroke="#FF4C00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h4>Direct your personal AI developer</h4>
+                    <p>using our proven prompt frameworks</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="#FF4C00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h4>Launch in days, not months</h4>
+                    <p>with our streamlined process</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 4L6 12L18 20" stroke="#FF4C00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h4>Make unlimited changes yourself</h4>
+                    <p>instead of paying developers</p>
+                </div>
+            </div>
+            
+            <div class="comparison-box">
+                <div class="comparison-side before">
+                    <h4>Before AppFoundry</h4>
+                    <ul>
+                        <li>$20,000+ development costs</li>
+                        <li>3-6 month waiting periods</li>
+                        <li>Frustrating revision cycles</li>
+                        <li>Dependency on developers</li>
+                    </ul>
+                </div>
+                <div class="comparison-arrow">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 12H19" stroke="#0070F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 5L19 12L12 19" stroke="#0070F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="comparison-side after">
+                    <h4>After AppFoundry</h4>
+                    <ul>
+                        <li>One-time $499 investment</li>
+                        <li>Build apps in 2-4 weeks</li>
+                        <li>Make changes yourself instantly</li>
+                        <li>Complete independence</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="solution-cta">
+                <a href="#pricing" class="cta-button">Start Building My App Today</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Wins Section -->
+    <section class="quick-wins" id="examples">
+        <div class="container">
+            <h2>What You'll Build in Your First 14 Days</h2>
+            <p class="section-subtitle">Start with these simple projects to build confidence before tackling your main app idea</p>
+            
+            <div class="wins-grid">
+                <div class="win-item">
+                    <div class="win-image">
+                        <img src="images/task-tracker-app.png" alt="Task Tracker App Screenshot">
+                    </div>
+                    <h3>Task Tracker App</h3>
+                    <p>A simple but powerful task management app with categories, due dates, and notifications.</p>
+                    <div class="build-time">Build time: 4 hours</div>
+                </div>
+                
+                <div class="win-item">
+                    <div class="win-image">
+                        <img src="images/recipe-finder-app.png" alt="Recipe Finder App Screenshot">
+                    </div>
+                    <h3>Recipe Finder App</h3>
+                    <p>Search recipes by ingredients you already have at home with filtering and favorites.</p>
+                    <div class="build-time">Build time: 6 hours</div>
+                </div>
+                
+                <div class="win-item">
+                    <div class="win-image">
+                        <img src="images/workout-tracker-app.png" alt="Workout Tracker App Screenshot">
+                    </div>
+                    <h3>Workout Tracker App</h3>
+                    <p>Track your exercises, sets, reps, and progress with visual progress charts.</p>
+                    <div class="build-time">Build time: 8 hours</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Proof Section -->
+    <section class="proof">
+        <div class="container">
+            <h2>Proof This Works for Real People</h2>
+            
+            <div class="market-metrics">
+                <div class="metric">
+                    <div class="metric-number">65B+</div>
+                    <div class="metric-label">No-Code Market Value by 2025</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-number">87%</div>
+                    <div class="metric-label">Cost Savings vs Traditional Dev</div>
+                </div>
+            </div>
+            
+            <div class="testimonial">
+                <div class="testimonial-header">
+                    <div class="testimonial-avatar">
+                        <img src="images/testimonial-jessica.jpg" alt="Jessica M.">
+                    </div>
+                    <div class="testimonial-meta">
+                        <h4>Jessica M.</h4>
+                        <p>E-commerce Entrepreneur</p>
+                    </div>
+                    <div class="testimonial-rating">
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                    </div>
+                </div>
+                <div class="testimonial-content">
+                    <p>"I was quoted $22,500 for an inventory management app by three different developers. After taking AppFoundry, I built the exact app I wanted in just 3 weeks, and it only cost me the course fee. The AI prompting techniques are brilliant, and I've already started on my second app!"</p>
+                </div>
+            </div>
+            
+            <div class="view-more-cta">
+                <a href="success-stories.html" class="view-more-link">See More Success Stories →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Curriculum Preview -->
+    <section class="curriculum-preview">
+        <div class="container">
+            <h2>Your App-Building Roadmap</h2>
+            <p class="section-subtitle">A proven 7-module system to turn your ideas into reality without coding</p>
+            
+            <div class="curriculum-roadmap">
+                <div class="roadmap-line"></div>
+                
+                <div class="module module-left">
+                    <div class="module-number">01</div>
+                    <div class="module-content">
+                        <h3>Setting Up Your AI Development Environment</h3>
+                        <p>Configure Claude and the minimal tools you need to start building without coding</p>
+                    </div>
+                </div>
+                
+                <div class="module module-right">
+                    <div class="module-number">03</div>
+                    <div class="module-content">
+                        <h3>Testing Your App: From Concept to Phone</h3>
+                        <p>See your app work on your device without writing a single line of code</p>
+                    </div>
+                </div>
+                
+                <div class="module module-left">
+                    <div class="module-number">07</div>
+                    <div class="module-content">
+                        <h3>Submitting to the App Store</h3>
+                        <p>Get your AI-built app published quickly and professionally</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="curriculum-cta">
+                <a href="curriculum.html" class="view-more-link">See the Complete 7-Module Curriculum →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <h2>Choose Your App Building Journey</h2>
+            <p class="section-subtitle">All plans include our 60-day "Build Your First App" guarantee</p>
+            
+            <div class="pricing-grid">
+                <div class="price-card basic">
+                    <div class="price-header">
+                        <h3>Essential Builder</h3>
+                        <div class="price">
+                            <span class="regular-price">$499</span>
+                            <span class="one-time">one-time payment</span>
+                        </div>
+                    </div>
+                    
+                    <ul class="price-features">
+                        <li><span class="feature-check">✓</span> Complete 7-module course</li>
+                        <li><span class="feature-check">✓</span> 30+ project templates</li>
+                        <li><span class="feature-check">✓</span> Community forum access</li>
+                        <li><span class="feature-check">✓</span> 60-day money-back guarantee</li>
+                        <li><span class="feature-check">✓</span> 3-month access to code updates</li>
+                        <li class="feature-missing">✗ Advanced AI implementation techniques</li>
+                        <li class="feature-missing">✗ 1-on-1 app review session</li>
+                    </ul>
+                    
+                    <div class="price-cta">
+                        <a href="checkout.html?plan=essential" class="cta-button">Start Building Now</a>
+                    </div>
+                </div>
+                
+                <div class="price-card complete">
+                    <div class="most-popular">Most Popular</div>
+                    <div class="price-header">
+                        <h3>Professional Developer</h3>
+                        <div class="price">
+                            <span class="regular-price">$999</span>
+                            <span class="one-time">one-time payment</span>
+                        </div>
+                        <div class="price-monthly">Or $99/month for 12 months</div>
+                    </div>
+                    
+                    <ul class="price-features">
+                        <li><span class="feature-check">✓</span> Everything in Essential Builder</li>
+                        <li><span class="feature-check">✓</span> <strong>Advanced AI implementation techniques</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>100+ premium templates</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>Priority community support</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>1-on-1 app review session</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>12-month access to code updates</strong></li>
+                        <li class="feature-missing">✗ Enterprise integration modules</li>
+                    </ul>
+                    
+                    <div class="price-cta">
+                        <a href="checkout.html?plan=complete" class="cta-button cta-button-highlighted">Get Complete Access</a>
+                    </div>
+                </div>
+                
+                <div class="price-card premium">
+                    <div class="price-header">
+                        <h3>Enterprise Builder</h3>
+                        <div class="price">
+                            <span class="regular-price">$1,999</span>
+                            <span class="one-time">one-time payment</span>
+                        </div>
+                        <div class="price-monthly">Or $199/month for 12 months</div>
+                    </div>
+                    
+                    <ul class="price-features">
+                        <li><span class="feature-check">✓</span> Everything in Professional Developer</li>
+                        <li><span class="feature-check">✓</span> <strong>Enterprise integration modules</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>White-label capabilities</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>Lifetime access to code updates</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>VIP Discord access with private channels</strong></li>
+                        <li><span class="feature-check">✓</span> <strong>Full companion app source code access</strong></li>
+                    </ul>
+                    
+                    <div class="price-cta">
+                        <a href="checkout.html?plan=premium" class="cta-button">Upgrade to Enterprise</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Preview Section -->
+    <section class="faq-preview">
+        <div class="container">
+            <h2>Frequently Asked Questions</h2>
+            
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Do I need any coding experience to use AppFoundry?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Absolutely not! The course is specifically designed for entrepreneurs and self-starters with zero coding knowledge. If you can use a computer and follow step-by-step instructions, you have all the skills needed to succeed with AppFoundry.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>How is this different from no-code platforms like Bubble or Webflow?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Unlike traditional no-code platforms that lock you into their ecosystems with monthly fees, AppFoundry teaches you how to leverage Claude AI to create truly custom apps that you own 100%. You're not limited by platform constraints, there are no ongoing fees, and you can create more complex functionality than most drag-and-drop tools allow.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>How long will it take to build my first app?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Most students complete their first functional app within 2-4 weeks of starting the course, working just a few hours per week. You'll start seeing results within the first few hours as you complete the initial modules. The complete curriculum takes about 10-15 hours to work through, and you can apply what you learn immediately to your app project.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>What is your refund policy?</h3>
+                        <div class="toggle-icon">+</div>
+                    </div>
+                    <div class="faq-answer">
+                        <p>We offer a 60-day "Build Your First App" guarantee. If you can't create a working app within 60 days of taking the course, we'll refund 100% of your purchase price. All we ask is that you show us you've made a sincere effort by sharing your project files. This is our way of ensuring your success while taking all the risk off your shoulders.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-cta">
+                <a href="faq.html" class="view-more-link">See All Frequently Asked Questions →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Start Building Your Dream App Today</h2>
+            <p>Join hundreds of entrepreneurs and self-starters who've built professional apps using our AI-powered system</p>
+            <a href="#pricing" class="cta-button large">I'm Ready to Build My App</a>
+            <div class="cta-guarantee">
+                <span class="guarantee-icon">🔒</span>
+                <span class="guarantee-text">Protected by our 60-day money-back guarantee</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="logo">AppFoundry</div>
+            <div class="footer-links">
+                <div class="link-group">
+                    <h4>Course</h4>
+                    <ul>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="curriculum.html">Curriculum</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="success-stories.html">Success Stories</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="refund-policy.html">Our Guarantee</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 AppFoundry. All rights reserved.
+            </div>
+        </div>
+    </footer>
 
     <!-- Scripts -->
-    <script>
-        // Your original JavaScript code here
-        document.addEventListener('DOMContentLoaded', function() {
-            // This code will run after the components are loaded
-            
-            // Wait for components to fully load
-            setTimeout(function() {
-                console.log("Initializing interactive components...");
-                
-                // Module details toggle
-                document.querySelectorAll('.module-expand').forEach(toggle => {
-                    toggle.addEventListener('click', function() {
-                        const moduleId = this.getAttribute('data-module');
-                        const details = document.getElementById(`module-details-${moduleId}`);
-                        
-                        if (details.style.display === 'block') {
-                            details.style.display = 'none';
-                            this.textContent = `See Lesson Details +`;
-                        } else {
-                            details.style.display = 'block';
-                            this.textContent = `Hide Lesson Details -`;
-                        }
-                    });
-                });
-                
-                // FAQ toggles
-                document.querySelectorAll('.faq-question').forEach(question => {
-                    question.addEventListener('click', function() {
-                        const answer = this.nextElementSibling;
-                        const icon = this.querySelector('.toggle-icon');
-                        
-                        // Close all other FAQs
-                        document.querySelectorAll('.faq-answer').forEach(item => {
-                            if (item !== answer && item.classList.contains('show')) {
-                                item.classList.remove('show');
-                                item.previousElementSibling.querySelector('.toggle-icon').textContent = '+';
-                            }
-                        });
-                        
-                        // Toggle current FAQ
-                        if (answer.classList.contains('show')) {
-                            answer.classList.remove('show');
-                            icon.textContent = '+';
-                        } else {
-                            answer.classList.add('show');
-                            icon.textContent = '-';
-                        }
-                    });
-                });
-                
-                // Carousel functionality - improved
-                const carousel = document.querySelector('.wins-carousel');
-                const items = document.querySelectorAll('.win-item');
-                const dots = document.querySelectorAll('.carousel-dots .dot');
-                const prevButton = document.querySelector('.carousel-prev');
-                const nextButton = document.querySelector('.carousel-next');
-                let currentIndex = 0;
-                
-                function showSlide(index) {
-                    // Reset current index if out of bounds
-                    if (index >= items.length) {
-                        index = 0;
-                    } else if (index < 0) {
-                        index = items.length - 1;
-                    }
-                    
-                    // Update current index
-                    currentIndex = index;
-                    
-                    // Update carousel position with smooth transition
-                    items.forEach((item, i) => {
-                        item.style.display = 'none';
-                        item.style.opacity = '0';
-                        
-                        if (i === currentIndex) {
-                            item.style.display = 'block';
-                            setTimeout(() => {
-                                item.style.opacity = '1';
-                            }, 50);
-                        }
-                    });
-                    
-                    // Update dots
-                    if (dots && dots.length) {
-                        dots.forEach((dot, i) => {
-                            dot.classList.toggle('active', i === currentIndex);
-                        });
-                    }
-                }
-                
-                // Set up event listeners for carousel
-                if (carousel && prevButton && nextButton) {
-                    prevButton.addEventListener('click', () => showSlide(currentIndex - 1));
-                    nextButton.addEventListener('click', () => showSlide(currentIndex + 1));
-                    
-                    if (dots && dots.length) {
-                        dots.forEach((dot, i) => {
-                            dot.addEventListener('click', () => showSlide(i));
-                        });
-                    }
-                    
-                    // Initialize carousel
-                    if (items && items.length) {
-                        showSlide(0);
-                        
-                        // Auto-advance carousel every 5 seconds
-                        let autoPlayInterval = setInterval(() => {
-                            showSlide(currentIndex + 1);
-                        }, 5000);
-                        
-                        // Pause auto-advance on hover
-                        carousel.addEventListener('mouseenter', () => {
-                            clearInterval(autoPlayInterval);
-                        });
-                        
-                        carousel.addEventListener('mouseleave', () => {
-                            autoPlayInterval = setInterval(() => {
-                                showSlide(currentIndex + 1);
-                            }, 5000);
-                        });
-                    }
-                }
-                
-                // ROI Calculator - Updated implementation
-                const calculateRoiButton = document.getElementById('calculate-roi');
-                if (calculateRoiButton) {
-                    console.log('ROI Calculator found, initializing event listener');
-                    
-                    calculateRoiButton.addEventListener('click', function() {
-                        console.log('Calculate button clicked');
-                        
-                        const complexity = document.getElementById('app-complexity').value;
-                        const rate = parseInt(document.getElementById('developer-rate').value) || 85;
-                        const revisions = parseInt(document.getElementById('revisions').value) || 3;
-                        
-                        console.log('Inputs:', {complexity, rate, revisions});
-                        
-                        let baseCost, baseTime;
-                        
-                        switch(complexity) {
-                            case 'simple':
-                                baseCost = 8000;
-                                baseTime = 2.5;
-                                break;
-                            case 'medium':
-                                baseCost = 15000;
-                                baseTime = 4.5;
-                                break;
-                            case 'complex':
-                                baseCost = 30000;
-                                baseTime = 7;
-                                break;
-                            default:
-                                baseCost = 15000;
-                                baseTime = 4.5;
-                        }
-                        
-                        // Adjust based on rate
-                        const rateFactor = rate / 85;
-                        baseCost = Math.round(baseCost * rateFactor);
-                        
-                        // Calculate revision costs
-                        const revisionCost = Math.round(baseCost * 0.15 * revisions);
-                        const totalCost = baseCost + revisionCost;
-                        
-                        // Calculate total time
-                        const revisionTime = revisions * 0.5;
-                        const totalTime = baseTime + revisionTime;
-                        
-                        console.log('Calculated values:', {
-                            baseCost,
-                            revisionCost,
-                            totalCost,
-                            baseTime,
-                            revisionTime,
-                            totalTime
-                        });
-                        
-                        // Update traditional development results
-                        const resultCost = document.querySelector('.result-card.traditional .result-cost');
-                        if (resultCost) {
-                            resultCost.textContent = '$' + totalCost.toLocaleString();
-                        }
-                        
-                        const resultTime = document.querySelector('.result-card.traditional .result-time');
-                        if (resultTime) {
-                            resultTime.textContent = `${totalTime.toFixed(1)} months`;
-                        }
-                        
-                        // Update the breakdown items
-                        const breakdownDev = document.querySelector('.result-card.traditional .result-breakdown li:nth-child(1)');
-                        if (breakdownDev) {
-                            const label = breakdownDev.querySelector('.breakdown-label');
-                            if (label) {
-                                breakdownDev.innerHTML = `<span class="breakdown-label">Development:</span> $${baseCost.toLocaleString()}`;
-                            } else {
-                                breakdownDev.textContent = `Development: $${baseCost.toLocaleString()}`;
-                            }
-                        }
-                        
-                        const breakdownRev = document.querySelector('.result-card.traditional .result-breakdown li:nth-child(2)');
-                        if (breakdownRev) {
-                            const label = breakdownRev.querySelector('.breakdown-label');
-                            if (label) {
-                                breakdownRev.innerHTML = `<span class="breakdown-label">Revisions:</span> $${revisionCost.toLocaleString()}`;
-                            } else {
-                                breakdownRev.textContent = `Revisions: $${revisionCost.toLocaleString()}`;
-                            }
-                        }
-                        
-                        // Calculate and update savings
-                        const savings = totalCost - 499;
-                        const timeMonths = totalTime - 0.5;
-                        
-                        const savingsAmount = document.querySelector('.savings-amount');
-                        if (savingsAmount) {
-                            savingsAmount.textContent = '$' + savings.toLocaleString();
-                        }
-                        
-                        const savingsTime = document.querySelector('.savings-time');
-                        if (savingsTime) {
-                            savingsTime.textContent = `${timeMonths.toFixed(1)} months`;
-                        }
-                        
-                        console.log('ROI calculation complete and results updated');
-                    });
-                } else {
-                    console.warn('ROI Calculator button not found. Calculator may not be loaded yet.');
-                }
-                
-                // Login button functionality
-                const loginButton = document.getElementById('loginButton');
-                if (loginButton) {
-                    loginButton.addEventListener('click', function() {
-                        window.location.href = 'direct-login.html';
-                    });
-                }
-                
-                // Add smooth scrolling for anchor links
-                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                    anchor.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        
-                        const targetId = this.getAttribute('href');
-                        
-                        if (targetId === '#') {
-                            window.scrollTo({
-                                top: 0,
-                                behavior: 'smooth'
-                            });
-                            return;
-                        }
-                        
-                        const targetElement = document.querySelector(targetId);
-                        
-                        if (targetElement) {
-                            const headerOffset = 80;
-                            const elementPosition = targetElement.getBoundingClientRect().top;
-                            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                            
-                            window.scrollTo({
-                                top: offsetPosition,
-                                behavior: 'smooth'
-                            });
-                        }
-                    });
-                });
-                
-                console.log("All interactive components initialized");
-            }, 1500); // Wait 1.5 seconds for all components to fully load
-        });
-    </script>
+    <script src="scripts.js"></script>
 </body>
 </html>
