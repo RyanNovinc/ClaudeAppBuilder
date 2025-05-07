@@ -44,7 +44,8 @@
             throw new Error("Failed to initialize Supabase client");
           }
           
-          // Query for the featured story
+          // Query for the featured story - FIXED QUERY
+          // This now specifically looks for featured = true
           const { data, error } = await client
             .from('submissions')
             .select('*')
@@ -86,6 +87,57 @@
           }
         } catch (e) {
           console.error("❌ Error fetching featured story:", e);
+          // Try to fall back to localStorage
+          return this.getFeaturedStoryFromLocalStorage();
+        }
+      },
+      
+      // Added fallback to get featured story from localStorage
+      getFeaturedStoryFromLocalStorage() {
+        try {
+          console.log("🔍 Trying to get featured story from localStorage...");
+          
+          // Check if we have a featured story ID
+          const featuredStoryId = localStorage.getItem('appfoundry_featured_story');
+          
+          if (featuredStoryId) {
+            // Get all submissions
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+            
+            // Find the featured story
+            const featuredStory = submissions.find(story => 
+              story.id === featuredStoryId && story.status === 'approved'
+            );
+            
+            if (featuredStory) {
+              console.log("✅ Found featured story in localStorage:", featuredStory.appName || featuredStory.app_name);
+              return featuredStory;
+            }
+          }
+          
+          // Try to find any story marked as featured
+          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+          const featuredStory = submissions.find(story => 
+            story.featured === true && story.status === 'approved'
+          );
+          
+          if (featuredStory) {
+            console.log("✅ Found story marked as featured in localStorage:", featuredStory.appName || featuredStory.app_name);
+            return featuredStory;
+          }
+          
+          // If no featured story found, return the first approved story
+          const approvedStories = submissions.filter(story => story.status === 'approved');
+          
+          if (approvedStories.length > 0) {
+            console.log("✅ Using first approved story from localStorage as featured:", approvedStories[0].appName || approvedStories[0].app_name);
+            return approvedStories[0];
+          }
+          
+          console.log("⚠️ No suitable story found in localStorage");
+          return null;
+        } catch (e) {
+          console.error("❌ Error getting featured story from localStorage:", e);
           return null;
         }
       },
@@ -122,6 +174,26 @@
           }
         } catch (e) {
           console.error("❌ Error fetching approved stories:", e);
+          // Try to fall back to localStorage
+          return this.getApprovedStoriesFromLocalStorage();
+        }
+      },
+      
+      // Added fallback to get approved stories from localStorage
+      getApprovedStoriesFromLocalStorage() {
+        try {
+          console.log("🔍 Trying to get approved stories from localStorage...");
+          
+          // Get all submissions
+          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+          
+          // Filter for approved stories
+          const approvedStories = submissions.filter(story => story.status === 'approved');
+          
+          console.log(`✅ Found ${approvedStories.length} approved stories in localStorage`);
+          return approvedStories;
+        } catch (e) {
+          console.error("❌ Error getting approved stories from localStorage:", e);
           return [];
         }
       },
@@ -132,13 +204,13 @@
           id: item.id,
           name: item.name,
           email: item.email || '',
-          appName: item.app_name,
-          appType: item.app_type,
-          experienceLevel: item.experience_level,
+          appName: item.app_name || item.appName, // Handle both naming conventions
+          appType: item.app_type || item.appType, // Handle both naming conventions
+          experienceLevel: item.experience_level || item.experienceLevel, // Handle both naming conventions
           testimonial: item.testimonial,
           story: item.story,
-          images: this.parseCloudinaryImages(item.cloudinary_images),
-          date: item.created_at,
+          images: this.parseCloudinaryImages(item.cloudinary_images || item.images), // Handle both naming conventions
+          date: item.created_at || item.date, // Handle both naming conventions
           status: item.status,
           featured: item.featured || false
         };
@@ -191,10 +263,36 @@
             return this.formatSubmission(data[0]);
           } else {
             console.log(`⚠️ No story found with ID: ${id}`);
-            return null;
+            // Try to fall back to localStorage
+            return this.getStoryByIdFromLocalStorage(id);
           }
         } catch (e) {
           console.error("❌ Error fetching story by ID:", e);
+          // Try to fall back to localStorage
+          return this.getStoryByIdFromLocalStorage(id);
+        }
+      },
+      
+      // Added fallback to get story by ID from localStorage
+      getStoryByIdFromLocalStorage(id) {
+        try {
+          console.log(`🔍 Trying to get story with ID: ${id} from localStorage...`);
+          
+          // Get all submissions
+          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
+          
+          // Find the story
+          const story = submissions.find(story => story.id === id);
+          
+          if (story) {
+            console.log("✅ Found story in localStorage:", story.appName || story.app_name);
+            return story;
+          }
+          
+          console.log(`⚠️ No story with ID: ${id} found in localStorage`);
+          return null;
+        } catch (e) {
+          console.error("❌ Error getting story from localStorage:", e);
           return null;
         }
       }
