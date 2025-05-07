@@ -1,0 +1,230 @@
+<script>
+    // Module details toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        // Module details toggle
+        document.querySelectorAll('.module-expand').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const moduleId = this.getAttribute('data-module');
+                const details = document.getElementById(`module-details-${moduleId}`);
+                
+                if (details.style.display === 'block') {
+                    details.style.display = 'none';
+                    this.textContent = `See Lesson Details +`;
+                } else {
+                    details.style.display = 'block';
+                    this.textContent = `Hide Lesson Details -`;
+                }
+            });
+        });
+        
+        // FAQ toggles
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', function() {
+                const answer = this.nextElementSibling;
+                const icon = this.querySelector('.toggle-icon');
+                
+                // Close all other FAQs
+                document.querySelectorAll('.faq-answer').forEach(item => {
+                    if (item !== answer && item.classList.contains('show')) {
+                        item.classList.remove('show');
+                        item.previousElementSibling.querySelector('.toggle-icon').textContent = '+';
+                    }
+                });
+                
+                // Toggle current FAQ
+                if (answer.classList.contains('show')) {
+                    answer.classList.remove('show');
+                    icon.textContent = '+';
+                } else {
+                    answer.classList.add('show');
+                    icon.textContent = '-';
+                }
+            });
+        });
+        
+        // Carousel functionality - improved
+        const carousel = document.querySelector('.wins-carousel');
+        const items = document.querySelectorAll('.win-item');
+        const dots = document.querySelectorAll('.carousel-dots .dot');
+        const prevButton = document.querySelector('.carousel-prev');
+        const nextButton = document.querySelector('.carousel-next');
+        let currentIndex = 0;
+        
+        function showSlide(index) {
+            // Reset current index if out of bounds
+            if (index >= items.length) {
+                index = 0;
+            } else if (index < 0) {
+                index = items.length - 1;
+            }
+            
+            // Update current index
+            currentIndex = index;
+            
+            // Update carousel position with smooth transition
+            items.forEach((item, i) => {
+                item.style.display = 'none';
+                item.style.opacity = '0';
+                
+                if (i === currentIndex) {
+                    item.style.display = 'block';
+                    setTimeout(() => {
+                        item.style.opacity = '1';
+                    }, 50);
+                }
+            });
+            
+            // Update dots
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentIndex);
+            });
+        }
+        
+        // Set up event listeners
+        if (prevButton && nextButton) {
+            prevButton.addEventListener('click', () => showSlide(currentIndex - 1));
+            nextButton.addEventListener('click', () => showSlide(currentIndex + 1));
+            
+            dots.forEach((dot, i) => {
+                dot.addEventListener('click', () => showSlide(i));
+            });
+            
+            // Initialize carousel
+            showSlide(0);
+            
+            // Auto-advance carousel every 5 seconds
+            let autoPlayInterval = setInterval(() => {
+                showSlide(currentIndex + 1);
+            }, 5000);
+            
+            // Pause auto-advance on hover
+            if (carousel) {
+                carousel.addEventListener('mouseenter', () => {
+                    clearInterval(autoPlayInterval);
+                });
+                
+                carousel.addEventListener('mouseleave', () => {
+                    autoPlayInterval = setInterval(() => {
+                        showSlide(currentIndex + 1);
+                    }, 5000);
+                });
+            }
+        }
+        
+        // ROI Calculator
+        const calculateRoiButton = document.getElementById('calculate-roi');
+        if (calculateRoiButton) {
+            calculateRoiButton.addEventListener('click', function() {
+                const complexity = document.getElementById('app-complexity').value;
+                const rate = parseInt(document.getElementById('developer-rate').value);
+                const revisions = parseInt(document.getElementById('revisions').value);
+                
+                let baseCost, baseTime;
+                
+                switch(complexity) {
+                    case 'simple':
+                        baseCost = 8000;
+                        baseTime = 2.5;
+                        break;
+                    case 'medium':
+                        baseCost = 15000;
+                        baseTime = 4.5;
+                        break;
+                    case 'complex':
+                        baseCost = 30000;
+                        baseTime = 7;
+                        break;
+                    default:
+                        baseCost = 15000;
+                        baseTime = 4.5;
+                }
+                
+                // Adjust based on rate
+                const rateFactor = rate / 85;
+                baseCost = Math.round(baseCost * rateFactor);
+                
+                // Calculate revision costs
+                const revisionCost = Math.round(baseCost * 0.15 * revisions);
+                const totalCost = baseCost + revisionCost;
+                
+                // Calculate total time
+                const revisionTime = revisions * 0.5;
+                const totalTime = baseTime + revisionTime;
+                
+                // Update the results with animation
+                const resultCost = document.querySelector('.result-card:nth-child(1) .result-cost');
+                if (resultCost) {
+                    resultCost.textContent = '$' + totalCost.toLocaleString();
+                }
+                
+                const resultTime = document.querySelector('.result-card:nth-child(1) .result-time');
+                if (resultTime) {
+                    resultTime.textContent = `${totalTime.toFixed(1)} months`;
+                }
+                
+                const resultBreakdown1 = document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(1)');
+                if (resultBreakdown1) {
+                    resultBreakdown1.textContent = `Development: $${baseCost.toLocaleString()}`;
+                }
+                
+                const resultBreakdown2 = document.querySelector('.result-card:nth-child(1) .result-breakdown li:nth-child(2)');
+                if (resultBreakdown2) {
+                    resultBreakdown2.textContent = `Revisions: $${revisionCost.toLocaleString()}`;
+                }
+                
+                // Calculate savings
+                const savings = totalCost - 499;
+                const timeMonths = totalTime - 0.5;
+                
+                // Update savings with animation
+                const savingsAmount = document.querySelector('.savings-amount');
+                if (savingsAmount) {
+                    savingsAmount.textContent = '$' + savings.toLocaleString();
+                }
+                
+                const savingsTime = document.querySelector('.savings-time');
+                if (savingsTime) {
+                    savingsTime.textContent = `${timeMonths.toFixed(1)} months`;
+                }
+            });
+        }
+        
+        // Add smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                
+                if (targetId === '#') {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                    return;
+                }
+                
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    const headerOffset = 80;
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Login button functionality
+        const loginButton = document.getElementById('loginButton');
+        if (loginButton) {
+            loginButton.addEventListener('click', function() {
+                window.location.href = 'direct-login.html';
+            });
+        }
+    });
+</script>
