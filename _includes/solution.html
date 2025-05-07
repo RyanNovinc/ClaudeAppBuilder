@@ -13,6 +13,7 @@
         </div>
         
         <div class="benefits-grid">
+            <!-- First row -->
             <div class="benefit-card">
                 <div class="benefit-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -56,8 +57,11 @@
                 <h4>Launch in days, not months</h4>
                 <p>with our streamlined process</p>
             </div>
-            
-            <div class="benefit-card">
+        </div>
+        
+        <!-- Second row with just one centered benefit -->
+        <div class="benefits-second-row">
+            <div class="benefit-card feature-card">
                 <div class="benefit-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#FF4C00" stroke-width="2"/>
@@ -158,9 +162,21 @@
 
 .benefits-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 30px;
+    margin-bottom: 30px;
+}
+
+.benefits-second-row {
+    display: flex;
+    justify-content: center;
     margin-bottom: 60px;
+}
+
+.feature-card {
+    max-width: 350px;
+    border: 2px solid #FFE4DC;
+    background: linear-gradient(to bottom right, #fff6f2, #fff);
 }
 
 .benefit-card {
@@ -335,6 +351,16 @@
     
     .solution-intro h3 {
         font-size: 1.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .benefits-grid {
+        gap: 20px;
+    }
+    
+    .benefit-card {
+        padding: 20px;
     }
 }
 </style>
