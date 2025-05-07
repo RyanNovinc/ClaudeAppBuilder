@@ -48,7 +48,4 @@
   
 [build.processing.html]
   pretty_urls = true
-
-# ADDED: Template processing for HTML includes
-[build.processing.templates]
-  content_types = ["text/html"]
+  SSI = true  # Enable Server-Side Includes
