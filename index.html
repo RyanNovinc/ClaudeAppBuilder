@@ -1,11 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!--#include file="_includes/head.html" -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppFoundry - Build AI-Powered Apps Without Coding | No-Code App Development</title>
+    
+    <!-- Story Manager Script - IMPORTANT: This must be the first script in the head -->
+    <script>
+    // Universal Story Manager - ensures stories are consistently available
+    (function() {
+      // Run on all pages to ensure localStorage data consistency
+      console.log("📊 Story Manager initializing on index page");
+      
+      // Check if we need to seed the localStorage from our backup
+      function seedStoriesIfNeeded() {
+        // Only run if appfoundry_submissions doesn't exist or is empty
+        if (!localStorage.getItem('appfoundry_submissions')) {
+          console.log("🌱 No stories found in localStorage, checking for seed data");
+          
+          // Check if we have any stories in our seed
+          if (localStorage.getItem('appfoundry_approved_seed')) {
+            console.log("🔄 Restoring stories from seed");
+            try {
+              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+              console.log("✅ Successfully restored", seed.length, "stories from seed");
+            } catch (e) {
+              console.error("❌ Error restoring from seed:", e);
+            }
+          }
+        } else {
+          // If we have submissions, make sure we have an up-to-date seed
+          try {
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log("💾 Seed updated with", submissions.length, "stories");
+          } catch (e) {
+            console.error("❌ Error updating seed:", e);
+          }
+        }
+      }
+      
+      // Run the seed check immediately
+      seedStoriesIfNeeded();
+    })();
+    </script>
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* All your CSS styles here */
+        :root {
+            --primary-color: #0070f3;
+            --primary-hover: #0055b3;
+            /* ... rest of your CSS ... */
+        }
+        /* ... rest of your CSS ... */
+    </style>
+    
+    <!-- Component loader script -->
+    <script src="loader.js"></script>
 </head>
 <body>
-    <!--#include file="_includes/header.html" -->
-    
+    <div id="header-container"></div>
+
     <div class="guarantee-banner">
         <div class="container">
             <span class="guarantee-icon">🔒</span>
@@ -14,20 +74,44 @@
         </div>
     </div>
 
-    <!--#include file="_includes/hero.html" -->
-    <!--#include file="_includes/problem.html" -->
-    <!--#include file="_includes/solution.html" -->
-    <!--#include file="_includes/quick-wins.html" -->
-    <!--#include file="_includes/roi-calculator.html" -->
-    <!--#include file="_includes/proof.html" -->
-    <!--#include file="_includes/curriculum.html" -->
-    <!--#include file="_includes/comparison.html" -->
-    <!--#include file="_includes/pricing.html" -->
-    <!--#include file="_includes/guarantee.html" -->
-    <!--#include file="_includes/faq.html" -->
-    <!--#include file="_includes/cta.html" -->
-    <!--#include file="_includes/footer.html" -->
+    <div id="hero-container"></div>
+    <div id="problem-container"></div>
+    <div id="solution-container"></div>
+    <div id="quick-wins-container"></div>
+    <div id="roi-calculator-container"></div>
+    <div id="proof-container"></div>
+    <div id="curriculum-container"></div>
+    <div id="comparison-container"></div>
+    <div id="pricing-container"></div>
+    <div id="guarantee-container"></div>
+    <div id="faq-container"></div>
+    <div id="cta-container"></div>
+    <div id="footer-container"></div>
 
-    <!--#include file="_includes/scripts.html" -->
+    <!-- Scripts -->
+    <script>
+        // Your original JavaScript code here
+        document.addEventListener('DOMContentLoaded', function() {
+            // This code will run after the components are loaded
+            
+            // Module details toggle
+            document.querySelectorAll('.module-expand').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const moduleId = this.getAttribute('data-module');
+                    const details = document.getElementById(`module-details-${moduleId}`);
+                    
+                    if (details.style.display === 'block') {
+                        details.style.display = 'none';
+                        this.textContent = `See Lesson Details +`;
+                    } else {
+                        details.style.display = 'block';
+                        this.textContent = `Hide Lesson Details -`;
+                    }
+                });
+            });
+            
+            // Rest of your original JavaScript code...
+        });
+    </script>
 </body>
 </html>
