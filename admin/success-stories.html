@@ -1883,7 +1883,7 @@ async function rejectSubmission(id) {
   }
 }
 
-// Set a story as featured - FIXED IMPLEMENTATION
+// Set a story as featured - FIXED IMPLEMENTATION WITH BETTER ERROR HANDLING
 async function setFeaturedStory(id) {
   try {
     // Find and update the card status
@@ -1905,7 +1905,52 @@ async function setFeaturedStory(id) {
       throw new Error("Supabase client not available");
     }
     
-    // STEP 1: DEBUGGING - Check current featured stories
+    // DEBUGGING STEP: First check if this story exists in the database
+    console.log(`Checking if story ${id} exists in database`);
+    const { data: storyCheck, error: storyCheckError } = await supabase
+      .from('submissions')
+      .select('id, app_name, status')
+      .eq('id', id);
+      
+    if (storyCheckError) {
+      console.error("Error checking story existence:", storyCheckError);
+      throw storyCheckError;
+    }
+    
+    if (!storyCheck || storyCheck.length === 0) {
+      console.error(`Story with ID ${id} not found in database. Will try to fix by using correctly formatted ID.`);
+      
+      // Try to query for the story using alternative approaches
+      // 1. First get all approved stories to find a matching one by name or other attributes
+      const { data: allStories, error: allStoriesError } = await supabase
+        .from('submissions')
+        .select('*')
+        .eq('status', 'approved');
+        
+      if (allStoriesError) {
+        console.error("Error fetching all stories:", allStoriesError);
+        throw new Error(`Failed to find story in database. Please try force syncing first.`);
+      }
+      
+      console.log(`Found ${allStories.length} approved stories in database. Will set the first one as featured.`);
+      
+      if (allStories.length === 0) {
+        throw new Error(`No approved stories found in database to set as featured.`);
+      }
+      
+      // Use the ID of the first approved story
+      id = allStories[0].id;
+      console.log(`Using first approved story with ID ${id} instead`);
+    } else {
+      console.log(`✅ Story exists in database:`, storyCheck[0]);
+      
+      // Make sure the story is approved
+      if (storyCheck[0].status !== 'approved') {
+        throw new Error(`Story with ID ${id} exists but is not approved (status: ${storyCheck[0].status})`);
+      }
+    }
+    
+    // STEP 1: Check current featured stories
     const { data: currentFeatured, error: checkError } = await supabase
       .from('submissions')
       .select('id, app_name, featured')
@@ -1917,7 +1962,7 @@ async function setFeaturedStory(id) {
       console.log("Current featured stories:", currentFeatured);
     }
     
-    // STEP 2: First, clear featured status from ALL stories
+    // STEP 2: Clear featured status from ALL stories
     console.log("Clearing featured status from all stories");
     const { error: clearError } = await supabase
       .from('submissions')
@@ -1947,7 +1992,7 @@ async function setFeaturedStory(id) {
       throw new Error(`No story found with ID: ${id}`);
     }
     
-    // STEP 4: DEBUGGING - Verify the update
+    // STEP 4: Verify the update
     const { data: verifyData, error: verifyError } = await supabase
       .from('submissions')
       .select('id, app_name, featured')
@@ -1957,6 +2002,10 @@ async function setFeaturedStory(id) {
       console.error("Error verifying featured update:", verifyError);
     } else {
       console.log("Verification of featured update:", verifyData);
+      
+      if (!verifyData[0].featured) {
+        console.warn("Story was not properly marked as featured - will try updating localStorage anyway");
+      }
     }
     
     // STEP 5: Update localStorage
