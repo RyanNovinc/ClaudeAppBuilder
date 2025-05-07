@@ -7,9 +7,7 @@
         <div class="resources-grid">
             <div class="resource-card">
                 <div class="resource-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15a2 2 0 0 1 0 4H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8Z"/>
-                    </svg>
+                    <img src="images/discord-icon.png" alt="Discord" class="discord-icon">
                 </div>
                 <h3>Private Discord Community</h3>
                 <p>Get direct access to me and connect with fellow app builders in our exclusive Discord community. Ask questions, share your progress, and get feedback in real-time.</p>
@@ -132,6 +130,12 @@
     stroke: var(--primary-color);
     width: 30px;
     height: 30px;
+}
+
+.resource-icon .discord-icon {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
 }
 
 .resource-card h3 {
