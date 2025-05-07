@@ -2,44 +2,37 @@
 [build]
   publish = "/"  # Your publish directory (adjust if needed for your setup)
   command = "npm install"  # Install dependencies for Netlify Functions
-
 # Functions directory
 [functions]
   directory = "functions"
   node_bundler = "esbuild"
-
 # Environment variables (for dev only - set these in Netlify dashboard for production)
 [build.environment]
   # These are placeholders - set actual values in Netlify dashboard
   GITHUB_TOKEN = "placeholder"
   ADMIN_TOKEN = "admin_token_secure"
-
 # Handle specific redirection for success stories
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
   force = true
-
 # Redirect all function calls
 [[redirects]]
   from = "/submit-story"
   to = "/.netlify/functions/submit-testimonial"
   status = 200
-
 # Admin panel redirect
 [[redirects]]
   from = "/admin/*"
   to = "/admin/index.html"
   status = 200
-
 # Force HTTPS
 [[redirects]]
   from = "http://*"
   to = "https://:splat"
   status = 301
   force = true
-
 # Set custom headers
 [[headers]]
   for = "/*"
@@ -55,3 +48,7 @@
   
 [build.processing.html]
   pretty_urls = true
+
+# ADDED: Template processing for HTML includes
+[build.processing.templates]
+  content_types = ["text/html"]
