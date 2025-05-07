@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadComponent('hero-container', '_includes/hero.html');
     loadComponent('problem-container', '_includes/problem.html');
     loadComponent('solution-container', '_includes/solution.html');
+    loadComponent('tools-resources-container', '_includes/tools-resources.html');
     loadComponent('quick-wins-container', '_includes/quick-wins.html');
     loadComponent('roi-calculator-container', '_includes/roi-calculator.html');
     loadComponent('proof-container', '_includes/proof.html');
