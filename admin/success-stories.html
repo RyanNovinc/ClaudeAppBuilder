@@ -99,13 +99,13 @@
       async getSubmissionsFromSupabase(status = 'all') {
         try {
           // Initialize Supabase client if needed
-          const supabase = this.initSupabase();
-          if (!supabase) {
+          const client = this.initSupabase();
+          if (!client) {
             throw new Error("Supabase client not available");
           }
           
           // Build query
-          let query = supabase.from('submissions').select('*');
+          let query = client.from('submissions').select('*');
           
           if (status !== 'all') {
             query = query.eq('status', status);
@@ -208,13 +208,13 @@
       async approveSubmissionInSupabase(id) {
         try {
           // Initialize Supabase client if needed
-          const supabase = this.initSupabase();
-          if (!supabase) {
+          const client = this.initSupabase();
+          if (!client) {
             throw new Error("Supabase client not available");
           }
           
           // Update the submission
-          const { data, error } = await supabase
+          const { data, error } = await client
             .from('submissions')
             .update({ status: 'approved' })
             .eq('id', id)
@@ -298,13 +298,13 @@
       async rejectSubmissionInSupabase(id) {
         try {
           // Initialize Supabase client if needed
-          const supabase = this.initSupabase();
-          if (!supabase) {
+          const client = this.initSupabase();
+          if (!client) {
             throw new Error("Supabase client not available");
           }
           
           // Update the submission
-          const { data, error } = await supabase
+          const { data, error } = await client
             .from('submissions')
             .update({ status: 'rejected' })
             .eq('id', id)
@@ -359,7 +359,7 @@
         }
       },
       
-      // Set a story as featured - FIXED VERSION
+      // Set a story as featured
       async setFeaturedStory(id) {
         try {
           logActivity('info', `Setting submission ${id} as featured`);
@@ -1729,530 +1729,590 @@
         }
         
         // Add action buttons
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'flex items-center justify-end gap-2 p-4 bg-gray-50 border-t border-gray-200';
-        
-        // View Full Story button
-        const viewButton = document.createElement('button');
-        viewButton.className = 'px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-sm';
-        viewButton.innerHTML = '<i class="fas fa-eye mr-1"></i> View';
-        viewButton.onclick = function() {
-          showStory(submission);
-        };
-        actionsDiv.appendChild(viewButton);
-        
-        // Edit button
-        const editButton = document.createElement('button');
-        editButton.className = 'px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm';
-        editButton.innerHTML = '<i class="fas fa-edit mr-1"></i> Edit';
-        editButton.onclick = function() {
-          openEditModal(submission);
-        };
-        actionsDiv.appendChild(editButton);
-        
-        // Add approve/reject buttons based on current status
-        if (submission.status === 'pending') {
-          // Approve button
-          const approveButton = document.createElement('button');
-          approveButton.className = 'px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm';
-          approveButton.innerHTML = '<i class="fas fa-check mr-1"></i> Approve';
-          approveButton.onclick = function() {
-            approveSubmission(submission.id);
+const actionsDiv = document.createElement('div');
+actionsDiv.className = 'flex items-center justify-end gap-2 p-4 bg-gray-50 border-t border-gray-200';
+
+// View Full Story button
+const viewButton = document.createElement('button');
+viewButton.className = 'px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-sm';
+viewButton.innerHTML = '<i class="fas fa-eye mr-1"></i> View';
+viewButton.onclick = function() {
+  showStory(submission);
+};
+actionsDiv.appendChild(viewButton);
+
+// Edit button
+const editButton = document.createElement('button');
+editButton.className = 'px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm';
+editButton.innerHTML = '<i class="fas fa-edit mr-1"></i> Edit';
+editButton.onclick = function() {
+  openEditModal(submission);
+};
+actionsDiv.appendChild(editButton);
+
+// Add approve/reject buttons based on current status
+if (submission.status === 'pending') {
+  // Approve button
+  const approveButton = document.createElement('button');
+  approveButton.className = 'px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm';
+  approveButton.innerHTML = '<i class="fas fa-check mr-1"></i> Approve';
+  approveButton.onclick = function() {
+    approveSubmission(submission.id);
+  };
+  actionsDiv.appendChild(approveButton);
+  
+  // Reject button
+  const rejectButton = document.createElement('button');
+  rejectButton.className = 'px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm';
+  rejectButton.innerHTML = '<i class="fas fa-times mr-1"></i> Reject';
+  rejectButton.onclick = function() {
+    rejectSubmission(submission.id);
+  };
+  actionsDiv.appendChild(rejectButton);
+} else if (submission.status === 'approved') {
+  // Featured status indicator and button
+  const featuredButton = document.createElement('button');
+  
+  if (submission.featured) {
+    // If already featured, show indicator with ability to unfeature
+    featuredButton.className = 'px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors text-sm';
+    featuredButton.innerHTML = '<i class="fas fa-star mr-1"></i> Featured';
+    featuredButton.onclick = function() {
+      if (confirm('Remove featured status from this story?')) {
+        unsetFeaturedStory(submission.id);
+      }
+    };
+  } else {
+    // If not featured, show "Set as Featured" button
+    featuredButton.className = 'px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors text-sm';
+    featuredButton.innerHTML = '<i class="fas fa-star mr-1"></i> Set as Featured';
+    featuredButton.onclick = function() {
+      setFeaturedStory(submission.id);
+    };
+  }
+  
+  actionsDiv.appendChild(featuredButton);
+  
+  // Reject button (can change from approved to rejected)
+  const rejectButton = document.createElement('button');
+  rejectButton.className = 'px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm';
+  rejectButton.innerHTML = '<i class="fas fa-times mr-1"></i> Reject';
+  rejectButton.onclick = function() {
+    rejectSubmission(submission.id);
+  };
+  actionsDiv.appendChild(rejectButton);
+} else if (submission.status === 'rejected') {
+  // Approve button (can change from rejected to approved)
+  const approveButton = document.createElement('button');
+  approveButton.className = 'px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm';
+  approveButton.innerHTML = '<i class="fas fa-check mr-1"></i> Approve';
+  approveButton.onclick = function() {
+    approveSubmission(submission.id);
+  };
+  actionsDiv.appendChild(approveButton);
+}
+
+card.appendChild(actionsDiv);
+
+return card;
+}
+
+// Approve a submission using the AdminAuth helper
+async function approveSubmission(id) {
+  try {
+    // Find and update the card status
+    const card = document.querySelector(`[data-id="${id}"]`);
+    if (card) {
+      const actionDiv = card.querySelector('.flex.items-center.justify-end');
+      if (actionDiv) {
+        actionDiv.innerHTML = '<div class="text-gray-500"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
+      }
+    }
+    
+    document.getElementById('loading-indicator').style.display = 'flex';
+    
+    logActivity('info', `Approving submission ${id}...`);
+    
+    // Use the AdminAuth helper
+    const result = await AdminAuth.approveSubmission(id);
+    
+    logActivity('success', `Successfully approved submission ${id}`);
+    
+    // Reload submissions
+    await loadSubmissions();
+    
+    showToast('Success', 'Submission approved successfully!', 'success');
+  } catch (error) {
+    logActivity('error', `Error approving submission: ${error.message}`);
+    showToast('Error', `Failed to approve submission: ${error.message}`, 'error');
+  } finally {
+    document.getElementById('loading-indicator').style.display = 'none';
+  }
+}
+
+// Reject a submission using the AdminAuth helper
+async function rejectSubmission(id) {
+  try {
+    // Find and update the card status
+    const card = document.querySelector(`[data-id="${id}"]`);
+    if (card) {
+      const actionDiv = card.querySelector('.flex.items-center.justify-end');
+      if (actionDiv) {
+        actionDiv.innerHTML = '<div class="text-gray-500"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
+      }
+    }
+    
+    document.getElementById('loading-indicator').style.display = 'flex';
+    
+    logActivity('info', `Rejecting submission ${id}...`);
+    
+    // Use the AdminAuth helper
+    const result = await AdminAuth.rejectSubmission(id);
+    
+    logActivity('success', `Successfully rejected submission ${id}`);
+    
+    // Reload submissions
+    await loadSubmissions();
+    
+    showToast('Success', 'Submission rejected successfully!', 'success');
+  } catch (error) {
+    logActivity('error', `Error rejecting submission: ${error.message}`);
+    showToast('Error', `Failed to reject submission: ${error.message}`, 'error');
+  } finally {
+    document.getElementById('loading-indicator').style.display = 'none';
+  }
+}
+
+// Set a story as featured - FIXED IMPLEMENTATION
+async function setFeaturedStory(id) {
+  try {
+    // Find and update the card status
+    const card = document.querySelector(`[data-id="${id}"]`);
+    if (card) {
+      const actionDiv = card.querySelector('.flex.items-center.justify-end');
+      if (actionDiv) {
+        actionDiv.innerHTML = '<div class="text-gray-500"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
+      }
+    }
+    
+    document.getElementById('loading-indicator').style.display = 'flex';
+    
+    console.log(`Setting submission ${id} as featured - Starting direct Supabase update`);
+    
+    // Initialize Supabase client
+    const supabase = AdminAuth.initSupabase();
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+    
+    // STEP 1: DEBUGGING - Check current featured stories
+    const { data: currentFeatured, error: checkError } = await supabase
+      .from('submissions')
+      .select('id, app_name, featured')
+      .eq('featured', true);
+      
+    if (checkError) {
+      console.error("Error checking current featured stories:", checkError);
+    } else {
+      console.log("Current featured stories:", currentFeatured);
+    }
+    
+    // STEP 2: First, clear featured status from ALL stories
+    console.log("Clearing featured status from all stories");
+    const { error: clearError } = await supabase
+      .from('submissions')
+      .update({ featured: false })
+      .not('id', 'is', null); // Update all records
+      
+    if (clearError) {
+      console.error("Error clearing featured status:", clearError);
+      throw clearError;
+    }
+    
+    // STEP 3: Mark this story as featured
+    console.log(`Setting story ${id} as featured`);
+    const { data, error } = await supabase
+      .from('submissions')
+      .update({ featured: true })
+      .eq('id', id)
+      .select();
+      
+    if (error) {
+      console.error("Error setting featured story:", error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      console.error(`No story found with ID: ${id}`);
+      throw new Error(`No story found with ID: ${id}`);
+    }
+    
+    // STEP 4: DEBUGGING - Verify the update
+    const { data: verifyData, error: verifyError } = await supabase
+      .from('submissions')
+      .select('id, app_name, featured')
+      .eq('id', id);
+      
+    if (verifyError) {
+      console.error("Error verifying featured update:", verifyError);
+    } else {
+      console.log("Verification of featured update:", verifyData);
+    }
+    
+    // STEP 5: Update localStorage
+    AdminAuth.updateFeaturedInLocalStorage(id);
+    
+    console.log(`Successfully set submission ${id} as featured`);
+    
+    // Reload submissions
+    await loadSubmissions();
+    
+    showToast('Success', 'Story set as featured successfully!', 'success');
+  } catch (error) {
+    console.error(`Error setting featured story: ${error.message}`);
+    showToast('Error', `Failed to set story as featured: ${error.message}`, 'error');
+  } finally {
+    document.getElementById('loading-indicator').style.display = 'none';
+  }
+}
+
+// Unset a featured story
+async function unsetFeaturedStory(id) {
+  try {
+    // Find and update the card status
+    const card = document.querySelector(`[data-id="${id}"]`);
+    if (card) {
+      const actionDiv = card.querySelector('.flex.items-center.justify-end');
+      if (actionDiv) {
+        actionDiv.innerHTML = '<div class="text-gray-500"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
+      }
+    }
+    
+    document.getElementById('loading-indicator').style.display = 'flex';
+    
+    logActivity('info', `Removing featured status from submission ${id}...`);
+    
+    // Use the AdminAuth helper
+    const result = await AdminAuth.unsetFeaturedStory(id);
+    
+    logActivity('success', `Successfully removed featured status from submission ${id}`);
+    
+    // Reload submissions
+    await loadSubmissions();
+    
+    showToast('Success', 'Featured status removed successfully!', 'success');
+  } catch (error) {
+    logActivity('error', `Error removing featured status: ${error.message}`);
+    showToast('Error', `Failed to remove featured status: ${error.message}`, 'error');
+  } finally {
+    document.getElementById('loading-indicator').style.display = 'none';
+  }
+}
+
+// Change tab
+function changeTab(status) {
+  // Update current tab
+  currentTab = status;
+  logActivity('info', `Changed tab to "${status}"`);
+  
+  // Update UI
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    if (tab.dataset.status === status) {
+      tab.classList.add('bg-white', 'text-blue-600', 'border-blue-600');
+      tab.classList.remove('bg-gray-100', 'text-gray-600', 'border-transparent');
+    } else {
+      tab.classList.remove('bg-white', 'text-blue-600', 'border-blue-600');
+      tab.classList.add('bg-gray-100', 'text-gray-600', 'border-transparent');
+    }
+  });
+  
+  // Show/hide Clear Rejected button based on tab
+  const clearRejectedButton = document.getElementById('clear-rejected-button');
+  if (status === 'rejected') {
+    clearRejectedButton.classList.remove('hidden');
+  } else {
+    clearRejectedButton.classList.add('hidden');
+  }
+  
+  // Reset to first page
+  currentPage = 1;
+  
+  // Display submissions for the new tab
+  loadSubmissions();
+}
+
+// Clear all rejected submissions
+async function clearRejectedSubmissions() {
+  if (!confirm('Are you sure you want to clear ALL rejected submissions? This action cannot be undone.')) {
+    return;
+  }
+  
+  try {
+    document.getElementById('loading-indicator').style.display = 'flex';
+    document.getElementById('submissions').style.display = 'none';
+    document.getElementById('clear-rejected-button').disabled = true;
+    document.getElementById('clear-rejected-button').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Clearing...';
+    
+    logActivity('info', 'Clearing all rejected submissions');
+    
+    // Call the AdminAuth helper to clear rejected submissions
+    const result = await AdminAuth.clearRejectedSubmissions();
+    
+    logActivity('success', `Successfully cleared rejected submissions: ${result.message}`);
+    
+    // Reload submissions
+    await loadSubmissions();
+    
+    showToast('Success', 'All rejected submissions have been cleared', 'success');
+  } catch (error) {
+    logActivity('error', `Error clearing rejected submissions: ${error.message}`);
+    showToast('Error', `Failed to clear rejected submissions: ${error.message}`, 'error');
+  } finally {
+    document.getElementById('loading-indicator').style.display = 'none';
+    document.getElementById('clear-rejected-button').disabled = false;
+    document.getElementById('clear-rejected-button').innerHTML = '<i class="fas fa-trash-alt mr-2"></i> Clear All Rejected';
+  }
+}
+
+// Show full story in modal
+function showStory(submission) {
+  logActivity('info', `Viewing full story for ${submission.id} (${submission.appName})`);
+  
+  // Set modal title
+  document.getElementById('story-modal-title').textContent = submission.appName;
+  
+  // Create modal content
+  let modalContent = `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div>
+        <div class="text-xs text-gray-500">Submitted By</div>
+        <div class="text-sm font-medium">${submission.name || 'Unknown'}</div>
+      </div>
+      <div>
+        <div class="text-xs text-gray-500">Email</div>
+        <div class="text-sm font-medium">${submission.email || 'N/A'}</div>
+      </div>
+      <div>
+        <div class="text-xs text-gray-500">App Type</div>
+        <div class="text-sm font-medium">${submission.appType || submission.app_type || 'Not specified'}</div>
+      </div>
+      <div>
+        <div class="text-xs text-gray-500">Experience Level</div>
+        <div class="text-sm font-medium">${submission.experienceLevel || 'Not specified'}</div>
+      </div>
+    </div>
+    
+    <div class="mb-6">
+      <div class="text-xs text-gray-500">Testimonial</div>
+      <div class="text-sm italic bg-gray-50 p-3 rounded mt-1">${submission.testimonial || 'No testimonial provided'}</div>
+    </div>
+    
+    <div class="mb-6">
+      <div class="text-xs text-gray-500">Full Story</div>
+      <div class="text-sm bg-gray-50 p-3 rounded mt-1 whitespace-pre-line">${submission.story || 'No story provided'}</div>
+    </div>
+  `;
+  
+  document.getElementById('story-modal-content').innerHTML = modalContent;
+  
+  // Add images
+  const imagesContainer = document.getElementById('story-modal-images');
+  imagesContainer.innerHTML = '';
+  
+  if (submission.images && submission.images.length > 0) {
+    const hasImages = submission.images.some(img => img !== null && img !== '');
+    
+    if (hasImages) {
+      imagesContainer.innerHTML = '<div class="text-xs text-gray-500 mb-2">Images</div>';
+      
+      const imagesGrid = document.createElement('div');
+      imagesGrid.className = 'grid grid-cols-2 md:grid-cols-3 gap-4';
+      
+      submission.images.forEach((imageUrl, index) => {
+        if (imageUrl) {
+          const img = document.createElement('img');
+          img.src = imageUrl;
+          img.alt = `${submission.appName} Screenshot ${index + 1}`;
+          img.className = 'w-full h-32 object-cover rounded border border-gray-200 cursor-pointer';
+          img.onclick = function() {
+            showImage(imageUrl);
           };
-          actionsDiv.appendChild(approveButton);
-          
-          // Reject button
-          const rejectButton = document.createElement('button');
-          rejectButton.className = 'px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm';
-          rejectButton.innerHTML = '<i class="fas fa-times mr-1"></i> Reject';
-          rejectButton.onclick = function() {
-            rejectSubmission(submission.id);
-          };
-          actionsDiv.appendChild(rejectButton);
-        } else if (submission.status === 'approved') {
-          // Featured status indicator and button
-          const featuredButton = document.createElement('button');
-          
-          if (submission.featured) {
-            // If already featured, show indicator with ability to unfeature
-            featuredButton.className = 'px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors text-sm';
-            featuredButton.innerHTML = '<i class="fas fa-star mr-1"></i> Featured';
-            featuredButton.onclick = function() {
-              if (confirm('Remove featured status from this story?')) {
-                unsetFeaturedStory(submission.id);
-              }
-            };
-          } else {
-            // If not featured, show "Set as Featured" button
-            featuredButton.className = 'px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors text-sm';
-            featuredButton.innerHTML = '<i class="fas fa-star mr-1"></i> Set as Featured';
-            featuredButton.onclick = function() {
-              setFeaturedStory(submission.id);
-            };
-          }
-          
-          actionsDiv.appendChild(featuredButton);
-          
-          // Reject button (can change from approved to rejected)
-          const rejectButton = document.createElement('button');
-          rejectButton.className = 'px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm';
-          rejectButton.innerHTML = '<i class="fas fa-times mr-1"></i> Reject';
-          rejectButton.onclick = function() {
-            rejectSubmission(submission.id);
-          };
-          actionsDiv.appendChild(rejectButton);
-        } else if (submission.status === 'rejected') {
-          // Approve button (can change from rejected to approved)
-          const approveButton = document.createElement('button');
-          approveButton.className = 'px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm';
-          approveButton.innerHTML = '<i class="fas fa-check mr-1"></i> Approve';
-          approveButton.onclick = function() {
-            approveSubmission(submission.id);
-          };
-          actionsDiv.appendChild(approveButton);
+          imagesGrid.appendChild(img);
         }
-        
-        card.appendChild(actionsDiv);
-        
-        return card;
-      }
+      });
       
-      // Approve a submission using the AdminAuth helper
-      async function approveSubmission(id) {
-        try {
-          // Find and update the card status
-          const card = document.querySelector(`[data-id="${id}"]`);
-          if (card) {
-            const actionDiv = card.querySelector('.flex.items-center.justify-end');
-            if (actionDiv) {
-              actionDiv.innerHTML = '<div class="text-gray-500"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
-            }
-          }
-          
-          document.getElementById('loading-indicator').style.display = 'flex';
-          
-          logActivity('info', `Approving submission ${id}...`);
-          
-          // Use the AdminAuth helper
-          const result = await AdminAuth.approveSubmission(id);
-          
-          logActivity('success', `Successfully approved submission ${id}`);
-          
-          // Reload submissions
-          await loadSubmissions();
-          
-          showToast('Success', 'Submission approved successfully!', 'success');
-        } catch (error) {
-          logActivity('error', `Error approving submission: ${error.message}`);
-          showToast('Error', `Failed to approve submission: ${error.message}`, 'error');
-        } finally {
-          document.getElementById('loading-indicator').style.display = 'none';
-        }
-      }
-      
-      // Reject a submission using the AdminAuth helper
-      async function rejectSubmission(id) {
-        try {
-          // Find and update the card status
-          const card = document.querySelector(`[data-id="${id}"]`);
-          if (card) {
-            const actionDiv = card.querySelector('.flex.items-center.justify-end');
-            if (actionDiv) {
-              actionDiv.innerHTML = '<div class="text-gray-500"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
-            }
-          }
-          
-          document.getElementById('loading-indicator').style.display = 'flex';
-          
-          logActivity('info', `Rejecting submission ${id}...`);
-          
-          // Use the AdminAuth helper
-          const result = await AdminAuth.rejectSubmission(id);
-          
-          logActivity('success', `Successfully rejected submission ${id}`);
-          
-          // Reload submissions
-          await loadSubmissions();
-          
-          showToast('Success', 'Submission rejected successfully!', 'success');
-        } catch (error) {
-          logActivity('error', `Error rejecting submission: ${error.message}`);
-          showToast('Error', `Failed to reject submission: ${error.message}`, 'error');
-        } finally {
-          document.getElementById('loading-indicator').style.display = 'none';
-        }
-      }
-      
-      // Set a story as featured
-      async function setFeaturedStory(id) {
-        try {
-          // Find and update the card status
-          const card = document.querySelector(`[data-id="${id}"]`);
-          if (card) {
-            const actionDiv = card.querySelector('.flex.items-center.justify-end');
-            if (actionDiv) {
-              actionDiv.innerHTML = '<div class="text-gray-500"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
-            }
-          }
-          
-          document.getElementById('loading-indicator').style.display = 'flex';
-          
-          logActivity('info', `Setting submission ${id} as featured...`);
-          
-          // Use the AdminAuth helper
-          const result = await AdminAuth.setFeaturedStory(id);
-          
-          logActivity('success', `Successfully set submission ${id} as featured`);
-          
-          // Reload submissions
-          await loadSubmissions();
-          
-          showToast('Success', 'Story set as featured successfully!', 'success');
-        } catch (error) {
-          logActivity('error', `Error setting featured story: ${error.message}`);
-          showToast('Error', `Failed to set story as featured: ${error.message}`, 'error');
-        } finally {
-          document.getElementById('loading-indicator').style.display = 'none';
-        }
-      }
-      
-      // Unset a featured story
-      async function unsetFeaturedStory(id) {
-        try {
-          // Find and update the card status
-          const card = document.querySelector(`[data-id="${id}"]`);
-          if (card) {
-            const actionDiv = card.querySelector('.flex.items-center.justify-end');
-            if (actionDiv) {
-              actionDiv.innerHTML = '<div class="text-gray-500"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
-            }
-          }
-          
-          document.getElementById('loading-indicator').style.display = 'flex';
-          
-          logActivity('info', `Removing featured status from submission ${id}...`);
-          
-          // Use the AdminAuth helper
-          const result = await AdminAuth.unsetFeaturedStory(id);
-          
-          logActivity('success', `Successfully removed featured status from submission ${id}`);
-          
-          // Reload submissions
-          await loadSubmissions();
-          
-          showToast('Success', 'Featured status removed successfully!', 'success');
-        } catch (error) {
-          logActivity('error', `Error removing featured status: ${error.message}`);
-          showToast('Error', `Failed to remove featured status: ${error.message}`, 'error');
-        } finally {
-          document.getElementById('loading-indicator').style.display = 'none';
-        }
-      }
-      
-      // Change tab
-      function changeTab(status) {
-        // Update current tab
-        currentTab = status;
-        logActivity('info', `Changed tab to "${status}"`);
-        
-        // Update UI
-        const tabs = document.querySelectorAll('.tab');
-        tabs.forEach(tab => {
-          if (tab.dataset.status === status) {
-            tab.classList.add('bg-white', 'text-blue-600', 'border-blue-600');
-            tab.classList.remove('bg-gray-100', 'text-gray-600', 'border-transparent');
-          } else {
-            tab.classList.remove('bg-white', 'text-blue-600', 'border-blue-600');
-            tab.classList.add('bg-gray-100', 'text-gray-600', 'border-transparent');
-          }
-        });
-        
-        // Show/hide Clear Rejected button based on tab
-        const clearRejectedButton = document.getElementById('clear-rejected-button');
-        if (status === 'rejected') {
-          clearRejectedButton.classList.remove('hidden');
-        } else {
-          clearRejectedButton.classList.add('hidden');
-        }
-        
-        // Reset to first page
-        currentPage = 1;
-        
-        // Display submissions for the new tab
-        loadSubmissions();
-      }
-      
-      // Clear all rejected submissions
-      async function clearRejectedSubmissions() {
-        if (!confirm('Are you sure you want to clear ALL rejected submissions? This action cannot be undone.')) {
-          return;
-        }
-        
-        try {
-          document.getElementById('loading-indicator').style.display = 'flex';
-          document.getElementById('submissions').style.display = 'none';
-          document.getElementById('clear-rejected-button').disabled = true;
-          document.getElementById('clear-rejected-button').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Clearing...';
-          
-          logActivity('info', 'Clearing all rejected submissions');
-          
-          // Call the AdminAuth helper to clear rejected submissions
-          const result = await AdminAuth.clearRejectedSubmissions();
-          
-          logActivity('success', `Successfully cleared rejected submissions: ${result.message}`);
-          
-          // Reload submissions
-          await loadSubmissions();
-          
-          showToast('Success', 'All rejected submissions have been cleared', 'success');
-        } catch (error) {
-          logActivity('error', `Error clearing rejected submissions: ${error.message}`);
-          showToast('Error', `Failed to clear rejected submissions: ${error.message}`, 'error');
-        } finally {
-          document.getElementById('loading-indicator').style.display = 'none';
-          document.getElementById('clear-rejected-button').disabled = false;
-          document.getElementById('clear-rejected-button').innerHTML = '<i class="fas fa-trash-alt mr-2"></i> Clear All Rejected';
-        }
-      }
-      
-      // Show full story in modal
-      function showStory(submission) {
-        logActivity('info', `Viewing full story for ${submission.id} (${submission.appName})`);
-        
-        // Set modal title
-        document.getElementById('story-modal-title').textContent = submission.appName;
-        
-        // Create modal content
-        let modalContent = `
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <div class="text-xs text-gray-500">Submitted By</div>
-              <div class="text-sm font-medium">${submission.name || 'Unknown'}</div>
-            </div>
-            <div>
-              <div class="text-xs text-gray-500">Email</div>
-              <div class="text-sm font-medium">${submission.email || 'N/A'}</div>
-            </div>
-            <div>
-              <div class="text-xs text-gray-500">App Type</div>
-              <div class="text-sm font-medium">${submission.appType || submission.app_type || 'Not specified'}</div>
-            </div>
-            <div>
-              <div class="text-xs text-gray-500">Experience Level</div>
-              <div class="text-sm font-medium">${submission.experienceLevel || 'Not specified'}</div>
-            </div>
-          </div>
-          
-          <div class="mb-6">
-            <div class="text-xs text-gray-500">Testimonial</div>
-            <div class="text-sm italic bg-gray-50 p-3 rounded mt-1">${submission.testimonial || 'No testimonial provided'}</div>
-          </div>
-          
-          <div class="mb-6">
-            <div class="text-xs text-gray-500">Full Story</div>
-            <div class="text-sm bg-gray-50 p-3 rounded mt-1 whitespace-pre-line">${submission.story || 'No story provided'}</div>
-          </div>
-        `;
-        
-        document.getElementById('story-modal-content').innerHTML = modalContent;
-        
-        // Add images
-        const imagesContainer = document.getElementById('story-modal-images');
-        imagesContainer.innerHTML = '';
-        
-        if (submission.images && submission.images.length > 0) {
-          const hasImages = submission.images.some(img => img !== null && img !== '');
-          
-          if (hasImages) {
-            imagesContainer.innerHTML = '<div class="text-xs text-gray-500 mb-2">Images</div>';
-            
-            const imagesGrid = document.createElement('div');
-            imagesGrid.className = 'grid grid-cols-2 md:grid-cols-3 gap-4';
-            
-            submission.images.forEach((imageUrl, index) => {
-              if (imageUrl) {
-                const img = document.createElement('img');
-                img.src = imageUrl;
-                img.alt = `${submission.appName} Screenshot ${index + 1}`;
-                img.className = 'w-full h-32 object-cover rounded border border-gray-200 cursor-pointer';
-                img.onclick = function() {
-                  showImage(imageUrl);
-                };
-                imagesGrid.appendChild(img);
-              }
-            });
-            
-            imagesContainer.appendChild(imagesGrid);
-            imagesContainer.style.display = 'block';
-          } else {
-            imagesContainer.style.display = 'none';
-          }
-        } else {
-          imagesContainer.style.display = 'none';
-        }
-        
-        // Show modal
-        document.getElementById('story-modal').classList.remove('hidden');
-      }
-      
-      // Close the modal
-      function closeStoryModal() {
-        document.getElementById('story-modal').classList.add('hidden');
-      }
-      
-      // Show image in viewer
-      function showImage(imageUrl) {
-        document.getElementById('full-image').src = imageUrl;
-        document.getElementById('image-viewer').classList.remove('hidden');
-      }
-      
-      // Close image viewer
-      function closeImageViewer() {
-        document.getElementById('image-viewer').classList.add('hidden');
-      }
-      
-      // Show empty state
-      function showEmptyState() {
-        document.getElementById('submissions').style.display = 'none';
-        document.getElementById('empty-state').style.display = 'block';
-        document.getElementById('pagination').innerHTML = '';
-        logActivity('info', 'Showing empty state - no submissions found');
-      }
-      
-      // Update pagination UI
-      function updatePagination(totalPages) {
-        const paginationContainer = document.getElementById('pagination');
-        paginationContainer.innerHTML = '';
-        
-        // Only show pagination if more than one page
-        if (totalPages <= 1) {
-          return;
-        }
-        
-        // Previous button
-        const prevButton = document.createElement('button');
-        prevButton.className = `px-3 py-2 border rounded-l ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-blue-600 hover:bg-blue-50'}`;
-        prevButton.textContent = 'Previous';
-        prevButton.disabled = currentPage === 1;
-        prevButton.onclick = function() {
-          if (currentPage > 1) {
-            currentPage--;
-            displaySubmissions();
-          }
-        };
-        paginationContainer.appendChild(prevButton);
-        
-        // Page buttons
-        const maxVisiblePages = 5;
-        const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-        const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-        
-        // First page button if needed
-        if (startPage > 1) {
-          const firstPageButton = document.createElement('button');
-          firstPageButton.className = 'px-3 py-2 border-t border-b border-l bg-white text-blue-600 hover:bg-blue-50';
-          firstPageButton.textContent = '1';
-          firstPageButton.onclick = function() {
-            currentPage = 1;
-            displaySubmissions();
-          };
-          paginationContainer.appendChild(firstPageButton);
-          
-          // Ellipsis if needed
-          if (startPage > 2) {
-            const ellipsis = document.createElement('span');
-            ellipsis.className = 'px-3 py-2 border-t border-b border-l bg-white text-gray-500';
-            ellipsis.textContent = '...';
-            paginationContainer.appendChild(ellipsis);
-          }
-        }
-        
-        // Page buttons
-        for (let i = startPage; i <= endPage; i++) {
-          const pageButton = document.createElement('button');
-          pageButton.className = `px-3 py-2 border-t border-b border-l ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'}`;
-          pageButton.textContent = i;
-          pageButton.onclick = function() {
-            currentPage = i;
-            displaySubmissions();
-          };
-          paginationContainer.appendChild(pageButton);
-        }
-        
-        // Last page button if needed
-        if (endPage < totalPages) {
-          // Ellipsis if needed
-          if (endPage < totalPages - 1) {
-            const ellipsis = document.createElement('span');
-            ellipsis.className = 'px-3 py-2 border-t border-b border-l bg-white text-gray-500';
-            ellipsis.textContent = '...';
-            paginationContainer.appendChild(ellipsis);
-          }
-          
-          const lastPageButton = document.createElement('button');
-          lastPageButton.className = 'px-3 py-2 border-t border-b border-l bg-white text-blue-600 hover:bg-blue-50';
-          lastPageButton.textContent = totalPages;
-          lastPageButton.onclick = function() {
-            currentPage = totalPages;
-            displaySubmissions();
-          };
-          paginationContainer.appendChild(lastPageButton);
-        }
-        
-        // Next button
-        const nextButton = document.createElement('button');
-        nextButton.className = `px-3 py-2 border rounded-r ${currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-blue-600 hover:bg-blue-50'}`;
-        nextButton.textContent = 'Next';
-        nextButton.disabled = currentPage === totalPages;
-        nextButton.onclick = function() {
-          if (currentPage < totalPages) {
-            currentPage++;
-            displaySubmissions();
-          }
-        };
-        paginationContainer.appendChild(nextButton);
-      }
-      
-      // Show toast notification
-      function showToast(title, message, type) {
-        // Create toast element
-        const toast = document.createElement('div');
-        toast.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg flex items-start gap-3 transition-opacity duration-300 z-50 ${
-          type === 'success' ? 'bg-green-100 text-green-800 border-l-4 border-green-500' : 
-          type === 'error' ? 'bg-red-100 text-red-800 border-l-4 border-red-500' : 
-          'bg-blue-100 text-blue-800 border-l-4 border-blue-500'
-        }`;
-        
-        // Toast content
-        toast.innerHTML = `
-          <div class="flex-shrink-0 pt-0.5">
-            <i class="fas ${
-              type === 'success' ? 'fa-check-circle text-green-500' : 
-              type === 'error' ? 'fa-exclamation-circle text-red-500' : 
-              'fa-info-circle text-blue-500'
-            }"></i>
-          </div>
-          <div class="flex-1">
-            <p class="font-medium">${title}</p>
-            <p class="text-sm mt-1">${message}</p>
-          </div>
-          <button type="button" class="flex-shrink-0 ml-4" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-          </button>
-        `;
-        
-        // Add to DOM
-        document.body.appendChild(toast);
-        
-        // Remove after 5 seconds
-        setTimeout(() => {
-          toast.style.opacity = '0';
-          setTimeout(() => {
-            toast.remove();
-          }, 300);
-        }, 5000);
-      }
-    </script>
+      imagesContainer.appendChild(imagesGrid);
+      imagesContainer.style.display = 'block';
+    } else {
+      imagesContainer.style.display = 'none';
+    }
+  } else {
+    imagesContainer.style.display = 'none';
+  }
+  
+  // Show modal
+  document.getElementById('story-modal').classList.remove('hidden');
+}
+
+// Close the modal
+function closeStoryModal() {
+  document.getElementById('story-modal').classList.add('hidden');
+}
+
+// Show image in viewer
+function showImage(imageUrl) {
+  document.getElementById('full-image').src = imageUrl;
+  document.getElementById('image-viewer').classList.remove('hidden');
+}
+
+// Close image viewer
+function closeImageViewer() {
+  document.getElementById('image-viewer').classList.add('hidden');
+}
+
+// Show empty state
+function showEmptyState() {
+  document.getElementById('submissions').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'block';
+  document.getElementById('pagination').innerHTML = '';
+  logActivity('info', 'Showing empty state - no submissions found');
+}
+
+// Update pagination UI
+function updatePagination(totalPages) {
+  const paginationContainer = document.getElementById('pagination');
+  paginationContainer.innerHTML = '';
+  
+  // Only show pagination if more than one page
+  if (totalPages <= 1) {
+    return;
+  }
+  
+  // Previous button
+  const prevButton = document.createElement('button');
+  prevButton.className = `px-3 py-2 border rounded-l ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-blue-600 hover:bg-blue-50'}`;
+  prevButton.textContent = 'Previous';
+  prevButton.disabled = currentPage === 1;
+  prevButton.onclick = function() {
+    if (currentPage > 1) {
+      currentPage--;
+      displaySubmissions();
+    }
+  };
+  paginationContainer.appendChild(prevButton);
+  
+  // Page buttons
+  const maxVisiblePages = 5;
+  const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+  const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+  
+  // First page button if needed
+  if (startPage > 1) {
+    const firstPageButton = document.createElement('button');
+    firstPageButton.className = 'px-3 py-2 border-t border-b border-l bg-white text-blue-600 hover:bg-blue-50';
+    firstPageButton.textContent = '1';
+    firstPageButton.onclick = function() {
+      currentPage = 1;
+      displaySubmissions();
+    };
+    paginationContainer.appendChild(firstPageButton);
+    
+    // Ellipsis if needed
+    if (startPage > 2) {
+      const ellipsis = document.createElement('span');
+      ellipsis.className = 'px-3 py-2 border-t border-b border-l bg-white text-gray-500';
+      ellipsis.textContent = '...';
+      paginationContainer.appendChild(ellipsis);
+    }
+  }
+  
+  // Page buttons
+  for (let i = startPage; i <= endPage; i++) {
+    const pageButton = document.createElement('button');
+    pageButton.className = `px-3 py-2 border-t border-b border-l ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 hover:bg-blue-50'}`;
+    pageButton.textContent = i;
+    pageButton.onclick = function() {
+      currentPage = i;
+      displaySubmissions();
+    };
+    paginationContainer.appendChild(pageButton);
+  }
+  
+  // Last page button if needed
+  if (endPage < totalPages) {
+    // Ellipsis if needed
+    if (endPage < totalPages - 1) {
+      const ellipsis = document.createElement('span');
+      ellipsis.className = 'px-3 py-2 border-t border-b border-l bg-white text-gray-500';
+      ellipsis.textContent = '...';
+      paginationContainer.appendChild(ellipsis);
+    }
+    
+    const lastPageButton = document.createElement('button');
+    lastPageButton.className = 'px-3 py-2 border-t border-b border-l bg-white text-blue-600 hover:bg-blue-50';
+    lastPageButton.textContent = totalPages;
+    lastPageButton.onclick = function() {
+      currentPage = totalPages;
+      displaySubmissions();
+    };
+    paginationContainer.appendChild(lastPageButton);
+  }
+  
+  // Next button
+  const nextButton = document.createElement('button');
+  nextButton.className = `px-3 py-2 border rounded-r ${currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-blue-600 hover:bg-blue-50'}`;
+  nextButton.textContent = 'Next';
+  nextButton.disabled = currentPage === totalPages;
+  nextButton.onclick = function() {
+    if (currentPage < totalPages) {
+      currentPage++;
+      displaySubmissions();
+    }
+  };
+  paginationContainer.appendChild(nextButton);
+}
+
+// Show toast notification
+function showToast(title, message, type) {
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg flex items-start gap-3 transition-opacity duration-300 z-50 ${
+    type === 'success' ? 'bg-green-100 text-green-800 border-l-4 border-green-500' : 
+    type === 'error' ? 'bg-red-100 text-red-800 border-l-4 border-red-500' : 
+    'bg-blue-100 text-blue-800 border-l-4 border-blue-500'
+  }`;
+  
+  // Toast content
+  toast.innerHTML = `
+    <div class="flex-shrink-0 pt-0.5">
+      <i class="fas ${
+        type === 'success' ? 'fa-check-circle text-green-500' : 
+        type === 'error' ? 'fa-exclamation-circle text-red-500' : 
+        'fa-info-circle text-blue-500'
+      }"></i>
+    </div>
+    <div class="flex-1">
+      <p class="font-medium">${title}</p>
+      <p class="text-sm mt-1">${message}</p>
+    </div>
+    <button type="button" class="flex-shrink-0 ml-4" onclick="this.parentElement.remove()">
+      <i class="fas fa-times"></i>
+    </button>
+  `;
+  
+  // Add to DOM
+  document.body.appendChild(toast);
+  
+  // Remove after 5 seconds
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 5000);
+}
+</script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <header class="bg-white shadow-sm">
