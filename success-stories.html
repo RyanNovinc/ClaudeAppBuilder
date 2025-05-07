@@ -33,115 +33,6 @@
         return this.supabaseClient;
       },
       
-      // Get the featured story directly from Supabase
-      async getFeaturedStory() {
-        try {
-          console.log("🔍 Fetching featured story from Supabase...");
-          
-          // Make sure Supabase client is initialized
-          const client = this.initSupabase();
-          if (!client) {
-            throw new Error("Failed to initialize Supabase client");
-          }
-          
-          // Query for the featured story - FIXED QUERY
-          // This now specifically looks for featured = true
-          const { data, error } = await client
-            .from('submissions')
-            .select('*')
-            .eq('status', 'approved')
-            .eq('featured', true)
-            .limit(1);
-            
-          if (error) {
-            console.error("❌ Supabase query error:", error);
-            throw error;
-          }
-          
-          if (data && data.length > 0) {
-            console.log("✅ Found featured story:", data[0].app_name);
-            return this.formatSubmission(data[0]);
-          } else {
-            console.log("⚠️ No featured story found in database. Checking for any approved story...");
-            
-            // If no featured story, try to get any approved story
-            const { data: approvedData, error: approvedError } = await client
-              .from('submissions')
-              .select('*')
-              .eq('status', 'approved')
-              .order('created_at', { ascending: false })
-              .limit(1);
-              
-            if (approvedError) {
-              console.error("❌ Supabase query error:", approvedError);
-              throw approvedError;
-            }
-            
-            if (approvedData && approvedData.length > 0) {
-              console.log("✅ Using first approved story as featured:", approvedData[0].app_name);
-              return this.formatSubmission(approvedData[0]);
-            }
-            
-            console.log("⚠️ No approved stories found in database");
-            return null;
-          }
-        } catch (e) {
-          console.error("❌ Error fetching featured story:", e);
-          // Try to fall back to localStorage
-          return this.getFeaturedStoryFromLocalStorage();
-        }
-      },
-      
-      // Added fallback to get featured story from localStorage
-      getFeaturedStoryFromLocalStorage() {
-        try {
-          console.log("🔍 Trying to get featured story from localStorage...");
-          
-          // Check if we have a featured story ID
-          const featuredStoryId = localStorage.getItem('appfoundry_featured_story');
-          
-          if (featuredStoryId) {
-            // Get all submissions
-            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-            
-            // Find the featured story
-            const featuredStory = submissions.find(story => 
-              story.id === featuredStoryId && story.status === 'approved'
-            );
-            
-            if (featuredStory) {
-              console.log("✅ Found featured story in localStorage:", featuredStory.appName || featuredStory.app_name);
-              return featuredStory;
-            }
-          }
-          
-          // Try to find any story marked as featured
-          const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions') || '[]');
-          const featuredStory = submissions.find(story => 
-            story.featured === true && story.status === 'approved'
-          );
-          
-          if (featuredStory) {
-            console.log("✅ Found story marked as featured in localStorage:", featuredStory.appName || featuredStory.app_name);
-            return featuredStory;
-          }
-          
-          // If no featured story found, return the first approved story
-          const approvedStories = submissions.filter(story => story.status === 'approved');
-          
-          if (approvedStories.length > 0) {
-            console.log("✅ Using first approved story from localStorage as featured:", approvedStories[0].appName || approvedStories[0].app_name);
-            return approvedStories[0];
-          }
-          
-          console.log("⚠️ No suitable story found in localStorage");
-          return null;
-        } catch (e) {
-          console.error("❌ Error getting featured story from localStorage:", e);
-          return null;
-        }
-      },
-      
       // Get all approved stories
       async getApprovedStories() {
         try {
@@ -211,8 +102,7 @@
           story: item.story,
           images: this.parseCloudinaryImages(item.cloudinary_images || item.images), // Handle both naming conventions
           date: item.created_at || item.date, // Handle both naming conventions
-          status: item.status,
-          featured: item.featured || false
+          status: item.status
         };
       },
       
@@ -497,80 +387,6 @@
         
         .view-story-button:hover {
             background-color: var(--primary-hover);
-        }
-        
-        .featured-story {
-            background-color: var(--background-white);
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--box-shadow);
-            margin-bottom: 40px;
-        }
-        
-        .featured-story-grid {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-        }
-        
-        .featured-story-content {
-            padding: 40px;
-        }
-        
-        .featured-tag {
-            display: inline-block;
-            background-color: rgba(255, 76, 0, 0.1);
-            color: var(--secondary-color);
-            font-size: 0.875rem;
-            font-weight: 600;
-            padding: 6px 12px;
-            border-radius: 30px;
-            margin-bottom: 20px;
-        }
-        
-        .featured-story-content h3 {
-            font-size: 1.75rem;
-            margin-bottom: 10px;
-            color: var(--text-dark);
-        }
-        
-        .featured-story-meta {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        
-        .featured-app-info .app-name {
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-        
-        .featured-app-info .app-category {
-            margin-left: 10px;
-            vertical-align: middle;
-        }
-        
-        .featured-story-quote {
-            font-style: italic;
-            font-size: 1.25rem;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            color: var(--text-dark);
-            position: relative;
-            padding-left: 20px;
-            border-left: 3px solid var(--primary-color);
-        }
-        
-        .featured-story-text {
-            color: var(--text-medium);
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-        
-        .featured-story-image {
-            height: 100%;
-            width: 100%;
-            object-fit: cover;
         }
         
         .methodology-section {
@@ -903,16 +719,6 @@
             100% { transform: rotate(360deg); }
         }
         
-        @media (max-width: 1024px) {
-            .featured-story-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .featured-story-image {
-                height: 300px;
-            }
-        }
-        
         @media (max-width: 768px) {
             .app-showcase h2,
             .methodology-section h2,
@@ -934,14 +740,6 @@
             
             .success-header p {
                 font-size: 1rem;
-            }
-            
-            .featured-story-content {
-                padding: 25px;
-            }
-            
-            .featured-story-quote {
-                font-size: 1.125rem;
             }
             
             .modal-content {
@@ -984,14 +782,6 @@
         <div class="success-header">
             <h1>Real People, Real Apps, Zero Coding</h1>
             <p>See the amazing apps our students have built without writing a single line of code using our AI-powered approach</p>
-        </div>
-        
-        <!-- Featured Story - Loading state -->
-        <div id="featured-story-container" class="featured-story">
-            <div class="loading-container">
-                <div class="loading-spinner"></div>
-                <div>Loading featured story...</div>
-            </div>
         </div>
         
         <div class="app-showcase">
@@ -1145,82 +935,11 @@
             console.log("Initializing page...");
             
             try {
-                // Load the featured story
-                await loadFeaturedStory();
-                
                 // Load all approved stories
                 await loadApprovedStories();
             } catch (error) {
                 console.error("Error initializing page:", error);
                 showEmptyState();
-            }
-        }
-        
-        // Load the featured story
-        async function loadFeaturedStory() {
-            const featuredStoryContainer = document.getElementById('featured-story-container');
-            
-            try {
-                console.log("Loading featured story...");
-                
-                // Get the featured story from Supabase
-                const featuredStory = await StoryManager.getFeaturedStory();
-                
-                if (featuredStory) {
-                    console.log("Featured story loaded:", featuredStory.appName);
-                    
-                    // Update the featured story section
-                    featuredStoryContainer.innerHTML = `
-                        <div class="featured-story-grid">
-                            <div class="featured-story-content">
-                                <div class="featured-tag">Featured Success Story</div>
-                                <h3>${featuredStory.appName || 'Amazing App'}</h3>
-                                <div class="featured-story-meta">
-                                    <div class="modal-avatar">
-                                        ${getInitial(featuredStory.name)}
-                                    </div>
-                                    <div class="featured-app-info">
-                                        <div>${featuredStory.name || 'Anonymous'}</div>
-                                        <div class="app-name">${featuredStory.appName || 'App'}</div>
-                                        <div>
-                                            <span class="app-category">${featuredStory.appType || 'App'}</span>
-                                            <span class="experience-level">${featuredStory.experienceLevel || 'Beginner'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="featured-story-quote">
-                                    "${featuredStory.testimonial || 'Amazing experience building with AppFoundry!'}"
-                                </div>
-                                <div class="featured-story-text">
-                                    ${(featuredStory.story || 'No detailed story provided.').split('\n').map(paragraph => `<p>${paragraph}</p>`).join('')}
-                                </div>
-                                <div class="text-sm text-gray-500 mt-4">Submitted on ${formatDate(featuredStory.date)}</div>
-                                <a href="#" class="cta-button view-story-button" data-story-id="${featuredStory.id}">Read Full Story</a>
-                            </div>
-                            <img src="${featuredStory.images && featuredStory.images.length > 0 && featuredStory.images[0] ? featuredStory.images[0] : 'images/app-placeholder.jpg'}" 
-                                alt="${featuredStory.appName} App" class="featured-story-image">
-                        </div>
-                    `;
-                    
-                    // Add event listener to the story button
-                    featuredStoryContainer.querySelector('.view-story-button').addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const storyId = this.getAttribute('data-story-id');
-                        openStoryModal(storyId);
-                    });
-                } else {
-                    console.log("No featured story found.");
-                    featuredStoryContainer.style.display = 'none';
-                }
-            } catch (error) {
-                console.error("Error loading featured story:", error);
-                featuredStoryContainer.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📱</div>
-                        <h3>No Featured Story Yet</h3>
-                        <p>Check back soon for our featured success story!</p>
-                    </div>
-                `;
             }
         }
         
@@ -1237,43 +956,23 @@
                 if (stories && stories.length > 0) {
                     console.log(`${stories.length} approved stories loaded`);
                     
-                    // Check if we have a featured story
-                    const featuredStory = await StoryManager.getFeaturedStory();
-                    let storiesToDisplay = stories;
-                    
-                    // If there's a featured story, filter it out
-                    if (featuredStory) {
-                        storiesToDisplay = stories.filter(story => story.id !== featuredStory.id);
-                    }
-                    
                     // Clear the loading state
                     appsGrid.innerHTML = '';
                     
                     // Create HTML for app cards
-                    if (storiesToDisplay.length > 0) {
-                        storiesToDisplay.forEach(story => {
-                            const appCard = createAppCard(story);
-                            appsGrid.innerHTML += appCard;
+                    stories.forEach(story => {
+                        const appCard = createAppCard(story);
+                        appsGrid.innerHTML += appCard;
+                    });
+                    
+                    // Add event listeners to view buttons
+                    appsGrid.querySelectorAll('.view-story-button').forEach(button => {
+                        button.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const storyId = this.getAttribute('data-story-id');
+                            openStoryModal(storyId);
                         });
-                        
-                        // Add event listeners to view buttons
-                        appsGrid.querySelectorAll('.view-story-button').forEach(button => {
-                            button.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                const storyId = this.getAttribute('data-story-id');
-                                openStoryModal(storyId);
-                            });
-                        });
-                    } else {
-                        // If no non-featured stories, show empty state
-                        appsGrid.innerHTML = `
-                            <div class="empty-state">
-                                <div class="empty-state-icon">📱</div>
-                                <h3>No Additional Stories Yet</h3>
-                                <p>Check out our featured story above!</p>
-                            </div>
-                        `;
-                    }
+                    });
                 } else {
                     console.log("No approved stories found");
                     showEmptyState();
@@ -1287,15 +986,6 @@
         // Show empty state
         function showEmptyState() {
             const appsGrid = document.getElementById('apps-grid');
-            const featuredStoryContainer = document.getElementById('featured-story-container');
-            
-            featuredStoryContainer.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">📱</div>
-                    <h3>No Featured Story Yet</h3>
-                    <p>Check back soon for our featured success story!</p>
-                </div>
-            `;
             
             appsGrid.innerHTML = `
                 <div class="empty-state">
