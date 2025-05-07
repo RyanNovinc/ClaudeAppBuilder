@@ -1,0 +1,81 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AppFoundry - Build AI-Powered Apps Without Coding | No-Code App Development</title>
+    
+<!-- Story Manager Script - IMPORTANT: This must be the first script in the head -->
+<script>
+// Universal Story Manager - ensures stories are consistently available
+(function() {
+  // Run on all pages to ensure localStorage data consistency
+  console.log("📊 Story Manager initializing on index page");
+  
+  // Check if we need to seed the localStorage from our backup
+  function seedStoriesIfNeeded() {
+    // Only run if appfoundry_submissions doesn't exist or is empty
+    if (!localStorage.getItem('appfoundry_submissions')) {
+      console.log("🌱 No stories found in localStorage, checking for seed data");
+      
+      // Check if we have any stories in our seed
+      if (localStorage.getItem('appfoundry_approved_seed')) {
+        console.log("🔄 Restoring stories from seed");
+        try {
+          const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+          localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+          console.log("✅ Successfully restored", seed.length, "stories from seed");
+        } catch (e) {
+          console.error("❌ Error restoring from seed:", e);
+        }
+      }
+    } else {
+      // If we have submissions, make sure we have an up-to-date seed
+      try {
+        const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+        localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+        console.log("💾 Seed updated with", submissions.length, "stories");
+      } catch (e) {
+        console.error("❌ Error updating seed:", e);
+      }
+    }
+  }
+  
+  // Run the seed check immediately
+  seedStoriesIfNeeded();
+})();
+</script>
+    
+<link rel="stylesheet" href="styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary-color: #0070f3;
+        --primary-hover: #0055b3;
+        --secondary-color: #ff4c00;
+        --secondary-hover: #e54400;
+        --success-color: #10b981;
+        --warning-color: #fbbf24;
+        --error-color: #ef4444;
+        --text-dark: #111827;
+        --text-medium: #4b5563;
+        --text-light: #6b7280;
+        --background-white: #ffffff;
+        --background-light: #f9fafb;
+        --border-light: #e5e7eb;
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        --border-radius: 12px;
+        --transition-fast: 0.2s;
+    }
+    
+    /* Improved floating elements */
+    .floating-element {
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.6;
+        z-index: 0;
+        animation: float 10s ease-in-out infinite;
+    }
+    
+    /* All your other CSS styles would go here */
+    /* Copy and paste the rest of your CSS from your original index.html */
+</style>
