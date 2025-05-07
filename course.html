@@ -145,6 +145,73 @@
             color: #6b7280;
         }
         
+        .app-download-callout {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f0fd 100%);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #0070f3;
+        }
+
+        .callout-icon {
+            font-size: 40px;
+            margin-right: 25px;
+        }
+
+        .callout-content {
+            flex: 1;
+        }
+
+        .callout-content h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            color: #1e293b;
+        }
+
+        .callout-content p {
+            margin-bottom: 20px;
+            color: #475569;
+        }
+
+        .app-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .app-button {
+            height: 40px;
+            transition: transform 0.2s;
+        }
+
+        .app-button:hover {
+            transform: translateY(-3px);
+        }
+
+        .app-button img {
+            height: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .app-download-callout {
+                flex-direction: column;
+                text-align: center;
+                padding: 25px;
+            }
+            
+            .callout-icon {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            
+            .app-buttons {
+                justify-content: center;
+            }
+        }
+        
         .extra-resources {
             background-color: white;
             border-radius: 12px;
@@ -284,6 +351,23 @@
                     <p>You were last working on Module 1: Setting Up Your Environment</p>
                 </div>
                 <a href="modules/module1.html" class="module-button">Continue Learning</a>
+            </div>
+            
+            <!-- App download callout -->
+            <div class="app-download-callout">
+                <div class="callout-icon">📱</div>
+                <div class="callout-content">
+                    <h3>Take Your Learning On The Go</h3>
+                    <p>Download our companion React Native app for mobile access to all course materials, community discussions, and more.</p>
+                    <div class="app-buttons">
+                        <a href="#" class="app-button">
+                            <img src="images/app-store-badge.png" alt="App Store">
+                        </a>
+                        <a href="#" class="app-button">
+                            <img src="images/google-play-badge.png" alt="Google Play">
+                        </a>
+                    </div>
+                </div>
             </div>
             
             <!-- Module Grid -->
