@@ -52,11 +52,11 @@
         <div class="course-preview-card">
             <div class="video-container">
                 <div class="video-overlay"></div>
-                <video poster="images/demo-video-thumbnail.jpg" class="preview-video">
+                <video poster="images/demo-video-thumbnail.jpg" class="preview-video" id="preview-video">
                     <source src="videos/appfoundry-demo.mp4" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
-                <button class="play-button" aria-label="Play video">
+                <button class="play-button" aria-label="Play video" onclick="playVideo()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="none">
                         <polygon points="5,3 19,12 5,21"/>
                     </svg>
@@ -96,34 +96,37 @@
             </div>
         </div>
     </div>
-    
-    <!-- Trusted by tech section -->
+</section>
+
+<!-- Built with technology section -->
+<div class="tech-section">
     <div class="container">
-        <div class="trusted-by">
-            <div class="trusted-label">Built with the latest technology</div>
-            <div class="tech-logos">
-                <div class="tech-logo">
-                    <img src="images/claude-logo.png" alt="Claude AI" width="80">
-                </div>
-                <div class="tech-logo">
-                    <img src="images/vscode-logo.png" alt="VS Code" width="80">
-                </div>
-                <div class="tech-logo">
-                    <img src="images/react-native-logo.png" alt="React Native" width="80">
-                </div>
-                <div class="tech-logo">
-                    <img src="images/expo-logo.png" alt="Expo" width="80">
-                </div>
+        <h3 class="tech-heading">BUILT WITH THE LATEST TECHNOLOGY</h3>
+        <div class="tech-logo-container">
+            <div class="tech-logo">
+                <img src="images/claude-logo.png" alt="Claude AI" width="80">
+            </div>
+            <div class="tech-logo">
+                <img src="images/vscode-logo.png" alt="VS Code" width="80">
+            </div>
+            <div class="tech-logo">
+                <img src="images/react-native-logo.png" alt="React Native" width="80">
+            </div>
+            <div class="tech-logo">
+                <img src="images/expo-logo.png" alt="Expo" width="80">
+            </div>
+            <div class="tech-logo">
+                <img src="images/supabase-logo.png" alt="Supabase" width="80">
             </div>
         </div>
     </div>
-</section>
+</div>
 
 <style>
 /* Hero section styling */
 .hero {
     position: relative;
-    padding: 120px 0 100px;
+    padding: 120px 0 50px; /* Reduced bottom padding to accommodate tech section */
     overflow: hidden;
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     z-index: 1;
@@ -506,26 +509,29 @@
     border-radius: 50%;
 }
 
-/* Trusted by section */
-.trusted-by {
-    margin-top: 80px;
-    text-align: center;
-    padding: 20px 0;
-    border-top: 1px solid var(--border-light);
+/* Tech section styling */
+.tech-section {
     position: relative;
-    z-index: 2;
+    margin-top: -20px; /* Pull up the section to overlap with hero */
+    margin-bottom: 60px;
+    z-index: 10;
 }
 
-.trusted-label {
-    font-size: 1rem;
-    color: var(--text-light);
+.tech-heading {
+    text-align: center;
+    color: var(--text-medium);
+    font-size: 0.9rem;
+    letter-spacing: 1.5px;
+    font-weight: 600;
     margin-bottom: 20px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600;
 }
 
-.tech-logos {
+.tech-logo-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    padding: 30px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -534,8 +540,11 @@
 }
 
 .tech-logo {
-    opacity: 0.7;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: all 0.3s ease;
 }
 
 .tech-logo:hover {
@@ -543,58 +552,14 @@
     transform: translateY(-5px);
 }
 
-/* Video modal styles */
-.video-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.video-modal.active {
-    display: flex;
-    opacity: 1;
-}
-
-.modal-content {
-    width: 80%;
-    max-width: 900px;
-    position: relative;
-}
-
-.close-modal {
-    position: absolute;
-    top: -40px;
-    right: 0;
-    color: white;
-    font-size: 2rem;
-    cursor: pointer;
-    z-index: 1001;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-video {
-    width: 100%;
-    border-radius: 8px;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-}
-
 /* Responsive styles */
 @media (max-width: 1200px) {
     .hero-headline {
         font-size: 3.25rem;
+    }
+    
+    .tech-logo-container {
+        gap: 30px;
     }
 }
 
@@ -651,8 +616,13 @@
         padding: 16px 24px;
     }
     
-    .tech-logos {
-        gap: 30px;
+    .tech-logo-container {
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .tech-logo img {
+        width: 60px;
     }
 }
 
@@ -670,50 +640,47 @@
     .meta-item {
         font-size: 0.85rem;
     }
+    
+    .tech-logo img {
+        width: 50px;
+    }
+    
+    .tech-logo-container {
+        padding: 15px;
+    }
 }
 </style>
 
-<!-- JavaScript for video modal functionality -->
+<!-- JavaScript for video functionality -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Create video modal elements
-    const modalElement = document.createElement('div');
-    modalElement.className = 'video-modal';
-    modalElement.innerHTML = `
-        <div class="modal-content">
-            <div class="close-modal">&times;</div>
-            <video controls class="modal-video">
-                <source src="videos/appfoundry-demo.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </div>
-    `;
-    document.body.appendChild(modalElement);
-    
-    // Get reference to elements
+    const previewVideo = document.getElementById('preview-video');
     const playButton = document.querySelector('.play-button');
-    const videoModal = document.querySelector('.video-modal');
-    const closeModal = document.querySelector('.close-modal');
-    const modalVideo = document.querySelector('.modal-video');
-    
-    // Open modal on play button click
-    playButton.addEventListener('click', function() {
-        videoModal.classList.add('active');
-        modalVideo.play();
-    });
-    
-    // Close modal
-    closeModal.addEventListener('click', function() {
-        videoModal.classList.remove('active');
-        modalVideo.pause();
-    });
-    
-    // Close modal when clicking outside
-    videoModal.addEventListener('click', function(e) {
-        if (e.target === videoModal) {
-            videoModal.classList.remove('active');
-            modalVideo.pause();
+    const videoOverlay = document.querySelector('.video-overlay');
+
+    // Function to play the video directly in the card
+    window.playVideo = function() {
+        if (previewVideo.paused) {
+            previewVideo.play();
+            playButton.style.opacity = '0';
+            videoOverlay.style.background = 'rgba(0, 0, 0, 0.1)';
+        } else {
+            previewVideo.pause();
+            playButton.style.opacity = '1';
+            videoOverlay.style.background = 'rgba(0, 0, 0, 0.3)';
         }
+    };
+
+    // When video ends, show the play button again
+    previewVideo.addEventListener('ended', function() {
+        playButton.style.opacity = '1';
+        videoOverlay.style.background = 'rgba(0, 0, 0, 0.3)';
+    });
+
+    // When video is paused, show the play button again
+    previewVideo.addEventListener('pause', function() {
+        playButton.style.opacity = '1';
+        videoOverlay.style.background = 'rgba(0, 0, 0, 0.3)';
     });
 });
 </script>
