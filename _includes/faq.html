@@ -1,124 +1,752 @@
-<!-- FAQ SECTION -->
-<section class="faq">
-    <div class="container">
-        <h2>Frequently Asked Questions</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppFoundry FAQ - Common Questions About Building AI-Powered Apps</title>
+    
+    <!-- Story Manager Script -->
+    <script>
+    // Universal Story Manager - ensures stories are consistently available
+    (function() {
+      // Run on all pages to ensure localStorage data consistency
+      console.log("📊 Story Manager initializing on FAQ page");
+      
+      // Check if we need to seed the localStorage from our backup
+      function seedStoriesIfNeeded() {
+        // Only run if appfoundry_submissions doesn't exist or is empty
+        if (!localStorage.getItem('appfoundry_submissions')) {
+          console.log("🌱 No stories found in localStorage, checking for seed data");
+          
+          // Check if we have any stories in our seed
+          if (localStorage.getItem('appfoundry_approved_seed')) {
+            console.log("🔄 Restoring stories from seed");
+            try {
+              const seed = JSON.parse(localStorage.getItem('appfoundry_approved_seed'));
+              localStorage.setItem('appfoundry_submissions', JSON.stringify(seed));
+              console.log("✅ Successfully restored", seed.length, "stories from seed");
+            } catch (e) {
+              console.error("❌ Error restoring from seed:", e);
+            }
+          }
+        } else {
+          // If we have submissions, make sure we have an up-to-date seed
+          try {
+            const submissions = JSON.parse(localStorage.getItem('appfoundry_submissions'));
+            localStorage.setItem('appfoundry_approved_seed', JSON.stringify(submissions));
+            console.log("💾 Seed updated with", submissions.length, "stories");
+          } catch (e) {
+            console.error("❌ Error updating seed:", e);
+          }
+        }
+      }
+      
+      // Run the seed check immediately
+      seedStoriesIfNeeded();
+    })();
+    </script>
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="custom-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Page specific styles */
+        .faq-hero {
+            text-align: center;
+            padding: 80px 0;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0055b3 100%);
+            color: white;
+            margin-bottom: 0;
+        }
         
-        <div class="faq-grid">
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Do I need any coding experience to use AppFoundry?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Absolutely not! The course is specifically designed for entrepreneurs and self-starters with zero coding knowledge. If you can use a computer and follow step-by-step instructions, you have all the skills needed to succeed with AppFoundry.</p>
+        .faq-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .faq-hero p {
+            font-size: 1.25rem;
+            max-width: 800px;
+            margin: 0 auto;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .faq-content {
+            padding: 80px 0;
+            background-color: var(--background-light);
+        }
+        
+        .faq-categories {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .category-button {
+            padding: 10px 20px;
+            background-color: white;
+            border: 1px solid var(--border-light);
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-medium);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .category-button:hover {
+            background-color: var(--background-light);
+            color: var(--primary-color);
+        }
+        
+        .category-button.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .faq-category {
+            margin-bottom: 60px;
+        }
+        
+        .category-title {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .faq-list {
+            margin-bottom: 40px;
+        }
+        
+        .faq-item {
+            margin-bottom: 20px;
+        }
+        
+        .faq-question {
+            background-color: white;
+            padding: 20px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .faq-question:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .faq-question h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            padding-right: 30px;
+            position: relative;
+        }
+        
+        .toggle-icon {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 1.5rem;
+            line-height: 1;
+            color: var(--primary-color);
+        }
+        
+        .faq-answer {
+            display: none;
+            padding: 20px 25px;
+            background-color: #f8fafc;
+            border-radius: 0 0 10px 10px;
+            margin-top: -5px;
+        }
+        
+        .faq-answer.show {
+            display: block;
+        }
+        
+        .faq-answer p {
+            margin: 0 0 15px;
+            line-height: 1.6;
+        }
+        
+        .faq-answer p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .faq-answer ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .faq-answer li {
+            margin-bottom: 8px;
+        }
+        
+        .faq-search {
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        
+        .search-container {
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 1px solid var(--border-light);
+            border-radius: 30px;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-medium);
+        }
+        
+        @media (max-width: 768px) {
+            .faq-hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .category-button {
+                font-size: 0.85rem;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="logo">AppFoundry</div>
+            <nav>
+                <ul>
+                    <li><a href="index.html#problem">The Problem</a></li>
+                    <li><a href="index.html#how-it-works">How It Works</a></li>
+                    <li><a href="index.html#examples">Examples</a></li>
+                    <li><a href="curriculum.html">Curriculum</a></li>
+                    <li><a href="index.html#pricing">Pricing</a></li>
+                    <li><a href="success-stories.html">Success Stories</a></li>
+                </ul>
+            </nav>
+            <button class="cta-button small" id="loginButton">Log in</button>
+        </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <section class="faq-hero">
+        <div class="container">
+            <h1>Frequently Asked Questions</h1>
+            <p>Everything you need to know about building AI-powered apps with AppFoundry</p>
+        </div>
+    </section>
+
+    <!-- FAQ Content -->
+    <section class="faq-content">
+        <div class="container">
+            <!-- Search Bar -->
+            <div class="faq-search">
+                <div class="search-container">
+                    <span class="search-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </span>
+                    <input type="text" id="faqSearch" class="search-input" placeholder="Search questions...">
                 </div>
             </div>
             
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>How is this different from no-code platforms like Bubble or Webflow?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Unlike traditional no-code platforms that lock you into their ecosystems with monthly fees, AppFoundry teaches you how to leverage Claude AI to create truly custom apps that you own 100%. You're not limited by platform constraints, there are no ongoing fees, and you can create more complex functionality than most drag-and-drop tools allow.</p>
+            <!-- Categories Filter -->
+            <div class="faq-categories">
+                <button class="category-button active" data-category="all">All Questions</button>
+                <button class="category-button" data-category="getting-started">Getting Started</button>
+                <button class="category-button" data-category="technical">Technical</button>
+                <button class="category-button" data-category="pricing">Pricing & Refunds</button>
+                <button class="category-button" data-category="comparison">vs Other Solutions</button>
+                <button class="category-button" data-category="support">Support</button>
+            </div>
+            
+            <!-- Getting Started FAQs -->
+            <div class="faq-category" id="getting-started">
+                <h2 class="category-title">Getting Started</h2>
+                
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>Do I need any coding experience to use AppFoundry?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Absolutely not! The course is specifically designed for entrepreneurs and self-starters with zero coding knowledge. If you can use a computer and follow step-by-step instructions, you have all the skills needed to succeed with AppFoundry.</p>
+                            <p>Our approach focuses on teaching you how to direct Claude AI to write the code for you. You'll learn exact prompting techniques that get professional results without needing to understand the code itself.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>How long will it take to build my first app?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Most students complete their first functional app within 2-4 weeks of starting the course, working just a few hours per week. You'll start seeing results within the first few hours as you complete the initial modules.</p>
+                            <p>The complete curriculum takes about 10-15 hours to work through, and you can apply what you learn immediately to your app project. Our step-by-step approach means you'll see progress quickly, with each module building on the previous one.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>What kind of apps can I build with AppFoundry?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>You can build a wide range of business apps including:</p>
+                            <ul>
+                                <li>Inventory management systems</li>
+                                <li>Client portals and CRMs</li>
+                                <li>Booking and scheduling platforms</li>
+                                <li>E-commerce apps</li>
+                                <li>Productivity and task management tools</li>
+                                <li>Service marketplaces</li>
+                                <li>Data collection and analysis tools</li>
+                                <li>Internal business tools</li>
+                            </ul>
+                            <p>If your app idea focuses on solving a specific business problem rather than being the next social media giant, AppFoundry is perfect for you. The system works best for targeted, practical applications that solve real business needs.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>How quickly can I start seeing results?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>You'll start seeing tangible results within the first few hours of the course. By the end of Module 1, you'll have your development environment set up. After Module 2, you'll have created your first simple component using Claude AI.</p>
+                            <p>By Module 3 (typically day 3-5 of the course), you'll be able to see your app running on your phone using Expo Go. Most students have a fully functional prototype with core features working within 2 weeks, and a polished app ready for submission within 4 weeks.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>How long will it take to build my first app?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Most students complete their first functional app within 2-4 weeks of starting the course, working just a few hours per week. You'll start seeing results within the first few hours as you complete the initial modules. The complete curriculum takes about 10-15 hours to work through, and you can apply what you learn immediately to your app project.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>What kind of apps can I build with AppFoundry?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>You can build a wide range of business apps including: inventory management systems, client portals, booking platforms, e-commerce apps, productivity tools, service marketplaces, and much more. If your app idea focuses on solving a specific business problem rather than being the next social media giant, AppFoundry is perfect for you.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Will I own the apps I create? Are there any ongoing fees?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>You own 100% of any app you create with AppFoundry, with no ongoing fees to us. The code is yours to modify, expand, and commercialize however you want. The only potential ongoing costs would be standard hosting fees (typically $5-20/month depending on your app's needs) and a Claude API subscription if you choose to use their API directly (they offer a free tier that's sufficient for most projects).</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Can I use AppFoundry to build apps for clients?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Absolutely! Many of our students use AppFoundry to start app development businesses or add value at their workplace. Our Professional plan includes everything you need to build apps for clients, while the Enterprise plan includes white-labeling capabilities for reselling without attribution.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>How does the AI integration actually work?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>Claude AI is a powerful language model created by Anthropic. Our course teaches you the exact prompts and techniques to direct Claude to generate code, design interfaces, and build app components. You'll learn structured, step-by-step frameworks that guide the AI to create exactly what you need, even with no technical background.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>Do I need to purchase additional tools or software?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>No, you don't need to purchase any additional software. You'll need a Claude AI account (which has a free tier sufficient for learning), VSCode (free), and we'll cover several free hosting and deployment options. The course includes all templates and resources needed to build fully functional apps.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>What if I get stuck during the course?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>All students get access to our community forum where you can ask questions and get help from other students. Professional and Enterprise plan members receive priority email support with faster response times. We're committed to your success and provide multiple support channels to ensure you never get stuck for long.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>What is your refund policy?</h3>
-                    <div class="toggle-icon">+</div>
-                </div>
-                <div class="faq-answer">
-                    <p>We offer a 60-day "Build Your First App" guarantee. If you can't create a working app within 60 days of taking the course, we'll refund 100% of your purchase price. All we ask is that you show us you've made a sincere effort by sharing your project files. This is our way of ensuring your success while taking all the risk off your shoulders.</p>
+            <!-- Technical FAQs -->
+            <div class="faq-category" id="technical">
+                <h2 class="category-title">Technical Questions</h2>
+                
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>How does the AI integration actually work?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Claude AI is a powerful language model created by Anthropic. Our course teaches you the exact prompts and techniques to direct Claude to generate code, design interfaces, and build app components.</p>
+                            <p>You'll learn structured, step-by-step frameworks that guide the AI to create exactly what you need, even with no technical background. This includes techniques for:</p>
+                            <ul>
+                                <li>Breaking down app requirements into AI-friendly components</li>
+                                <li>Creating detailed specifications that Claude can understand</li>
+                                <li>Generating UI components with precise styling</li>
+                                <li>Implementing complex functionality through clear prompting</li>
+                                <li>Testing and debugging with AI assistance</li>
+                            </ul>
+                            <p>The system works because Claude excels at generating code when given clear instructions, and we've developed a proven framework for providing those instructions effectively.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>Do I need to purchase additional tools or software?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>No, you don't need to purchase any additional software. You'll need:</p>
+                            <ul>
+                                <li>A Claude AI account (which has a free tier sufficient for learning)</li>
+                                <li>VSCode (free code editor)</li>
+                                <li>Node.js (free development environment)</li>
+                                <li>Expo Go (free mobile app for testing)</li>
+                            </ul>
+                            <p>The course includes all templates, prompts, and resources needed to build fully functional apps. For deploying your finished app, we cover several free and low-cost hosting options, with most students spending less than $10/month on hosting their completed app.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>Will I own the apps I create? Are there any ongoing fees?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>You own 100% of any app you create with AppFoundry, with no ongoing fees to us. The code is yours to modify, expand, and commercialize however you want.</p>
+                            <p>The only potential ongoing costs would be:</p>
+                            <ul>
+                                <li>Standard hosting fees (typically $5-20/month depending on your app's needs)</li>
+                                <li>A Claude API subscription if you choose to use their API directly (they offer a free tier that's sufficient for most projects)</li>
+                                <li>Optional app store developer accounts if you want to publish to the App Store ($99/year for Apple, $25 one-time for Google)</li>
+                            </ul>
+                            <p>We show you how to keep these costs minimal during the development and initial launch phases.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>What technologies does AppFoundry use to build apps?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>AppFoundry teaches you to build apps using these modern technologies:</p>
+                            <ul>
+                                <li><strong>React Native</strong>: A cross-platform framework that lets you build apps for both iOS and Android with a single codebase</li>
+                                <li><strong>Expo</strong>: A set of tools and services built around React Native that simplifies mobile development</li>
+                                <li><strong>Supabase</strong>: An open-source Firebase alternative providing authentication, database, and storage solutions</li>
+                                <li><strong>Claude AI</strong>: The advanced AI assistant that helps generate code, designs, and solutions</li>
+                            </ul>
+                            <p>These technologies are selected because they're modern, widely used in industry, and work well together to create professional apps efficiently. They also have excellent documentation and community support, making them ideal for non-technical founders.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <div class="faq-item">
-                <div class="faq-question">
-                    <h3>What support and resources will I receive during the course?</h3>
-                    <div class="toggle-icon">+</div>
+            <!-- Pricing FAQs -->
+            <div class="faq-category" id="pricing">
+                <h2 class="category-title">Pricing & Refunds</h2>
+                
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>What is your refund policy?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>We offer a 60-day "Build Your First App" guarantee. If you can't create a working app within 60 days of taking the course, we'll refund 100% of your purchase price.</p>
+                            <p>All we ask is that you show us you've made a sincere effort by sharing your project files. This is our way of ensuring your success while taking all the risk off your shoulders.</p>
+                            <p>We're so confident in this system because we've seen complete beginners transform into app creators in days, not months.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>Do you offer payment plans?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Yes, we offer flexible payment plans for both the Professional Developer and Enterprise Builder packages:</p>
+                            <ul>
+                                <li><strong>Professional Developer</strong>: $99/month for 12 months (total $1,188) or a one-time payment of $999</li>
+                                <li><strong>Enterprise Builder</strong>: $199/month for 12 months (total $2,388) or a one-time payment of $1,999</li>
+                            </ul>
+                            <p>We also offer a 3-payment option for Professional Developer at $349 per payment (total $1,047).</p>
+                            <p>All payment plans come with the same 60-day guarantee as our one-time payments.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>What's included in each pricing tier?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p><strong>Essential Builder ($499)</strong>:</p>
+                            <ul>
+                                <li>Complete 7-module course</li>
+                                <li>30+ project templates</li>
+                                <li>Community forum access</li>
+                                <li>60-day money-back guarantee</li>
+                                <li>3-month access to code updates</li>
+                            </ul>
+                            <p><strong>Professional Developer ($999)</strong>:</p>
+                            <ul>
+                                <li>Everything in Essential Builder</li>
+                                <li>Advanced AI implementation techniques</li>
+                                <li>100+ premium templates</li>
+                                <li>Priority community support</li>
+                                <li>1-on-1 app review session</li>
+                                <li>12-month access to code updates</li>
+                            </ul>
+                            <p><strong>Enterprise Builder ($1,999)</strong>:</p>
+                            <ul>
+                                <li>Everything in Professional Developer</li>
+                                <li>Enterprise integration modules</li>
+                                <li>White-label capabilities</li>
+                                <li>Lifetime access to code updates</li>
+                                <li>VIP Discord access with private channels</li>
+                                <li>Full companion app source code access</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-                <div class="faq-answer">
-                    <p>In addition to the course content, you'll receive access to our exclusive Discord community where you can connect with other students, share your progress, and get direct help from me. You'll also get access to our companion React Native app with Supabase authentication that provides mobile access to course materials and serves as a practical example of the technology you'll be learning. Additionally, all students receive our library of templates, prompt frameworks, and code snippets to accelerate your app development process.</p>
+            </div>
+            
+            <!-- Comparison FAQs -->
+            <div class="faq-category" id="comparison">
+                <h2 class="category-title">Comparison with Other Solutions</h2>
+                
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>How is this different from no-code platforms like Bubble or Webflow?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Unlike traditional no-code platforms that lock you into their ecosystems with monthly fees, AppFoundry teaches you how to leverage Claude AI to create truly custom apps that you own 100%.</p>
+                            <p>Key differences include:</p>
+                            <ul>
+                                <li><strong>No platform lock-in</strong>: You're not limited by platform constraints</li>
+                                <li><strong>No ongoing fees</strong>: Pay once for the course, not monthly for access to a platform</li>
+                                <li><strong>Greater customization</strong>: Create more complex functionality than most drag-and-drop tools allow</li>
+                                <li><strong>Full ownership</strong>: Own your code and can modify any part of it, unlike platform-dependent solutions</li>
+                                <li><strong>Lower long-term costs</strong>: No scaling fees based on users or traffic</li>
+                            </ul>
+                            <p>While Bubble and similar platforms are great for simple projects, AppFoundry gives you the ability to create truly custom solutions without the ongoing costs or limitations.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>How does AppFoundry compare to hiring a developer?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Hiring a developer typically costs $15,000-$50,000+ for a custom app, takes 3-6 months, and creates ongoing dependency for changes and updates. With AppFoundry:</p>
+                            <ul>
+                                <li><strong>Cost</strong>: One-time payment of $499-$1,999 vs. $15,000-$50,000+</li>
+                                <li><strong>Time</strong>: Build your app in 2-4 weeks vs. 3-6 months</li>
+                                <li><strong>Control</strong>: You maintain complete control of your project vs. dependency on a developer</li>
+                                <li><strong>Revisions</strong>: Make unlimited changes yourself for free vs. paying for each revision</li>
+                                <li><strong>Knowledge</strong>: Gain valuable skills you can use repeatedly vs. outsourcing your knowledge</li>
+                            </ul>
+                            <p>Most importantly, you understand exactly how your app works because you built it, giving you the ability to grow and adapt it as your business evolves.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>Why not just use Claude AI directly without taking this course?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>While Claude AI is powerful, it requires specific knowledge and expertise to effectively direct it to build complete, functional apps. Common challenges when using Claude directly include:</p>
+                            <ul>
+                                <li>Inconsistent code that doesn't work together cohesively</li>
+                                <li>Incomplete implementations that miss critical components</li>
+                                <li>Difficulty creating a proper project structure</li>
+                                <li>Challenges with debugging and fixing issues</li>
+                                <li>No clear path from concept to published app</li>
+                            </ul>
+                            <p>AppFoundry provides you with proven templates, prompting frameworks, and step-by-step guidance that turns Claude from a helpful assistant into a complete app development solution. We've spent months refining these techniques to eliminate the trial-and-error process.</p>
+                            <p>Additionally, the course includes specialized modules on app store submission, styling, and production-ready features that typically require technical knowledge to implement correctly.</p>
+                        </div>
+                    </div>
                 </div>
+            </div>
+            
+            <!-- Support FAQs -->
+            <div class="faq-category" id="support">
+                <h2 class="category-title">Support & Resources</h2>
+                
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>What if I get stuck during the course?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>All students get access to our community forum where you can ask questions and get help from other students. Professional and Enterprise plan members receive priority email support with faster response times.</p>
+                            <p>We're committed to your success and provide multiple support channels:</p>
+                            <ul>
+                                <li><strong>Community Discord</strong>: Connect with other students and get peer support</li>
+                                <li><strong>Detailed Documentation</strong>: Comprehensive written guides and troubleshooting tips</li>
+                                <li><strong>Weekly Office Hours</strong>: Live Q&A sessions for all students</li>
+                                <li><strong>Email Support</strong>: Direct assistance for specific questions</li>
+                            </ul>
+                            <p>Our most active support channel is the Discord community, where both students and instructors regularly share advice, code solutions, and encouragement.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>Can I use AppFoundry to build apps for clients?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Absolutely! Many of our students use AppFoundry to start app development businesses or add value at their workplace. Our Professional plan includes everything you need to build apps for clients, while the Enterprise plan includes white-labeling capabilities for reselling without attribution.</p>
+                            <p>We provide guidance on:</p>
+                            <ul>
+                                <li>Setting up client projects efficiently</li>
+                                <li>Managing client expectations and requirements</li>
+                                <li>Packaging and delivering finished products</li>
+                                <li>Ongoing maintenance and support models</li>
+                                <li>Pricing your services appropriately</li>
+                            </ul>
+                            <p>Many graduates find they can charge $3,000-$10,000 for projects that take them just 1-2 weeks to complete once they're familiar with the AppFoundry method.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>What support and resources will I receive during the course?</h3>
+                            <div class="toggle-icon">+</div>
+                        </div>
+                        <div class="faq-answer">
+                            <p>In addition to the course content, you'll receive:</p>
+                            <ul>
+                                <li><strong>Discord Community</strong>: Connect with other students, share your progress, and get direct help</li>
+                                <li><strong>Companion App</strong>: Access course materials on mobile with our React Native app (which also serves as a practical example)</li>
+                                <li><strong>Template Library</strong>: Extensive collection of project templates, prompt frameworks, and code snippets</li>
+                                <li><strong>Implementation Guides</strong>: Detailed step-by-step instructions for common features</li>
+                                <li><strong>Troubleshooting Handbook</strong>: Solutions to common issues and challenges</li>
+                                <li><strong>Weekly Updates</strong>: Regular content additions and improvements based on student feedback</li>
+                            </ul>
+                            <p>Professional and Enterprise plan members also receive email support, 1-on-1 app review sessions, and access to premium templates and resources.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Still Have Questions -->
+            <div class="have-more-questions">
+                <h3>Still Have Questions?</h3>
+                <p>Contact us directly at <a href="mailto:hello@risegg.net">hello@risegg.net</a> and we'll get back to you within 24 hours.</p>
+                <a href="index.html#pricing" class="cta-button">Start Building Today</a>
             </div>
         </div>
-        
-        <div class="have-more-questions">
-            <h3>Have more questions?</h3>
-            <p>Contact us directly at <a href="mailto:hello@risegg.net">hello@risegg.net</a> and we'll get back to you within 24 hours.</p>
-            <a href="#pricing" class="cta-button">Start Building Today</a>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="logo">AppFoundry</div>
+            <div class="footer-links">
+                <div class="link-group">
+                    <h4>Course</h4>
+                    <ul>
+                        <li><a href="index.html#problem">The Problem</a></li>
+                        <li><a href="index.html#how-it-works">How It Works</a></li>
+                        <li><a href="curriculum.html">Curriculum</a></li>
+                        <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="success-stories.html">Success Stories</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="refund-policy.html">Our Guarantee</a></li>
+                    </ul>
+                </div>
+                <div class="link-group">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="mailto:hello@risegg.net">Email Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                © 2025 AppFoundry. All rights reserved.
+            </div>
         </div>
-    </div>
-</section>
+    </footer>
+
+    <!-- Component loader script -->
+    <script src="loader.js"></script>
+    <!-- Main scripts -->
+    <script src="scripts.js"></script>
+    
+    <!-- FAQ Specific Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize FAQ toggles (already handled in main scripts.js)
+            
+            // Category filtering
+            const categoryButtons = document.querySelectorAll('.category-button');
+            const faqCategories = document.querySelectorAll('.faq-category');
+            
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    const category = this.getAttribute('data-category');
+                    
+                    // Show all categories or only the selected one
+                    if (category === 'all') {
+                        faqCategories.forEach(cat => cat.style.display = 'block');
+                    } else {
+                        faqCategories.forEach(cat => {
+                            if (cat.id === category) {
+                                cat.style.display = 'block';
+                            } else {
+                                cat.style.display = 'none';
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // Search functionality
+            const searchInput = document.getElementById('faqSearch');
+            const faqItems = document.querySelectorAll('.faq-item');
+            
+            searchInput.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                if (searchTerm.length > 2) {
+                    // Show all categories when searching
+                    faqCategories.forEach(cat => cat.style.display = 'block');
+                    
+                    // Reset category buttons
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelector('[data-category="all"]').classList.add('active');
+                    
+                    // Filter FAQ items
+                    faqItems.forEach(item => {
+                        const question = item.querySelector('.faq-question h3').textContent.toLowerCase();
+                        const answer = item.querySelector('.faq-answer').textContent.toLowerCase();
+                        
+                        if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                            item.style.display = 'block';
+                            
+                            // Highlight the text
+                            const questionText = item.querySelector('.faq-question h3');
+                            questionText.innerHTML = questionText.textContent.replace(
+                                new RegExp(searchTerm, 'gi'),
+                                match => `<span class="highlight">${match}</span>`
+                            );
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                } else if (searchTerm.length === 0) {
+                    // Reset all items
+                    faqItems.forEach(item => {
+                        item.style.display = 'block';
+                        const questionText = item.querySelector('.faq-question h3');
+                        questionText.innerHTML = questionText.textContent;
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
