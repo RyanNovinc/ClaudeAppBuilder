@@ -253,7 +253,7 @@ nav ul li a.active {
 /* Hero section */
 .hero {
   position: relative;
-  padding: 120px 0 80px;
+  padding: 60px 0 80px;
   overflow: hidden;
   background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   z-index: 1;
